@@ -52,3 +52,16 @@ See [ASSETS.md](./ASSETS.md). Do not add copyrighted third-party game logos as â
 ## Agents
 
 Follow root [AGENTS.md](../AGENTS.md). No AI co-author git trailers.
+
+## GitHub workflow (diagram)
+
+```mermaid
+flowchart LR
+  A[Issue] --> B[feat/fix/docs branch]
+  B --> C[PR to main]
+  C --> D{CI tests}
+  D -->|fail| B
+  D -->|pass| E[Review]
+  E --> F[Merge]
+  F --> G[main always playable]
+```
