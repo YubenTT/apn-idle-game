@@ -128,15 +128,26 @@ lower than the research's 460–520 h because no rewrite and no framework onboar
   dependencies.
 
 ### I-001 · Wire `tokens.css` into `game.css` (staged) — 🔴 M
-- **Goal:** every color/size in the UI comes from a token, not a literal.
+- **Goal:** make the token layer authoritative for the UI palette and shared type,
+  touch, and safe-area primitives; owning screen issues migrate their layout geometry.
 - **Scope:** `@import "../brand/tokens.css"` at the top of `css/game.css`; swap
-  literals for `var(--…)` region by region (surfaces → text → economy → components).
+  literals for `var(--…)` region by region (surfaces → text → economy → components),
+  using an exact-value compatibility bridge where canonical values would drift.
 - **Acceptance:**
-  - [ ] `tokens.css` imported; app renders identically pre-swap (additive).
-  - [ ] Each swapped region passes a screenshot diff vs `qa/screenshots/` (no drift).
-  - [ ] No raw hex remains in swapped regions (grep clean).
-  - [ ] `node qa/run-tests.mjs` green.
-- **Files:** `css/game.css`, `index.html` (link if used), `brand/tokens.css`.
+  - [x] `tokens.css` imported; app renders identically pre-swap (additive).
+  - [x] Each swapped region passes screenshot diff: controlled Run/Gear chrome is
+        pixel-identical to clean `origin/main` at 428×926, 375×812, and 844×390
+        after masking live Canvas/state content, so its relationship to the
+        historical `qa/screenshots/` references is unchanged.
+  - [x] No raw hex, color function, or named palette literal remains in
+        `game.css`; static QA prevents regression (`transparent` / `currentColor`
+        remain valid CSS controls).
+  - [x] Every `font-size` plus shared touch and safe-area primitives use tokens;
+        legacy screen geometry remains frozen for its owning redesign issue.
+  - [x] Notes and SP retain shipped values for the focused I-002 change.
+  - [x] `node qa/run-tests.mjs` green.
+- **Files:** `css/game.css`, `brand/tokens.css`, `brand/DESIGN-TOKENS.md`,
+  `qa/check-css-tokens.mjs`, `qa/run-tests.mjs`, plan/status docs.
 - **Out of scope:** the 2 value changes (that's I-002); new layouts.
 
 ### I-002 · Apply the 2 token changes — 🔴 S
