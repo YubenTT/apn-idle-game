@@ -10,7 +10,6 @@ import {
   killsNeeded,
 } from './formulas.js';
 import { SEASON, META, SKILLS, TIPS, ATTR_LABEL, ATTR_META } from './content.js';
-import { skillIco, attrIco, metaIco } from './icons.js';
 import {
   combatStats,
   allocAttr,
@@ -216,19 +215,24 @@ function fillShip(s) {
   const notes = Math.floor(s.run.patches);
   const gain = Math.floor(notes * s.meta.live);
   const liveNext = liveGain(s.authority.shippedThisSeason);
-  el.textContent = [
-    `Notes ready: ${formatNum(notes)}`,
-    `Ship now → +${formatNum(gain)} permanent Rep`,
-    `Live Mult: ×${s.meta.live.toFixed(2)} (also multiplies damage)`,
-    `Shipped this season: ${formatNum(s.authority.shippedThisSeason)} Rep`,
-    s.ui.seasonDone || s.run.zone >= SEASON.zones
-      ? `End Season ready → Live +${liveNext.toFixed(3)} · Boosts kept · Weapon reset`
-      : `Next checkpoint: Zone ${SEASON.zones * (Math.floor(s.run.zone / SEASON.zones) + 1)}`,
-  ].join('\n');
+  const seasonReady = s.ui.seasonDone || s.run.zone >= SEASON.zones;
+  const nextZ = SEASON.zones * (Math.floor(s.run.zone / SEASON.zones) + 1);
+  el.className = 'ship-stats';
+  el.innerHTML = [
+    row('Notes ready', formatNum(notes), notes > 0 ? 'hi' : ''),
+    row('Ship for', `+${formatNum(gain)} Rep`, gain > 0 ? 'hi' : ''),
+    row('Live Mult', `×${s.meta.live.toFixed(2)}`, 'ok'),
+    row('Shipped this season', `${formatNum(s.authority.shippedThisSeason)} Rep`, ''),
+    seasonReady
+      ? row('End Season', `+${liveNext.toFixed(3)} Live · boosts stay`, 'hi')
+      : row('Next checkpoint', `Zone ${nextZ}`, ''),
+  ].join('');
   const leave = document.getElementById('btn-leave');
-  if (leave) {
-    leave.hidden = !(s.ui.seasonDone || s.run.zone >= SEASON.zones);
-  }
+  if (leave) leave.hidden = !seasonReady;
+}
+
+function row(k, v, cls = '') {
+  return `<div class="ship-row ${cls === 'hi' ? 'ready' : ''}"><span class="k">${k}</span><span class="v ${cls}">${v}</span></div>`;
 }
 
 function reqBadges(req, h) {
@@ -256,24 +260,24 @@ function renderSkills(s) {
   if (!root) return;
   const h = s.run.hero;
   const hasSp = h.sp > 0;
-  const maskName = h.mask ? SKILLS[h.mask]?.name : 'None';
+  const maskName = h.mask ? SKILLS[h.mask]?.name : '—';
 
   let html = `
   <div class="sp-bank ${hasSp ? 'has-sp' : ''}">
     <div class="sp-bank-left">
-      <span class="sp-bank-label">Skill Points</span>
+      <span class="sp-bank-label">SP</span>
       <strong class="sp-bank-val">${h.sp}</strong>
-      <span class="sp-bank-hint">${hasSp ? 'Tap cards to spend' : 'Rank up to earn SP'}</span>
+      <span class="sp-bank-hint">${hasSp ? 'Tap to spend · 1 SP each' : 'Rank up for SP'}</span>
     </div>
     <div class="sp-bank-right">
       <span class="mask-pill ${h.mask ? 'on' : ''}">
-        <span class="mask-pill-lab">MASK</span>
+        <span class="mask-pill-lab">Mask</span>
         <span class="mask-pill-name">${maskName}</span>
       </span>
     </div>
   </div>
 
-  <div class="section-lab">Attributes · 1 SP each</div>
+  <div class="section-lab">Attributes</div>
   <div class="attr-row">`;
 
   for (const id of ['scan', 'verify', 'amplify']) {
@@ -281,10 +285,8 @@ function renderSkills(s) {
     const val = h[id] || 0;
     const can = hasSp;
     html += `
-    <button type="button" class="attr-card ${can ? 'can' : 'locked'}" data-alloc="attr" data-id="${id}" style="--acc:${m.accent}">
-      <span class="attr-ico" aria-hidden="true">${attrIco(id)}</span>
+    <button type="button" class="attr-card ${can ? 'can' : 'locked'}" data-alloc="attr" data-id="${id}" title="${m.sub}">
       <span class="attr-lab">${m.label}</span>
-      <span class="attr-sub">${m.sub}</span>
       <span class="attr-lv">${val}</span>
       <span class="attr-plus" aria-hidden="true">+</span>
     </button>`;
@@ -300,29 +302,29 @@ function renderSkills(s) {
     const maxed = lv >= sk.max;
     const owned = lv > 0;
     const pct = Math.round((lv / sk.max) * 100);
-    const acc = sk.accent || '#fc1243';
     let state = 'locked';
     if (maxed) state = 'maxed';
     else if (ok) state = 'can';
     else if (owned) state = 'owned';
 
-    let cta = 'Need req';
-    if (maxed) cta = 'MAX';
-    else if (ok) cta = '1 SP';
-    else if (h.sp < 1) cta = '0 SP';
+    let cta = '—';
+    if (maxed) cta = 'Max';
+    else if (ok) cta = '+1 SP';
+    else if (h.sp < 1) cta = 'No SP';
     else cta = 'Locked';
+
+    const reqs = Object.keys(sk.req || {}).length ? reqBadges(sk.req, h) : '';
 
     html += `
     <button type="button" class="skill-card ${state} ${sk.type === 'mask' ? 'is-mask' : ''}"
-      data-alloc="skill" data-id="${sk.id}" style="--acc:${acc}" ${maxed ? 'disabled' : ''}>
-      <div class="sk-ico" aria-hidden="true">${skillIco(sk.id)}</div>
+      data-alloc="skill" data-id="${sk.id}" ${maxed ? 'disabled' : ''}>
       <div class="sk-main">
         <div class="sk-top">
           <span class="sk-name">${sk.name}</span>
           <span class="sk-type t-${sk.type}">${typeTag(sk.type)}</span>
         </div>
         <div class="sk-desc">${sk.desc}</div>
-        <div class="sk-reqs">${reqBadges(sk.req, h)}</div>
+        ${reqs ? `<div class="sk-reqs">${reqs}</div>` : ''}
         <div class="sk-bar"><i style="width:${pct}%"></i></div>
       </div>
       <div class="sk-side">
@@ -342,30 +344,29 @@ function renderMeta(s) {
   let html = `
   <div class="sp-bank rep-bank">
     <div class="sp-bank-left">
-      <span class="sp-bank-label">Reputation</span>
+      <span class="sp-bank-label">Rep</span>
       <strong class="sp-bank-val gold">${formatNum(rep)}</strong>
-      <span class="sp-bank-hint">Permanent · never reset on End Season</span>
+      <span class="sp-bank-hint">Permanent · never resets</span>
     </div>
   </div>
+  <div class="section-lab">Permanent boosts</div>
   <div class="skill-grid">`;
   for (const u of Object.values(META)) {
     const lv = metaLv(s, u.id);
     const cost = metaCost(u.base, u.growth, lv);
     const ok = rep >= cost;
     html += `
-    <button type="button" class="skill-card ${ok ? 'can' : 'locked'}" data-meta="${u.id}" style="--acc:#e6b84d">
-      <div class="sk-ico gold" aria-hidden="true">${metaIco(u.id)}</div>
+    <button type="button" class="skill-card ${ok ? 'can' : 'locked'}" data-meta="${u.id}">
       <div class="sk-main">
         <div class="sk-top">
           <span class="sk-name">${u.name}</span>
-          <span class="sk-type t-passive">BOOST</span>
         </div>
         <div class="sk-desc">${u.desc}</div>
         <div class="sk-bar"><i style="width:${Math.min(100, lv * 12)}%"></i></div>
       </div>
       <div class="sk-side">
         <span class="sk-lv">Lv ${lv}</span>
-        <span class="sk-cta">${formatNum(cost)} Rep</span>
+        <span class="sk-cta">${formatNum(cost)} rep</span>
       </div>
     </button>`;
   }

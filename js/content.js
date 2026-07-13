@@ -26,7 +26,7 @@ export const META = {
   xp_posts: {
     id: 'xp_posts',
     name: 'Faster Ranks',
-    desc: '+8% Rank XP per kill. Permanent.',
+    desc: '+8% Rank XP per kill',
     base: 5,
     growth: 1.42,
     per: 0.08,
@@ -34,7 +34,7 @@ export const META = {
   xp_global: {
     id: 'xp_global',
     name: 'Bonus XP',
-    desc: '+6% all Rank XP. Permanent.',
+    desc: '+6% all Rank XP',
     base: 5,
     growth: 1.42,
     per: 0.06,
@@ -42,7 +42,7 @@ export const META = {
   signal_power: {
     id: 'signal_power',
     name: 'Signal Power',
-    desc: '+5% damage forever. Stacks with Live Mult.',
+    desc: '+5% damage · stacks with Live Mult',
     base: 8,
     growth: 1.48,
     per: 0.05,
@@ -50,7 +50,7 @@ export const META = {
   feed_speed: {
     id: 'feed_speed',
     name: 'Move Speed',
-    desc: '+3% march speed. Permanent.',
+    desc: '+3% march speed',
     base: 10,
     growth: 1.5,
     per: 0.03,
@@ -58,7 +58,7 @@ export const META = {
   byte_gain: {
     id: 'byte_gain',
     name: 'More Signal',
-    desc: '+5% Signal from kills. Permanent.',
+    desc: '+5% Signal from kills',
     base: 6,
     growth: 1.38,
     per: 0.05,
@@ -66,7 +66,7 @@ export const META = {
   patch_gain: {
     id: 'patch_gain',
     name: 'More Notes',
-    desc: '+7% Notes from red Patch Notes. Permanent.',
+    desc: '+7% Notes from red Patch Notes',
     base: 9,
     growth: 1.45,
     per: 0.07,
@@ -74,7 +74,7 @@ export const META = {
   cold_start: {
     id: 'cold_start',
     name: 'Flat Damage',
-    desc: '+3 flat damage. Permanent early-game edge.',
+    desc: '+3 flat damage · strong early',
     base: 12,
     growth: 1.65,
     per: 3,
