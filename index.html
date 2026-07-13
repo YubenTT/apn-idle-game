@@ -7,7 +7,7 @@
     <meta name="color-scheme" content="dark" />
     <title>APN Idle</title>
     <link rel="icon" href="./assets/apn-logo.svg" />
-    <link rel="stylesheet" href="./css/game.css?v=stats1" />
+    <link rel="stylesheet" href="./css/game.css?v=bag1" />
   </head>
   <body>
     <div id="app">
@@ -19,7 +19,7 @@
             <span class="meta-pill" title="Economy mult (Live × Pro × Boost)"><span class="meta-k">×</span><em id="v-live">1.00</em></span>
             <span class="meta-pill pro-badge" id="v-pro" hidden title="APN Pro">PRO</span>
             <span class="meta-pill sp" title="Unspent skill points"><em id="v-sp">0</em><span class="meta-k">sp</span></span>
-            <button type="button" class="meta-pill gear-pill" id="v-gear-pill" title="Open Gear" hidden></button>
+
           </div>
         </div>
         <div class="hud-res">
@@ -61,6 +61,14 @@
           </div>
         </div>
         <canvas id="game"></canvas>
+        <!-- In-stage bag FAB (Gear) — left rail, not bottom nav -->
+        <button type="button" class="bag-fab" id="btn-bag" data-panel="gear" title="Gear · Inventory" aria-label="Open Gear">
+          <svg class="bag-fab-ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="currentColor" d="M8 7V6a4 4 0 018 0v1h3.2c.7 0 1.3.6 1.3 1.3v10.4c0 1.3-1 2.3-2.3 2.3H5.8c-1.3 0-2.3-1-2.3-2.3V8.3C3.5 7.6 4.1 7 4.8 7H8zm2 0h4V6a2 2 0 10-4 0v1zm-3.5 4.5h11v7.2c0 .2-.1.3-.3.3H6.8c-.2 0-.3-.1-.3-.3v-7.2zm3 1.5v4h1.5v-4H9.5zm4 0v4H15v-4h-1.5z"/>
+          </svg>
+          <span class="bag-fab-lab">Bag</span>
+          <span class="bag-fab-badge" id="bag-badge" hidden>0</span>
+        </button>
         <div id="toast" hidden></div>
         <div id="loot-toast" class="loot-toast" hidden aria-live="polite"></div>
       </main>
@@ -117,15 +125,6 @@
             ><path fill="currentColor" d="M4 18h16v2H4v-2zm2-4l4-8 2 4 4-6 4 10H6z"
           /></svg>
           <span>Ship</span>
-        </button>
-        <button type="button" data-panel="gear" class="nav-btn">
-          <svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"
-            ><path
-              fill="currentColor"
-              d="M12 2l2 4h4l-3 3 1 5-4-2.5L8 14l1-5-3-3h4L12 2zm-7 14v2h14v-2H5zm2 4v2h10v-2H7z"
-            /></svg
-          >
-          <span>Gear</span>
         </button>
         <button type="button" data-panel="hub" class="nav-btn">
           <svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"
@@ -223,6 +222,6 @@
       </div>
     </div>
 
-    <script type="module" src="./js/main.js?v=stats1"></script>
+    <script type="module" src="./js/main.js?v=bag1"></script>
   </body>
 </html>

@@ -122,14 +122,6 @@ export function bindUI(s) {
   $('sheet-close')?.addEventListener('click', () => closeSheet(s));
   $('sheet-backdrop')?.addEventListener('click', () => closeSheet(s));
 
-  // Header gear pill → Gear panel (icons only, no name spam)
-  $('v-gear-pill')?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    unlockAudio();
-    openSheet(s, 'gear');
-    if (s.settings.sfx !== false) sfx('click');
-  });
-
   $('btn-scanner')?.addEventListener('click', () => {
     unlockAudio();
     if (buyScanner(s)) save(s);
@@ -409,6 +401,7 @@ function openSheet(s, panel) {
   document.querySelectorAll('.hud-nav button').forEach((b) => {
     b.classList.toggle('active', b.dataset.panel === panel);
   });
+  document.getElementById('btn-bag')?.classList.toggle('active', panel === 'gear');
   const title = document.getElementById('sheet-title');
   if (title) title.textContent = PANEL_TITLES[panel] || panel;
   ['skills', 'meta', 'ship', 'gear', 'hub', 'settings'].forEach((p) => {
@@ -446,6 +439,7 @@ function closeSheet(s) {
   }
   document.getElementById('app')?.classList.remove('sheet-open');
   document.querySelectorAll('.hud-nav button').forEach((b) => b.classList.remove('active'));
+  document.getElementById('btn-bag')?.classList.remove('active');
 }
 
 function fillShip(s) {
@@ -1014,30 +1008,31 @@ export function renderHUD(s) {
   set($('v-kills'), `${s.run.killsInZone}/${need}`);
   set($('v-xp-lab'), `${formatNum(h.xp | 0)}/${formatNum(needXp)}`);
 
-  // Compact equipped gear in header — up to 3 icons + count
-  const gp = $('v-gear-pill');
-  if (gp) {
+  // Left bag FAB badge: upgrades (green) or bag count
+  const bagBtn = $('btn-bag');
+  const bagBadge = $('bag-badge');
+  if (bagBtn && bagBadge) {
     const gear = normalizeGear(s.meta.gear);
-    const pieces = SLOTS.map((sl) => gear[sl]).filter(Boolean);
-    if (pieces.length) {
-      gp.hidden = false;
-      const show = pieces.slice(0, 3);
-      const key = pieces.map((p) => p.id).join('|');
-      if (gp.dataset.gkey !== key) {
-        gp.dataset.gkey = key;
-        gp.innerHTML =
-          show
-            .map((it) => {
-              const col = rarityColor(it.rarity);
-              return `<span class="gp-ico" style="color:${col}">${gearIcon(it)}</span>`;
-            })
-            .join('') +
-          `<span class="gp-n">${pieces.length}/4</span>`;
-      }
+    s.meta.gear = gear;
+    const bag = gear.bag || [];
+    const n = bag.length;
+    const ups = bag.filter((it) => isUpgrade(gear, it)).length;
+    const eq = equippedCount(gear);
+    bagBtn.classList.toggle('has-up', ups > 0);
+    bagBtn.classList.toggle('active', s.ui.panel === 'gear');
+    bagBtn.title =
+      ups > 0
+        ? `Gear · ${ups} better piece${ups > 1 ? 's' : ''} ready · ${eq}/4`
+        : `Bag · ${n} item${n === 1 ? '' : 's'} · ${eq}/4 equipped`;
+    if (ups > 0) {
+      bagBadge.hidden = false;
+      bagBadge.textContent = ups > 9 ? '9+' : String(ups);
+    } else if (n > 0) {
+      bagBadge.hidden = false;
+      bagBadge.textContent = n > 9 ? '9+' : String(n);
     } else {
-      gp.hidden = true;
-      gp.dataset.gkey = '';
-      gp.innerHTML = '';
+      bagBadge.hidden = true;
+      bagBadge.textContent = '';
     }
   }
 
