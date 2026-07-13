@@ -57,7 +57,8 @@ export const C = {
   ALERT_INTERVAL: 3.2,
   SP_PER_LEVEL: 3,
   SEASON_ZONES: 20,
-  MELEE_RANGE: 54,
+  /** Stop distance from hero center — keep enemies clearly separate (not “worn”) */
+  MELEE_RANGE: 86,
   HIT_FLASH: 0.12,
   MAX_ENEMIES: 1,
   SPAWN_CD_MIN: 0.45,

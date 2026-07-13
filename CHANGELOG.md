@@ -13,6 +13,19 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 - PWA manifest
 - Wire real IAP receipts for APN Pro / coin packs
 
+## [1.5.0] — 2026-07-13
+
+### Changed
+
+- **Title intro**: animated clean brand card (no mascot / no fluff copy)
+- **Gear** in bottom nav + header icon pill (no item-name spam top-right)
+- Gear loadout: mascot + slot chips + cleaner inventory
+- Center loot drop fade polish; one-shot gear tip only
+- Overdrive ON: strong chip + stage vignette + canvas aura
+- Dual-eye scanners always-on idle beams; enemies no longer glued to mascot
+- Sheet panels: bottom nav stays usable, same-tab no longer closes (no flap)
+- Per-item gear icons by name family
+
 ## [1.4.1] — 2026-07-13
 
 ### Changed

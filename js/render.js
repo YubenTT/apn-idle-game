@@ -500,8 +500,9 @@ function drawHero(ctx, x, gy, s, t) {
   const mw = 76;
   const hx = x - recoil;
   // Visor / eye height on Host mascot (facing right after flip)
-  const eyeX = hx + 10;
+  const eyeX = hx + 12;
   const eyeY = footY - mh * 0.64;
+  const overdrive = !!h.deepOn;
 
   // Soft skill auras UNDER the character (no hard ring lines)
   const cy = footY - mh * 0.42;
@@ -516,16 +517,28 @@ function drawHero(ctx, x, gy, s, t) {
     ctx.arc(hx, cy, 36 + st * 22, 0, Math.PI * 2);
     ctx.fill();
   }
-  if (h.deepOn) {
-    const pulse = 0.08 + Math.sin(t * 5) * 0.03;
-    const rg = ctx.createRadialGradient(hx, cy, 6, hx, cy, 42);
-    rg.addColorStop(0, `rgba(252,18,67,${pulse + 0.06})`);
-    rg.addColorStop(0.6, `rgba(252,18,67,${pulse * 0.5})`);
+  // Overdrive — clear crimson field + pulse rings (readable at a glance)
+  if (overdrive) {
+    const pulse = 0.5 + Math.sin(t * 7) * 0.5;
+    const rad = 52 + pulse * 10;
+    const rg = ctx.createRadialGradient(hx, cy, 4, hx, cy, rad);
+    rg.addColorStop(0, `rgba(252,18,67,${0.28 + pulse * 0.1})`);
+    rg.addColorStop(0.45, `rgba(252,18,67,${0.14 + pulse * 0.06})`);
     rg.addColorStop(1, 'rgba(252,18,67,0)');
     ctx.fillStyle = rg;
     ctx.beginPath();
-    ctx.arc(hx, cy, 42, 0, Math.PI * 2);
+    ctx.arc(hx, cy, rad, 0, Math.PI * 2);
     ctx.fill();
+    ctx.strokeStyle = `rgba(255,90,120,${0.22 + pulse * 0.18})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(hx, cy, 28 + pulse * 6, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.strokeStyle = `rgba(252,18,67,${0.12 + pulse * 0.1})`;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(hx, cy, 40 + pulse * 8, 0, Math.PI * 2);
+    ctx.stroke();
   }
   if (h.summaryT > 0) {
     const a = Math.min(1, h.summaryT / 1.2) * 0.12;
@@ -553,38 +566,40 @@ function drawHero(ctx, x, gy, s, t) {
     }
   }
 
-  // Dual eye scanners — beams from visor, not a stick out of the skull
-  const beamLen = 28 + attack * 36;
-  const beamAlpha = 0.55 + attack * 0.4;
-  for (const dy of [-3.5, 3.5]) {
+  // Dual eye scanners — always-on idle beams, punch on attack (never a skull stick)
+  // Reach matches MELEE stop so the beam meets the enemy, not through the mascot body
+  const idlePulse = 0.55 + Math.sin(t * 6) * 0.08;
+  const beamLen = 48 + attack * 42 + (overdrive ? 10 : 0);
+  const beamAlpha = (0.28 + attack * 0.55) * idlePulse + (overdrive ? 0.12 : 0);
+  for (const dy of [-3.2, 3.2]) {
     ctx.save();
     ctx.translate(eyeX, eyeY + dy);
-    // soft eye glow
-    const eg = ctx.createRadialGradient(0, 0, 0, 0, 0, 5);
-    eg.addColorStop(0, `rgba(255,120,140,${0.7 + attack * 0.3})`);
+    // soft eye glow (visor, not a prop stuck on the head)
+    const eg = ctx.createRadialGradient(0, 0, 0, 0, 0, 4.5);
+    eg.addColorStop(0, `rgba(255,140,160,${0.55 + attack * 0.4 + (overdrive ? 0.15 : 0)})`);
     eg.addColorStop(1, 'rgba(252,18,67,0)');
     ctx.fillStyle = eg;
     ctx.beginPath();
-    ctx.arc(0, 0, 5, 0, Math.PI * 2);
+    ctx.arc(0, 0, 4.5, 0, Math.PI * 2);
     ctx.fill();
     // beam core
     const g = ctx.createLinearGradient(0, 0, beamLen, 0);
     g.addColorStop(0, `rgba(252,18,67,${beamAlpha})`);
-    g.addColorStop(0.35, `rgba(255,90,120,${beamAlpha * 0.55})`);
+    g.addColorStop(0.4, `rgba(255,90,120,${beamAlpha * 0.5})`);
     g.addColorStop(1, 'rgba(252,18,67,0)');
     ctx.fillStyle = g;
-    const bh = 1.6 + attack * 1.4;
+    const bh = 1.2 + attack * 1.8 + (overdrive ? 0.4 : 0);
     ctx.beginPath();
-    ctx.moveTo(2, -bh);
-    ctx.lineTo(beamLen, -bh * 0.35);
-    ctx.lineTo(beamLen, bh * 0.35);
-    ctx.lineTo(2, bh);
+    ctx.moveTo(1, -bh);
+    ctx.lineTo(beamLen, -bh * 0.3);
+    ctx.lineTo(beamLen, bh * 0.3);
+    ctx.lineTo(1, bh);
     ctx.closePath();
     ctx.fill();
-    if (attack > 0.35) {
-      ctx.fillStyle = `rgba(255,255,255,${attack * 0.7})`;
+    if (attack > 0.3) {
+      ctx.fillStyle = `rgba(255,255,255,${attack * 0.75})`;
       ctx.beginPath();
-      ctx.arc(beamLen * 0.92, 0, 1.5 + attack * 1.5, 0, Math.PI * 2);
+      ctx.arc(beamLen * 0.9, 0, 1.4 + attack * 1.8, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.restore();
@@ -604,6 +619,22 @@ function drawHero(ctx, x, gy, s, t) {
   }
   ctx.restore();
 
+  // Overdrive crown flare above head (readable status)
+  if (overdrive) {
+    const fl = 0.55 + Math.sin(t * 9) * 0.35;
+    ctx.fillStyle = `rgba(252,18,67,${0.35 + fl * 0.35})`;
+    ctx.beginPath();
+    ctx.moveTo(hx, footY - mh - 4);
+    ctx.lineTo(hx - 7, footY - mh + 8);
+    ctx.lineTo(hx + 7, footY - mh + 8);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = `rgba(255,200,210,${0.5 + fl * 0.4})`;
+    ctx.beginPath();
+    ctx.arc(hx, footY - mh - 2, 2.2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
   // Hit spark at eyes when attacking
   if (attack > 0.5) {
     ctx.fillStyle = `rgba(255,255,255,${(attack - 0.5) * 1.4})`;
@@ -614,12 +645,12 @@ function drawHero(ctx, x, gy, s, t) {
 
   if (s.stats.combo >= 3) {
     ctx.fillStyle = 'rgba(12,16,20,0.82)';
-    roundRect(ctx, hx - 18, footY - mh - 18, 36, 14, 5);
+    roundRect(ctx, hx - 18, footY - mh - 18 - (overdrive ? 10 : 0), 36, 14, 5);
     ctx.fill();
     ctx.fillStyle = '#fc1243';
     ctx.font = '800 11px system-ui,sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(`${s.stats.combo}×`, hx, footY - mh - 7);
+    ctx.fillText(`${s.stats.combo}×`, hx, footY - mh - 7 - (overdrive ? 10 : 0));
   }
 }
 
