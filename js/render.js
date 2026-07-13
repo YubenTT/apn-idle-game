@@ -17,6 +17,23 @@ const sprites = {
 };
 
 const FOOT_PAD = 2;
+export const CANVAS_TONE_TOKENS = Object.freeze({
+  notes: '--c-notes',
+  sp: '--c-sp',
+});
+const canvasToneColors = new Map();
+
+function resolveCanvasPaint(paint) {
+  if (typeof paint === 'string') return paint;
+  const tone = paint?.tone;
+  const token = CANVAS_TONE_TOKENS[tone];
+  if (!token) throw new Error(`Unknown Canvas tone: ${tone || '(missing)'}`);
+  if (canvasToneColors.has(tone)) return canvasToneColors.get(tone);
+  const value = getComputedStyle(document.documentElement).getPropertyValue(token).trim();
+  if (!value) throw new Error(`Missing Canvas color token: ${token}`);
+  canvasToneColors.set(tone, value);
+  return value;
+}
 
 /** 5 biomes — painted midground strips (cached canvas “PNG” look) */
 const BIOMES = [
@@ -329,7 +346,7 @@ export function draw(ctx, w, h, s) {
     ctx.strokeStyle = 'rgba(6,8,10,0.9)';
     ctx.lineJoin = 'round';
     ctx.strokeText(f.text, 0, 0);
-    ctx.fillStyle = f.color;
+    ctx.fillStyle = resolveCanvasPaint(f.color);
     ctx.fillText(f.text, 0, 0);
     ctx.restore();
   }
@@ -789,7 +806,7 @@ function drawParticle(ctx, p) {
   if (p.rot) ctx.rotate(p.rot);
   if (p.kind === 'coin') {
     // diamond / note chip
-    ctx.fillStyle = p.c;
+    ctx.fillStyle = resolveCanvasPaint(p.c);
     ctx.beginPath();
     const r = p.r || 4;
     ctx.moveTo(0, -r);
@@ -817,7 +834,7 @@ function drawConfettiBit(ctx, c) {
   ctx.globalAlpha = a;
   ctx.translate(c.x, c.y);
   ctx.rotate(c.rot);
-  ctx.fillStyle = c.c;
+  ctx.fillStyle = resolveCanvasPaint(c.c);
   ctx.fillRect(-c.w / 2, -c.h / 2, c.w, c.h);
   ctx.restore();
 }

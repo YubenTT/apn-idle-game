@@ -317,6 +317,9 @@ function tip(s, id) {
   s.ui.pendingTip = id;
 }
 
+// Domain events carry a semantic visual role; render.js owns the CSS token value.
+const tone = (role) => ({ tone: role });
+
 function floater(s, x, y, text, color, big = false) {
   s.world.floaters.push({
     x: x + (Math.random() - 0.5) * 18,
@@ -433,7 +436,7 @@ function grantXp(s, amount) {
     h.level += 1;
     h.sp += C.SP_PER_LEVEL;
     floater(s, s.world.heroX, 150, `RANK ${h.level}`, '#10B981', true);
-    floater(s, s.world.heroX + 20, 175, `+${C.SP_PER_LEVEL} SP`, '#FC1243', true);
+    floater(s, s.world.heroX + 20, 175, `+${C.SP_PER_LEVEL} SP`, tone('sp'), true);
     toast(s, pick(LEVEL_LINES) + ` (+${C.SP_PER_LEVEL} SP)`);
     tip(s, 'level');
     particles(s, s.world.heroX, 200, '#FC1243', 18);
@@ -495,9 +498,9 @@ function onKill(s, e) {
   if (e.type === 'patch') {
     const p = C.PATCH_FROM_CHAMP * patchM;
     s.run.patches += p;
-    floater(s, e.displayX, 135, `+${p | 0} Notes`, '#FC1243', true);
-    particles(s, e.displayX, 150, '#FC1243', 20, 'coin');
-    confetti(s, e.displayX, 180, ['#FC1243', '#ff6b8a', '#fff', '#e6b84d'], 24);
+    floater(s, e.displayX, 135, `+${p | 0} Notes`, tone('notes'), true);
+    particles(s, e.displayX, 150, tone('notes'), 20, 'coin');
+    confetti(s, e.displayX, 180, [tone('notes'), '#fff', '#e6b84d'], 24);
     tip(s, 'patch');
     s.ui.chipPulse.patches = 0.45;
   }
@@ -915,7 +918,7 @@ export function allocSkill(s, id) {
   if (id === 'live_tracker') s.run.hero.trackerOn = true;
   s.ui.panelDirty = true;
   confetti(s, s.world.heroX, 190, ['#FC1243', '#fff', '#3ecf8e'], 16);
-  floater(s, s.world.heroX, 145, `${d.name} ·${cost}SP`, '#FC1243', true);
+  floater(s, s.world.heroX, 145, `${d.name} ·${cost}SP`, tone('sp'), true);
   if (s.settings.sfx !== false) sfx('buy');
   return true;
 }

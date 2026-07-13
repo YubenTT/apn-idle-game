@@ -453,7 +453,7 @@ function fillShip(s) {
   const eco = economyMult(s);
   el.className = 'ship-stats compact';
   el.innerHTML = [
-    row('Notes', formatNum(notes), notes > 0 ? 'hi' : ''),
+    row('Notes', formatNum(notes), notes > 0 ? 'hi' : '', 'notes'),
     row('→ Rep', `+${formatNum(gain)}`, gain > 0 ? 'hi' : ''),
     row('Mult', `×${eco.toFixed(2)}`, ''),
     seasonReady
@@ -464,8 +464,11 @@ function fillShip(s) {
   if (leave) leave.hidden = !seasonReady;
 }
 
-function row(k, v, cls = '') {
-  return `<div class="ship-row ${cls === 'hi' ? 'ready' : ''}"><span class="k">${k}</span><span class="v ${cls}">${v}</span></div>`;
+function row(k, v, cls = '', tone = '') {
+  const classes = ['ship-row'];
+  if (cls === 'hi') classes.push('ready');
+  if (tone) classes.push(`t-${tone}`);
+  return `<div class="${classes.join(' ')}"><span class="k">${k}</span><span class="v ${cls}">${v}</span></div>`;
 }
 
 function reqBadges(req, h) {
