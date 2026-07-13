@@ -15,7 +15,7 @@ import {
   lerp,
   isSeasonCheckpoint,
 } from './formulas.js';
-import { SEASON, META, SKILLS, ENEMY_FLAVOR } from './content.js';
+import { SEASON, META, SKILLS, ENEMY_FLAVOR, PREMIUM } from './content.js';
 import {
   killLine,
   pick,
@@ -50,6 +50,13 @@ export function createState() {
       postsShippedTotal: 0,
       /** Permanent loadout — survives End Season */
       gear: emptyGear(),
+      /**
+       * Monetization surface (survives End Season).
+       * pro: permanent APN Pro mult
+       * coins: premium soft currency (bosses/ships/IAP packs)
+       * boostEndsAt: ms timestamp for timed 2× boost
+       */
+      premium: { pro: false, coins: 0, boostEndsAt: 0 },
     },
     authority: {
       amount: 0,
@@ -72,7 +79,6 @@ export function createState() {
         mana: C.MANA_MAX,
         scanner: 0,
         skills: {},
-        mask: null,
         trackerOn: false,
         deepOn: false,
         trackerStacks: 0,
@@ -131,22 +137,41 @@ export function metaPer(s, id) {
   return d.per * metaLv(s, id);
 }
 
-/** True when sprint is active and has fuel (or free-sprint mask) */
+/** Hold-sprint only when energy remains */
 export function isSprinting(s) {
-  const free = s.run.hero.mask === 'editor_pick';
-  if (free) return true;
   return !!(s.world.sprinting && s.run.hero.energy > 0.5);
 }
 
-/** External input: hold canvas / Sprint button / Space */
 export function setSprint(s, on) {
   s.world.sprinting = !!on;
-  if (on && s.run.hero.energy <= 0.5 && s.run.hero.mask !== 'editor_pick') {
-    // will toast from step if they keep holding empty
-    s.ui.sprintWanted = true;
-  } else {
-    s.ui.sprintWanted = !!on;
-  }
+  s.ui.sprintWanted = !!on && s.run.hero.energy <= 0.5 ? true : !!on;
+}
+
+/** Ensure premium blob exists (save migration) */
+export function ensurePremium(s) {
+  if (!s.meta.premium) s.meta.premium = { pro: false, coins: 0, boostEndsAt: 0 };
+  if (typeof s.meta.premium.coins !== 'number') s.meta.premium.coins = 0;
+  if (typeof s.meta.premium.boostEndsAt !== 'number') s.meta.premium.boostEndsAt = 0;
+  return s.meta.premium;
+}
+
+/** Live × Pro × timed 2× — multiplies damage + Signal/Notes income */
+export function economyMult(s) {
+  ensurePremium(s);
+  let m = Math.max(1, s.meta.live || 1);
+  if (s.meta.premium.pro) m *= PREMIUM.pro.mult;
+  if (s.meta.premium.boostEndsAt > Date.now()) m *= PREMIUM.boost_2x.mult;
+  return m;
+}
+
+export function boostActive(s) {
+  ensurePremium(s);
+  return s.meta.premium.boostEndsAt > Date.now();
+}
+
+export function boostSecondsLeft(s) {
+  ensurePremium(s);
+  return Math.max(0, (s.meta.premium.boostEndsAt - Date.now()) / 1000);
 }
 
 export function combatStats(s) {
@@ -154,13 +179,16 @@ export function combatStats(s) {
   const g = gearBonuses(s.meta.gear);
   const flat = metaPer(s, 'cold_start') + (g.flat_dmg || 0);
   let dmg = scannerDamage(h.scanner, flat);
-  dmg *= 1 + 0.022 * h.scan;
+  dmg *= 1 + 0.024 * h.scan;
   dmg *= 1 + metaPer(s, 'signal_power');
   dmg *= 1 + (g.dmg_pct || 0) / 100;
-  // Live Mult is permanent prestige power — must move combat, not only Rep
-  dmg *= Math.max(1, s.meta.live || 1);
+  dmg *= economyMult(s);
 
-  let crit = Math.min(0.65, 0.011 * h.verify + (g.crit_pct || 0) / 100);
+  const sharp = skillLv(s, 'sharp_eye');
+  let crit = Math.min(
+    0.7,
+    0.012 * h.verify + (g.crit_pct || 0) / 100 + 0.02 * sharp
+  );
   let interval = C.ATTACK_INTERVAL / (1 + (g.atk_spd || 0) / 100);
   let move = C.MOVE_SPEED * (1 + metaPer(s, 'feed_speed')) * (1 + (g.move_pct || 0) / 100);
   let eMax = C.ENERGY_MAX + 4 * h.verify + (g.energy || 0);
@@ -176,40 +204,34 @@ export function combatStats(s) {
   const notify = skillLv(s, 'notify');
   const tracker = skillLv(s, 'live_tracker');
   const deep = skillLv(s, 'deep_dive');
-  const freeSprint = h.mask === 'editor_pick';
+  const marathon = skillLv(s, 'marathon');
   const sprintOn = isSprinting(s);
 
   if (scroll) {
-    interval /= 1 + 0.03 * scroll;
-    sprintDrain *= Math.max(0.5, 1 - 0.03 * scroll);
+    interval /= 1 + 0.032 * scroll;
+    sprintDrain *= Math.max(0.45, 1 - 0.035 * scroll);
   }
-  if (amp) skillMult *= 1.1 + 0.04 * amp;
-  if (notify) eRegen += 0.4 * notify;
-
-  if (h.mask === 'verified_mask') {
-    crit = 1;
-    dmg *= 1.22;
-  }
-  if (freeSprint) {
-    eRegen += 10;
-    move *= 1.12;
-    timeScale = Math.max(timeScale, 1.25);
+  if (amp) skillMult *= 1.08 + 0.045 * amp;
+  if (notify) eRegen += 0.45 * notify;
+  if (marathon) {
+    eRegen += 0.55 * marathon;
+    sprintDrain *= Math.max(0.4, 1 - 0.05 * marathon);
   }
 
   if (sprintOn) {
-    timeScale = freeSprint ? Math.max(C.SPRINT_TIME, 1.5) : C.SPRINT_TIME;
+    timeScale = C.SPRINT_TIME;
     interval /= C.SPRINT_ATK;
-    move *= freeSprint ? 1.25 : C.SPRINT_MULT;
+    move *= C.SPRINT_MULT;
     dmg *= C.SPRINT_DMG;
   }
 
   if (h.trackerOn && tracker > 0) {
-    const cap = 0.45 + 0.12 * tracker;
+    const cap = 0.42 + 0.11 * tracker;
     dmg *= 1 + Math.min(cap, h.trackerStacks) * skillMult;
   }
   if (h.deepOn && deep > 0) {
-    dmg *= (1.55 + 0.08 * deep) * skillMult;
-    eRegen -= 5.5;
+    dmg *= (1.48 + 0.075 * deep) * skillMult;
+    eRegen -= 5.2;
   }
 
   return {
@@ -229,6 +251,7 @@ export function combatStats(s) {
     tracker,
     deep,
     gear: g,
+    economy: economyMult(s),
     summary: skillLv(s, 'summary_burst'),
     hotfix: skillLv(s, 'hotfix'),
   };
@@ -388,7 +411,9 @@ function onKill(s, e) {
 
   const zone = s.run.zone;
   const gb = gearBonuses(s.meta.gear);
-  const byteM = (1 + metaPer(s, 'byte_gain')) * (1 + (gb.signal_pct || 0) / 100);
+  const eco = economyMult(s);
+  const byteM =
+    (1 + metaPer(s, 'byte_gain')) * (1 + (gb.signal_pct || 0) / 100) * eco;
   let typeByte = 1;
   let typeXp = 1;
   if (e.type === 'lag' || e.type === 'spoiler' || e.type === 'event') {
@@ -416,7 +441,8 @@ function onKill(s, e) {
   const xpM = (1 + metaPer(s, 'xp_posts')) * (1 + metaPer(s, 'xp_global'));
   grantXp(s, C.XP_BASE * (1 + 0.11 * zone) * typeXp * xpM * comboMult);
 
-  const patchM = (1 + metaPer(s, 'patch_gain')) * (1 + (gb.notes_pct || 0) / 100);
+  const patchM =
+    (1 + metaPer(s, 'patch_gain')) * (1 + (gb.notes_pct || 0) / 100) * eco;
   if (e.type === 'patch') {
     const p = C.PATCH_FROM_CHAMP * patchM;
     s.run.patches += p;
@@ -431,6 +457,9 @@ function onKill(s, e) {
     s.meta.bosses += 1;
     s.world.bossActive = false;
     s.world.bossTimer = 0;
+    ensurePremium(s);
+    s.meta.premium.coins += PREMIUM.coinsPerBoss;
+    floater(s, e.displayX, 80, `+${PREMIUM.coinsPerBoss} coins`, '#e6b84d');
     toast(s, pick(BOSS_WIN));
     floater(s, e.displayX, 115, 'GATE CLEARED', '#FF2F4B', true);
     confetti(s, e.displayX, 170, ['#FC1243', '#FF2F4B', '#e6b84d', '#fff'], 40);
@@ -546,9 +575,8 @@ export function step(s, dt) {
   const h = s.run.hero;
 
   // resources — regen pauses slightly while sprinting so drain feels real
-  const freeSprint = h.mask === 'editor_pick';
   const sprintOn = isSprinting(s);
-  const eRegenNow = sprintOn && !freeSprint ? st.eRegen * 0.25 : st.eRegen;
+  const eRegenNow = sprintOn ? st.eRegen * 0.25 : st.eRegen;
   h.energy = clamp(h.energy + eRegenNow * dt, 0, st.eMax);
   h.mana = clamp(h.mana + st.mRegen * dt, 0, st.mMax);
   h.attackAnim = Math.max(0, h.attackAnim - dt * 4);
@@ -564,7 +592,7 @@ export function step(s, dt) {
   if (h.summaryT > 0) h.summaryT -= dt;
 
   // sprint drain + empty feedback
-  if (s.world.sprinting && !freeSprint) {
+  if (s.world.sprinting) {
     if (h.energy > 0) {
       h.energy = Math.max(0, h.energy - st.sprintDrain * dt);
       s.ui.sprintEmptyToast = false;
@@ -809,7 +837,7 @@ export function allocAttr(s, attr) {
   s.run.hero[attr] += 1;
   s.ui.panelDirty = true;
   confetti(s, s.world.heroX, 200, ['#FC1243', '#e6b84d', '#5eb0ff', '#fff'], 14);
-  const lab = attr === 'scan' ? 'DAMAGE' : attr === 'verify' ? 'CRIT' : 'SKILLS';
+  const lab = attr === 'scan' ? 'DAMAGE' : attr === 'verify' ? 'CRIT' : 'UTILITY';
   floater(s, s.world.heroX, 140, `+${lab}`, '#e6b84d');
   if (s.settings.sfx !== false) sfx('buy');
   return true;
@@ -820,11 +848,10 @@ export function allocSkill(s, id) {
   const d = SKILLS[id];
   s.run.hero.sp -= 1;
   s.run.hero.skills[id] = (s.run.hero.skills[id] || 0) + 1;
-  if (d.type === 'mask') s.run.hero.mask = id;
   if (id === 'live_tracker') s.run.hero.trackerOn = true;
   s.ui.panelDirty = true;
-  confetti(s, s.world.heroX, 190, [d.accent || '#3ecf8e', '#fff', '#FC1243'], 18);
-  floater(s, s.world.heroX, 145, d.name, d.accent || '#3ecf8e', true);
+  confetti(s, s.world.heroX, 190, ['#FC1243', '#fff', '#3ecf8e'], 16);
+  floater(s, s.world.heroX, 145, d.name, '#FC1243', true);
   if (s.settings.sfx !== false) sfx('buy');
   return true;
 }
@@ -837,14 +864,14 @@ export function buyScanner(s) {
   toast(s, pick(SCANNER_LINES) + ` (Lv ${s.run.hero.scanner})`);
   particles(s, s.world.heroX, 200, '#FC1243', 16);
   confetti(s, s.world.heroX, 190, ['#FC1243', '#ff6b8a', '#fff'], 16);
-  floater(s, s.world.heroX, 150, `WEAPON Lv ${s.run.hero.scanner}`, '#FC1243', true);
+  floater(s, s.world.heroX, 150, `SIGNAL Lv ${s.run.hero.scanner}`, '#FC1243', true);
   s.ui.chipPulse = s.ui.chipPulse || {};
   s.ui.chipPulse.bytes = 0.3;
   if (s.settings.sfx !== false) sfx('upgrade');
   return true;
 }
 
-/** Convert banked Notes → permanent Reputation (not CMS “publish”). */
+/** Convert banked Notes → permanent Reputation */
 export function shipPatches(s) {
   const p = Math.floor(s.run.patches);
   if (p < 1) {
@@ -852,12 +879,15 @@ export function shipPatches(s) {
     tip(s, 'ship');
     return false;
   }
-  const gained = Math.floor(p * C.SHIP_RATE * s.meta.live);
+  // Live Mult already in economy; ship payout uses live × pro × boost via economyMult / live
+  const gained = Math.floor(p * C.SHIP_RATE * economyMult(s));
   s.run.patches = 0;
   s.authority.amount += gained;
   s.authority.shippedThisSeason += gained;
   s.meta.ships += 1;
   s.meta.postsShippedTotal += gained;
+  ensurePremium(s);
+  s.meta.premium.coins += PREMIUM.coinsPerShip;
   s.run.hero.energy = combatStats(s).eMax;
   toast(s, pick(SHIP_LINES) + ` (+${gained} Rep)`);
   tip(s, 'ship');
@@ -919,8 +949,7 @@ export function leaveSeason(s) {
   h.sp = 0;
   h.scan = h.verify = h.amplify = 0;
   h.skills = {};
-  h.mask = null;
-  h.scanner = 0; // Signal weapon level is season-only
+  h.scanner = 0; // Signal level is season-only
   h.energy = C.ENERGY_MAX;
   h.mana = C.MANA_MAX;
   h.trackerOn = false;
@@ -930,9 +959,11 @@ export function leaveSeason(s) {
   s.world.bossActive = false;
   s.world.attackCd = 0;
   s.ui.seasonDone = false;
+  ensurePremium(s);
+  s.meta.premium.coins += PREMIUM.coinsPerSeason;
   toast(
     s,
-    `New season! Live ×${s.meta.live.toFixed(2)} (+${gain.toFixed(3)}). Gear & Boosts kept · Signal weapon reset.`
+    `New season! Live ×${s.meta.live.toFixed(2)} (+${gain.toFixed(3)}). Gear · Boosts · Pro kept · Signal Lv reset · +${PREMIUM.coinsPerSeason} coins`
   );
   s.ui.panelDirty = true;
   confetti(s, s.world.heroX, 180, ['#e6b84d', '#FC1243', '#fff', '#3ecf8e'], 36);
@@ -949,7 +980,54 @@ export function equipGear(s, itemId) {
   return true;
 }
 
-export { gearBonuses, rarityColor, rarityLabel };
+/** Unlock APN Pro (IAP hook — demo unlock in Menu) */
+export function unlockPro(s) {
+  ensurePremium(s);
+  if (s.meta.premium.pro) {
+    toast(s, 'APN Pro already active');
+    return false;
+  }
+  s.meta.premium.pro = true;
+  toast(s, `APN Pro unlocked · permanent ×${PREMIUM.pro.mult} economy`);
+  tip(s, 'premium');
+  s.ui.panelDirty = true;
+  confetti(s, s.world.heroX, 180, ['#e6b84d', '#FC1243', '#fff'], 28);
+  if (s.settings.sfx !== false) sfx('rank');
+  return true;
+}
+
+/** Buy timed 2× boost with coins */
+export function buyBoost2x(s) {
+  ensurePremium(s);
+  const cost = PREMIUM.boost_2x.coinCost;
+  if (s.meta.premium.coins < cost) {
+    toast(s, `Need ${cost} coins (earn from bosses & ships)`);
+    return false;
+  }
+  s.meta.premium.coins -= cost;
+  const add = PREMIUM.boost_2x.minutes * 60 * 1000;
+  const base = Math.max(Date.now(), s.meta.premium.boostEndsAt || 0);
+  s.meta.premium.boostEndsAt = base + add;
+  toast(s, `2× Boost · ${PREMIUM.boost_2x.minutes}m`);
+  s.ui.panelDirty = true;
+  confetti(s, s.world.heroX, 180, ['#e6b84d', '#fff'], 20);
+  if (s.settings.sfx !== false) sfx('upgrade');
+  return true;
+}
+
+/** Mock coin pack purchase (IAP stub) */
+export function buyCoinPack(s, packId) {
+  ensurePremium(s);
+  const pack = PREMIUM.packs.find((p) => p.id === packId);
+  if (!pack) return false;
+  s.meta.premium.coins += pack.coins;
+  toast(s, `+${pack.coins} coins (${pack.priceLabel})`);
+  s.ui.panelDirty = true;
+  if (s.settings.sfx !== false) sfx('coin');
+  return true;
+}
+
+export { gearBonuses, rarityColor, rarityLabel, PREMIUM };
 
 export function simulateOffline(s, seconds) {
   const T = Math.min(seconds, C.OFFLINE_CAP);
@@ -966,7 +1044,9 @@ export function simulateOffline(s, seconds) {
   for (let i = 0; i < steps; i++) step(s, C.FIXED_DT);
   const sim = steps * C.FIXED_DT;
   if (T > sim) {
-    const ratio = ((T - sim) / Math.max(sim, 1)) * C.IDLE_EFF;
+    let idle = C.IDLE_EFF;
+    if (s.meta.premium?.pro) idle = Math.min(0.96, idle + 0.06);
+    const ratio = ((T - sim) / Math.max(sim, 1)) * idle;
     const db = Math.max(0, s.run.bytes - before.bytes);
     const dp = Math.max(0, s.run.patches - before.patches);
     s.run.bytes += db * ratio;

@@ -1654,11 +1654,87 @@ body {
 }
 
 .meta-pill.gear-pill {
-  max-width: 120px;
+  max-width: 100px;
   overflow: hidden;
   text-overflow: ellipsis;
   color: #9aa6b5;
   font-size: 10px;
+}
+
+.meta-pill.pro-badge {
+  color: #e6b84d;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  border: 1px solid rgba(230, 184, 77, 0.45);
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(230, 184, 77, 0.1);
+}
+
+.meta-pill.pro-on em {
+  color: #e6b84d;
+}
+
+.premium-card {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #1e2733;
+  background: #0c1014;
+}
+
+.premium-card.owned {
+  border-color: rgba(230, 184, 77, 0.4);
+}
+
+.premium-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.premium-card-top strong {
+  font-size: 13px;
+  font-weight: 800;
+  color: #eef2f6;
+}
+
+.premium-tag {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #e6b84d;
+  background: rgba(230, 184, 77, 0.12);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.premium-list {
+  margin: 0 0 10px;
+  padding: 0 0 0 16px;
+  font-size: 11px;
+  color: #7d8a99;
+  line-height: 1.45;
+}
+
+.premium-list li {
+  margin: 2px 0;
+}
+
+.premium-packs {
+  display: grid;
+  gap: 5px;
+  margin-bottom: 8px;
+}
+
+.premium-card .btn-primary[disabled] {
+  opacity: 0.75;
+  cursor: default;
+  background: #2a3340;
+  box-shadow: none;
 }
 
 /* Sheet CTAs tighter */

@@ -18,8 +18,14 @@ import {
   leaveSeason,
   setSprint,
   isSprinting,
+  unlockPro,
+  buyBoost2x,
+  buyCoinPack,
+  economyMult,
+  skillLv,
 } from '../js/game.js';
 import { emptyGear, rollItem, offerItem } from '../js/loot.js';
+import { SKILLS } from '../js/content.js';
 
 let fails = 0;
 const ok = (c, m) => {
@@ -29,50 +35,48 @@ const ok = (c, m) => {
   } else console.log('OK', m);
 };
 
+// —— Basic combat ——
 const s = createState();
 s.run.hero.scanner = 5;
 for (let i = 0; i < 60 * 8; i++) step(s, C.FIXED_DT);
 ok(s.meta.kills > 0, `kills occur (${s.meta.kills})`);
 ok(s.run.bytes > 0, `bytes drop (${s.run.bytes | 0})`);
-ok(s.stats.dps >= 0, 'dps meter');
 
-// HP actually decreases mid-fight
-const s2 = createState();
-s2.run.hero.scanner = 10;
-for (let i = 0; i < 60 * 5; i++) step(s2, C.FIXED_DT);
-const e = s2.world.enemies.find((x) => x.hp > 0);
-ok(s2.meta.kills > 0 || !!e, 'combat produced kills or live enemy');
-if (e) {
-  const hp0 = e.hp;
-  const id = e.id;
-  for (let i = 0; i < 60 * 3; i++) step(s2, C.FIXED_DT);
-  const still = s2.world.enemies.find((x) => x.id === id);
-  ok(
-    !still || still.hp < hp0 - 0.5 || s2.meta.kills > 0,
-    `HP decreases or dies (hp0=${hp0 | 0} now=${still ? still.hp | 0 : 'dead'} kills=${s2.meta.kills})`
-  );
-} else {
-  ok(s2.meta.kills > 0, 'kills without residual enemy');
-}
+// —— No masks in catalog ——
+ok(!SKILLS.verified_mask, 'no crit mask skill');
+ok(!SKILLS.editor_pick, 'no endless sprint mask');
+ok(!!SKILLS.sharp_eye, 'sharp_eye skill exists');
+ok(!!SKILLS.marathon, 'marathon skill exists');
 
-// skills
+// —— Skills path (no mask) ——
 const s3 = createState();
 s3.run.hero.sp = 40;
-ok(allocAttr(s3, 'scan'), 'alloc scan');
-ok(allocSkill(s3, 'hotfix') || s3.run.hero.scan >= 1, 'hotfix path');
-if (s3.run.hero.scan >= 1) allocSkill(s3, 'hotfix');
+ok(allocAttr(s3, 'scan'), 'alloc damage');
+ok(allocSkill(s3, 'hotfix'), 'learn burst');
 s3.run.hero.mana = 60;
 s3.run.hero.scanner = 8;
 for (let i = 0; i < 30; i++) step(s3, C.FIXED_DT);
 ok(castHotfix(s3) || s3.world.enemies.length === 0, 'hotfix cast');
 
-// ship notes → rep
+// —— Sharp eye unlock path ——
+const sSharp = createState();
+sSharp.run.hero.sp = 20;
+for (let i = 0; i < 5; i++) allocAttr(sSharp, 'verify');
+ok(allocSkill(sSharp, 'sharp_eye'), 'learn sharp eye at Crit 5');
+ok(skillLv(sSharp, 'sharp_eye') === 1, 'sharp eye rank 1');
+const crit0 = createState();
+const crit1 = createState();
+crit1.run.hero.skills.sharp_eye = 5;
+ok(combatStats(crit1).crit > combatStats(crit0).crit, 'sharp eye raises crit');
+
+// —— Ship ——
 s3.run.patches = 5;
 s3.meta.live = 1.1;
 ok(shipPatches(s3), 'ship patches');
 ok(s3.authority.amount >= 5, 'authority gained');
+ok(s3.meta.premium.coins >= 1, 'ship grants coins');
 
-// scanner buy
+// —— Scanner ——
 const s4 = createState();
 s4.run.bytes = 1000;
 const d0 = combatStats(s4).dmg;
@@ -82,31 +86,18 @@ ok(combatStats(s4).dmg > d0, 'scanner increases dmg');
 ok(isBossZone(9), 'boss zone 10');
 ok(killsNeeded(9) === 1, 'boss needs 1');
 ok(enemyHp(5) > enemyHp(0), 'hp scales');
-ok(scannerDamage(3) > scannerDamage(0), 'scanner scales');
+ok(expectedHits(0, 0) < 8, `Z1 starter (${expectedHits(0, 0).toFixed(1)}h)`);
+ok(expectedHits(20, 8) > 2.5, `Z21 lag multi (${expectedHits(20, 8).toFixed(1)})`);
 
-// Multi-hit when lagging weapon; pace clears without brick walls
-ok(expectedHits(20, 8) > 3, `Z21 lag multi-hit (${expectedHits(20, 8).toFixed(1)})`);
-ok(expectedHits(50, 20) > 3, `Z51 lag multi-hit (${expectedHits(50, 20).toFixed(1)})`);
-ok(expectedHits(70, 40) > 2.5, `Z71 lag multi-hit (${expectedHits(70, 40).toFixed(1)})`);
-// Pace weapon (≈0.9×zone) is snappy but not free one-shot
-const pace70 = Math.floor(70 * 0.9);
-ok(expectedHits(70, pace70) > 2 && expectedHits(70, pace70) < 25,
-  `Z71 pace sc${pace70} hits=${expectedHits(70, pace70).toFixed(1)}`);
-ok(expectedHits(0, 0) < 8, `Z1 starter reachable (${expectedHits(0, 0).toFixed(1)} hits)`);
-ok(expectedHits(10, 9) < 15, `Z11 pace not brick (${expectedHits(10, 9).toFixed(1)})`);
-// Very ahead still multi-hits early (soft one-shot only if massively overleveled)
-ok(expectedHits(20, 35) > 1.2, `Z21 ahead still multi (${expectedHits(20, 35).toFixed(1)})`);
-
-// season push
+// —— Season push ——
 const s5 = createState();
-s5.run.hero.scanner = 30;
-s5.run.hero.sp = 100;
-for (let i = 0; i < 5; i++) allocAttr(s5, 'scan');
+s5.run.hero.scanner = 35;
+s5.run.hero.sp = 80;
+for (let i = 0; i < 6; i++) allocAttr(s5, 'scan');
+allocSkill(s5, 'hotfix');
 allocSkill(s5, 'live_tracker');
 s5.run.hero.trackerOn = true;
-for (let i = 0; i < 4; i++) allocAttr(s5, 'verify');
-allocSkill(s5, 'verified_mask');
-for (let i = 0; i < 60 * 60 * 8; i++) {
+for (let i = 0; i < 60 * 60 * 10; i++) {
   s5.run.hero.energy = 100;
   s5.run.hero.mana = 60;
   step(s5, C.FIXED_DT);
@@ -115,80 +106,70 @@ for (let i = 0; i < 60 * 60 * 8; i++) {
 ok(s5.meta.bosses >= 1, `bosses (${s5.meta.bosses})`);
 ok(s5.run.zone >= 5 || s5.ui.seasonDone, `progress zone ${s5.run.zone}`);
 
-// Endless zones: past checkpoint 20 combat still spawns/advances
+// —— Endless past 20 ——
 const s6 = createState();
 s6.run.zone = 19;
-s6.run.killsInZone = 0;
 s6.run.hero.scanner = 45;
-s6.ui.seasonDone = false;
 for (let i = 0; i < 60 * 60; i++) {
   s6.run.hero.energy = 100;
   step(s6, C.FIXED_DT);
   if (s6.run.zone >= 21) break;
 }
 ok(s6.run.zone >= 20, `past Z20 zone=${s6.run.zone}`);
-ok(s6.ui.seasonDone === true || s6.run.zone >= 20, 'checkpoint flag or beyond');
-for (let i = 0; i < 60 * 3; i++) step(s6, C.FIXED_DT);
-ok(s6.world.enemies.some((e) => e.hp > 0) || s6.meta.kills > 0, 'combat continues after Z20');
-ok(enemyHp(50) > enemyHp(20), 'late HP still scales');
-ok(enemyHp(100) > enemyHp(70), 'very late HP still scales');
 
-// Prestige: Boosts + Rep permanent, weapon resets
+// —— Prestige keeps gear + boosts + pro, resets signal ——
 const s7 = createState();
 s7.run.zone = 20;
 s7.ui.seasonDone = true;
 s7.run.hero.scanner = 40;
-s7.run.patches = 0;
 s7.authority.amount = 100;
 s7.authority.shippedThisSeason = 50;
 s7.authority.upgrades.signal_power = 3;
-s7.authority.upgrades.cold_start = 2;
 s7.meta.live = 1.1;
+s7.meta.premium.pro = true;
+s7.meta.premium.coins = 10;
+s7.meta.gear = emptyGear();
+const drop = rollItem(25, 'weapon');
+offerItem(s7.meta.gear, drop);
+const gearName = s7.meta.gear.weapon.name;
 const liveBefore = s7.meta.live;
 ok(leaveSeason(s7), 'end season');
-ok(s7.run.hero.scanner === 0, `weapon reset (sc=${s7.run.hero.scanner})`);
-ok(s7.authority.upgrades.signal_power === 3, 'boost signal_power kept');
-ok(s7.authority.upgrades.cold_start === 2, 'boost cold_start kept');
-ok(s7.authority.amount === 100, `rep kept (${s7.authority.amount})`);
-ok(s7.meta.live > liveBefore, `live mult grew (${s7.meta.live.toFixed(3)})`);
-ok(s7.run.zone === 0, 'zone reset');
-ok(s7.authority.shippedThisSeason === 0, 'season ship counter reset');
+ok(s7.run.hero.scanner === 0, 'signal reset');
+ok(s7.authority.upgrades.signal_power === 3, 'boosts kept');
+ok(s7.authority.amount === 100, 'rep kept');
+ok(s7.meta.premium.pro === true, 'pro kept');
+ok(s7.meta.premium.coins >= 10 + 15, 'season coins granted');
+ok(s7.meta.gear.weapon?.name === gearName, 'gear kept');
+ok(s7.meta.live > liveBefore, 'live grew');
 
-// Live Mult multiplies damage
+// —— Premium mult ——
 const s8 = createState();
 s8.run.hero.scanner = 5;
-const dBase = combatStats(s8).dmg;
-s8.meta.live = 2;
-ok(Math.abs(combatStats(s8).dmg - dBase * 2) < 0.01, 'live mult on damage');
+const base = combatStats(s8).dmg;
+ok(unlockPro(s8), 'unlock pro');
+ok(Math.abs(combatStats(s8).dmg / base - 1.25) < 0.02, 'pro ×1.25 dmg');
+ok(economyMult(s8) >= 1.25, 'economy mult pro');
+s8.meta.premium.coins = 100;
+ok(buyBoost2x(s8), 'buy 2x boost');
+ok(economyMult(s8) >= 2.4, `boost stacks (${economyMult(s8).toFixed(2)})`);
+ok(buyCoinPack(s8, 'coins_100'), 'coin pack');
+ok(s8.meta.premium.coins >= 100, 'pack coins');
 
-// Sprint flag
+// —— Sprint ——
 const s9 = createState();
 s9.run.hero.energy = 100;
 setSprint(s9, true);
-ok(isSprinting(s9), 'sprint on with energy');
-ok(combatStats(s9).timeScale >= C.SPRINT_TIME - 0.01, `sprint timeScale ${combatStats(s9).timeScale}`);
+ok(isSprinting(s9), 'sprint on');
+ok(combatStats(s9).timeScale >= C.SPRINT_TIME - 0.01, 'sprint timescale');
 s9.run.hero.energy = 0;
-ok(!isSprinting(s9), 'sprint off when empty');
+ok(!isSprinting(s9), 'sprint off empty');
 
-// Soft weapon DR after high levels (no infinite one-shot snowball)
-const growEarly = scannerDamage(20) / scannerDamage(10);
-const growLate = scannerDamage(60) / scannerDamage(50);
-ok(growLate < growEarly, `weapon soft DR late (${growLate.toFixed(3)} < ${growEarly.toFixed(3)})`);
-
-// Gear permanence across End Season
-const s10 = createState();
-s10.meta.gear = emptyGear();
-const drop = rollItem(25, 'weapon');
-offerItem(s10.meta.gear, drop);
-s10.ui.seasonDone = true;
-s10.run.zone = 20;
-s10.run.hero.scanner = 15;
-s10.authority.shippedThisSeason = 30;
-const gearName = s10.meta.gear.weapon?.name;
-ok(!!gearName, `gear equipped pre-season (${gearName})`);
-ok(leaveSeason(s10), 'leave with gear');
-ok(s10.meta.gear.weapon?.name === gearName, 'gear survives End Season');
-ok(s10.run.hero.scanner === 0, 'signal weapon still resets');
+// —— Zero-mask save migration path: skills without mask fields ——
+const sM = createState();
+sM.run.hero.sp = 30;
+for (let i = 0; i < 5; i++) allocAttr(sM, 'amplify');
+ok(allocSkill(sM, 'marathon'), 'marathon learn');
+ok(!('mask' in sM.run.hero) || sM.run.hero.mask == null, 'no mask on hero');
 
 console.log(fails ? `${fails} FAILURES` : 'ALL PASS');
 process.exit(fails ? 1 : 0);

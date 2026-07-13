@@ -9,7 +9,16 @@ import {
   clamp,
   killsNeeded,
 } from './formulas.js';
-import { SEASON, META, SKILLS, TIPS, ATTR_LABEL, ATTR_META } from './content.js';
+import {
+  SEASON,
+  META,
+  SKILLS,
+  SKILL_TREES,
+  TIPS,
+  ATTR_LABEL,
+  ATTR_META,
+  PREMIUM,
+} from './content.js';
 import {
   combatStats,
   allocAttr,
@@ -27,6 +36,13 @@ import {
   equipGear,
   rarityColor,
   rarityLabel,
+  unlockPro,
+  buyBoost2x,
+  buyCoinPack,
+  ensurePremium,
+  economyMult,
+  boostActive,
+  boostSecondsLeft,
 } from './game.js';
 import { formatAffix } from './loot.js';
 import { save, clear } from './save.js';
@@ -175,6 +191,21 @@ export function bindUI(s) {
       renderGear(s);
     }
   });
+
+  $('panel-settings')?.addEventListener('click', (e) => {
+    const t = e.target.closest('[data-premium]');
+    if (!t) return;
+    const act = t.dataset.premium;
+    let ok = false;
+    if (act === 'pro') ok = unlockPro(s);
+    else if (act === 'boost') ok = buyBoost2x(s);
+    else if (act.startsWith('coins_')) ok = buyCoinPack(s, act);
+    if (ok) {
+      save(s);
+      renderPremium(s);
+      if (s.settings.sfx !== false) sfx('click');
+    } else if (s.settings.sfx !== false) sfx('error');
+  });
 }
 
 function popSpend(el) {
@@ -208,12 +239,13 @@ function openSheet(s, panel) {
     const a = document.getElementById('v-attrs');
     if (a) {
       const h = s.run.hero;
-      a.textContent = `Damage ${h.scan} · Crit ${h.verify} · Skills ${h.amplify}`;
+      a.textContent = `Damage ${h.scan} · Crit ${h.verify} · Utility ${h.amplify}`;
     }
     const sx = document.getElementById('chk-sfx');
     if (sx) sx.checked = s.settings.sfx !== false;
     const mo = document.getElementById('chk-motion');
     if (mo) mo.checked = !!s.settings.reducedMotion;
+    renderPremium(s);
   }
 }
 
@@ -228,18 +260,19 @@ function fillShip(s) {
   const el = document.getElementById('ship-info');
   if (!el) return;
   const notes = Math.floor(s.run.patches);
-  const gain = Math.floor(notes * s.meta.live);
+  const gain = Math.floor(notes * economyMult(s));
   const liveNext = liveGain(s.authority.shippedThisSeason);
   const seasonReady = s.ui.seasonDone || s.run.zone >= SEASON.zones;
   const nextZ = SEASON.zones * (Math.floor(s.run.zone / SEASON.zones) + 1);
+  const eco = economyMult(s);
   el.className = 'ship-stats';
   el.innerHTML = [
     row('Notes ready', formatNum(notes), notes > 0 ? 'hi' : ''),
     row('Ship for', `+${formatNum(gain)} Rep`, gain > 0 ? 'hi' : ''),
-    row('Live Mult', `×${s.meta.live.toFixed(2)}`, 'ok'),
+    row('Economy mult', `×${eco.toFixed(2)} (Live×Pro×Boost)`, 'ok'),
     row('Shipped this season', `${formatNum(s.authority.shippedThisSeason)} Rep`, ''),
     seasonReady
-      ? row('End Season', `+${liveNext.toFixed(3)} Live · gear+boosts stay`, 'hi')
+      ? row('End Season', `+${liveNext.toFixed(3)} Live · gear+boosts+pro stay`, 'hi')
       : row('Next checkpoint', `Zone ${nextZ}`, ''),
   ].join('');
   const leave = document.getElementById('btn-leave');
@@ -265,9 +298,47 @@ function typeTag(type) {
     active: 'TAP',
     toggle: 'TOGGLE',
     passive: 'PASSIVE',
-    mask: 'MASK',
   };
   return map[type] || (type || '').toUpperCase();
+}
+
+function skillCard(s, sk) {
+  const h = s.run.hero;
+  const lv = skillLv(s, sk.id);
+  const ok = canLearn(s, sk.id);
+  const maxed = lv >= sk.max;
+  const owned = lv > 0;
+  const pct = Math.round((lv / sk.max) * 100);
+  let state = 'locked';
+  if (maxed) state = 'maxed';
+  else if (ok) state = 'can';
+  else if (owned) state = 'owned';
+
+  let cta = '—';
+  if (maxed) cta = 'Max';
+  else if (ok) cta = '+1 SP';
+  else if (h.sp < 1) cta = 'No SP';
+  else cta = 'Locked';
+
+  const reqs = Object.keys(sk.req || {}).length ? reqBadges(sk.req, h) : '';
+
+  return `
+  <button type="button" class="skill-card ${state}"
+    data-alloc="skill" data-id="${sk.id}" ${maxed ? 'disabled' : ''}>
+    <div class="sk-main">
+      <div class="sk-top">
+        <span class="sk-name">${sk.name}</span>
+        <span class="sk-type t-${sk.type}">${typeTag(sk.type)}</span>
+      </div>
+      <div class="sk-desc">${sk.desc}</div>
+      ${reqs ? `<div class="sk-reqs">${reqs}</div>` : ''}
+      <div class="sk-bar"><i style="width:${pct}%"></i></div>
+    </div>
+    <div class="sk-side">
+      <span class="sk-lv">${lv}<small>/${sk.max}</small></span>
+      <span class="sk-cta">${cta}</span>
+    </div>
+  </button>`;
 }
 
 function renderSkills(s) {
@@ -275,80 +346,105 @@ function renderSkills(s) {
   if (!root) return;
   const h = s.run.hero;
   const hasSp = h.sp > 0;
-  const maskName = h.mask ? SKILLS[h.mask]?.name : '—';
 
   let html = `
   <div class="sp-bank ${hasSp ? 'has-sp' : ''}">
     <div class="sp-bank-left">
       <span class="sp-bank-label">SP</span>
       <strong class="sp-bank-val">${h.sp}</strong>
-      <span class="sp-bank-hint">${hasSp ? 'Tap to spend · 1 SP each' : 'Rank up for SP'}</span>
-    </div>
-    <div class="sp-bank-right">
-      <span class="mask-pill ${h.mask ? 'on' : ''}">
-        <span class="mask-pill-lab">Mask</span>
-        <span class="mask-pill-name">${maskName}</span>
-      </span>
+      <span class="sp-bank-hint">${
+        hasSp
+          ? '1. Attributes · 2. Skills in that tree'
+          : 'Rank up for skill points'
+      }</span>
     </div>
   </div>
 
-  <div class="section-lab">Attributes</div>
+  <div class="section-lab">Attributes · 1 SP</div>
   <div class="attr-row">`;
 
   for (const id of ['scan', 'verify', 'amplify']) {
     const m = ATTR_META[id];
     const val = h[id] || 0;
-    const can = hasSp;
     html += `
-    <button type="button" class="attr-card ${can ? 'can' : 'locked'}" data-alloc="attr" data-id="${id}" title="${m.sub}">
+    <button type="button" class="attr-card ${hasSp ? 'can' : 'locked'}" data-alloc="attr" data-id="${id}" title="${m.sub}">
       <span class="attr-lab">${m.label}</span>
       <span class="attr-lv">${val}</span>
       <span class="attr-plus" aria-hidden="true">+</span>
     </button>`;
   }
 
-  html += `</div>
-  <div class="section-lab">Skills</div>
-  <div class="skill-grid">`;
+  html += `</div>`;
 
-  for (const sk of Object.values(SKILLS)) {
-    const lv = skillLv(s, sk.id);
-    const ok = canLearn(s, sk.id);
-    const maxed = lv >= sk.max;
-    const owned = lv > 0;
-    const pct = Math.round((lv / sk.max) * 100);
-    let state = 'locked';
-    if (maxed) state = 'maxed';
-    else if (ok) state = 'can';
-    else if (owned) state = 'owned';
+  for (const tree of SKILL_TREES) {
+    html += `<div class="section-lab">${tree.label}</div><div class="skill-grid">`;
+    for (const sk of Object.values(SKILLS)) {
+      if (sk.tree !== tree.id) continue;
+      html += skillCard(s, sk);
+    }
+    html += `</div>`;
+  }
+  root.innerHTML = html;
+}
 
-    let cta = '—';
-    if (maxed) cta = 'Max';
-    else if (ok) cta = '+1 SP';
-    else if (h.sp < 1) cta = 'No SP';
-    else cta = 'Locked';
+function renderPremium(s) {
+  const root = document.getElementById('premium-body');
+  if (!root) return;
+  ensurePremium(s);
+  const p = s.meta.premium;
+  const eco = economyMult(s);
+  const boostOn = boostActive(s);
+  const left = boostSecondsLeft(s);
+  const leftM = Math.ceil(left / 60);
 
-    const reqs = Object.keys(sk.req || {}).length ? reqBadges(sk.req, h) : '';
-
+  let html = `
+  <div class="sp-bank rep-bank">
+    <div class="sp-bank-left">
+      <span class="sp-bank-label">Coins</span>
+      <strong class="sp-bank-val gold">${formatNum(p.coins)}</strong>
+      <span class="sp-bank-hint">Economy now ×${eco.toFixed(2)}${
+        boostOn ? ` · 2× ${leftM}m left` : ''
+      }</span>
+    </div>
+  </div>
+  <p class="lead">Optional. Free path is complete — Pro &amp; boosts speed progress.</p>
+  <div class="premium-card ${p.pro ? 'owned' : ''}">
+    <div class="premium-card-top">
+      <strong>APN Pro</strong>
+      <span class="premium-tag">${p.pro ? 'OWNED' : 'ONE-TIME'}</span>
+    </div>
+    <ul class="premium-list">
+      ${PREMIUM.pro.benefits.map((b) => `<li>${b}</li>`).join('')}
+    </ul>
+    <button type="button" class="btn-primary" data-premium="pro" ${p.pro ? 'disabled' : ''}>
+      <span class="btn-primary-title">${p.pro ? 'Pro Active' : 'Unlock APN Pro'}</span>
+      <span class="btn-primary-sub">${p.pro ? `×${PREMIUM.pro.mult} permanent` : 'Demo IAP · permanent mult'}</span>
+    </button>
+  </div>
+  <div class="premium-card">
+    <div class="premium-card-top">
+      <strong>2× Boost</strong>
+      <span class="premium-tag">${PREMIUM.boost_2x.coinCost} coins</span>
+    </div>
+    <p class="fine" style="margin:6px 0 10px">${PREMIUM.boost_2x.desc}</p>
+    <button type="button" class="btn-ghost" data-premium="boost" style="margin-top:0">
+      ${boostOn ? `Extend 2× (+${PREMIUM.boost_2x.minutes}m)` : `Activate 2× · ${PREMIUM.boost_2x.minutes}m`}
+    </button>
+  </div>
+  <div class="section-lab">Coin packs · demo IAP</div>
+  <div class="premium-packs">`;
+  for (const pack of PREMIUM.packs) {
     html += `
-    <button type="button" class="skill-card ${state} ${sk.type === 'mask' ? 'is-mask' : ''}"
-      data-alloc="skill" data-id="${sk.id}" ${maxed ? 'disabled' : ''}>
-      <div class="sk-main">
-        <div class="sk-top">
-          <span class="sk-name">${sk.name}</span>
-          <span class="sk-type t-${sk.type}">${typeTag(sk.type)}</span>
-        </div>
-        <div class="sk-desc">${sk.desc}</div>
-        ${reqs ? `<div class="sk-reqs">${reqs}</div>` : ''}
-        <div class="sk-bar"><i style="width:${pct}%"></i></div>
+    <button type="button" class="gear-item" data-premium="${pack.id}">
+      <div>
+        <div class="gi-name">+${pack.coins} coins</div>
+        <div class="gi-meta">${pack.priceLabel}${pack.tag ? ` · ${pack.tag}` : ''}</div>
       </div>
-      <div class="sk-side">
-        <span class="sk-lv">${lv}<small>/${sk.max}</small></span>
-        <span class="sk-cta">${cta}</span>
-      </div>
+      <span class="gi-cta">Get</span>
     </button>`;
   }
-  html += '</div>';
+  html += `</div>
+  <p class="fine">Earn free coins: +${PREMIUM.coinsPerBoss}/boss · +${PREMIUM.coinsPerShip}/ship · +${PREMIUM.coinsPerSeason}/season</p>`;
   root.innerHTML = html;
 }
 
@@ -460,9 +556,22 @@ export function renderHUD(s) {
     b.dataset.badge = s.run.hero.sp > 0 ? String(s.run.hero.sp) : '';
   });
   set($('v-zone'), String(s.run.zone + 1));
-  set($('v-live'), s.meta.live.toFixed(2));
+  // Show full economy mult when boost/pro active, else base Live
+  const eco = economyMult(s);
+  set($('v-live'), eco.toFixed(2));
   set($('v-level'), String(h.level));
   set($('v-sp'), String(h.sp));
+  const livePill = document.querySelector('.meta-pill [id="v-live"]')?.parentElement;
+  if (livePill) {
+    livePill.title = `Economy ×${eco.toFixed(2)} (Live ${s.meta.live.toFixed(2)}${
+      s.meta.premium?.pro ? ' · Pro' : ''
+    }${boostActive(s) ? ' · 2×' : ''})`;
+    livePill.classList.toggle('pro-on', !!(s.meta.premium?.pro || boostActive(s)));
+  }
+  const proBadge = $('v-pro');
+  if (proBadge) {
+    proBadge.hidden = !s.meta.premium?.pro;
+  }
   // CTA cost + afford state
   const cost = scannerCost(h.scanner);
   const costEl = $('v-cost');
@@ -519,11 +628,11 @@ export function renderHUD(s) {
   const spBtn = $('btn-sprint');
   if (spBtn) {
     spBtn.classList.toggle('is-active', sprinting);
-    spBtn.classList.toggle('is-empty', h.energy < 1 && h.mask !== 'editor_pick');
+    spBtn.classList.toggle('is-empty', h.energy < 1);
     const sub = spBtn.querySelector('.btn-sprint-sub');
     if (sub) {
       if (sprinting) set(sub, `×${(st.timeScale || 1.85).toFixed(2)} LIVE`);
-      else if (h.energy < 1 && h.mask !== 'editor_pick') set(sub, 'Need energy');
+      else if (h.energy < 1) set(sub, 'Need energy');
       else set(sub, 'Hold · ×1.85 speed');
     }
   }

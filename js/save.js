@@ -7,6 +7,7 @@ export function save(s) {
     meta: {
       ...s.meta,
       gear: s.meta.gear || { weapon: null, armor: null, bag: [] },
+      premium: s.meta.premium || { pro: false, coins: 0, boostEndsAt: 0 },
     },
     authority: s.authority,
     run: {
@@ -46,7 +47,7 @@ export function load() {
 export function apply(s, d) {
   if (!d) return 0;
   Object.assign(s.meta, d.meta || {});
-  // migrate gear
+  // migrate gear + premium
   if (!s.meta.gear) s.meta.gear = { weapon: null, armor: null, bag: [] };
   if (d.meta?.gear) {
     s.meta.gear = {
@@ -54,6 +55,22 @@ export function apply(s, d) {
       armor: d.meta.gear.armor || null,
       bag: Array.isArray(d.meta.gear.bag) ? d.meta.gear.bag : [],
     };
+  }
+  if (!s.meta.premium) s.meta.premium = { pro: false, coins: 0, boostEndsAt: 0 };
+  if (d.meta?.premium) {
+    s.meta.premium = {
+      pro: !!d.meta.premium.pro,
+      coins: d.meta.premium.coins || 0,
+      boostEndsAt: d.meta.premium.boostEndsAt || 0,
+    };
+  }
+  // strip legacy mask skills from save
+  if (s.run.hero) {
+    delete s.run.hero.mask;
+    if (s.run.hero.skills) {
+      delete s.run.hero.skills.verified_mask;
+      delete s.run.hero.skills.editor_pick;
+    }
   }
   if (d.authority) {
     s.authority.amount = d.authority.amount || 0;

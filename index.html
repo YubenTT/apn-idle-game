@@ -7,7 +7,7 @@
     <meta name="color-scheme" content="dark" />
     <title>APN Idle</title>
     <link rel="icon" href="./assets/apn-logo.svg" />
-    <link rel="stylesheet" href="./css/game.css?v=gear1" />
+    <link rel="stylesheet" href="./css/game.css?v=build2" />
   </head>
   <body>
     <div id="app">
@@ -16,7 +16,8 @@
           <strong class="hud-title">APN <span>Idle</span></strong>
           <div class="hud-meta" role="status">
             <span id="v-combo" class="meta-pill combo" hidden></span>
-            <span class="meta-pill" title="Live multiplier"><span class="meta-k">×</span><em id="v-live">1.00</em></span>
+            <span class="meta-pill" title="Economy mult (Live × Pro × Boost)"><span class="meta-k">×</span><em id="v-live">1.00</em></span>
+            <span class="meta-pill pro-badge" id="v-pro" hidden title="APN Pro">PRO</span>
             <span class="meta-pill sp" title="Unspent skill points"><em id="v-sp">0</em><span class="meta-k">sp</span></span>
             <span class="meta-pill gear-pill" id="v-gear-pill" title="Equipped gear"></span>
           </div>
@@ -160,7 +161,7 @@
           <section id="panel-ship" hidden>
             <p class="lead">
               Notes → permanent <strong>Rep</strong> &amp; Boosts.
-              Every 20 zones: End Season for Live Mult. Gear &amp; Boosts stay; Signal Lv resets.
+              End Season: +Live Mult. Gear, Boosts &amp; Pro stay; Signal Lv resets.
             </p>
             <div id="ship-info" class="ship-stats" role="status"></div>
             <button type="button" id="btn-ship" class="btn-primary">
@@ -181,8 +182,10 @@
               <label class="chk"><input type="checkbox" id="chk-motion" /> Reduced motion</label>
               <label class="chk"><input type="checkbox" id="chk-sfx" checked /> Sound effects</label>
             </div>
-            <p class="fine" id="v-attrs">Damage 0 · Crit 0 · Skills 0</p>
-            <p class="fine">Sprint ×1.85 · hover orbs · boss gear permanent · Signal Lv seasonal</p>
+            <p class="fine" id="v-attrs">Damage 0 · Crit 0 · Utility 0</p>
+            <div class="section-lab">Premium</div>
+            <div id="premium-body"></div>
+            <p class="fine">Sprint ×1.85 · hover orbs · gear permanent · Signal Lv seasonal</p>
             <button type="button" id="btn-wipe" class="btn-ghost">New Game</button>
           </section>
         </div>
@@ -207,6 +210,6 @@
       </div>
     </div>
 
-    <script type="module" src="./js/main.js?v=gear1"></script>
+    <script type="module" src="./js/main.js?v=build2"></script>
   </body>
 </html>

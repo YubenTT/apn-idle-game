@@ -35,10 +35,11 @@ export const C = {
   /** Pace scanner ≈ zone * this (player should stay near this) */
   ENEMY_PACE_SCANNER: 0.9,
   /** Hits-to-kill at pace weapon (before attrs/boosts/live) */
-  ENEMY_HITS_BASE: 4.2,
-  ENEMY_HITS_PER_ZONE: 0.055,
-  /** Extra budget for attrs / skills / light boosts (~player power beyond weapon) */
-  ENEMY_POWER_BUDGET: 1.35,
+  // Slightly snappier early, still multi-hit mid/late at pace
+  ENEMY_HITS_BASE: 3.6,
+  ENEMY_HITS_PER_ZONE: 0.06,
+  /** Extra budget for attrs / skills / gear / premium beyond bare weapon */
+  ENEMY_POWER_BUDGET: 1.45,
   ENEMY_HP_STEP_EVERY: 5,
   ENEMY_HP_STEP_BONUS: 0.035,
 
