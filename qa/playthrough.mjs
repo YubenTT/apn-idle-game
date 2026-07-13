@@ -78,7 +78,7 @@ for (let t = 0; t < 40; t++) {
   if (s.run.zone >= 9) break;
 }
 note(
-  `mid: Z${s.run.zone + 1} kills=${s.meta.kills} bosses=${s.meta.bosses} sc=${s.run.hero.scanner} notes=${s.run.patches | 0} gear=${['weapon','head','chest','legs','boots','trinket'].filter((sl)=>s.meta.gear?.[sl]).length}/6`
+  `mid: Z${s.run.zone + 1} kills=${s.meta.kills} bosses=${s.meta.bosses} sc=${s.run.hero.scanner} notes=${s.run.patches | 0} gear=${['weapon','chest','legs','visor'].filter((sl)=>s.meta.gear?.[sl]).length}/4`
 );
 
 // Ship notes if any
@@ -120,15 +120,17 @@ note(
 
 // End season if ready
 if (s.ui.seasonDone || s.run.zone >= 20) {
-  const gearSnap = ['weapon', 'head', 'chest', 'legs', 'boots', 'trinket']
-    .map((sl) => s.meta.gear?.[sl]?.id || null);
+  const gearSnap = ['weapon', 'chest', 'legs', 'visor'].map(
+    (sl) => s.meta.gear?.[sl]?.id || null
+  );
   const pro = s.meta.premium.pro;
   const boosts = { ...s.authority.upgrades };
   leaveSeason(s);
-  const gearAfter = ['weapon', 'head', 'chest', 'legs', 'boots', 'trinket']
-    .map((sl) => s.meta.gear?.[sl]?.id || null);
+  const gearAfter = ['weapon', 'chest', 'legs', 'visor'].map(
+    (sl) => s.meta.gear?.[sl]?.id || null
+  );
   note(
-    `prestige: Z${s.run.zone + 1} sc=${s.run.hero.scanner} live×${s.meta.live.toFixed(2)} gear=${gearAfter.filter(Boolean).length}/6 pro=${s.meta.premium.pro}`
+    `prestige: Z${s.run.zone + 1} sc=${s.run.hero.scanner} live×${s.meta.live.toFixed(2)} gear=${gearAfter.filter(Boolean).length}/4 pro=${s.meta.premium.pro}`
   );
   if (gearSnap.some((id, i) => id && gearAfter[i] !== id)) {
     console.error('FAIL: gear lost on prestige');
@@ -173,7 +175,7 @@ console.log(
       live: s.meta.live,
       pro: s.meta.premium.pro,
       coins: s.meta.premium.coins,
-      gear: ['weapon', 'head', 'chest', 'legs', 'boots', 'trinket'].filter((sl) => s.meta.gear?.[sl]).length,
+      gear: ['weapon', 'chest', 'legs', 'visor'].filter((sl) => s.meta.gear?.[sl]).length,
       economy: economyMult(s),
     },
     null,

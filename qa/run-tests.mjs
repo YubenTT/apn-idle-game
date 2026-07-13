@@ -134,9 +134,9 @@ for (let i = 0; i < 60 * 60; i++) {
 }
 ok(s6.run.zone >= 20, `past Z20 zone=${s6.run.zone}`);
 
-// —— Multi-slot gear ——
-ok(SLOTS.length === 6, '6 gear slots');
-ok(SLOTS.includes('chest') && SLOTS.includes('legs') && SLOTS.includes('boots'), 'armor slots');
+// —— Brand 4-slot gear (Weapon · Chest · Legs · Visor) ——
+ok(SLOTS.length === 4, '4 brand gear slots');
+ok(SLOTS.includes('chest') && SLOTS.includes('legs') && SLOTS.includes('visor'), 'brand armor slots');
 const gSlots = emptyGear();
 for (const slot of SLOTS) {
   const it = rollItem(10, slot);
@@ -156,10 +156,15 @@ ok(!resW.equipped, 'worse weapon stays bag');
 ok(gSlots.weapon?.id === strong.id, 'best weapon kept');
 ok(gSlots.bag.some((x) => x.id === weak.id), 'weak in bag');
 
-// legacy armor → chest migration
-const legacy = ng({ weapon: rollItem(5, 'weapon'), armor: { ...rollItem(5, 'chest'), slot: 'armor' }, bag: [] });
+// legacy armor/head → chest/visor migration
+const legacy = ng({
+  weapon: rollItem(5, 'weapon'),
+  armor: { ...rollItem(5, 'chest'), slot: 'armor' },
+  head: { ...rollItem(5, 'visor'), slot: 'head' },
+  bag: [],
+});
 ok(legacy.chest && legacy.chest.slot === 'chest', 'armor migrates to chest');
-ok(!('armor' in legacy) || legacy.armor == null, 'no armor key needed');
+ok(legacy.visor && legacy.visor.slot === 'visor', 'head migrates to visor');
 
 // sell bag for signal
 const sellG = emptyGear();
@@ -237,12 +242,12 @@ ok(sBox.meta.premium.coins < 500, 'coins spent on boxes');
 // equip / unequip
 const sEq = createState();
 sEq.meta.gear = emptyGear();
-const bagItem = rollItem(8, 'boots');
+const bagItem = rollItem(8, 'legs');
 sEq.meta.gear.bag = [bagItem];
 ok(equipGear(sEq, bagItem.id), 'equip from bag');
-ok(sEq.meta.gear.boots?.id === bagItem.id, 'boots equipped');
-ok(unequipGear(sEq, 'boots'), 'unequip boots');
-ok(!sEq.meta.gear.boots, 'boots empty');
+ok(sEq.meta.gear.legs?.id === bagItem.id, 'legs equipped');
+ok(unequipGear(sEq, 'legs'), 'unequip legs');
+ok(!sEq.meta.gear.legs, 'legs empty');
 ok(sEq.meta.gear.bag.some((x) => x.id === bagItem.id), 'back in bag');
 
 // —— Sprint ——
