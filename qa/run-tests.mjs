@@ -40,6 +40,7 @@ import {
   SLOTS,
   sellFromBag,
   sellValue,
+  primaryStat,
 } from '../js/loot.js';
 import { SKILLS, PREMIUM } from '../js/content.js';
 import { hubOnKill } from '../js/hub.js';
@@ -138,9 +139,25 @@ ok(s6.run.zone >= 20, `past Z20 zone=${s6.run.zone}`);
 ok(SLOTS.length === 4, '4 brand gear slots');
 ok(SLOTS.includes('chest') && SLOTS.includes('legs') && SLOTS.includes('visor'), 'brand armor slots');
 const gSlots = emptyGear();
+const expectPrimary = {
+  weapon: 'Damage',
+  chest: 'Energy',
+  legs: 'Sprint',
+  visor: 'Crit',
+};
 for (const slot of SLOTS) {
   const it = rollItem(10, slot);
   ok(it.slot === slot, `roll ${slot}`);
+  const prim = primaryStat(it);
+  ok(prim.brand === expectPrimary[slot], `${slot} primary=${prim.brand} (want ${expectPrimary[slot]})`);
+  ok(!/defense/i.test(prim.text), `${slot} no Defense label`);
+  // no wrong-slot junk affixes
+  for (const a of it.affixes) {
+    if (slot === 'weapon') ok(['dmg_pct', 'flat_dmg', 'crit_pct', 'atk_spd'].includes(a.key), `weapon affix ${a.key}`);
+    if (slot === 'chest') ok(['energy', 'notes_pct', 'signal_pct'].includes(a.key), `chest affix ${a.key}`);
+    if (slot === 'legs') ok(['move_pct', 'atk_spd', 'e_regen'].includes(a.key), `legs affix ${a.key}`);
+    if (slot === 'visor') ok(['crit_pct', 'signal_pct', 'dmg_pct'].includes(a.key), `visor affix ${a.key}`);
+  }
   offerItem(gSlots, it);
   ok(gSlots[slot]?.id === it.id, `equip ${slot}`);
 }

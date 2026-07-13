@@ -148,12 +148,14 @@ Target Gear sheet (owner mock):
 
 ### Loadout slots (brand)
 
-| Slot | Fantasy | Primary display |
-|------|---------|-----------------|
-| **Weapon** | Scanner stick / beam | Signal / Damage |
-| **Chest** | Vest / mail / plating | Defense (energy shell) |
-| **Legs** | Leggings / greaves | Sprint (move / atk) |
-| **Visor** | Goggles / visor | Signal / Crit |
+| Slot | Fantasy | Stats (real systems only) | Card primary |
+|------|---------|---------------------------|--------------|
+| **Weapon** | Scanner / beam | Damage · Crit · Atk Speed | **Damage** |
+| **Chest** | Vest / shell | Energy · Notes · Signal | **Energy** |
+| **Legs** | Leggings | Sprint (move) · Atk Speed · Regen | **Sprint** |
+| **Visor** | Optics | Crit · Signal · light Damage | **Crit** |
+
+There is **no Defense** — APN Idle has no tank layer. Energy is the sprint stamina pool.
 
 Inventory also holds **modules/charms** (bag-only or future module slot): Arrow Module, Shield Patch, Signal Amp, Archive Charm — sellable junk or equip when slot empty/better.
 
