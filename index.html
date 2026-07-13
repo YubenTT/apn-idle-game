@@ -7,7 +7,7 @@
     <meta name="color-scheme" content="dark" />
     <title>APN Idle</title>
     <link rel="icon" href="./assets/apn-logo.svg" />
-    <link rel="stylesheet" href="./css/game.css?v=hub1" />
+    <link rel="stylesheet" href="./css/game.css?v=gearui1" />
   </head>
   <body>
     <div id="app">
@@ -62,6 +62,7 @@
         </div>
         <canvas id="game"></canvas>
         <div id="toast" hidden></div>
+        <div id="loot-toast" class="loot-toast" hidden aria-live="polite"></div>
       </main>
 
       <section class="hud-bars">
@@ -159,10 +160,7 @@
             <div id="skills-body"></div>
           </section>
           <section id="panel-ship" hidden>
-            <p class="lead">
-              Notes → permanent <strong>Rep</strong> &amp; Boosts.
-              End Season: +Live Mult. Gear, Boosts &amp; Pro stay; Signal Lv resets.
-            </p>
+            <p class="lead">Notes → Rep. End Season keeps Gear, Boosts &amp; Pro.</p>
             <div id="ship-info" class="ship-stats" role="status"></div>
             <button type="button" id="btn-ship" class="btn-primary">
               <span class="btn-primary-title">Ship Notes → Rep</span>
@@ -213,6 +211,6 @@
       </div>
     </div>
 
-    <script type="module" src="./js/main.js?v=hub1"></script>
+    <script type="module" src="./js/main.js?v=gearui1"></script>
   </body>
 </html>

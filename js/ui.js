@@ -62,7 +62,7 @@ import {
   SEASON_MILESTONES,
   hubFeed,
 } from './hub.js';
-import { skillIco, attrIco, metaIco, hubIco } from './icons.js';
+import { skillIco, attrIco, metaIco, hubIco, gearIcon } from './icons.js';
 import { save, clear } from './save.js';
 import { sfx, unlockAudio, setMuted } from './sfx.js';
 
@@ -459,7 +459,7 @@ function renderPremium(s) {
       }</span>
     </div>
   </div>
-  <p class="lead">Optional QoL. Free path stays complete — never paywall zones or gear.</p>
+  <p class="lead">Optional. Free path stays complete.</p>
   <div class="premium-card ${p.pro ? 'owned' : ''}">
     <div class="premium-card-top">
       <span class="premium-ico">${hubIco('pro')}</span>
@@ -611,9 +611,9 @@ function renderHub(s) {
   let html = `
   <div class="hub-hero">
     <div class="hub-hero-copy">
-      <span class="hub-kicker">LIVE EVENT</span>
-      <strong>Balance Protocol</strong>
-      <p>Clear noise. Ship notes. Claim daily rewards.</p>
+      <span class="hub-kicker">HUB</span>
+      <strong>Daily goals</strong>
+      <p>Claim rewards · keep the feed live</p>
     </div>
     <div class="hub-hero-meta">
       <span>Z${s.run.zone + 1}</span>
@@ -676,21 +676,32 @@ function renderHub(s) {
   root.innerHTML = html;
 }
 
-function pieceBlock(label, item) {
+function affixLines(item, max = 3) {
+  return (item?.affixes || [])
+    .slice(0, max)
+    .map((a) => `<span class="gi-aff">${formatAffix(a)}</span>`)
+    .join('');
+}
+
+function equipCard(slot, item) {
+  const lab = slot === 'weapon' ? 'Weapon' : 'Armor';
   if (!item) {
-    return `<div class="gear-slot empty">
-      <div class="gear-slot-lab">${label}</div>
-      <div class="gear-slot-name" style="color:#5c6878">Empty</div>
-      <div class="gear-slot-aff">Bosses drop gear</div>
+    return `
+    <div class="eq-card empty" data-slot="${slot}">
+      <div class="eq-ico muted">${gearIcon({ slot, name: 'empty', rarity: 'white' })}</div>
+      <div class="eq-lab">${lab}</div>
+      <div class="eq-empty">Empty</div>
+      <div class="eq-hint">Boss drop</div>
     </div>`;
   }
   const col = rarityColor(item.rarity);
-  const aff = (item.affixes || []).map((a) => formatAffix(a)).join(' · ');
-  return `<div class="gear-slot">
-    <div class="gear-slot-lab">${label}</div>
-    <div class="gear-slot-r" style="color:${col}">${rarityLabel(item.rarity)} · i${item.ilvl}</div>
-    <div class="gear-slot-name" style="color:${col}">${item.name}</div>
-    <div class="gear-slot-aff">${aff}</div>
+  return `
+  <div class="eq-card r-${item.rarity}" style="--rc:${col}">
+    <div class="eq-ico" style="color:${col}">${gearIcon(item)}</div>
+    <div class="eq-lab">${lab}</div>
+    <div class="eq-rarity" style="color:${col}">${rarityLabel(item.rarity)} · ${item.ilvl}</div>
+    <div class="eq-name" style="color:${col}">${item.name}</div>
+    <div class="eq-affs">${affixLines(item, 3)}</div>
   </div>`;
 }
 
@@ -698,26 +709,43 @@ function renderGear(s) {
   const root = document.getElementById('gear-body');
   if (!root) return;
   const g = s.meta.gear || { weapon: null, armor: null, bag: [] };
+  const wCol = g.weapon ? rarityColor(g.weapon.rarity) : '#3a4656';
+  const aCol = g.armor ? rarityColor(g.armor.rarity) : '#3a4656';
+
   let html = `
-  <p class="lead">Boss drops · <strong>permanent</strong> across seasons. Better score auto-equips.</p>
-  <div class="gear-slots">
-    ${pieceBlock('Weapon', g.weapon)}
-    ${pieceBlock('Armor', g.armor)}
+  <div class="loadout">
+    <div class="loadout-stage">
+      <div class="loadout-glow" style="--wc:${wCol};--ac:${aCol}"></div>
+      <img class="loadout-mascot" src="./assets/mascot-host.png" alt="" width="120" height="120" />
+      <div class="loadout-tags">
+        <span class="ltag" style="color:${wCol}">${g.weapon ? g.weapon.name : 'No weapon'}</span>
+        <span class="ltag" style="color:${aCol}">${g.armor ? g.armor.name : 'No armor'}</span>
+      </div>
+    </div>
+    <div class="eq-row">
+      ${equipCard('weapon', g.weapon)}
+      ${equipCard('armor', g.armor)}
+    </div>
+    <p class="fine loadout-note">Permanent · better score auto-equips · bosses drop gear</p>
   </div>
-  <div class="section-lab">Bag · tap to equip</div>
+  <div class="section-lab">Bag</div>
   <div class="gear-bag">`;
+
   const bag = g.bag || [];
   if (!bag.length) {
-    html += `<p class="fine">No spare gear yet. Clear Version Gates.</p>`;
+    html += `<p class="fine bag-empty">Bag empty — clear Version Gates for drops.</p>`;
   } else {
-    for (const it of bag.slice(0, 16)) {
+    for (const it of bag.slice(0, 20)) {
       const col = rarityColor(it.rarity);
-      const aff = (it.affixes || []).map((a) => formatAffix(a)).slice(0, 2).join(' · ');
+      const top = (it.affixes || [])[0];
       html += `
-      <button type="button" class="gear-item" data-equip="${it.id}">
-        <div>
+      <button type="button" class="gear-item r-${it.rarity}" data-equip="${it.id}" style="--rc:${col}">
+        <div class="gi-ico" style="color:${col}">${gearIcon(it)}</div>
+        <div class="gi-body">
           <div class="gi-name" style="color:${col}">${it.name}</div>
-          <div class="gi-meta">${rarityLabel(it.rarity)} ${it.slot} · i${it.ilvl}${aff ? ` · ${aff}` : ''}</div>
+          <div class="gi-meta">${rarityLabel(it.rarity)} · ${it.slot} · ${it.ilvl}${
+            top ? ` · ${formatAffix(top)}` : ''
+          }</div>
         </div>
         <span class="gi-cta">Equip</span>
       </button>`;
@@ -725,6 +753,50 @@ function renderGear(s) {
   }
   html += '</div>';
   root.innerHTML = html;
+}
+
+/** Center-screen loot drop card */
+function updateLootDrop(s) {
+  const el = document.getElementById('loot-toast');
+  if (!el) return;
+  const drop = s.ui.lootDrop;
+  if (!drop || !drop.item) {
+    if (!el.hidden) {
+      el.classList.remove('show', 'out');
+      el.hidden = true;
+    }
+    return;
+  }
+  const item = drop.item;
+  const col = rarityColor(item.rarity);
+  const life = drop.life || 2.35;
+  const u = drop.t / life;
+  // rebuild content when new drop id
+  if (el.dataset.dropId !== item.id) {
+    el.dataset.dropId = item.id;
+    el.innerHTML = `
+      <div class="loot-card r-${item.rarity}" style="--rc:${col}">
+        <div class="loot-badge">${drop.equipped ? 'Equipped' : 'Bag'}</div>
+        <div class="loot-ico" style="color:${col}">${gearIcon(item)}</div>
+        <div class="loot-rarity" style="color:${col}">${rarityLabel(item.rarity)}</div>
+        <div class="loot-name">${item.name}</div>
+        <div class="loot-aff">${(item.affixes || [])
+          .slice(0, 2)
+          .map((a) => formatAffix(a))
+          .join(' · ')}</div>
+      </div>`;
+    el.hidden = false;
+    el.classList.remove('out');
+    // force reflow for enter anim
+    void el.offsetWidth;
+    el.classList.add('show');
+  }
+  // fade out last 0.4s
+  if (u < 0.22) {
+    el.classList.add('out');
+  } else {
+    el.classList.remove('out');
+  }
 }
 
 export function renderHUD(s) {
@@ -736,6 +808,7 @@ export function renderHUD(s) {
   set($('v-patches'), formatNum(s.run.patches));
   set($('v-auth'), formatNum(s.authority.amount));
   set($('v-dps'), formatNum(Math.max(0, Math.round(s.stats.dps))));
+  updateLootDrop(s);
   // resource chip pulse on gain
   const chips = document.querySelectorAll('.hud-res .chip');
   if (chips[0]) chips[0].classList.toggle('pulse', !!(s.ui.chipPulse && s.ui.chipPulse.bytes > 0));
