@@ -393,7 +393,7 @@ export function renderHUD(s) {
     b.dataset.badge = s.run.hero.sp > 0 ? String(s.run.hero.sp) : '';
   });
   set($('v-zone'), String(s.run.zone + 1));
-  set($('v-live'), `×${s.meta.live.toFixed(2)}`);
+  set($('v-live'), s.meta.live.toFixed(2));
   set($('v-level'), String(h.level));
   set($('v-sp'), String(h.sp));
   // CTA cost + afford state

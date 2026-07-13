@@ -7,7 +7,7 @@
     <meta name="color-scheme" content="dark" />
     <title>APN Idle</title>
     <link rel="icon" href="./assets/apn-logo.svg" />
-    <link rel="stylesheet" href="./css/game.css?v=meta2" />
+    <link rel="stylesheet" href="./css/game.css?v=hud1" />
   </head>
   <body>
     <div id="app">
@@ -16,24 +16,24 @@
           <strong class="hud-title">APN <span>Idle</span></strong>
           <div class="hud-meta" role="status">
             <span id="v-combo" class="meta-pill combo" hidden></span>
-            <span class="meta-pill" title="Current zone"><span class="meta-k">Zone</span> <em id="v-zone">1</em></span>
-            <span class="meta-pill" title="Live multiplier"><span class="meta-k">Live</span> <em id="v-live">×1.00</em></span>
-            <span class="meta-pill" title="Rank"><span class="meta-k">Rank</span> <em id="v-level">1</em></span>
-            <span class="meta-pill sp" title="Unspent skill points"><em id="v-sp">0</em> <span class="meta-k">SP</span></span>
+            <span class="meta-pill" title="Current zone"><span class="meta-k">Z</span> <em id="v-zone">1</em></span>
+            <span class="meta-pill" title="Live multiplier"><span class="meta-k">×</span><em id="v-live">1.00</em></span>
+            <span class="meta-pill" title="Rank"><span class="meta-k">R</span> <em id="v-level">1</em></span>
+            <span class="meta-pill sp" title="Unspent skill points"><em id="v-sp">0</em><span class="meta-k">sp</span></span>
           </div>
         </div>
         <div class="hud-res">
-          <div class="chip" title="Spend on weapon upgrades">
-            <small>SIGNAL</small><strong id="v-bytes">0</strong>
+          <div class="chip" title="Signal — Upgrade Weapon">
+            <strong id="v-bytes">0</strong><small>sig</small>
           </div>
-          <div class="chip" title="Ship Notes → Reputation">
-            <small>NOTES</small><strong id="v-patches">0</strong>
+          <div class="chip" title="Notes — Ship for Rep">
+            <strong id="v-patches">0</strong><small>notes</small>
           </div>
-          <div class="chip" title="Permanent Boosts (never reset)">
-            <small>REP</small><strong id="v-auth">0</strong>
+          <div class="chip" title="Rep — permanent Boosts">
+            <strong id="v-auth">0</strong><small>rep</small>
           </div>
           <div class="chip" title="Damage per second">
-            <small>DPS</small><strong id="v-dps">0</strong>
+            <strong id="v-dps">0</strong><small>dps</small>
           </div>
         </div>
       </header>
@@ -191,6 +191,6 @@
       </div>
     </div>
 
-    <script type="module" src="./js/main.js?v=meta2"></script>
+    <script type="module" src="./js/main.js?v=hud1"></script>
   </body>
 </html>
