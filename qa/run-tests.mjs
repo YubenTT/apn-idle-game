@@ -44,6 +44,7 @@ import {
 } from '../js/loot.js';
 import { SKILLS, PREMIUM } from '../js/content.js';
 import { hubOnKill } from '../js/hub.js';
+import { checkCssTokenContract } from './check-css-tokens.mjs';
 
 function installSeededRandom(seed) {
   let state = seed >>> 0;
@@ -66,6 +67,11 @@ const ok = (c, m) => {
     fails++;
   } else console.log('OK', m);
 };
+
+// —— CSS token contract ——
+for (const check of checkCssTokenContract()) {
+  ok(check.pass, `${check.message} (${check.detail})`);
+}
 
 // —— Basic combat ——
 const s = createState();

@@ -1,7 +1,8 @@
 # Design tokens
 
 > The single source of truth for how APN Idle **looks**. Machine-readable values
-> live in [`tokens.css`](./tokens.css); this file is the *why* and the rules.
+> live in [`tokens.css`](./tokens.css), which is imported by the shipped UI; this
+> file is the *why* and the rules.
 > No screen may introduce a color, size, or radius that isn't a token here.
 
 ## Principle: one color, one job
@@ -31,9 +32,33 @@ overloaded jobs their own hue.
 | **SP** | crimson `#fc1243` | violet `--c-sp #b07cff` | SP badges read as "another red thing." Violet gives skill-points a distinct, ownable identity separate from combat crimson. |
 
 These two are the only **value** changes; everything else is formalization.
-Migration is a find-and-replace when we wire `tokens.css` — tracked in
-[ROADMAP](../docs/ROADMAP.md) and gated by a visual-regression pass
-([QA-CHECKLIST](../docs/QA-CHECKLIST.md)).
+I-001 wired the token layer with exact-value compatibility aliases, so it produced
+no visual change. I-002 applies these two intentional changes as a separate,
+reviewable diff, gated by [QA-CHECKLIST](../docs/QA-CHECKLIST.md).
+
+## Compatibility bridge (I-001)
+
+The pre-redesign CSS used 118 exact color values, while the canonical surface and
+text tiers intentionally describe the destination system. Directly replacing a
+shipped value such as `#0c1014` with `--ink-950 #071019` would have changed the UI
+inside a foundation issue and failed the no-drift gate.
+
+`tokens.css` therefore contains a temporary `--compat-*` group:
+
+- aliases preserve the exact pre-token pixels and are valid only for migrated
+  legacy rules;
+- new or redesigned components use canonical role tokens, never compatibility
+  aliases;
+- each owning screen issue retires its compatibility aliases as that screen moves
+  onto the canonical palette and component scale;
+- every `font-size` now resolves through canonical or exact compatibility type
+  tokens; screen-specific legacy layout geometry stays frozen until its owning
+  redesign issue so I-001 cannot silently reflow the UI.
+
+The zero-dependency `qa/check-css-tokens.mjs` guard enforces the import, rejects raw
+palette literals and font-size lengths in `game.css`, verifies custom-property
+resolution, and prevents the I-002 Notes/SP tokens from being applied early. CSS
+control values `transparent` and `currentColor` remain valid.
 
 ## Full palette
 
@@ -108,13 +133,12 @@ border and a green "affordable" CTA are never adjacent in the same decision.
 Low-contrast grey labels and 1px hairline bars from the current build must be
 raised to these floors — verified in [QA-CHECKLIST](../docs/QA-CHECKLIST.md).
 
-## How tokens get into the code (later, reversible)
+## Runtime and retirement contract
 
-1. `@import "../brand/tokens.css"` at the top of `css/game.css` (or a `<link>` in
-   `index.html`). Additive — nothing breaks.
-2. Swap literals for `var(--…)` file-region by file-region, re-running the visual
-   regression each step.
-3. Apply the two **change** values only when a screen is being redesigned anyway,
-   never as a surprise global flip.
-
-Until then `tokens.css` is a reference contract that design and code agree on.
+1. `css/game.css` imports `../brand/tokens.css` as its first effective rule.
+2. Shipped literals are represented by canonical tokens when values and roles
+   match, otherwise by the exact compatibility bridge above.
+3. `node qa/run-tests.mjs` runs the token guard on every change.
+4. I-002 owns the only two planned global value changes: Notes and SP.
+5. Later screen issues replace compatibility aliases with canonical component
+   tokens and verify portrait + landscape browser evidence in the same PR.

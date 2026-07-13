@@ -24,8 +24,23 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
   - `docs/decisions/` ADRs — **ADR-0001** keep vanilla ES + Canvas 2D (reject
     PixiJS/React rewrite), **ADR-0002** token-driven design system, **ADR-0003**
     GLB single-source mascot
-- Two deliberate token changes staged for the redesign pass (not yet wired): Notes
-  crimson → rose `#ff6a8f`, SP crimson → violet `#b07cff` (de-collide from primary).
+- Runtime design-token foundation: `css/game.css` now imports `brand/tokens.css`;
+  all 532 CSS color literals resolve through canonical or exact-value compatibility
+  tokens, with a zero-dependency headless guard against regression.
+- Two deliberate token changes staged but not yet applied: Notes crimson → rose
+  `#ff6a8f`, SP crimson → violet `#b07cff` (de-collide from primary in I-002).
+
+### Changed
+
+- All font sizes, touch minimums, and safe-area values use exact design tokens.
+  Screen-specific legacy geometry remains unchanged until its owning redesign issue.
+
+### Tests
+
+- Added CSS token-contract checks for first-rule import order, raw color literals,
+  unresolved custom properties, and premature Notes/SP token application.
+- Verified pixel-identical masked Run/Gear chrome against clean `origin/main` at
+  428×926, 375×812, and 844×390 in a real browser.
 
 ### Fixed
 
