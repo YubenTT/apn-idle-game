@@ -283,6 +283,7 @@ every doc + the source-of-truth table (which doc wins on which topic).
 | [NAMING.md](./brand/NAMING.md) | Copy & naming standard |
 | **Screens / production** | |
 | [SCREEN-SPECS.md](./docs/SCREEN-SPECS.md) | Mobile-first per-screen redesign |
+| [REDESIGN-PLAN.md](./docs/REDESIGN-PLAN.md) | Execution plan — sequenced issue backlog |
 | [ART-PIPELINE.md](./docs/ART-PIPELINE.md) | GLB → sprite → atlas → WebP |
 | [PERF-BUDGET.md](./docs/PERF-BUDGET.md) | Load + runtime budgets |
 | [QA-CHECKLIST.md](./docs/QA-CHECKLIST.md) | V1 quality gate |
