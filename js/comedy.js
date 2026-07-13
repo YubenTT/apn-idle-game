@@ -52,10 +52,10 @@ export const LEVEL_LINES = [
 ];
 
 export const SHIP_LINES = [
-  'Published. No rollback this time.',
-  'Notes live. Gamers: “finally.”',
-  'Rep gained. Influencers: sweating.',
-  'Published. Refresh the homepage of life.',
+  'Notes shipped. Reputation permanent.',
+  'Banked. Boosts desk is smiling.',
+  'Rep secured. No refunds, no take-backs.',
+  'Shipped to the feed. Ego +1.',
 ];
 
 export const SCANNER_LINES = [
@@ -66,9 +66,9 @@ export const SCANNER_LINES = [
 ];
 
 export const SPRINT_HINTS = [
-  'Hold to sprint — energy is basically coffee.',
+  'Hold Sprint — whole game runs ×1.85. Energy is coffee.',
   'Tap orbs for energy and Signal.',
-  'Red Patch Notes drop Notes — Publish for Rep.',
+  'Red Patch Notes → Ship for permanent Rep → Boosts.',
 ];
 
 export const TITLE_TAGLINES = [

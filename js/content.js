@@ -21,11 +21,12 @@ export const ATTR_META = {
   amplify: { label: 'Skills', sub: 'skill power', accent: '#5eb0ff' },
 };
 
+/** Permanent meta upgrades — bought with Rep, never wiped on End Season */
 export const META = {
   xp_posts: {
     id: 'xp_posts',
     name: 'Faster Ranks',
-    desc: '+8% Rank XP per kill. Earn skill points sooner.',
+    desc: '+8% Rank XP per kill. Permanent.',
     base: 5,
     growth: 1.42,
     per: 0.08,
@@ -33,15 +34,15 @@ export const META = {
   xp_global: {
     id: 'xp_global',
     name: 'Bonus XP',
-    desc: '+6% all Rank XP.',
+    desc: '+6% all Rank XP. Permanent.',
     base: 5,
     growth: 1.42,
     per: 0.06,
   },
   signal_power: {
     id: 'signal_power',
-    name: 'Weapon Damage',
-    desc: '+5% weapon damage to all noise.',
+    name: 'Signal Power',
+    desc: '+5% damage forever. Stacks with Live Mult.',
     base: 8,
     growth: 1.48,
     per: 0.05,
@@ -49,7 +50,7 @@ export const META = {
   feed_speed: {
     id: 'feed_speed',
     name: 'Move Speed',
-    desc: '+3% march speed toward the next enemy.',
+    desc: '+3% march speed. Permanent.',
     base: 10,
     growth: 1.5,
     per: 0.03,
@@ -57,7 +58,7 @@ export const META = {
   byte_gain: {
     id: 'byte_gain',
     name: 'More Signal',
-    desc: '+5% Signal from kills.',
+    desc: '+5% Signal from kills. Permanent.',
     base: 6,
     growth: 1.38,
     per: 0.05,
@@ -65,7 +66,7 @@ export const META = {
   patch_gain: {
     id: 'patch_gain',
     name: 'More Notes',
-    desc: '+7% Notes from red Patch Notes.',
+    desc: '+7% Notes from red Patch Notes. Permanent.',
     base: 9,
     growth: 1.45,
     per: 0.07,
@@ -73,7 +74,7 @@ export const META = {
   cold_start: {
     id: 'cold_start',
     name: 'Flat Damage',
-    desc: '+3 flat weapon damage. Strong early game.',
+    desc: '+3 flat damage. Permanent early-game edge.',
     base: 12,
     growth: 1.65,
     per: 3,
@@ -194,15 +195,17 @@ export const ENEMY_FLAVOR = {
 };
 
 export const TIPS = {
-  start: 'Kill noise. Grab Notes (red). Publish → Rep → Boosts. Upgrade Weapon with Signal.',
-  kill: 'Spend Signal on Upgrade Weapon for more damage.',
+  start:
+    'Kill noise. Red enemies drop Notes. Ship Notes → permanent Rep → Boosts. Weapon is this season only.',
+  kill: 'Spend Signal on Upgrade Weapon (resets each End Season).',
   level: 'Rank up! Open Build — spend SP on Damage / Crit / Skills.',
-  patch: 'Red Patch Notes drop Notes. Publish them for Rep.',
+  patch: 'Notes banked. Open Ship → convert to permanent Reputation.',
   alert: 'Hover or tap glowing orbs for energy and Signal.',
   boss: 'Version Gate: kill it before the timer or it full-heals.',
-  ship: 'Stuck? Publish Notes → Boosts → keep clearing.',
+  ship: 'Stuck? Ship Notes → buy permanent Boosts → Upgrade Weapon.',
   combo: 'Feed streak! Bonus Signal while the streak holds.',
-  season: 'Checkpoint! Publish Notes, then End Season for permanent Live Mult.',
+  season:
+    'Checkpoint! Ship Notes, then End Season: +Live Mult, Boosts stay, weapon resets.',
 };
 
 /**

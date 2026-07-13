@@ -7,7 +7,7 @@
     <meta name="color-scheme" content="dark" />
     <title>APN Idle</title>
     <link rel="icon" href="./assets/apn-logo.svg" />
-    <link rel="stylesheet" href="./css/game.css?v=hover1" />
+    <link rel="stylesheet" href="./css/game.css?v=meta2" />
   </head>
   <body>
     <div id="app">
@@ -26,10 +26,10 @@
           <div class="chip" title="Spend on weapon upgrades">
             <small>SIGNAL</small><strong id="v-bytes">0</strong>
           </div>
-          <div class="chip" title="Publish for Reputation">
+          <div class="chip" title="Ship Notes → Reputation">
             <small>NOTES</small><strong id="v-patches">0</strong>
           </div>
-          <div class="chip" title="Buy permanent Boosts">
+          <div class="chip" title="Permanent Boosts (never reset)">
             <small>REP</small><strong id="v-auth">0</strong>
           </div>
           <div class="chip" title="Damage per second">
@@ -79,13 +79,13 @@
             <span class="btn-sprint-ico" aria-hidden="true">⚡</span>
             <span class="btn-sprint-txt">
               <span class="btn-sprint-title">Sprint</span>
-              <span class="btn-sprint-sub">Hold · faster hits</span>
+              <span class="btn-sprint-sub">Hold · ×1.85 speed</span>
             </span>
           </button>
           <button type="button" id="btn-scanner" class="btn-primary">
             <span class="btn-primary-title">Upgrade Weapon</span>
             <span class="btn-primary-sub"
-              ><span id="v-cost">12</span> Signal · Damage Lv <span id="v-scanner">0</span></span
+              ><span id="v-cost">14</span> Signal · Lv <span id="v-scanner">0</span> · this season</span
             >
           </button>
         </div>
@@ -111,7 +111,7 @@
           <svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"
             ><path fill="currentColor" d="M4 18h16v2H4v-2zm2-4l4-8 2 4 4-6 4 10H6z"
           /></svg>
-          <span>Publish</span>
+          <span>Ship</span>
         </button>
         <button type="button" data-panel="meta" class="nav-btn">
           <svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"
@@ -146,13 +146,17 @@
             <div id="skills-body"></div>
           </section>
           <section id="panel-ship" hidden>
-            <p class="lead">Cash in Notes → Rep. Every 20 zones: End Season for permanent Live Mult (combat never stops).</p>
+            <p class="lead">
+              Turn red <strong>Notes</strong> into permanent <strong>Reputation</strong>.
+              Spend Rep on <strong>Boosts</strong> (never reset). Every 20 zones you can
+              <strong>End Season</strong> for more Live Mult — weapon &amp; build reset, Boosts stay.
+            </p>
             <pre id="ship-info" class="box"></pre>
             <button type="button" id="btn-ship" class="btn-primary">
-              <span class="btn-primary-title">Publish Notes</span>
-              <span class="btn-primary-sub">Notes → Rep</span>
+              <span class="btn-primary-title">Ship Notes → Rep</span>
+              <span class="btn-primary-sub">Convert banked Notes</span>
             </button>
-            <button type="button" id="btn-leave" class="btn-ghost" hidden>End Season · Live Mult</button>
+            <button type="button" id="btn-leave" class="btn-ghost" hidden>End Season · keep Boosts</button>
           </section>
           <section id="panel-meta" hidden>
             <div id="meta-body"></div>
@@ -162,7 +166,7 @@
             <label class="chk"><input type="checkbox" id="chk-motion" /> Reduced motion</label>
             <label class="chk"><input type="checkbox" id="chk-sfx" checked /> Sound effects</label>
             <p class="fine" id="v-attrs">Damage 0 · Crit 0 · Skills 0</p>
-            <p class="fine">Hold Sprint = faster hits · Hover/tap glowing orbs = energy &amp; Signal</p>
+            <p class="fine">Hold Sprint = ×1.85 game speed · Hover orbs for energy · Weapon resets each season</p>
             <button type="button" id="btn-wipe" class="btn-ghost">New Game</button>
           </section>
         </div>
@@ -173,8 +177,8 @@
       <div class="modal-card">
         <img src="./assets/mascot-title.png" alt="" width="88" height="88" />
         <h1>APN <span>Idle</span></h1>
-        <p id="title-tagline">Clear noise. Publish notes. Stay live.</p>
-        <p class="fine">Auto-clear feed noise, grab Notes, Publish for Rep, stack Live Mult.</p>
+        <p id="title-tagline">Clear noise. Ship notes. Stay live.</p>
+        <p class="fine">Clear feed noise → Notes → Ship for permanent Rep &amp; Boosts → End Season for Live Mult.</p>
         <button type="button" id="btn-start" class="btn-primary">Play</button>
       </div>
     </div>
@@ -187,6 +191,6 @@
       </div>
     </div>
 
-    <script type="module" src="./js/main.js?v=hover1"></script>
+    <script type="module" src="./js/main.js?v=meta2"></script>
   </body>
 </html>

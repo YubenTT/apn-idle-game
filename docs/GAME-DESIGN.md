@@ -12,7 +12,7 @@ and you get stronger the longer the feed stays live.
 | Auto-attack noise | Scrolling / moderating the feed |
 | Upgrade Weapon | Better scanner / tools |
 | Burst / Area / Ramp | Editorial powers (hotfix, summary, live tracker) |
-| Publish Notes | Hitting “publish” on the site |
+| Ship Notes | Banking patch notes → reputation (not CMS publish) |
 | End Season | New content season / Live Mult era |
 
 ## Systems
@@ -22,7 +22,7 @@ and you get stronger the longer the feed stays live.
 - Max **1** living enemy (classic idle clarity).
 - Fixed melee range; enemies walk into range.
 - Auto-attack from `combatStats.interval`.
-- **Sprint (hold):** attack speed ×1.45, damage ×1.1, approach speed up, drains Energy.
+- **Sprint (hold):** full game time scale ×1.85, attack/march juice, shorter spawn gaps, drains Energy.
 - Boss every 10 zones (**Version Gate**) with timer heal-on-fail.
 
 ### Progression
@@ -58,7 +58,7 @@ Ticker   LIVE feed parody (game icons)
 Stage    Canvas combat
 Bars     Rank XP | Zone kills | Energy | Mana
 CTA      Sprint (hold) | Upgrade Weapon | skill chips
-Nav      Build | Publish | Boosts | Menu
+Nav      Build | Ship | Boosts | Menu
 ```
 
 ## Copy rules

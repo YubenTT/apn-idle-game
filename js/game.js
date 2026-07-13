@@ -141,10 +141,12 @@ export function combatStats(s) {
   const h = s.run.hero;
   const flat = metaPer(s, 'cold_start');
   let dmg = scannerDamage(h.scanner, flat);
-  dmg *= 1 + 0.025 * h.scan;
+  dmg *= 1 + 0.022 * h.scan;
   dmg *= 1 + metaPer(s, 'signal_power');
+  // Live Mult is permanent prestige power — must move combat, not only Rep
+  dmg *= Math.max(1, s.meta.live || 1);
 
-  let crit = Math.min(0.7, 0.012 * h.verify);
+  let crit = Math.min(0.65, 0.011 * h.verify);
   let interval = C.ATTACK_INTERVAL;
   let move = C.MOVE_SPEED * (1 + metaPer(s, 'feed_speed'));
   let eMax = C.ENERGY_MAX + 4 * h.verify;
@@ -153,6 +155,7 @@ export function combatStats(s) {
   let mRegen = C.MANA_REGEN + 0.08 * h.amplify;
   let skillMult = 1;
   let sprintDrain = C.SPRINT_DRAIN;
+  let timeScale = 1;
 
   const scroll = skillLv(s, 'scroll_speed');
   const amp = skillLv(s, 'amplify');
@@ -163,34 +166,36 @@ export function combatStats(s) {
   const sprintOn = isSprinting(s);
 
   if (scroll) {
-    interval /= 1 + 0.035 * scroll;
+    interval /= 1 + 0.03 * scroll;
     sprintDrain *= Math.max(0.5, 1 - 0.03 * scroll);
   }
-  if (amp) skillMult *= 1.12 + 0.05 * amp;
+  if (amp) skillMult *= 1.1 + 0.04 * amp;
   if (notify) eRegen += 0.4 * notify;
 
   if (h.mask === 'verified_mask') {
     crit = 1;
-    dmg *= 1.28;
+    dmg *= 1.22;
   }
   if (freeSprint) {
     eRegen += 10;
-    move *= 1.18;
+    move *= 1.12;
+    timeScale = Math.max(timeScale, 1.25); // mild always-on speed with mask
   }
 
-  // Sprint: felt in combat (attack speed + dmg), not only walking
+  // Sprint: real game speed (timeScale) + march/atk juice
   if (sprintOn) {
+    timeScale = freeSprint ? Math.max(C.SPRINT_TIME, 1.5) : C.SPRINT_TIME;
     interval /= C.SPRINT_ATK;
-    move *= freeSprint ? 1.35 : C.SPRINT_MULT;
+    move *= freeSprint ? 1.25 : C.SPRINT_MULT;
     dmg *= C.SPRINT_DMG;
   }
 
   if (h.trackerOn && tracker > 0) {
-    const cap = 0.55 + 0.14 * tracker;
+    const cap = 0.45 + 0.12 * tracker;
     dmg *= 1 + Math.min(cap, h.trackerStacks) * skillMult;
   }
   if (h.deepOn && deep > 0) {
-    dmg *= (1.75 + 0.09 * deep) * skillMult;
+    dmg *= (1.55 + 0.08 * deep) * skillMult;
     eRegen -= 5.5;
   }
 
@@ -206,6 +211,7 @@ export function combatStats(s) {
     skillMult,
     sprintDrain,
     sprintOn,
+    timeScale,
     notify,
     tracker,
     deep,
@@ -435,7 +441,7 @@ function onKill(s, e) {
 
     if (isSeasonCheckpoint(s.run.zone)) {
       s.ui.seasonDone = true;
-      toast(s, `Zone ${s.run.zone} checkpoint! Publish → End Season for Live Mult.`);
+      toast(s, `Zone ${s.run.zone} checkpoint! Ship Notes, then End Season for Live Mult.`);
       tip(s, 'season');
     } else {
       toast(s, `Zone ${s.run.zone + 1}`, 1.4);
@@ -535,8 +541,9 @@ export function step(s, dt) {
   if (s.world.spawnCd <= 0 && alive.length < maxE) {
     const e = spawnEnemy(s);
     if (e) s.world.enemies.push(e);
-    s.world.spawnCd =
-      C.SPAWN_CD_MIN + Math.random() * (C.SPAWN_CD_MAX - C.SPAWN_CD_MIN);
+    let cd = C.SPAWN_CD_MIN + Math.random() * (C.SPAWN_CD_MAX - C.SPAWN_CD_MIN);
+    if (sprintOn) cd *= C.SPRINT_SPAWN; // shorter gaps while sprinting
+    s.world.spawnCd = cd;
   }
 
   // alerts
@@ -790,6 +797,7 @@ export function buyScanner(s) {
   return true;
 }
 
+/** Convert banked Notes → permanent Reputation (not CMS “publish”). */
 export function shipPatches(s) {
   const p = Math.floor(s.run.patches);
   if (p < 1) {
@@ -835,27 +843,29 @@ export function buyMeta(s, id) {
   return true;
 }
 
+/**
+ * End Season (prestige).
+ * KEEP permanent: Live Mult, Boosts (authority.upgrades), unspent Rep.
+ * RESET run power: zone, weapon, rank, attrs, skills, Notes.
+ * Weapon is intentionally NOT permanent — re-earn each season with Signal.
+ */
 export function leaveSeason(s) {
-  // Prestige: need a checkpoint (every 20 zones) — combat never softlocks
   if (!s.ui.seasonDone && s.run.zone < SEASON.zones) {
     toast(s, `Reach Zone ${SEASON.zones} checkpoint to End Season`);
     return false;
   }
   if (!s.ui.seasonDone && s.run.zone >= SEASON.zones) {
-    // allow claim if they passed a checkpoint zone without flag (safety)
     s.ui.seasonDone = true;
   }
   const gain = liveGain(s.authority.shippedThisSeason);
   s.meta.live += gain;
   s.meta.season += 1;
-  s.authority.amount = 0;
+  // Rep + Boosts stay permanent — only the season shipping counter resets
   s.authority.shippedThisSeason = 0;
-  s.authority.upgrades = Object.fromEntries(Object.keys(META).map((k) => [k, 0]));
-  // Keep high-water zone progress light: drop back one season block, not to zero
-  // so prestige feels like a new season without full wipe of map identity
+  // Run wipe
   s.run.zone = 0;
   s.run.killsInZone = 0;
-  s.run.bytes = Math.floor(s.run.bytes * 0.25);
+  s.run.bytes = Math.floor(s.run.bytes * 0.15);
   s.run.patches = 0;
   const h = s.run.hero;
   h.level = 1;
@@ -864,14 +874,23 @@ export function leaveSeason(s) {
   h.scan = h.verify = h.amplify = 0;
   h.skills = {};
   h.mask = null;
-  h.scanner = Math.max(0, Math.floor(h.scanner * 0.85));
+  h.scanner = 0; // weapon is run-only
+  h.energy = C.ENERGY_MAX;
+  h.mana = C.MANA_MAX;
   h.trackerOn = false;
   h.deepOn = false;
   h.trackerStacks = 0;
   s.world.enemies = [];
   s.world.bossActive = false;
+  s.world.attackCd = 0;
   s.ui.seasonDone = false;
-  toast(s, `Live Mult +${gain.toFixed(3)} → ×${s.meta.live.toFixed(2)}. Season ${s.meta.season + 1}.`);
+  toast(
+    s,
+    `New season! Live Mult +${gain.toFixed(3)} → ×${s.meta.live.toFixed(2)}. Boosts kept · Weapon reset.`
+  );
+  s.ui.panelDirty = true;
+  confetti(s, s.world.heroX, 180, ['#e6b84d', '#FC1243', '#fff', '#3ecf8e'], 36);
+  if (s.settings.sfx !== false) sfx('rank');
   return true;
 }
 

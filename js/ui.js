@@ -31,7 +31,7 @@ import { sfx, unlockAudio, setMuted } from './sfx.js';
 
 const PANEL_TITLES = {
   skills: 'Build',
-  ship: 'Publish',
+  ship: 'Ship Notes',
   meta: 'Boosts',
   settings: 'Menu',
 };
@@ -215,16 +215,18 @@ function fillShip(s) {
   if (!el) return;
   const notes = Math.floor(s.run.patches);
   const gain = Math.floor(notes * s.meta.live);
+  const liveNext = liveGain(s.authority.shippedThisSeason);
   el.textContent = [
     `Notes ready: ${formatNum(notes)}`,
-    `Live Mult: ×${s.meta.live.toFixed(2)}`,
-    `Publish now → ~${formatNum(gain)} Rep`,
-    `Rep this season: ${formatNum(s.authority.shippedThisSeason)}`,
-    `End season → Live +${liveGain(s.authority.shippedThisSeason).toFixed(3)}`,
+    `Ship now → +${formatNum(gain)} permanent Rep`,
+    `Live Mult: ×${s.meta.live.toFixed(2)} (also multiplies damage)`,
+    `Shipped this season: ${formatNum(s.authority.shippedThisSeason)} Rep`,
+    s.ui.seasonDone || s.run.zone >= SEASON.zones
+      ? `End Season ready → Live +${liveNext.toFixed(3)} · Boosts kept · Weapon reset`
+      : `Next checkpoint: Zone ${SEASON.zones * (Math.floor(s.run.zone / SEASON.zones) + 1)}`,
   ].join('\n');
   const leave = document.getElementById('btn-leave');
   if (leave) {
-    // Show End Season at checkpoint OR after zone 20+
     leave.hidden = !(s.ui.seasonDone || s.run.zone >= SEASON.zones);
   }
 }
@@ -342,7 +344,7 @@ function renderMeta(s) {
     <div class="sp-bank-left">
       <span class="sp-bank-label">Reputation</span>
       <strong class="sp-bank-val gold">${formatNum(rep)}</strong>
-      <span class="sp-bank-hint">Permanent boosts</span>
+      <span class="sp-bank-hint">Permanent · never reset on End Season</span>
     </div>
   </div>
   <div class="skill-grid">`;
@@ -426,7 +428,7 @@ export function renderHUD(s) {
   if (eWrap) eWrap.classList.toggle('is-sprinting', sprinting);
   const eLab = $('v-energy-lab');
   if (eLab) {
-    if (sprinting) set(eLab, 'SPRINTING');
+    if (sprinting) set(eLab, `×${(st.timeScale || 1.85).toFixed(2)} SPEED`);
     else if (h.energy < st.eMax * 0.2) set(eLab, 'Low — grab orbs');
     else set(eLab, 'Sprint fuel');
   }
@@ -434,6 +436,12 @@ export function renderHUD(s) {
   if (spBtn) {
     spBtn.classList.toggle('is-active', sprinting);
     spBtn.classList.toggle('is-empty', h.energy < 1 && h.mask !== 'editor_pick');
+    const sub = spBtn.querySelector('.btn-sprint-sub');
+    if (sub) {
+      if (sprinting) set(sub, `×${(st.timeScale || 1.85).toFixed(2)} LIVE`);
+      else if (h.energy < 1 && h.mask !== 'editor_pick') set(sub, 'Need energy');
+      else set(sub, 'Hold · ×1.85 speed');
+    }
   }
   document.getElementById('app')?.classList.toggle('is-sprinting', sprinting);
 

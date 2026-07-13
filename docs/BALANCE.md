@@ -6,45 +6,60 @@ All knobs live in `js/formulas.js` → `C`.
 
 | Moment | Feel |
 |--------|------|
-| First 30s | Kill something, see Signal, understand Weapon button |
+| First 30s | Kill something (a few hits), see Signal, understand Weapon |
 | First rank | Open Build, spend SP |
-| First red enemy | Notes → Publish path |
+| First red enemy | Notes → **Ship** → permanent Rep |
 | Zone 10 | First Version Gate (boss) |
-| Zone 20 | Checkpoint toast; prestige available; **keep playing** |
-| Z40+ | Soft HP scale so upgrades still matter |
+| Zone 20 | Checkpoint; End Season available; **keep playing** |
+| Mid zones | Must keep upgrading weapon or fights drag |
+| End Season | Live Mult ↑, **Boosts stay**, **weapon resets** |
+
+## Meta permanence
+
+| System | On End Season |
+|--------|----------------|
+| **Boosts** (Rep purchases) | **Permanent** — never wipe |
+| **Unspent Rep** | **Kept** |
+| **Live Mult** | **Permanent** (+gain) |
+| **Weapon level** | **Full reset** (run-only) |
+| Rank / SP / skills / attrs | Reset |
+| Zone / Notes | Reset |
+| Signal | Partial keep (15%) |
+
+Live Mult multiplies **damage** and Notes→Rep conversion.
+
+## Sprint
+
+Hold Sprint (button / stage / Space):
+
+- **Time scale ×1.85** — whole sim runs faster (main loop)
+- Extra attack speed + march + shorter spawn gaps
+- Drains Energy (grab green orbs)
 
 ## Key constants
 
 | Key | Role |
 |-----|------|
-| `BASE_DAMAGE` / `SCANNER_DMG_GROWTH` | Weapon power curve |
-| `SCANNER_COST_*` | Signal sink |
-| `ENEMY_HP_*` | Zone difficulty |
-| `ENEMY_HP_SOFT_AFTER` / `SOFT_ZONE` | Late-game HP softens after Z40 |
-| `ZONE_KILLS` / `ZONE_KILLS_PER5` | Clear length (capped) |
-| `SPRINT_ATK` / `SPRINT_DMG` / `SPRINT_DRAIN` | Hold-sprint combat feel |
-| `SP_PER_LEVEL` | Build economy |
-| `SEASON_ZONES` | Prestige checkpoint length (20) |
+| `SPRINT_TIME` | Real game speed while sprinting |
+| `BASE_DAMAGE` / `SCANNER_DMG_GROWTH` | Weapon curve (+ soft DR after Lv25) |
+| `SCANNER_COST_*` | Signal sink (steep) |
+| `ENEMY_HP_*` | Zone difficulty (multi-hit forever) |
+| `ENEMY_HP_SOFT_AFTER` | Very late soft (100+) only |
+| `ZONE_KILLS*` | Clear length |
+| `SEASON_ZONES` | Prestige checkpoint (20) |
 
-## HP formula (sketch)
+## HP sketch
 
 ```text
-base * zoneGrowth^min(z, softAfter) * softGrowth^max(0, z-softAfter)
-    * stepGrowth^floor(z/stepEvery) * typeMult
+base * zone^z * step^floor(z/5) * decade^floor(z/10) * typeMult
 ```
 
-## Prestige
-
-- Trigger: finishing a zone such that `zone % 20 === 0` (internal 0-based after advance).
-- Reward: `liveGain(shippedThisSeason)` added to `meta.live`.
-- Cost: reset run attrs/skills/zone; keep Live Mult; partial weapon keep.
+Weapon damage soft-caps after high levels so pure Signal spam cannot one-shot late zones.
 
 ## Tuning checklist
-
-After any `C` change:
 
 ```bash
 node qa/run-tests.mjs
 ```
 
-Manually: time-to-first-kill, time-to-Z10, energy empty while sprinting, checkpoint at 20 without freeze.
+Manual: hold Sprint → energy bar says ×1.85 SPEED; Z20+ multi-hit without upgrades; End Season keeps Boosts, zeros weapon.

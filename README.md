@@ -2,7 +2,7 @@
 
 **The All Patch Notes waiting-room game.**
 
-Crush feed noise. Grab **Notes**. **Publish** for **Rep**. Stack **Live Mult**.
+Crush feed noise. Grab **Notes**. **Ship** them for permanent **Rep**. Stack **Live Mult**.
 Stay live while the real patch notes load.
 
 | | |
@@ -53,13 +53,13 @@ npx --yes serve -l 8790   # optional; not required by the game
 | Input | Action |
 |-------|--------|
 | Auto | Host attacks the nearest noise |
-| **Hold Sprint** (button / stage / Space) | Faster hits, more damage, drains **Energy** |
-| Tap green/blue orbs | Energy / Signal pickups |
-| **Upgrade Weapon** | Spend Signal for permanent damage |
-| **Build** | Spend SP on Damage / Crit / Skills |
-| **Publish** | Notes → Rep |
-| **Boosts** | Permanent meta with Rep |
-| **End Season** | At zone checkpoints (every 20) → Live Mult |
+| **Hold Sprint** (button / stage / Space) | **×1.85 game speed**, drains **Energy** |
+| Hover/tap green/blue orbs | Energy / Signal pickups |
+| **Upgrade Weapon** | Spend Signal — **this season only** (resets on End Season) |
+| **Build** | Spend SP on Damage / Crit / Skills (season) |
+| **Ship** | Notes → permanent **Rep** |
+| **Boosts** | **Permanent** meta bought with Rep (never wipe) |
+| **End Season** | Checkpoint every 20 zones → +Live Mult · Boosts kept · weapon reset |
 
 ---
 
@@ -76,13 +76,13 @@ npx --yes serve -l 8790   # optional; not required by the game
 └──────┬──────┘         └──────────────┘
        │ red Patch Notes
        ▼
-┌─────────────┐   Notes  ┌──────────┐   Rep   ┌─────────┐
-│ Collect     │ ───────► │ Publish  │ ──────► │ Boosts  │
-└──────┬──────┘          └────┬─────┘         └─────────┘
+┌─────────────┐   Notes  ┌──────────┐   Rep   ┌──────────────────┐
+│ Collect     │ ───────► │  Ship    │ ──────► │ Boosts (forever) │
+└──────┬──────┘          └────┬─────┘         └──────────────────┘
        │ every 20 zones       │
        ▼                      ▼
 ┌─────────────┐         ┌───────────┐
-│ Checkpoint  │ ──────► │ End Season│ → Live Mult (prestige)
+│ Checkpoint  │ ──────► │ End Season│ → +Live Mult · weapon/build reset
 └─────────────┘         └───────────┘
        │
        └── zones continue forever (no softlock)
@@ -90,13 +90,14 @@ npx --yes serve -l 8790   # optional; not required by the game
 
 ### Currencies (player-facing)
 
-| Currency | Earn | Spend |
-|----------|------|--------|
-| **Signal** | Kills, orbs | Upgrade Weapon |
-| **Notes** | Red Patch Notes, bosses | Publish → Rep |
-| **Rep** | Publish | Permanent Boosts |
-| **SP** | Rank ups | Damage / Crit / Skills + skill ranks |
-| **Live Mult** | End Season | Multiplies ship payout (and progress feel) |
+| Currency | Earn | Spend | Survives End Season? |
+|----------|------|--------|----------------------|
+| **Signal** | Kills, orbs | Upgrade Weapon | Partial |
+| **Notes** | Red Patch Notes, bosses | Ship → Rep | No |
+| **Rep** | Ship Notes | Permanent Boosts | **Yes** |
+| **SP / Build / Weapon** | Rank / Signal | Power this season | **No** (reset) |
+| **Boosts** | Rep | Passive power | **Yes (permanent)** |
+| **Live Mult** | End Season | Multiplies **damage + Ship** | **Yes** |
 
 Internal save fields may still say `bytes` / `patches` / `authority` — see [ARCHITECTURE.md](./docs/ARCHITECTURE.md).
 
