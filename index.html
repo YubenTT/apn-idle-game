@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+    <meta name="theme-color" content="#0d1217" />
+    <meta name="color-scheme" content="dark" />
+    <title>APN Idle</title>
+    <link rel="icon" href="./assets/apn-logo.svg" />
+    <link rel="stylesheet" href="./css/game.css?v=sprint1" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="hud-top">
+        <div class="hud-brand">
+          <strong class="hud-title">APN <span>Idle</span></strong>
+          <div class="hud-meta" role="status">
+            <span id="v-combo" class="meta-pill combo" hidden></span>
+            <span class="meta-pill" title="Current zone"><span class="meta-k">Zone</span> <em id="v-zone">1</em></span>
+            <span class="meta-pill" title="Live multiplier"><span class="meta-k">Live</span> <em id="v-live">×1.00</em></span>
+            <span class="meta-pill" title="Rank"><span class="meta-k">Rank</span> <em id="v-level">1</em></span>
+            <span class="meta-pill sp" title="Unspent skill points"><em id="v-sp">0</em> <span class="meta-k">SP</span></span>
+          </div>
+        </div>
+        <div class="hud-res">
+          <div class="chip" title="Spend on weapon upgrades">
+            <small>SIGNAL</small><strong id="v-bytes">0</strong>
+          </div>
+          <div class="chip" title="Publish for Reputation">
+            <small>NOTES</small><strong id="v-patches">0</strong>
+          </div>
+          <div class="chip" title="Buy permanent Boosts">
+            <small>REP</small><strong id="v-auth">0</strong>
+          </div>
+          <div class="chip" title="Damage per second">
+            <small>DPS</small><strong id="v-dps">0</strong>
+          </div>
+        </div>
+      </header>
+
+      <div class="hud-ticker">
+        <div class="live-tag">LIVE</div>
+        <div class="ticker-clip"><div class="ticker-track" id="ticker-track"></div></div>
+      </div>
+
+      <main class="hud-stage">
+        <canvas id="game"></canvas>
+        <div id="toast" hidden></div>
+      </main>
+
+      <section class="hud-bars">
+        <div class="bar">
+          <div class="bar-lab">
+            <span>Rank</span><span id="v-xp-lab">0 XP</span>
+          </div>
+          <div class="bar-bg"><div id="bar-xp" class="bar-fg xp"></div></div>
+        </div>
+        <div class="bar">
+          <div class="bar-lab">
+            <span>Zone</span><span id="v-kills">0/5</span>
+          </div>
+          <div class="bar-bg"><div id="bar-zone" class="bar-fg zone"></div></div>
+        </div>
+        <div class="bar-row2">
+          <div class="bar" id="bar-energy-wrap">
+            <div class="bar-lab"><span>Energy</span><span id="v-energy-lab">Sprint fuel</span></div>
+            <div class="bar-bg"><div id="bar-energy" class="bar-fg en"></div></div>
+          </div>
+          <div class="bar">
+            <div class="bar-lab"><span>Mana</span><span>Skills</span></div>
+            <div class="bar-bg"><div id="bar-mana" class="bar-fg mn"></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="hud-cta">
+        <div class="cta-row">
+          <button type="button" id="btn-sprint" class="btn-sprint" aria-pressed="false">
+            <span class="btn-sprint-ico" aria-hidden="true">⚡</span>
+            <span class="btn-sprint-txt">
+              <span class="btn-sprint-title">Sprint</span>
+              <span class="btn-sprint-sub">Hold · faster hits</span>
+            </span>
+          </button>
+          <button type="button" id="btn-scanner" class="btn-primary">
+            <span class="btn-primary-title">Upgrade Weapon</span>
+            <span class="btn-primary-sub"
+              ><span id="v-cost">12</span> Signal · Damage Lv <span id="v-scanner">0</span></span
+            >
+          </button>
+        </div>
+        <div class="btn-skills" id="skill-shortcuts">
+          <button type="button" id="btn-hotfix" class="btn-chip" hidden>Burst</button>
+          <button type="button" id="btn-summary" class="btn-chip" hidden>Area</button>
+          <button type="button" id="btn-tracker" class="btn-chip" hidden>Ramp</button>
+          <button type="button" id="btn-deep" class="btn-chip" hidden>Overdrive</button>
+        </div>
+      </section>
+
+      <nav class="hud-nav" aria-label="Main">
+        <button type="button" data-panel="skills" class="nav-btn">
+          <svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"
+            ><path
+              fill="currentColor"
+              d="M12 2L3 7v2h18V7L12 2zm-7 9v8h4v-6h6v6h4v-8H5z"
+            /></svg
+          >
+          <span>Build</span>
+        </button>
+        <button type="button" data-panel="ship" class="nav-btn">
+          <svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"
+            ><path fill="currentColor" d="M4 18h16v2H4v-2zm2-4l4-8 2 4 4-6 4 10H6z"
+          /></svg>
+          <span>Publish</span>
+        </button>
+        <button type="button" data-panel="meta" class="nav-btn">
+          <svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"
+            ><path
+              fill="currentColor"
+              d="M12 2a7 7 0 00-7 7c0 2.4 1.2 4.5 3 5.7V17h8v-2.3c1.8-1.2 3-3.3 3-5.7a7 7 0 00-7-7zm-2 17h4v2h-4v-2z"
+            /></svg
+          >
+          <span>Boosts</span>
+        </button>
+        <button type="button" data-panel="settings" class="nav-btn">
+          <svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"
+            ><path
+              fill="currentColor"
+              d="M19.1 12.9a7.5 7.5 0 000-1.8l2-1.5-2-3.5-2.4 1a7.3 7.3 0 00-1.6-.9L14.8 3h-4l-.4 2.7a7.3 7.3 0 00-1.6.9l-2.4-1-2 3.5 2 1.5a7.5 7.5 0 000 1.8l-2 1.5 2 3.5 2.4-1c.5.4 1 .7 1.6.9l.4 2.7h4l.4-2.7c.6-.2 1.1-.5 1.6-.9l2.4 1 2-3.5-2-1.5zM12 15.5A3.5 3.5 0 1112 8a3.5 3.5 0 010 7.5z"
+            /></svg
+          >
+          <span>Menu</span>
+        </button>
+      </nav>
+    </div>
+
+    <div id="sheet-root" class="sheet-root" hidden>
+      <div class="sheet-backdrop" id="sheet-backdrop"></div>
+      <div class="sheet">
+        <div class="sheet-head">
+          <h2 id="sheet-title">Build</h2>
+          <button type="button" id="sheet-close">Close</button>
+        </div>
+        <div class="sheet-body">
+          <section id="panel-skills" hidden>
+            <div id="skills-body"></div>
+          </section>
+          <section id="panel-ship" hidden>
+            <p class="lead">Cash in Notes → Rep. Every 20 zones: End Season for permanent Live Mult (combat never stops).</p>
+            <pre id="ship-info" class="box"></pre>
+            <button type="button" id="btn-ship" class="btn-primary">
+              <span class="btn-primary-title">Publish Notes</span>
+              <span class="btn-primary-sub">Notes → Rep</span>
+            </button>
+            <button type="button" id="btn-leave" class="btn-ghost" hidden>End Season · Live Mult</button>
+          </section>
+          <section id="panel-meta" hidden>
+            <div id="meta-body"></div>
+          </section>
+          <section id="panel-settings" hidden>
+            <p class="lead">allpatchnotes.com mini-game</p>
+            <label class="chk"><input type="checkbox" id="chk-motion" /> Reduced motion</label>
+            <label class="chk"><input type="checkbox" id="chk-sfx" checked /> Sound effects</label>
+            <p class="fine" id="v-attrs">Damage 0 · Crit 0 · Skills 0</p>
+            <p class="fine">Hold Sprint button / stage / Space = faster hits · Tap green orbs = energy</p>
+            <button type="button" id="btn-wipe" class="btn-ghost">New Game</button>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <div id="title-screen" class="modal">
+      <div class="modal-card">
+        <img src="./assets/mascot-title.png" alt="" width="88" height="88" />
+        <h1>APN <span>Idle</span></h1>
+        <p id="title-tagline">Clear noise. Publish notes. Stay live.</p>
+        <p class="fine">Auto-clear feed noise, grab Notes, Publish for Rep, stack Live Mult.</p>
+        <button type="button" id="btn-start" class="btn-primary">Play</button>
+      </div>
+    </div>
+
+    <div id="offline-modal" class="modal" hidden>
+      <div class="modal-card">
+        <h2>While offline</h2>
+        <pre id="offline-body" class="box"></pre>
+        <button type="button" id="btn-offline-ok" class="btn-primary">Continue</button>
+      </div>
+    </div>
+
+    <script type="module" src="./js/main.js?v=sprint1"></script>
+  </body>
+</html>

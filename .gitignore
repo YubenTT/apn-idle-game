@@ -1,0 +1,35 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+*.code-workspace
+
+# Local env
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+.env
+.env.*
+
+# Packages / archives (source lives in tree)
+*.zip
+APN-Idle-Package.zip
+
+# Optional local noise
+.cache/
+tmp/
+*.log
+
+# Node if added later
+node_modules/
+dist/
+coverage/
+.turbo/
+
+# Keep qa screenshots intentional; ignore ad-hoc local dumps
+qa/screenshots/_local/

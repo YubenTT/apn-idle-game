@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Domain tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run headless tests
+        run: node qa/run-tests.mjs
+
+      - name: Verify entrypoints exist
+        run: |
+          test -f index.html
+          test -f js/main.js
+          test -f js/game.js
+          test -f js/formulas.js
+          test -f css/game.css
+          test -f assets/mascot-host.png
+          test -d assets/enemies
+          test -d assets/icons
