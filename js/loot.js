@@ -14,11 +14,43 @@ export const RARITY = {
  */
 export const SLOTS = ['weapon', 'chest', 'legs', 'visor'];
 
+/**
+ * Slot fantasy → real combat systems (no tank "Defense"):
+ *  Weapon  → Damage / Crit / Atk Speed
+ *  Chest   → Energy (sprint tank) / Notes / Signal
+ *  Legs    → Sprint (move) / Atk Speed / Regen
+ *  Visor   → Crit / Signal / Damage
+ */
 export const SLOT_META = {
-  weapon: { id: 'weapon', label: 'Weapon', short: 'Wpn', primary: 'Signal' },
-  chest: { id: 'chest', label: 'Chest', short: 'Chest', primary: 'Defense' },
-  legs: { id: 'legs', label: 'Legs', short: 'Legs', primary: 'Sprint' },
-  visor: { id: 'visor', label: 'Visor', short: 'Visor', primary: 'Signal' },
+  weapon: {
+    id: 'weapon',
+    label: 'Weapon',
+    short: 'Wpn',
+    primary: 'Damage',
+    /** Affix keys preferred for card primary (order = priority) */
+    primaryKeys: ['dmg_pct', 'flat_dmg', 'crit_pct', 'atk_spd'],
+  },
+  chest: {
+    id: 'chest',
+    label: 'Chest',
+    short: 'Chest',
+    primary: 'Energy',
+    primaryKeys: ['energy', 'notes_pct', 'signal_pct'],
+  },
+  legs: {
+    id: 'legs',
+    label: 'Legs',
+    short: 'Legs',
+    primary: 'Sprint',
+    primaryKeys: ['move_pct', 'atk_spd', 'e_regen'],
+  },
+  visor: {
+    id: 'visor',
+    label: 'Visor',
+    short: 'Visor',
+    primary: 'Crit',
+    primaryKeys: ['crit_pct', 'signal_pct', 'dmg_pct'],
+  },
 };
 
 /** Legacy slot → brand slot */
@@ -62,95 +94,95 @@ const SLOT_NAMES = {
 };
 
 /**
- * Affixes — slot-tagged.
- * Brand primary display maps these to Signal / Defense / Sprint.
+ * Affixes — only stats the combat loop actually uses.
+ * Display label = game language (no fake "Defense").
+ *
+ * weapon: hit harder / crit / swing faster
+ * chest:  bigger energy pool, more Notes & Signal from kills
+ * legs:   march faster, attack a bit faster, regen while sprinting
+ * visor:  crit + Signal read + light damage
  */
 const AFFIX = {
-  // Signal / damage cluster
-  signal_pct: {
-    key: 'signal_pct',
-    label: 'Signal',
-    brand: 'Signal',
-    unit: '%',
-    min: 6,
-    max: 28,
-    slots: ['weapon', 'visor', 'chest'],
-  },
   dmg_pct: {
     key: 'dmg_pct',
     label: 'Damage',
-    brand: 'Signal',
     unit: '%',
-    min: 3,
-    max: 12,
-    slots: ['weapon'],
+    min: 4,
+    max: 14,
+    slots: ['weapon', 'visor'],
   },
   flat_dmg: {
     key: 'flat_dmg',
-    label: 'Flat Dmg',
-    brand: 'Signal',
+    label: 'Damage',
     unit: '',
-    min: 4,
-    max: 22,
-    slots: ['weapon', 'chest'],
+    min: 5,
+    max: 24,
+    slots: ['weapon'],
   },
-  // Defense cluster (energy shell)
-  energy: {
-    key: 'energy',
-    label: 'Energy',
-    brand: 'Defense',
-    unit: '',
-    min: 8,
-    max: 26,
+  crit_pct: {
+    key: 'crit_pct',
+    label: 'Crit',
+    unit: '%',
+    min: 1.5,
+    max: 7,
+    slots: ['weapon', 'visor'],
+  },
+  atk_spd: {
+    key: 'atk_spd',
+    label: 'Atk Speed',
+    unit: '%',
+    min: 3,
+    max: 10,
+    slots: ['weapon', 'legs'],
+  },
+  signal_pct: {
+    key: 'signal_pct',
+    label: 'Signal',
+    unit: '%',
+    min: 5,
+    max: 18,
     slots: ['chest', 'visor'],
   },
   notes_pct: {
     key: 'notes_pct',
     label: 'Notes',
-    brand: 'Defense',
     unit: '%',
-    min: 3,
-    max: 12,
-    slots: ['chest', 'legs'],
-  },
-  // Sprint cluster
-  move_pct: {
-    key: 'move_pct',
-    label: 'Move',
-    brand: 'Sprint',
-    unit: '%',
-    min: 4,
+    min: 5,
     max: 16,
-    slots: ['legs'],
+    slots: ['chest'],
   },
-  atk_spd: {
-    key: 'atk_spd',
-    label: 'Atk Speed',
-    brand: 'Sprint',
-    unit: '%',
-    min: 2,
-    max: 8,
-    slots: ['weapon', 'legs'],
+  energy: {
+    key: 'energy',
+    label: 'Energy',
+    unit: '',
+    min: 10,
+    max: 32,
+    slots: ['chest'],
   },
   e_regen: {
     key: 'e_regen',
-    label: 'E-Regen',
-    brand: 'Sprint',
+    label: 'Regen',
     unit: '',
     min: 1,
     max: 5,
-    slots: ['legs', 'visor'],
+    slots: ['legs'],
   },
-  // Crit (visor secondary)
-  crit_pct: {
-    key: 'crit_pct',
-    label: 'Crit',
-    brand: 'Signal',
+  move_pct: {
+    key: 'move_pct',
+    label: 'Sprint',
     unit: '%',
-    min: 1,
-    max: 6,
-    slots: ['weapon', 'visor'],
+    min: 5,
+    max: 16,
+    slots: ['legs'],
   },
+};
+
+/** Guaranteed first affix per slot so primary card always makes sense */
+const SLOT_SIGNATURE = {
+  weapon: 'dmg_pct',
+  chest: 'energy',
+  legs: 'move_pct',
+  visor: 'crit_pct',
 };
 
 const UNIQUE_BY_SLOT = {
@@ -158,17 +190,17 @@ const UNIQUE_BY_SLOT = {
     {
       name: 'APN Eye',
       affixes: [
-        { key: 'signal_pct', value: 24 },
-        { key: 'dmg_pct', value: 14 },
-        { key: 'crit_pct', value: 6 },
+        { key: 'dmg_pct', value: 18 },
+        { key: 'crit_pct', value: 7 },
+        { key: 'atk_spd', value: 8 },
       ],
     },
     {
       name: 'Host Beam',
       affixes: [
-        { key: 'signal_pct', value: 22 },
-        { key: 'flat_dmg', value: 20 },
-        { key: 'atk_spd', value: 8 },
+        { key: 'dmg_pct', value: 14 },
+        { key: 'flat_dmg', value: 22 },
+        { key: 'crit_pct', value: 5 },
       ],
     },
   ],
@@ -176,7 +208,7 @@ const UNIQUE_BY_SLOT = {
     {
       name: 'Live Forever',
       affixes: [
-        { key: 'energy', value: 28 },
+        { key: 'energy', value: 30 },
         { key: 'notes_pct', value: 14 },
         { key: 'signal_pct', value: 12 },
       ],
@@ -184,9 +216,9 @@ const UNIQUE_BY_SLOT = {
     {
       name: 'Zero Downtime',
       affixes: [
-        { key: 'energy', value: 24 },
-        { key: 'flat_dmg', value: 14 },
-        { key: 'signal_pct', value: 10 },
+        { key: 'energy', value: 26 },
+        { key: 'signal_pct', value: 14 },
+        { key: 'notes_pct', value: 10 },
       ],
     },
   ],
@@ -196,7 +228,7 @@ const UNIQUE_BY_SLOT = {
       affixes: [
         { key: 'move_pct', value: 16 },
         { key: 'atk_spd', value: 8 },
-        { key: 'notes_pct', value: 10 },
+        { key: 'e_regen', value: 5 },
       ],
     },
     {
@@ -212,17 +244,17 @@ const UNIQUE_BY_SLOT = {
     {
       name: 'All-Seeing',
       affixes: [
-        { key: 'signal_pct', value: 18 },
-        { key: 'crit_pct', value: 8 },
-        { key: 'energy', value: 14 },
+        { key: 'crit_pct', value: 9 },
+        { key: 'signal_pct', value: 16 },
+        { key: 'dmg_pct', value: 8 },
       ],
     },
     {
       name: 'Zero Lag Lens',
       affixes: [
-        { key: 'signal_pct', value: 16 },
-        { key: 'crit_pct', value: 7 },
-        { key: 'e_regen', value: 5 },
+        { key: 'crit_pct', value: 8 },
+        { key: 'signal_pct', value: 14 },
+        { key: 'dmg_pct', value: 10 },
       ],
     },
   ],
@@ -255,16 +287,30 @@ function floorRarity(rarity, minId) {
   return min;
 }
 
-function rollAffix(slot, rarity, ilvl) {
-  const pool = Object.values(AFFIX).filter((a) => a.slots.includes(slot));
-  const def = pick(pool.length ? pool : Object.values(AFFIX));
+function rollAffixValue(def, rarity, ilvl) {
   const t = Math.min(1, ilvl / 80);
   const base = def.min + (def.max - def.min) * (0.35 + t * 0.65);
   const mult = rarity.power * (0.85 + Math.random() * 0.3);
   let value = base * mult;
   if (def.unit === '%') value = Math.round(value * 10) / 10;
   else value = Math.round(value);
-  return { key: def.key, label: def.label, brand: def.brand, unit: def.unit, value };
+  return { key: def.key, label: def.label, unit: def.unit, value };
+}
+
+function rollAffix(slot, rarity, ilvl, exclude = new Set()) {
+  const pool = Object.values(AFFIX).filter(
+    (a) => a.slots.includes(slot) && !exclude.has(a.key)
+  );
+  const def = pick(pool.length ? pool : Object.values(AFFIX).filter((a) => a.slots.includes(slot)));
+  if (!def) return null;
+  return rollAffixValue(def, rarity, ilvl);
+}
+
+function rollSignatureAffix(slot, rarity, ilvl) {
+  const key = SLOT_SIGNATURE[slot] || 'dmg_pct';
+  const def = AFFIX[key];
+  if (!def) return rollAffix(slot, rarity, ilvl);
+  return rollAffixValue(def, rarity, ilvl);
 }
 
 function scoreItem(item) {
@@ -286,7 +332,6 @@ function mapUniqueAffixes(affixes, ilvl) {
     return {
       key: a.key,
       label: def?.label || a.key,
-      brand: def?.brand || def?.label || a.key,
       unit: def?.unit || '',
       value: Math.round(a.value * (0.9 + Math.min(0.4, ilvl / 100)) * 10) / 10,
     };
@@ -317,39 +362,27 @@ export function emptyGear() {
   };
 }
 
-/** Normalize any save/runtime gear blob into brand 4-slot shape */
+/** Normalize any save/runtime gear blob into brand 4-slot shape + fix legacy stats */
 export function normalizeGear(raw) {
   const g = emptyGear();
   if (!raw || typeof raw !== 'object') return g;
 
-  // Direct brand slots
   for (const slot of SLOTS) {
     let piece = raw[slot] || null;
-    // legacy keys landing on brand slots
     if (!piece && slot === 'chest' && raw.armor) piece = raw.armor;
     if (!piece && slot === 'visor' && raw.head) piece = raw.head;
     if (!piece && slot === 'legs' && raw.boots) piece = raw.boots;
     if (!piece && slot === 'visor' && raw.trinket) piece = raw.trinket;
     if (piece) {
-      piece = migrateItem(piece);
+      piece = sanitizeItem({ ...piece, slot: piece.slot || slot });
       if (piece.slot !== slot) piece = { ...piece, slot };
-      // if slot already filled, push weaker to bag later
       if (!g[slot]) g[slot] = piece;
-      else {
-        g.bag.push(piece);
-      }
+      else g.bag.push(piece);
     }
   }
 
   const bagIn = Array.isArray(raw.bag) ? raw.bag : [];
-  // also orphan legacy equipped pieces not mapped above
-  for (const leg of ['armor', 'head', 'boots', 'trinket', 'module']) {
-    if (raw[leg] && !SLOTS.includes(leg)) {
-      // already handled via mapping if slot empty
-    }
-  }
-  g.bag = [...g.bag, ...bagIn.map(migrateItem).filter(Boolean)];
-  // dedupe by id
+  g.bag = [...g.bag, ...bagIn.map((it) => sanitizeItem(migrateItem(it))).filter(Boolean)];
   const seen = new Set();
   g.bag = g.bag.filter((it) => {
     if (!it?.id || seen.has(it.id)) return false;
@@ -360,27 +393,71 @@ export function normalizeGear(raw) {
 }
 
 /**
- * Brand primary line for cards: "+24 Signal"
- * Picks strongest affix by brand weight.
+ * Card primary line — slot-priority first, then strongest remaining.
+ * Always uses real labels: Damage · Crit · Energy · Sprint · Signal · Notes · Regen · Atk Speed
+ * Never invents "Defense".
  */
 export function primaryStat(item) {
+  const slot = item?.slot;
+  const meta = SLOT_META[slot];
+  const fb = meta?.primary || 'Damage';
   if (!item?.affixes?.length) {
-    const fb = SLOT_META[item?.slot]?.primary || 'Signal';
-    return { value: 0, brand: fb, text: `+0 ${fb}` };
+    return { value: 0, brand: fb, text: `+0 ${fb}`, key: null };
   }
-  let best = item.affixes[0];
-  let bestW = -1;
+
+  const byKey = Object.fromEntries(item.affixes.map((a) => [a.key, a]));
+  // Prefer slot signature order (e.g. weapon always shows Damage if present)
+  for (const key of meta?.primaryKeys || []) {
+    const a = byKey[key];
+    if (!a) continue;
+    const label = AFFIX[key]?.label || a.label || fb;
+    const val = a.unit === '%' ? Math.round(a.value * 10) / 10 : Math.round(a.value);
+    const suffix = a.unit === '%' ? '%' : '';
+    return { value: val, brand: label, text: `+${val}${suffix} ${label}`, key };
+  }
+
+  // Fallback: first affix with real label
+  const a = item.affixes[0];
+  const label = AFFIX[a.key]?.label || a.label || fb;
+  const val = a.unit === '%' ? Math.round(a.value * 10) / 10 : Math.round(a.value);
+  const suffix = a.unit === '%' ? '%' : '';
+  return { value: val, brand: label, text: `+${val}${suffix} ${label}`, key: a.key };
+}
+
+/** Sanitize saved items: drop unknown keys, fix labels, no Defense branding */
+export function sanitizeItem(item) {
+  if (!item || typeof item !== 'object') return item;
+  item = migrateItem(item);
+  if (!Array.isArray(item.affixes)) return item;
+  const cleaned = [];
   for (const a of item.affixes) {
-    const brand = a.brand || AFFIX[a.key]?.brand || a.label || 'Signal';
-    const w = a.value * (a.unit === '%' ? 1.2 : 1);
-    if (w > bestW) {
-      bestW = w;
-      best = { ...a, brand };
+    const def = AFFIX[a.key];
+    if (!def) continue;
+    // drop affixes that don't belong on this slot (legacy mess)
+    if (!def.slots.includes(item.slot)) continue;
+    cleaned.push({
+      key: def.key,
+      label: def.label,
+      unit: def.unit,
+      value: a.value,
+    });
+  }
+  // ensure signature exists if empty after clean
+  if (!cleaned.length) {
+    const sig = SLOT_SIGNATURE[item.slot] || 'dmg_pct';
+    const def = AFFIX[sig];
+    if (def) {
+      cleaned.push({
+        key: def.key,
+        label: def.label,
+        unit: def.unit,
+        value: def.min + Math.round((item.ilvl || 1) * 0.3),
+      });
     }
   }
-  const brand = best.brand || SLOT_META[item.slot]?.primary || 'Signal';
-  const val = Math.round(best.value);
-  return { value: val, brand, text: `+${val} ${brand}` };
+  item.affixes = cleaned;
+  item.score = scoreItem(item);
+  return item;
 }
 
 /**
@@ -419,13 +496,15 @@ export function rollItem(zone, forcedSlot = null, opts = {}) {
   const n = rarity.affixes;
   const used = new Set();
   const affixes = [];
-  for (let i = 0; i < n; i++) {
-    let a;
-    let tries = 0;
-    do {
-      a = rollAffix(slot, rarity, ilvl);
-      tries++;
-    } while (used.has(a.key) && tries < 8);
+  // First affix = slot signature (Weapon→Damage, Chest→Energy, Legs→Sprint, Visor→Crit)
+  const sig = rollSignatureAffix(slot, rarity, ilvl);
+  if (sig) {
+    affixes.push(sig);
+    used.add(sig.key);
+  }
+  for (let i = affixes.length; i < n; i++) {
+    const a = rollAffix(slot, rarity, ilvl, used);
+    if (!a) break;
     used.add(a.key);
     affixes.push(a);
   }
@@ -479,7 +558,7 @@ export function gearBonuses(gear) {
  */
 export function offerItem(gear, item, bagCap = 24) {
   if (!gear || !item) return { equipped: false, replaced: null, item };
-  item = migrateItem(item);
+  item = sanitizeItem(migrateItem(item));
   const slot = item.slot;
   if (!SLOTS.includes(slot)) {
     gear.bag = gear.bag || [];
@@ -509,7 +588,7 @@ export function equipFromBag(gear, itemId) {
   const idx = gear.bag.findIndex((x) => x.id === itemId);
   if (idx < 0) return false;
   const [raw] = gear.bag.splice(idx, 1);
-  const item = migrateItem(raw);
+  const item = sanitizeItem(migrateItem(raw));
   if (!SLOTS.includes(item.slot)) {
     gear.bag.unshift(item);
     return false;

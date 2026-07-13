@@ -14,6 +14,15 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 - Wire real IAP receipts for APN Pro / coin packs / boxes
 - Rewarded-ad stubs (MindStudios monetization playbook)
 
+## [1.7.1] — 2026-07-13
+
+### Fixed
+
+- Gear stats make sense: **no Defense** (not a game system)
+- Slot signature primaries: Weapon→Damage · Chest→Energy · Legs→Sprint · Visor→Crit
+- Affix pools only use combat stats (dmg/crit/atk/signal/notes/energy/move/regen)
+- Save sanitize strips wrong-slot affixes on load
+
 ## [1.7.0] — 2026-07-13
 
 ### Added
