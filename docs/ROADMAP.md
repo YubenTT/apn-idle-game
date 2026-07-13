@@ -13,6 +13,7 @@ Living plan — not a commitment calendar.
 - [x] Juice: confetti, floaters, death, biomes, SFX
 - [x] LIVE ticker with game icons
 - [x] Headless domain tests + CI
+- [x] Deterministic seeded headless QA (including gear ordering assertions)
 - [x] Host mascot + enemy sprites + GLB kit files
 
 ## Shipped (docs / system)
@@ -20,6 +21,8 @@ Living plan — not a commitment calendar.
 - [x] Design-system + docs backbone ([00_START_HERE](./00_START_HERE.md),
       [brand/](../brand/), [SCREEN-SPECS](./SCREEN-SPECS.md), ADRs) — system-first
       redesign foundation; runtime unchanged
+- [x] Redesign control plane — 24 focused issues grouped into 7 autonomous
+      delivery sessions with one combined visual evidence gate
 
 ## Near term
 
