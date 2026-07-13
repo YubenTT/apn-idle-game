@@ -23,10 +23,12 @@ Living plan — not a commitment calendar.
       redesign foundation; runtime unchanged
 - [x] Redesign control plane — 24 focused issues grouped into 7 autonomous
       delivery sessions with one combined visual evidence gate
+- [x] Runtime token foundation — `brand/tokens.css` imported by `css/game.css`,
+      532 color literals migrated with exact pixel preservation, and static token
+      contract enforced in headless QA
 
 ## Near term
 
-- [ ] Wire `brand/tokens.css` into `css/game.css` (staged, visual-regression gated)
 - [ ] Apply the 2 staged token changes (Notes → rose, SP → violet) during redesign
 - [ ] Redesign screens against [SCREEN-SPECS](./SCREEN-SPECS.md) (Run HUD, Gear,
       Build, Ship, Hub, Boosts, Menu) — one screen at a time, each through
