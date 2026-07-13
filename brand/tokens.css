@@ -1,0 +1,102 @@
+/* ============================================================================
+ * APN Idle — canonical design tokens
+ * ----------------------------------------------------------------------------
+ * SINGLE SOURCE OF TRUTH for color, type, space, radius, elevation, motion.
+ * Prose rationale + tables: brand/DESIGN-TOKENS.md
+ *
+ * Status: reference layer. Values reconciled with the shipped css/game.css so
+ * migration is additive, not a rewrite. NOT yet imported by index.html — wire it
+ * in a later, reversible pass (one @import, then swap literals for var()).
+ *
+ * Rule: no raw hex in game code once wired. Every color is a token below.
+ * ============================================================================ */
+
+:root {
+  /* --- Brand / primary ---------------------------------------------------- */
+  /* APN crimson. ONE job: primary CTA, PATCH tag, LIVE, patch-note enemy accent.
+     Locked to the shipped value (--acc in game.css). Do not use for economy. */
+  --apn-primary:        #fc1243;
+  --apn-primary-hi:     #ff3a63;   /* hover / pressed lift */
+  --apn-primary-dim:    #b00d30;   /* borders on primary fills */
+
+  /* --- Surfaces (dark editorial night) ----------------------------------- */
+  --ink-950:            #071019;   /* app background */
+  --surface-900:        #0b1622;   /* card / sheet base */
+  --surface-800:        #112032;   /* second-layer panels */
+  --surface-700:        #16283c;   /* raised / hover panel */
+  --border-700:         #22364c;   /* 1px lines, slot borders */
+  --border-600:         #2c435e;   /* stronger dividers */
+
+  /* --- Text tiers -------------------------------------------------------- */
+  --text-high:          #f3f7fb;   /* primary text, values */
+  --text-mid:           #aab7c7;   /* secondary text */
+  --text-low:           #6c7a8d;   /* helper / disabled */
+
+  /* --- Economy semantics — ONE hue = ONE currency ------------------------ */
+  /* Locked to shipped HUD language: */
+  --c-signal:           #5eb0ff;   /* Signal — scan resource, blue (shipped) */
+  --c-rep:              #e6b84d;   /* Rep — permanent progression, gold (shipped) */
+  --c-positive:         #3ecf8e;   /* DPS / live-green / "can buy" (shipped) */
+  /* Deliberate de-collision from primary crimson (see DESIGN-TOKENS.md §Change): */
+  --c-notes:            #ff6a8f;   /* Notes — archive economy, rose (was crimson) */
+  --c-sp:               #b07cff;   /* SP / skill points, violet (was crimson) */
+  --c-zone:             #3fd0d8;   /* Zone progress, cyan */
+  --c-info:             #62a8ff;   /* news / source link / helper info */
+
+  /* --- Content-type tags (patch/news/guide/event/video) ------------------ */
+  --tag-patch:          var(--apn-primary);  /* red */
+  --tag-news:           #62a8ff;             /* blue */
+  --tag-guide:          #e6b84d;             /* amber */
+  --tag-event:          #1cc67e;             /* green */
+  --tag-video:          #a67cff;             /* purple */
+
+  /* --- Rarity ladder (item cards only; never in HUD role) ---------------- */
+  --rarity-common:      #3a4656;
+  --rarity-green:       #3ecf8e;   /* shipped .r-green */
+  --rarity-blue:        #5eb0ff;   /* shipped .r-blue */
+  --rarity-yellow:      #e6b84d;   /* shipped .r-yellow */
+  --rarity-unique:      #fc1243;   /* shipped .r-unique */
+
+  /* --- Type scale (pt on mobile canvas; use rem in CSS) ------------------- */
+  --font-sans: system-ui, -apple-system, "Segoe UI", Inter, Roboto, sans-serif;
+  --fs-display-l:  28px;  --lh-display-l:  32px;   /* sheet title */
+  --fs-display-m:  22px;  --lh-display-m:  26px;   /* target name */
+  --fs-body-l:     17px;  --lh-body-l:     22px;   /* primary button, item name */
+  --fs-body-m:     15px;  --lh-body-m:     20px;   /* row body, stat desc */
+  --fs-label-m:    13px;  --lh-label-m:    16px;   /* chip label */
+  --fs-label-s:    11px;  --lh-label-s:    14px;   /* meta tag, rarity */
+  --fs-metric-xl:  24px;  --lh-metric-xl:  26px;   /* Signal/Notes/SP values */
+  --fs-metric-m:   18px;  --lh-metric-m:   20px;   /* HP, cost, level */
+  /* All numeric values use font-variant-numeric: tabular-nums. */
+
+  /* --- Spacing scale (4px base) ------------------------------------------ */
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
+  --sp-6: 24px; --sp-8: 32px; --sp-12: 48px;
+
+  /* --- Radius ------------------------------------------------------------ */
+  --r-chip: 12px;  --r-card: 16px;  --r-cta: 18px;  --r-stage: 20px;
+  --r-sheet: 24px; --r-slot: 14px;  --r-pill: 999px;
+
+  /* --- Elevation (flat editorial — no outer glow) ------------------------ */
+  --elev-card:  0 1px 0 rgba(255,255,255,.03) inset, 0 2px 8px rgba(0,0,0,.35);
+  --elev-sheet: 0 -8px 32px rgba(0,0,0,.45);
+  --border-1:   1px solid var(--border-700);
+
+  /* --- Motion ------------------------------------------------------------ */
+  --dur-fast: 120ms; --dur-base: 200ms; --dur-slow: 320ms;
+  --ease-out: cubic-bezier(.22,.61,.36,1);
+  --ease-in-out: cubic-bezier(.45,0,.15,1);
+
+  /* --- Touch + safe area ------------------------------------------------- */
+  --touch-min: 44px;                 /* iOS min; Android target 48px */
+  --safe-top:    env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left:   env(safe-area-inset-left, 0px);
+  --safe-right:  env(safe-area-inset-right, 0px);
+}
+
+/* Respect the OS/user setting. Motion tokens collapse; the game also exposes an
+   in-app "Reduced motion" toggle that must gate the same animations. */
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur-fast: 0ms; --dur-base: 0ms; --dur-slow: 0ms; }
+}

@@ -263,13 +263,36 @@ Details → [docs/EMBED.md](./docs/EMBED.md)
 
 ## Docs index
 
+**Start here:** [docs/00_START_HERE.md](./docs/00_START_HERE.md) — one-screen map of
+every doc + the source-of-truth table (which doc wins on which topic).
+
 | Doc | Contents |
 |-----|----------|
-| [ARCHITECTURE.md](./docs/ARCHITECTURE.md) | Layers, data flow, extension points |
+| **Product / design** | |
+| [00_START_HERE.md](./docs/00_START_HERE.md) | Docs index + source-of-truth map |
+| [VISION.md](./docs/VISION.md) | Design pillars + non-goals (the decision filter) |
+| [CONCEPT.md](./docs/CONCEPT.md) | Original product concept |
 | [GAME-DESIGN.md](./docs/GAME-DESIGN.md) | Fantasy, loop, systems |
 | [BALANCE.md](./docs/BALANCE.md) | Curves, checkpoints, sprint |
+| [MONETIZATION.md](./docs/MONETIZATION.md) | Monetization posture |
+| **Design system (`brand/`)** | |
+| [DESIGN-TOKENS.md](./brand/DESIGN-TOKENS.md) · [tokens.css](./brand/tokens.css) | Color / type / spacing / motion — one color, one job |
+| [COMPONENTS.md](./brand/COMPONENTS.md) | Component library specs + states |
+| [MASCOT-CANON.md](./brand/MASCOT-CANON.md) | GLB single-source mascot rules |
+| [ART-DIRECTION.md](./brand/ART-DIRECTION.md) | 2D grammar, icons, enemies, backgrounds |
+| [NAMING.md](./brand/NAMING.md) | Copy & naming standard |
+| **Screens / production** | |
+| [SCREEN-SPECS.md](./docs/SCREEN-SPECS.md) | Mobile-first per-screen redesign |
+| [ART-PIPELINE.md](./docs/ART-PIPELINE.md) | GLB → sprite → atlas → WebP |
+| [PERF-BUDGET.md](./docs/PERF-BUDGET.md) | Load + runtime budgets |
+| [QA-CHECKLIST.md](./docs/QA-CHECKLIST.md) | V1 quality gate |
+| **Engineering / governance** | |
+| [ARCHITECTURE.md](./docs/ARCHITECTURE.md) | Layers, data flow, extension points |
 | [ASSETS.md](./docs/ASSETS.md) | Mascot, enemies, icons, GLB |
-| [CONCEPT.md](./docs/CONCEPT.md) | Original product concept |
+| [GLOSSARY.md](./docs/GLOSSARY.md) | Term standard + code↔UI name map |
+| [DEFINITION-OF-DONE.md](./docs/DEFINITION-OF-DONE.md) | "Is it done?" checklist |
+| [DOC-UPDATE-POLICY.md](./docs/DOC-UPDATE-POLICY.md) | Which doc to update when |
+| [decisions/](./docs/decisions/) | ADRs (stack, tokens, mascot) |
 | [CONTRIBUTING.md](./docs/CONTRIBUTING.md) | PR rules, conventions |
 | [ROADMAP.md](./docs/ROADMAP.md) | Near / mid / long term |
 | [EMBED.md](./docs/EMBED.md) | Site integration |

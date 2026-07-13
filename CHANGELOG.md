@@ -7,6 +7,23 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ## [Unreleased]
 
+### Added
+
+- **Design-system + docs backbone** (system-first redesign foundation; no runtime
+  change — the vanilla ES + Canvas 2D game is untouched):
+  - `brand/` design system — `tokens.css` (canonical CSS custom properties,
+    reconciled with shipped hexes), `DESIGN-TOKENS.md`, `COMPONENTS.md`,
+    `MASCOT-CANON.md`, `ART-DIRECTION.md`, `NAMING.md`
+  - `docs/00_START_HERE.md` source-of-truth map · `VISION.md` (pillars + non-goals)
+    · `SCREEN-SPECS.md` (mobile-first per-screen redesign) · `ART-PIPELINE.md` ·
+    `PERF-BUDGET.md` · `QA-CHECKLIST.md` · `GLOSSARY.md` · `DEFINITION-OF-DONE.md` ·
+    `DOC-UPDATE-POLICY.md`
+  - `docs/decisions/` ADRs — **ADR-0001** keep vanilla ES + Canvas 2D (reject
+    PixiJS/React rewrite), **ADR-0002** token-driven design system, **ADR-0003**
+    GLB single-source mascot
+- Two deliberate token changes staged for the redesign pass (not yet wired): Notes
+  crimson → rose `#ff6a8f`, SP crimson → violet `#b07cff` (de-collide from primary).
+
 ### Planned
 
 - Save schema rename (bytes → signal) with migration
