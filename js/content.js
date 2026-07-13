@@ -84,14 +84,17 @@ export const META = {
  * Three clear trees matching attributes. All stackable.
  * Unlock by putting SP into the matching attribute first.
  */
+/**
+ * Skills — stackable, no masks.
+ * max is soft ceiling; SP cost rises every 5 ranks for long-session sink.
+ */
 export const SKILLS = {
-  // —— Damage tree ——
   hotfix: {
     id: 'hotfix',
     tree: 'scan',
     name: 'Burst Hit',
     short: 'Burst',
-    max: 10,
+    max: 20,
     req: { scan: 1 },
     type: 'active',
     desc: 'Heavy hit on the nearest enemy. Costs mana.',
@@ -101,7 +104,7 @@ export const SKILLS = {
     tree: 'scan',
     name: 'Attack Speed',
     short: 'Speed',
-    max: 10,
+    max: 20,
     req: { scan: 3 },
     type: 'passive',
     desc: 'Faster auto-attacks and cheaper Sprint.',
@@ -111,18 +114,17 @@ export const SKILLS = {
     tree: 'scan',
     name: 'Damage Ramp',
     short: 'Ramp',
-    max: 12,
+    max: 25,
     req: { scan: 5 },
     type: 'toggle',
     desc: 'Damage ramps while you keep fighting. Strong on bosses.',
   },
-  // —— Crit tree ——
   notify: {
     id: 'notify',
     tree: 'verify',
     name: 'Extra Orbs',
     short: 'Orbs',
-    max: 8,
+    max: 15,
     req: { verify: 1 },
     type: 'passive',
     desc: 'More energy/Signal orbs, better pickups.',
@@ -132,7 +134,7 @@ export const SKILLS = {
     tree: 'verify',
     name: 'Area Blast',
     short: 'Area',
-    max: 8,
+    max: 15,
     req: { verify: 3 },
     type: 'active',
     desc: 'Brief AoE damage + better orb rewards.',
@@ -142,18 +144,17 @@ export const SKILLS = {
     tree: 'verify',
     name: 'Sharp Eye',
     short: 'Crit+',
-    max: 10,
+    max: 20,
     req: { verify: 5 },
     type: 'passive',
-    desc: '+2% crit chance per rank (stacks with Crit attr).',
+    desc: '+1.5% crit chance per rank (stacks with Crit attr).',
   },
-  // —— Utility tree ——
   deep_dive: {
     id: 'deep_dive',
     tree: 'amplify',
     name: 'Overdrive',
     short: 'Overdrive',
-    max: 10,
+    max: 20,
     req: { amplify: 1 },
     type: 'toggle',
     desc: 'Big damage boost while active. Drains energy — grab orbs.',
@@ -163,7 +164,7 @@ export const SKILLS = {
     tree: 'amplify',
     name: 'Skill Power',
     short: 'Power',
-    max: 10,
+    max: 20,
     req: { amplify: 3 },
     type: 'passive',
     desc: 'Actives, Ramp, and Overdrive hit harder.',
@@ -173,12 +174,17 @@ export const SKILLS = {
     tree: 'amplify',
     name: 'Marathon',
     short: 'Stamina',
-    max: 8,
+    max: 15,
     req: { amplify: 5 },
     type: 'passive',
     desc: '+energy regen and lower Sprint drain.',
   },
 };
+
+/** SP cost to raise a skill from current level → next (scalable sink) */
+export function skillSpCost(currentLv) {
+  return 1 + Math.floor(Math.max(0, currentLv) / 5);
+}
 
 /** Tree section order for Build UI */
 export const SKILL_TREES = [
@@ -192,7 +198,6 @@ export const SKILL_TREES = [
  * Free path is complete; Pro & boosts are optional power/convenience.
  */
 export const PREMIUM = {
-  /** Permanent IAP */
   pro: {
     id: 'pro',
     name: 'APN Pro',
@@ -200,11 +205,18 @@ export const PREMIUM = {
     mult: 1.25,
     benefits: [
       '×1.25 damage, Signal & Notes forever',
-      'Slightly better offline gains',
-      'Pro badge in header',
+      'Auto-Sprint included (no hold)',
+      'Better offline gains',
+      'Pro badge',
     ],
   },
-  /** Spend coins for timed power */
+  /** Convenience — was free “Endless Sprint” mask; now Pro / coin unlock */
+  auto_sprint: {
+    id: 'auto_sprint',
+    name: 'Auto-Sprint',
+    coinCost: 80,
+    desc: 'Sprint stays on without holding. Still drains energy.',
+  },
   boost_2x: {
     id: 'boost_2x',
     name: '2× Boost',
@@ -213,12 +225,18 @@ export const PREMIUM = {
     coinCost: 40,
     desc: '2× damage, Signal & Notes for 30 minutes.',
   },
-  /** Coin packs (mock IAP) */
+  /** Skip-ahead: runs offline sim for N seconds (not free endless power) */
+  time_warp: {
+    id: 'time_warp',
+    name: 'Time Warp +1h',
+    seconds: 3600,
+    coinCost: 30,
+    desc: 'Fast-forward 1 hour of idle progress. Once every few minutes.',
+  },
   packs: [
     { id: 'coins_100', coins: 100, priceLabel: 'Starter', tag: null },
     { id: 'coins_500', coins: 500, priceLabel: 'Bundle', tag: 'Best' },
   ],
-  /** Free earn rates */
   coinsPerBoss: 3,
   coinsPerShip: 1,
   coinsPerSeason: 15,

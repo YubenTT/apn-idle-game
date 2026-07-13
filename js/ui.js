@@ -18,6 +18,7 @@ import {
   ATTR_LABEL,
   ATTR_META,
   PREMIUM,
+  skillSpCost,
 } from './content.js';
 import {
   combatStats,
@@ -37,14 +38,31 @@ import {
   rarityColor,
   rarityLabel,
   unlockPro,
+  unlockAutoSprint,
   buyBoost2x,
   buyCoinPack,
+  timeWarp,
   ensurePremium,
   economyMult,
   boostActive,
   boostSecondsLeft,
+  hasAutoSprint,
+  claimHubObjective,
+  claimSeasonMilestone,
+  ensureHub,
 } from './game.js';
 import { formatAffix } from './loot.js';
+import {
+  DAILY_DEFS,
+  WEEKLY_DEFS,
+  hubProgress,
+  hubDone,
+  hubClaimed,
+  seasonLevel,
+  SEASON_MILESTONES,
+  hubFeed,
+} from './hub.js';
+import { skillIco, attrIco, metaIco, hubIco } from './icons.js';
 import { save, clear } from './save.js';
 import { sfx, unlockAudio, setMuted } from './sfx.js';
 
@@ -52,6 +70,7 @@ const PANEL_TITLES = {
   skills: 'Build',
   ship: 'Ship Notes',
   gear: 'Gear',
+  hub: 'Hub',
   meta: 'Boosts',
   settings: 'Menu',
 };
@@ -199,12 +218,39 @@ export function bindUI(s) {
     let ok = false;
     if (act === 'pro') ok = unlockPro(s);
     else if (act === 'boost') ok = buyBoost2x(s);
+    else if (act === 'auto') ok = unlockAutoSprint(s);
+    else if (act === 'warp') ok = timeWarp(s);
     else if (act.startsWith('coins_')) ok = buyCoinPack(s, act);
     if (ok) {
       save(s);
       renderPremium(s);
       if (s.settings.sfx !== false) sfx('click');
     } else if (s.settings.sfx !== false) sfx('error');
+  });
+
+  $('panel-hub')?.addEventListener('click', (e) => {
+    const claim = e.target.closest('[data-claim]');
+    if (claim) {
+      const [period, id] = claim.dataset.claim.split(':');
+      if (claimHubObjective(s, period, id)) {
+        save(s);
+        renderHub(s);
+      } else if (s.settings.sfx !== false) sfx('error');
+      return;
+    }
+    const mil = e.target.closest('[data-season-lv]');
+    if (mil) {
+      if (claimSeasonMilestone(s, Number(mil.dataset.seasonLv))) {
+        save(s);
+        renderHub(s);
+      } else if (s.settings.sfx !== false) sfx('error');
+      return;
+    }
+    const go = e.target.closest('[data-go]');
+    if (go) {
+      openSheet(s, go.dataset.go);
+      if (s.settings.sfx !== false) sfx('click');
+    }
   });
 }
 
@@ -227,7 +273,7 @@ function openSheet(s, panel) {
   });
   const title = document.getElementById('sheet-title');
   if (title) title.textContent = PANEL_TITLES[panel] || panel;
-  ['skills', 'meta', 'ship', 'gear', 'settings'].forEach((p) => {
+  ['skills', 'meta', 'ship', 'gear', 'hub', 'settings'].forEach((p) => {
     const el = document.getElementById(`panel-${p}`);
     if (el) el.hidden = p !== panel;
   });
@@ -235,6 +281,7 @@ function openSheet(s, panel) {
   if (panel === 'meta') renderMeta(s);
   if (panel === 'ship') fillShip(s);
   if (panel === 'gear') renderGear(s);
+  if (panel === 'hub') renderHub(s);
   if (panel === 'settings') {
     const a = document.getElementById('v-attrs');
     if (a) {
@@ -305,6 +352,7 @@ function typeTag(type) {
 function skillCard(s, sk) {
   const h = s.run.hero;
   const lv = skillLv(s, sk.id);
+  const cost = skillSpCost(lv);
   const ok = canLearn(s, sk.id);
   const maxed = lv >= sk.max;
   const owned = lv > 0;
@@ -316,8 +364,8 @@ function skillCard(s, sk) {
 
   let cta = '—';
   if (maxed) cta = 'Max';
-  else if (ok) cta = '+1 SP';
-  else if (h.sp < 1) cta = 'No SP';
+  else if (ok) cta = `+${cost} SP`;
+  else if (h.sp < cost) cta = `${cost} SP`;
   else cta = 'Locked';
 
   const reqs = Object.keys(sk.req || {}).length ? reqBadges(sk.req, h) : '';
@@ -325,6 +373,7 @@ function skillCard(s, sk) {
   return `
   <button type="button" class="skill-card ${state}"
     data-alloc="skill" data-id="${sk.id}" ${maxed ? 'disabled' : ''}>
+    <div class="sk-ico" aria-hidden="true">${skillIco(sk.id)}</div>
     <div class="sk-main">
       <div class="sk-top">
         <span class="sk-name">${sk.name}</span>
@@ -346,6 +395,7 @@ function renderSkills(s) {
   if (!root) return;
   const h = s.run.hero;
   const hasSp = h.sp > 0;
+  const totalSkillRanks = Object.values(h.skills || {}).reduce((a, b) => a + b, 0);
 
   let html = `
   <div class="sp-bank ${hasSp ? 'has-sp' : ''}">
@@ -354,9 +404,9 @@ function renderSkills(s) {
       <strong class="sp-bank-val">${h.sp}</strong>
       <span class="sp-bank-hint">${
         hasSp
-          ? '1. Attributes · 2. Skills in that tree'
+          ? 'Attrs 1 SP · Skills cost more every 5 ranks'
           : 'Rank up for skill points'
-      }</span>
+      } · ${totalSkillRanks} ranks trained</span>
     </div>
   </div>
 
@@ -368,6 +418,7 @@ function renderSkills(s) {
     const val = h[id] || 0;
     html += `
     <button type="button" class="attr-card ${hasSp ? 'can' : 'locked'}" data-alloc="attr" data-id="${id}" title="${m.sub}">
+      <span class="attr-ico" aria-hidden="true">${attrIco(id)}</span>
       <span class="attr-lab">${m.label}</span>
       <span class="attr-lv">${val}</span>
       <span class="attr-plus" aria-hidden="true">+</span>
@@ -396,20 +447,22 @@ function renderPremium(s) {
   const boostOn = boostActive(s);
   const left = boostSecondsLeft(s);
   const leftM = Math.ceil(left / 60);
+  const auto = hasAutoSprint(s);
 
   let html = `
   <div class="sp-bank rep-bank">
     <div class="sp-bank-left">
       <span class="sp-bank-label">Coins</span>
       <strong class="sp-bank-val gold">${formatNum(p.coins)}</strong>
-      <span class="sp-bank-hint">Economy now ×${eco.toFixed(2)}${
-        boostOn ? ` · 2× ${leftM}m left` : ''
+      <span class="sp-bank-hint">×${eco.toFixed(2)}${boostOn ? ` · 2× ${leftM}m` : ''}${
+        auto ? ' · Auto-Sprint' : ''
       }</span>
     </div>
   </div>
-  <p class="lead">Optional. Free path is complete — Pro &amp; boosts speed progress.</p>
+  <p class="lead">Optional QoL. Free path stays complete — never paywall zones or gear.</p>
   <div class="premium-card ${p.pro ? 'owned' : ''}">
     <div class="premium-card-top">
+      <span class="premium-ico">${hubIco('pro')}</span>
       <strong>APN Pro</strong>
       <span class="premium-tag">${p.pro ? 'OWNED' : 'ONE-TIME'}</span>
     </div>
@@ -418,11 +471,23 @@ function renderPremium(s) {
     </ul>
     <button type="button" class="btn-primary" data-premium="pro" ${p.pro ? 'disabled' : ''}>
       <span class="btn-primary-title">${p.pro ? 'Pro Active' : 'Unlock APN Pro'}</span>
-      <span class="btn-primary-sub">${p.pro ? `×${PREMIUM.pro.mult} permanent` : 'Demo IAP · permanent mult'}</span>
+      <span class="btn-primary-sub">${p.pro ? `×${PREMIUM.pro.mult} + Auto-Sprint` : 'Demo IAP'}</span>
+    </button>
+  </div>
+  <div class="premium-card ${auto ? 'owned' : ''}">
+    <div class="premium-card-top">
+      <span class="premium-ico">${hubIco('auto_sprint')}</span>
+      <strong>Auto-Sprint</strong>
+      <span class="premium-tag">${auto ? 'ON' : `${PREMIUM.auto_sprint.coinCost} coins`}</span>
+    </div>
+    <p class="fine" style="margin:6px 0 10px">${PREMIUM.auto_sprint.desc}</p>
+    <button type="button" class="btn-ghost" data-premium="auto" style="margin-top:0" ${auto ? 'disabled' : ''}>
+      ${auto ? 'Active' : 'Unlock Auto-Sprint'}
     </button>
   </div>
   <div class="premium-card">
     <div class="premium-card-top">
+      <span class="premium-ico">${hubIco('boost')}</span>
       <strong>2× Boost</strong>
       <span class="premium-tag">${PREMIUM.boost_2x.coinCost} coins</span>
     </div>
@@ -431,11 +496,21 @@ function renderPremium(s) {
       ${boostOn ? `Extend 2× (+${PREMIUM.boost_2x.minutes}m)` : `Activate 2× · ${PREMIUM.boost_2x.minutes}m`}
     </button>
   </div>
+  <div class="premium-card">
+    <div class="premium-card-top">
+      <span class="premium-ico">${hubIco('warp')}</span>
+      <strong>Time Warp +1h</strong>
+      <span class="premium-tag">${PREMIUM.time_warp.coinCost} coins</span>
+    </div>
+    <p class="fine" style="margin:6px 0 10px">${PREMIUM.time_warp.desc}</p>
+    <button type="button" class="btn-ghost" data-premium="warp" style="margin-top:0">Warp +1 hour</button>
+  </div>
   <div class="section-lab">Coin packs · demo IAP</div>
   <div class="premium-packs">`;
   for (const pack of PREMIUM.packs) {
     html += `
     <button type="button" class="gear-item" data-premium="${pack.id}">
+      <div class="sk-ico gold" aria-hidden="true">${hubIco('coin')}</div>
       <div>
         <div class="gi-name">+${pack.coins} coins</div>
         <div class="gi-meta">${pack.priceLabel}${pack.tag ? ` · ${pack.tag}` : ''}</div>
@@ -444,7 +519,7 @@ function renderPremium(s) {
     </button>`;
   }
   html += `</div>
-  <p class="fine">Earn free coins: +${PREMIUM.coinsPerBoss}/boss · +${PREMIUM.coinsPerShip}/ship · +${PREMIUM.coinsPerSeason}/season</p>`;
+  <p class="fine">Free coins: boss +${PREMIUM.coinsPerBoss} · ship +${PREMIUM.coinsPerShip} · season +${PREMIUM.coinsPerSeason} · hub quests</p>`;
   root.innerHTML = html;
 }
 
@@ -466,14 +541,16 @@ function renderMeta(s) {
     const lv = metaLv(s, u.id);
     const cost = metaCost(u.base, u.growth, lv);
     const ok = rep >= cost;
+    const barPct = Math.min(100, lv * 8);
     html += `
     <button type="button" class="skill-card ${ok ? 'can' : 'locked'}" data-meta="${u.id}">
+      <div class="sk-ico gold" aria-hidden="true">${metaIco(u.id)}</div>
       <div class="sk-main">
         <div class="sk-top">
           <span class="sk-name">${u.name}</span>
         </div>
         <div class="sk-desc">${u.desc}</div>
-        <div class="sk-bar"><i style="width:${Math.min(100, lv * 12)}%"></i></div>
+        <div class="sk-bar"><i style="width:${barPct}%"></i></div>
       </div>
       <div class="sk-side">
         <span class="sk-lv">Lv ${lv}</span>
@@ -482,6 +559,120 @@ function renderMeta(s) {
     </button>`;
   }
   html += '</div>';
+  root.innerHTML = html;
+}
+
+function questRow(s, def, period) {
+  ensureHub(s);
+  const hub = s.meta.hub;
+  const prog = hubProgress(hub, def, period);
+  const done = hubDone(hub, def, period);
+  const claimed = hubClaimed(hub, def, period);
+  const pct = Math.round((prog / def.target) * 100);
+  const rewardBits = Object.entries(def.reward)
+    .map(([k, v]) => `+${v} ${k === 'authority' ? 'rep' : k}`)
+    .join(' · ');
+  let cta = `${prog}/${def.target}`;
+  let cls = 'quest-row';
+  if (claimed) {
+    cta = 'Done';
+    cls += ' claimed';
+  } else if (done) {
+    cta = 'Claim';
+    cls += ' ready';
+  }
+  return `
+  <div class="${cls}">
+    <div class="quest-ico" aria-hidden="true">${hubIco(period === 'daily' ? 'daily' : 'weekly')}</div>
+    <div class="quest-main">
+      <div class="quest-name">${def.label}</div>
+      <div class="quest-desc">${def.desc} · ${rewardBits}</div>
+      <div class="sk-bar"><i style="width:${pct}%"></i></div>
+    </div>
+    ${
+      claimed
+        ? `<span class="quest-cta muted">✓</span>`
+        : done
+          ? `<button type="button" class="quest-cta" data-claim="${period}:${def.id}">Claim</button>`
+          : `<span class="quest-cta muted">${prog}/${def.target}</span>`
+    }
+  </div>`;
+}
+
+function renderHub(s) {
+  const root = document.getElementById('hub-body');
+  if (!root) return;
+  ensureHub(s);
+  const hub = s.meta.hub;
+  const season = seasonLevel(hub.seasonXp || 0);
+  const gear = s.meta.gear || {};
+  const feed = hubFeed(4);
+
+  let html = `
+  <div class="hub-hero">
+    <div class="hub-hero-copy">
+      <span class="hub-kicker">LIVE EVENT</span>
+      <strong>Balance Protocol</strong>
+      <p>Clear noise. Ship notes. Claim daily rewards.</p>
+    </div>
+    <div class="hub-hero-meta">
+      <span>Z${s.run.zone + 1}</span>
+      <span>×${economyMult(s).toFixed(2)}</span>
+    </div>
+  </div>
+
+  <div class="hub-quick">
+    <button type="button" class="hub-chip" data-go="gear">Gear ${gear.weapon ? '●' : '○'}</button>
+    <button type="button" class="hub-chip" data-go="meta">Boosts</button>
+    <button type="button" class="hub-chip" data-go="ship">Ship</button>
+    <button type="button" class="hub-chip" data-go="settings">Premium</button>
+  </div>
+
+  <div class="section-lab">Daily objectives</div>
+  <div class="quest-list">
+    ${DAILY_DEFS.map((d) => questRow(s, d, 'daily')).join('')}
+  </div>
+
+  <div class="section-lab">Weekly objectives</div>
+  <div class="quest-list">
+    ${WEEKLY_DEFS.map((d) => questRow(s, d, 'weekly')).join('')}
+  </div>
+
+  <div class="section-lab">Season progress</div>
+  <div class="season-card">
+    <div class="season-top">
+      <span>Patch Season</span>
+      <strong>Lv ${season.level}</strong>
+    </div>
+    <div class="sk-bar season-bar"><i style="width:${Math.round((season.into / season.need) * 100)}%"></i></div>
+    <div class="season-sub">${formatNum(season.into)} / ${formatNum(season.need)} XP</div>
+    <div class="season-milestones">`;
+  for (const m of SEASON_MILESTONES) {
+    const unlocked = season.level >= m.lv;
+    const claimed = !!hub.seasonClaimed?.[m.lv];
+    html += `
+    <button type="button" class="season-mil ${unlocked ? 'on' : ''} ${claimed ? 'claimed' : ''}"
+      data-season-lv="${m.lv}" ${!unlocked || claimed ? 'disabled' : ''}>
+      <span class="sm-lv">${m.lv}</span>
+      <span class="sm-lab">${claimed ? '✓' : unlocked ? 'Claim' : '···'}</span>
+    </button>`;
+  }
+  html += `</div></div>
+
+  <div class="section-lab">Patch feed</div>
+  <div class="hub-feed">`;
+  for (const it of feed) {
+    html += `
+    <div class="feed-row">
+      <img class="feed-ico" src="./assets/icons/${it.icon}.svg" alt="" width="28" height="28" />
+      <div class="feed-main">
+        <div class="feed-title">${it.name} · <span class="kind ${it.kind}">${it.kind}</span></div>
+        <div class="feed-text">${it.text}</div>
+      </div>
+      <span class="feed-ago">${it.ago}</span>
+    </div>`;
+  }
+  html += `</div>`;
   root.innerHTML = html;
 }
 
@@ -627,15 +818,30 @@ export function renderHUD(s) {
   }
   const spBtn = $('btn-sprint');
   if (spBtn) {
+    const auto = hasAutoSprint(s);
     spBtn.classList.toggle('is-active', sprinting);
     spBtn.classList.toggle('is-empty', h.energy < 1);
+    spBtn.classList.toggle('is-auto', auto);
     const sub = spBtn.querySelector('.btn-sprint-sub');
     if (sub) {
-      if (sprinting) set(sub, `×${(st.timeScale || 1.85).toFixed(2)} LIVE`);
+      if (sprinting) set(sub, auto ? 'AUTO · ×1.85' : `×${(st.timeScale || 1.85).toFixed(2)} LIVE`);
       else if (h.energy < 1) set(sub, 'Need energy');
-      else set(sub, 'Hold · ×1.85 speed');
+      else set(sub, auto ? 'Auto-Sprint on' : 'Hold · ×1.85 speed');
     }
   }
+  // Hub badge when claimable
+  ensureHub(s);
+  let hubReady = 0;
+  for (const d of DAILY_DEFS) {
+    if (hubDone(s.meta.hub, d, 'daily') && !hubClaimed(s.meta.hub, d, 'daily')) hubReady++;
+  }
+  for (const d of WEEKLY_DEFS) {
+    if (hubDone(s.meta.hub, d, 'weekly') && !hubClaimed(s.meta.hub, d, 'weekly')) hubReady++;
+  }
+  document.querySelectorAll('.nav-btn[data-panel="hub"]').forEach((b) => {
+    b.classList.toggle('has-badge', hubReady > 0);
+    b.dataset.badge = hubReady > 0 ? String(hubReady) : '';
+  });
   document.getElementById('app')?.classList.toggle('is-sprinting', sprinting);
 
   if (s.ui.pendingTip && TIPS[s.ui.pendingTip]) {
@@ -682,6 +888,7 @@ export function renderHUD(s) {
     if (s.ui.panel === 'meta') renderMeta(s);
     if (s.ui.panel === 'ship') fillShip(s);
     if (s.ui.panel === 'gear') renderGear(s);
+    if (s.ui.panel === 'hub') renderHub(s);
     lastPanel = s.ui.panel;
     s.ui.panelDirty = false;
   }

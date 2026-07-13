@@ -19,9 +19,11 @@ Applied to:
 
 | Product | Type | Effect | Earn / pay |
 |---------|------|--------|------------|
-| **APN Pro** | One-time IAP | Permanent ×1.25 economy + better offline | Demo unlock in Menu · wire real IAP later |
-| **2× Boost** | Timed consumable | ×2 economy for 30 minutes (stacks with Pro) | **40 coins** |
-| **Coin packs** | Soft IAP | +100 / +500 coins | Demo “Get” buttons · real store SKUs later |
+| **APN Pro** | One-time IAP | ×1.25 economy + **Auto-Sprint** + offline bonus | Menu → Premium |
+| **Auto-Sprint** | Coin unlock (or free with Pro) | Sprint without hold; still drains energy | **80 coins** |
+| **2× Boost** | Timed | ×2 economy 30m | **40 coins** |
+| **Time Warp +1h** | Consumable + CD | Fast-forward 1h idle (8m cooldown) | **30 coins** |
+| **Coin packs** | Soft IAP | +100 / +500 coins | Demo “Get” |
 
 ## Free coin sinks & sources
 

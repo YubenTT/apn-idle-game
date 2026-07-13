@@ -23,9 +23,11 @@ import {
   buyCoinPack,
   economyMult,
   skillLv,
+  claimHubObjective,
 } from '../js/game.js';
 import { emptyGear, rollItem, offerItem } from '../js/loot.js';
 import { SKILLS } from '../js/content.js';
+import { hubOnKill } from '../js/hub.js';
 
 let fails = 0;
 const ok = (c, m) => {
@@ -142,13 +144,16 @@ ok(s7.meta.premium.coins >= 10 + 15, 'season coins granted');
 ok(s7.meta.gear.weapon?.name === gearName, 'gear kept');
 ok(s7.meta.live > liveBefore, 'live grew');
 
-// —— Premium mult ——
+// —— Premium mult (energy empty so Auto-Sprint doesn’t add SPRINT_DMG) ——
 const s8 = createState();
 s8.run.hero.scanner = 5;
+s8.run.hero.energy = 0;
 const base = combatStats(s8).dmg;
 ok(unlockPro(s8), 'unlock pro');
+s8.run.hero.energy = 0;
 ok(Math.abs(combatStats(s8).dmg / base - 1.25) < 0.02, 'pro ×1.25 dmg');
 ok(economyMult(s8) >= 1.25, 'economy mult pro');
+ok(s8.meta.premium.autoSprint === true, 'pro includes auto-sprint');
 s8.meta.premium.coins = 100;
 ok(buyBoost2x(s8), 'buy 2x boost');
 ok(economyMult(s8) >= 2.4, `boost stacks (${economyMult(s8).toFixed(2)})`);
@@ -163,6 +168,12 @@ ok(isSprinting(s9), 'sprint on');
 ok(combatStats(s9).timeScale >= C.SPRINT_TIME - 0.01, 'sprint timescale');
 s9.run.hero.energy = 0;
 ok(!isSprinting(s9), 'sprint off empty');
+
+// —— Hub claims ——
+const sHub = createState();
+for (let i = 0; i < 50; i++) hubOnKill(sHub, { type: 'stale' });
+ok(claimHubObjective(sHub, 'daily', 'd_kills'), 'claim daily kills');
+ok(sHub.run.hero.sp >= 2, 'daily reward SP');
 
 // —— Zero-mask save migration path: skills without mask fields ——
 const sM = createState();

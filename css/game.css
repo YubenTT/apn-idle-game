@@ -1219,7 +1219,20 @@ body {
 }
 
 .attr-ico {
-  display: none;
+  display: flex;
+  width: 22px;
+  height: 22px;
+  align-items: center;
+  justify-content: center;
+  color: #9aa6b5;
+  margin-bottom: 2px;
+}
+.attr-ico .ico {
+  width: 16px;
+  height: 16px;
+}
+.attr-card.can .attr-ico {
+  color: #fc1243;
 }
 
 .attr-ico .ico,
@@ -1289,8 +1302,8 @@ body {
 .skill-card {
   --acc: #fc1243;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 6px 10px;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  gap: 6px 8px;
   align-items: center;
   width: 100%;
   text-align: left;
@@ -1369,11 +1382,30 @@ body {
 }
 
 .sk-ico {
-  display: none;
+  display: flex;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  align-items: center;
+  justify-content: center;
+  background: rgba(252, 18, 67, 0.1);
+  color: #fc1243;
+  border: 1px solid rgba(252, 18, 67, 0.22);
+  flex-shrink: 0;
+  grid-column: 1;
+}
+
+.sk-ico .ico {
+  width: 18px;
+  height: 18px;
+  display: block;
 }
 
 .sk-ico.gold {
-  display: none;
+  display: flex;
+  color: #e6b84d;
+  background: rgba(230, 184, 77, 0.1);
+  border-color: rgba(230, 184, 77, 0.28);
 }
 
 .sk-main {
@@ -1381,7 +1413,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  grid-column: 1;
+  grid-column: 2;
 }
 
 .sk-top {
@@ -1488,8 +1520,296 @@ body {
   gap: 4px;
   flex-shrink: 0;
   min-width: 48px;
-  grid-column: 2;
+  grid-column: 3;
   grid-row: 1;
+}
+
+/* ---- HUB ---- */
+.hub-hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #1a1020 0%, #0c1014 55%, #101820 100%);
+  border: 1px solid rgba(252, 18, 67, 0.28);
+}
+
+.hub-kicker {
+  display: block;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #fc1243;
+  margin-bottom: 4px;
+}
+
+.hub-hero-copy strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 800;
+  color: #eef2f6;
+  margin-bottom: 4px;
+}
+
+.hub-hero-copy p {
+  margin: 0;
+  font-size: 11px;
+  color: #8b97a6;
+  line-height: 1.35;
+}
+
+.hub-hero-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #9aa6b5;
+}
+
+.hub-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.hub-chip {
+  border: 1px solid #1e2733;
+  background: #0c1014;
+  color: #c5ced8;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 7px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.hub-chip:active {
+  background: #151c24;
+}
+
+.quest-list {
+  display: grid;
+  gap: 5px;
+  margin-bottom: 4px;
+}
+
+.quest-row {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid #1e2733;
+  background: #0c1014;
+}
+
+.quest-row.ready {
+  border-color: rgba(252, 18, 67, 0.45);
+  background: rgba(252, 18, 67, 0.06);
+}
+
+.quest-row.claimed {
+  opacity: 0.65;
+}
+
+.quest-ico {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fc1243;
+  background: rgba(252, 18, 67, 0.1);
+}
+
+.quest-ico .ico {
+  width: 16px;
+  height: 16px;
+}
+
+.quest-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: #eef2f6;
+}
+
+.quest-desc {
+  font-size: 10px;
+  color: #6b7787;
+  margin: 1px 0 4px;
+}
+
+.quest-cta {
+  border: 0;
+  background: #fc1243;
+  color: #fff;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 6px 10px;
+  border-radius: 7px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.quest-cta.muted {
+  background: transparent;
+  color: #6b7787;
+  cursor: default;
+  padding: 4px 0;
+}
+
+.season-card {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #1e2733;
+  background: #0c1014;
+  margin-bottom: 8px;
+}
+
+.season-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+  font-size: 11px;
+  color: #8b97a6;
+}
+
+.season-top strong {
+  font-size: 14px;
+  color: #c084fc;
+}
+
+.season-bar i {
+  background: linear-gradient(90deg, #7c5cff, #c084fc) !important;
+}
+
+.season-sub {
+  font-size: 10px;
+  color: #6b7787;
+  margin: 4px 0 8px;
+}
+
+.season-milestones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.season-mil {
+  flex: 1 1 44px;
+  min-width: 44px;
+  border: 1px solid #1e2733;
+  background: #11161d;
+  color: #6b7787;
+  border-radius: 8px;
+  padding: 6px 4px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.season-mil.on:not(.claimed) {
+  border-color: rgba(192, 132, 252, 0.5);
+  color: #eef2f6;
+  cursor: pointer;
+}
+
+.season-mil.claimed {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.sm-lv {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.sm-lab {
+  display: block;
+  font-size: 9px;
+  margin-top: 2px;
+}
+
+.hub-feed {
+  display: grid;
+  gap: 5px;
+}
+
+.feed-row {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid #1e2733;
+  background: #0c1014;
+}
+
+.feed-ico {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.feed-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #e8edf2;
+}
+
+.feed-text {
+  font-size: 10px;
+  color: #6b7787;
+  margin-top: 1px;
+}
+
+.feed-ago {
+  font-size: 9px;
+  color: #5c6878;
+  white-space: nowrap;
+}
+
+.premium-ico {
+  display: inline-flex;
+  width: 22px;
+  height: 22px;
+  align-items: center;
+  color: #e6b84d;
+  margin-right: 4px;
+}
+
+.premium-ico .ico {
+  width: 16px;
+  height: 16px;
+}
+
+.premium-card-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-sprint.is-auto {
+  border-color: rgba(230, 184, 77, 0.45);
+}
+
+.gear-item {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
 }
 
 .sk-lv {
