@@ -336,6 +336,89 @@ body {
   touch-action: none;
 }
 
+/* In-stage Zone / Rank — compact top strip (PlayForge-style) */
+.stage-hud {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  z-index: 4;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.stage-stat {
+  min-width: 0;
+  padding: 6px 8px 7px;
+  border-radius: 10px;
+  background: rgba(8, 12, 16, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.stage-stat-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.stage-stat-lab {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #7d8a99;
+  white-space: nowrap;
+}
+
+.stage-stat-lab em {
+  font-style: normal;
+  font-size: 12px;
+  font-weight: 800;
+  color: #eef2f6;
+  margin-left: 3px;
+  font-variant-numeric: tabular-nums;
+}
+
+.stage-stat-val {
+  font-size: 10px;
+  font-weight: 700;
+  color: #8b97a6;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.stage-stat-track {
+  height: 4px;
+  border-radius: 99px;
+  background: rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.stage-stat-track i {
+  display: block;
+  height: 100%;
+  width: 0%;
+  border-radius: 99px;
+  transition: width 0.12s linear;
+}
+
+.stage-stat-track i.zone {
+  background: linear-gradient(90deg, #7c5cff, #c084fc);
+}
+
+.stage-stat-track i.xp {
+  background: linear-gradient(90deg, #d40d38, #fc1243);
+}
+
+.hud-bars {
+  padding: 6px 12px 4px;
+}
+
 #toast {
   position: absolute;
   left: 50%;
@@ -677,11 +760,11 @@ body {
 .hud-nav {
   flex: 0 0 auto;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 4px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 2px;
   border-top: 1px solid #243040;
   background: #0a0e13;
-  padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0));
+  padding: 4px 4px calc(6px + env(safe-area-inset-bottom, 0));
 }
 
 .nav-btn {
@@ -689,14 +772,14 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
-  min-height: 52px;
+  gap: 2px;
+  min-height: 48px;
   border: 0;
   border-radius: 10px;
   background: transparent;
   color: #8b97a6;
   font: inherit;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   padding: 8px 4px 6px;
   cursor: pointer;
@@ -1472,6 +1555,110 @@ body {
   .attr-card.just-bought {
     animation: none;
   }
+}
+
+/* ---- GEAR PANEL ---- */
+.gear-slots {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.gear-slot {
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #0c1014;
+  border: 1px solid #1e2733;
+  min-height: 72px;
+}
+
+.gear-slot.empty {
+  opacity: 0.75;
+}
+
+.gear-slot-lab {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #5c6878;
+  margin-bottom: 4px;
+}
+
+.gear-slot-name {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 2px;
+}
+
+.gear-slot-aff {
+  font-size: 10px;
+  color: #7d8a99;
+  line-height: 1.35;
+}
+
+.gear-slot-r {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.gear-bag {
+  display: grid;
+  gap: 5px;
+}
+
+.gear-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid #1e2733;
+  background: #0c1014;
+  color: #e8edf2;
+  font: inherit;
+  cursor: pointer;
+}
+
+.gear-item:active {
+  transform: scale(0.99);
+}
+
+.gear-item .gi-name {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.gear-item .gi-meta {
+  font-size: 10px;
+  color: #6b7787;
+  margin-top: 1px;
+}
+
+.gear-item .gi-cta {
+  font-size: 10px;
+  font-weight: 800;
+  color: #fff;
+  background: #fc1243;
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.meta-pill.gear-pill {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #9aa6b5;
+  font-size: 10px;
 }
 
 /* Sheet CTAs tighter */

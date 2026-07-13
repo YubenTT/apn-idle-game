@@ -27,6 +27,16 @@ import {
   SCANNER_LINES,
 } from './comedy.js';
 import { sfx } from './sfx.js';
+import {
+  emptyGear,
+  rollItem,
+  offerItem,
+  equipFromBag,
+  gearBonuses,
+  shouldDropOnKill,
+  rarityColor,
+  rarityLabel,
+} from './loot.js';
 
 export function createState() {
   return {
@@ -38,6 +48,8 @@ export function createState() {
       ships: 0,
       bosses: 0,
       postsShippedTotal: 0,
+      /** Permanent loadout — survives End Season */
+      gear: emptyGear(),
     },
     authority: {
       amount: 0,
@@ -139,18 +151,20 @@ export function setSprint(s, on) {
 
 export function combatStats(s) {
   const h = s.run.hero;
-  const flat = metaPer(s, 'cold_start');
+  const g = gearBonuses(s.meta.gear);
+  const flat = metaPer(s, 'cold_start') + (g.flat_dmg || 0);
   let dmg = scannerDamage(h.scanner, flat);
   dmg *= 1 + 0.022 * h.scan;
   dmg *= 1 + metaPer(s, 'signal_power');
+  dmg *= 1 + (g.dmg_pct || 0) / 100;
   // Live Mult is permanent prestige power — must move combat, not only Rep
   dmg *= Math.max(1, s.meta.live || 1);
 
-  let crit = Math.min(0.65, 0.011 * h.verify);
-  let interval = C.ATTACK_INTERVAL;
-  let move = C.MOVE_SPEED * (1 + metaPer(s, 'feed_speed'));
-  let eMax = C.ENERGY_MAX + 4 * h.verify;
-  let eRegen = C.ENERGY_REGEN;
+  let crit = Math.min(0.65, 0.011 * h.verify + (g.crit_pct || 0) / 100);
+  let interval = C.ATTACK_INTERVAL / (1 + (g.atk_spd || 0) / 100);
+  let move = C.MOVE_SPEED * (1 + metaPer(s, 'feed_speed')) * (1 + (g.move_pct || 0) / 100);
+  let eMax = C.ENERGY_MAX + 4 * h.verify + (g.energy || 0);
+  let eRegen = C.ENERGY_REGEN + (g.e_regen || 0);
   let mMax = C.MANA_MAX + 8 * h.amplify;
   let mRegen = C.MANA_REGEN + 0.08 * h.amplify;
   let skillMult = 1;
@@ -179,10 +193,9 @@ export function combatStats(s) {
   if (freeSprint) {
     eRegen += 10;
     move *= 1.12;
-    timeScale = Math.max(timeScale, 1.25); // mild always-on speed with mask
+    timeScale = Math.max(timeScale, 1.25);
   }
 
-  // Sprint: real game speed (timeScale) + march/atk juice
   if (sprintOn) {
     timeScale = freeSprint ? Math.max(C.SPRINT_TIME, 1.5) : C.SPRINT_TIME;
     interval /= C.SPRINT_ATK;
@@ -215,6 +228,7 @@ export function combatStats(s) {
     notify,
     tracker,
     deep,
+    gear: g,
     summary: skillLv(s, 'summary_burst'),
     hotfix: skillLv(s, 'hotfix'),
   };
@@ -373,7 +387,8 @@ function onKill(s, e) {
   }
 
   const zone = s.run.zone;
-  const byteM = 1 + metaPer(s, 'byte_gain');
+  const gb = gearBonuses(s.meta.gear);
+  const byteM = (1 + metaPer(s, 'byte_gain')) * (1 + (gb.signal_pct || 0) / 100);
   let typeByte = 1;
   let typeXp = 1;
   if (e.type === 'lag' || e.type === 'spoiler' || e.type === 'event') {
@@ -401,7 +416,7 @@ function onKill(s, e) {
   const xpM = (1 + metaPer(s, 'xp_posts')) * (1 + metaPer(s, 'xp_global'));
   grantXp(s, C.XP_BASE * (1 + 0.11 * zone) * typeXp * xpM * comboMult);
 
-  const patchM = 1 + metaPer(s, 'patch_gain');
+  const patchM = (1 + metaPer(s, 'patch_gain')) * (1 + (gb.notes_pct || 0) / 100);
   if (e.type === 'patch') {
     const p = C.PATCH_FROM_CHAMP * patchM;
     s.run.patches += p;
@@ -422,6 +437,38 @@ function onKill(s, e) {
     s.ui.chipPulse.patches = 0.5;
   } else if (Math.random() < 0.35 || s.stats.combo <= 2) {
     floater(s, e.displayX, 125, killLine(e.type), '#F5F6F8');
+  }
+
+  // Gear drops — bosses guaranteed, elites/patch rare
+  if (shouldDropOnKill(e.type)) {
+    if (!s.meta.gear) s.meta.gear = emptyGear();
+    const forced = e.type === 'boss' ? null : Math.random() < 0.5 ? 'weapon' : 'armor';
+    let item = rollItem(zone, forced);
+    // Bosses: re-roll pure whites once for better feel
+    if (e.type === 'boss' && item.rarity === 'white' && Math.random() < 0.55) {
+      item = rollItem(zone, item.slot);
+    }
+    const res = offerItem(s.meta.gear, item);
+    const col = rarityColor(item.rarity);
+    const tag = rarityLabel(item.rarity);
+    floater(
+      s,
+      e.displayX,
+      95,
+      res.equipped ? `EQUIP ${item.name}` : `+${item.name}`,
+      col,
+      true
+    );
+    confetti(s, e.displayX, 160, [col, '#fff', '#FC1243'], e.type === 'boss' ? 28 : 14);
+    toast(
+      s,
+      res.equipped
+        ? `${tag} ${item.slot}: ${item.name} equipped`
+        : `${tag} ${item.name} → bag`
+    );
+    tip(s, 'gear');
+    s.ui.panelDirty = true;
+    if (s.settings.sfx !== false) sfx('upgrade');
   }
 
   particles(s, e.displayX, 210, e.color, e.type === 'boss' ? 26 : 14);
@@ -845,9 +892,8 @@ export function buyMeta(s, id) {
 
 /**
  * End Season (prestige).
- * KEEP permanent: Live Mult, Boosts (authority.upgrades), unspent Rep.
- * RESET run power: zone, weapon, rank, attrs, skills, Notes.
- * Weapon is intentionally NOT permanent — re-earn each season with Signal.
+ * KEEP: Live Mult, Boosts, Rep, gear (weapon+armor+bag).
+ * RESET: zone, Signal weapon Lv, rank, attrs, skills, Notes.
  */
 export function leaveSeason(s) {
   if (!s.ui.seasonDone && s.run.zone < SEASON.zones) {
@@ -860,9 +906,9 @@ export function leaveSeason(s) {
   const gain = liveGain(s.authority.shippedThisSeason);
   s.meta.live += gain;
   s.meta.season += 1;
-  // Rep + Boosts stay permanent — only the season shipping counter resets
   s.authority.shippedThisSeason = 0;
-  // Run wipe
+  // gear is on meta — intentionally untouched
+  if (!s.meta.gear) s.meta.gear = emptyGear();
   s.run.zone = 0;
   s.run.killsInZone = 0;
   s.run.bytes = Math.floor(s.run.bytes * 0.15);
@@ -874,7 +920,7 @@ export function leaveSeason(s) {
   h.scan = h.verify = h.amplify = 0;
   h.skills = {};
   h.mask = null;
-  h.scanner = 0; // weapon is run-only
+  h.scanner = 0; // Signal weapon level is season-only
   h.energy = C.ENERGY_MAX;
   h.mana = C.MANA_MAX;
   h.trackerOn = false;
@@ -886,13 +932,24 @@ export function leaveSeason(s) {
   s.ui.seasonDone = false;
   toast(
     s,
-    `New season! Live Mult +${gain.toFixed(3)} → ×${s.meta.live.toFixed(2)}. Boosts kept · Weapon reset.`
+    `New season! Live ×${s.meta.live.toFixed(2)} (+${gain.toFixed(3)}). Gear & Boosts kept · Signal weapon reset.`
   );
   s.ui.panelDirty = true;
   confetti(s, s.world.heroX, 180, ['#e6b84d', '#FC1243', '#fff', '#3ecf8e'], 36);
   if (s.settings.sfx !== false) sfx('rank');
   return true;
 }
+
+export function equipGear(s, itemId) {
+  if (!s.meta.gear) s.meta.gear = emptyGear();
+  if (!equipFromBag(s.meta.gear, itemId)) return false;
+  toast(s, 'Equipped');
+  s.ui.panelDirty = true;
+  if (s.settings.sfx !== false) sfx('click');
+  return true;
+}
+
+export { gearBonuses, rarityColor, rarityLabel };
 
 export function simulateOffline(s, seconds) {
   const T = Math.min(seconds, C.OFFLINE_CAP);

@@ -196,16 +196,17 @@ export const ENEMY_FLAVOR = {
 
 export const TIPS = {
   start:
-    'Kill noise. Red enemies drop Notes. Ship Notes → permanent Rep → Boosts. Weapon is this season only.',
-  kill: 'Spend Signal on Upgrade Weapon (resets each End Season).',
+    'Kill noise. Notes → Ship for Rep. Bosses drop Gear (permanent). Signal Lv is this season only.',
+  kill: 'Spend Signal on Upgrade Signal. Gear from bosses is permanent.',
   level: 'Rank up! Open Build — spend SP on Damage / Crit / Skills.',
   patch: 'Notes banked. Open Ship → convert to permanent Reputation.',
   alert: 'Hover or tap glowing orbs for energy and Signal.',
-  boss: 'Version Gate: kill it before the timer or it full-heals.',
-  ship: 'Stuck? Ship Notes → buy permanent Boosts → Upgrade Weapon.',
+  boss: 'Version Gate: kill before timer · gear drop guaranteed.',
+  ship: 'Stuck? Ship Notes → Boosts · check Gear · Upgrade Signal.',
   combo: 'Feed streak! Bonus Signal while the streak holds.',
   season:
-    'Checkpoint! Ship Notes, then End Season: +Live Mult, Boosts stay, weapon resets.',
+    'Checkpoint! Ship Notes, End Season: +Live Mult · Gear & Boosts stay · Signal Lv resets.',
+  gear: 'Gear equipped! Check Gear tab — permanent across seasons.',
 };
 
 /**

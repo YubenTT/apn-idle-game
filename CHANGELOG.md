@@ -12,6 +12,22 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 - Save schema rename (bytes → signal) with migration
 - PWA manifest
 
+## [1.2.0] — 2026-07-13
+
+### Added
+
+- **Gear system**: weapon + armor drops (white→unique), boss guaranteed
+- Gear permanent across End Season with Boosts + Live Mult
+- Gear panel + bag equip UI
+
+### Changed
+
+- Dual eye scanners (no skull stick weapon)
+- Soft hit bloom instead of square flash
+- Soft Ramp/Overdrive glows (no ring lines)
+- Zone + Rank bars moved into stage overlay
+- Nav: Build · Ship · Gear · Boosts · Menu
+
 ## [1.1.0] — 2026-07-13
 
 ### Changed

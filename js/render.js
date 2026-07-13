@@ -349,24 +349,25 @@ export function draw(ctx, w, h, s) {
   ctx.fillStyle = vig;
   ctx.fillRect(0, 0, w, h);
 
-  // boss timer
+  // boss timer (below stage Zone/Rank HUD)
   if (s.world.bossActive) {
     const ratio = clamp(s.world.bossTimer / C.BOSS_TIMER, 0, 1);
     const bx = w * 0.18;
     const bw = w * 0.64;
+    const by = 54;
     ctx.fillStyle = 'rgba(10,14,19,0.8)';
-    roundRect(ctx, bx, 14, bw, 12, 6);
+    roundRect(ctx, bx, by, bw, 10, 5);
     ctx.fill();
     const g = ctx.createLinearGradient(bx, 0, bx + bw, 0);
     g.addColorStop(0, '#A3072F');
     g.addColorStop(1, '#FC1243');
     ctx.fillStyle = g;
-    roundRect(ctx, bx, 14, bw * ratio, 12, 6);
+    roundRect(ctx, bx, by, bw * ratio, 10, 5);
     ctx.fill();
-    ctx.fillStyle = '#F5F6F8';
-    ctx.font = '700 11px system-ui,sans-serif';
+    ctx.fillStyle = 'rgba(245,246,248,0.85)';
+    ctx.font = '700 10px system-ui,sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('VERSION GATE TIMER', w / 2, 42);
+    ctx.fillText('VERSION GATE', w / 2, by + 22);
   }
 
   ctx.restore();
@@ -389,14 +390,16 @@ function drawBiomeTag(ctx, w, bio) {
   ctx.save();
   ctx.font = '700 10px system-ui,sans-serif';
   const tw = ctx.measureText(label).width;
-  const x = w - tw - 22;
-  ctx.fillStyle = 'rgba(8,12,16,0.55)';
-  roundRect(ctx, x, 10, tw + 14, 18, 6);
+  const x = w - tw - 16;
+  // Below in-stage Zone/Rank strip
+  const y = 48;
+  ctx.fillStyle = 'rgba(8,12,16,0.45)';
+  roundRect(ctx, x, y, tw + 12, 16, 5);
   ctx.fill();
   ctx.fillStyle = bio.accent;
-  ctx.globalAlpha = 0.85;
+  ctx.globalAlpha = 0.75;
   ctx.textAlign = 'left';
-  ctx.fillText(label, x + 7, 22);
+  ctx.fillText(label, x + 6, y + 11);
   ctx.restore();
 }
 
@@ -487,71 +490,109 @@ function drawHero(ctx, x, gy, s, t) {
   const h = s.run.hero;
   const bob = Math.sin(t * 8) * 1.2;
   const attack = easeOutCubic(h.attackAnim);
-  const recoil = h.hitRecoil * 4;
-  const squashY = 1 - attack * 0.05;
-  const squashX = 1 + attack * 0.06;
-  const sprinting = s.world.sprinting;
+  const recoil = h.hitRecoil * 3;
+  const squashY = 1 - attack * 0.04;
+  const squashX = 1 + attack * 0.05;
+  const sprinting = s.world.sprinting && h.energy > 0.5;
   const img = ready(sprites.mascot) ? sprites.mascot : null;
   const footY = gy - FOOT_PAD + bob;
   const mh = 76;
   const mw = 76;
+  const hx = x - recoil;
+  // Visor / eye height on Host mascot (facing right after flip)
+  const eyeX = hx + 10;
+  const eyeY = footY - mh * 0.64;
+
+  // Soft skill auras UNDER the character (no hard ring lines)
+  const cy = footY - mh * 0.42;
+  if (h.trackerOn && h.trackerStacks > 0.04) {
+    const st = Math.min(1, h.trackerStacks);
+    const rg = ctx.createRadialGradient(hx, cy, 4, hx, cy, 36 + st * 22);
+    rg.addColorStop(0, `rgba(62,207,142,${0.1 + st * 0.12})`);
+    rg.addColorStop(0.55, `rgba(62,207,142,${0.05 + st * 0.06})`);
+    rg.addColorStop(1, 'rgba(62,207,142,0)');
+    ctx.fillStyle = rg;
+    ctx.beginPath();
+    ctx.arc(hx, cy, 36 + st * 22, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  if (h.deepOn) {
+    const pulse = 0.08 + Math.sin(t * 5) * 0.03;
+    const rg = ctx.createRadialGradient(hx, cy, 6, hx, cy, 42);
+    rg.addColorStop(0, `rgba(252,18,67,${pulse + 0.06})`);
+    rg.addColorStop(0.6, `rgba(252,18,67,${pulse * 0.5})`);
+    rg.addColorStop(1, 'rgba(252,18,67,0)');
+    ctx.fillStyle = rg;
+    ctx.beginPath();
+    ctx.arc(hx, cy, 42, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  if (h.summaryT > 0) {
+    const a = Math.min(1, h.summaryT / 1.2) * 0.12;
+    const rg = ctx.createRadialGradient(hx, cy, 20, hx, cy, 88);
+    rg.addColorStop(0, `rgba(94,176,255,${a})`);
+    rg.addColorStop(1, 'rgba(94,176,255,0)');
+    ctx.fillStyle = rg;
+    ctx.beginPath();
+    ctx.arc(hx, cy, 88, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   ctx.fillStyle = 'rgba(0,0,0,0.5)';
   ctx.beginPath();
-  ctx.ellipse(x - recoil, gy + 3, 20, 5, 0, 0, Math.PI * 2);
+  ctx.ellipse(hx, gy + 3, 20, 5, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  if (sprinting || h.deepOn) {
-    // speed lines / afterimage
-    ctx.fillStyle = sprinting ? 'rgba(230,184,77,0.16)' : 'rgba(252,18,67,0.12)';
-    for (let i = 1; i <= 4; i++) {
+  // Subtle sprint dust (no SPRINT billboard)
+  if (sprinting) {
+    ctx.fillStyle = 'rgba(230,184,77,0.1)';
+    for (let i = 1; i <= 3; i++) {
       ctx.beginPath();
-      ctx.ellipse(x - recoil - i * 10, gy - 28, 10 + i, 14, 0, 0, Math.PI * 2);
+      ctx.ellipse(hx - i * 9, gy - 22, 8 + i, 11, 0, 0, Math.PI * 2);
       ctx.fill();
-    }
-    if (sprinting) {
-      ctx.strokeStyle = 'rgba(230,184,77,0.55)';
-      ctx.lineWidth = 2;
-      for (let i = 0; i < 5; i++) {
-        const ly = footY - 20 - i * 10;
-        const lx = x - recoil - 28 - (i % 2) * 6;
-        ctx.beginPath();
-        ctx.moveTo(lx, ly);
-        ctx.lineTo(lx - 14, ly);
-        ctx.stroke();
-      }
-      // SPRINT tag
-      ctx.fillStyle = 'rgba(12,16,20,0.85)';
-      roundRect(ctx, x - 28, footY - mh - 40, 56, 16, 4);
-      ctx.fill();
-      ctx.fillStyle = '#e6b84d';
-      ctx.font = '800 10px system-ui,sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('SPRINT', x, footY - mh - 28);
     }
   }
 
-  // scanner beam
-  ctx.save();
-  ctx.translate(x + 22 - recoil, footY - mh * 0.55);
-  ctx.rotate(-0.15 - attack * 1.0);
-  const grad = ctx.createLinearGradient(0, 0, 50, 0);
-  grad.addColorStop(0, 'rgba(252,18,67,0.95)');
-  grad.addColorStop(1, 'rgba(252,18,67,0)');
-  ctx.fillStyle = grad;
-  roundRect(ctx, 0, -3, 42 + attack * 14, 6, 3);
-  ctx.fill();
-  // beam tip spark
-  if (attack > 0.2) {
-    ctx.fillStyle = `rgba(255,255,255,${attack})`;
+  // Dual eye scanners — beams from visor, not a stick out of the skull
+  const beamLen = 28 + attack * 36;
+  const beamAlpha = 0.55 + attack * 0.4;
+  for (const dy of [-3.5, 3.5]) {
+    ctx.save();
+    ctx.translate(eyeX, eyeY + dy);
+    // soft eye glow
+    const eg = ctx.createRadialGradient(0, 0, 0, 0, 0, 5);
+    eg.addColorStop(0, `rgba(255,120,140,${0.7 + attack * 0.3})`);
+    eg.addColorStop(1, 'rgba(252,18,67,0)');
+    ctx.fillStyle = eg;
     ctx.beginPath();
-    ctx.arc(42 + attack * 14, 0, 3 + attack * 2, 0, Math.PI * 2);
+    ctx.arc(0, 0, 5, 0, Math.PI * 2);
     ctx.fill();
+    // beam core
+    const g = ctx.createLinearGradient(0, 0, beamLen, 0);
+    g.addColorStop(0, `rgba(252,18,67,${beamAlpha})`);
+    g.addColorStop(0.35, `rgba(255,90,120,${beamAlpha * 0.55})`);
+    g.addColorStop(1, 'rgba(252,18,67,0)');
+    ctx.fillStyle = g;
+    const bh = 1.6 + attack * 1.4;
+    ctx.beginPath();
+    ctx.moveTo(2, -bh);
+    ctx.lineTo(beamLen, -bh * 0.35);
+    ctx.lineTo(beamLen, bh * 0.35);
+    ctx.lineTo(2, bh);
+    ctx.closePath();
+    ctx.fill();
+    if (attack > 0.35) {
+      ctx.fillStyle = `rgba(255,255,255,${attack * 0.7})`;
+      ctx.beginPath();
+      ctx.arc(beamLen * 0.92, 0, 1.5 + attack * 1.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
   }
-  ctx.restore();
 
+  // Body
   ctx.save();
-  ctx.translate(x - recoil, footY);
+  ctx.translate(hx, footY);
   ctx.scale(squashX * -1, squashY);
   if (img) {
     ctx.drawImage(img, -mw / 2, -mh, mw, mh);
@@ -563,37 +604,22 @@ function drawHero(ctx, x, gy, s, t) {
   }
   ctx.restore();
 
-  const cy = footY - mh * 0.55;
-  if (h.deepOn) {
-    ctx.strokeStyle = 'rgba(252,18,67,0.45)';
-    ctx.lineWidth = 2;
+  // Hit spark at eyes when attacking
+  if (attack > 0.5) {
+    ctx.fillStyle = `rgba(255,255,255,${(attack - 0.5) * 1.4})`;
     ctx.beginPath();
-    ctx.arc(x - recoil, cy, 38, 0, Math.PI * 2);
-    ctx.stroke();
-  }
-  if (h.summaryT > 0) {
-    ctx.strokeStyle = 'rgba(94,176,255,0.4)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(x - recoil, cy, 90, 0, Math.PI * 2);
-    ctx.stroke();
-  }
-  if (h.trackerOn && h.trackerStacks > 0.05) {
-    ctx.strokeStyle = `rgba(62,207,142,${0.25 + h.trackerStacks * 0.3})`;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(x - recoil, cy, 32 + h.trackerStacks * 18, 0, Math.PI * 2);
-    ctx.stroke();
+    ctx.arc(eyeX + 2, eyeY, 2 + attack * 2, 0, Math.PI * 2);
+    ctx.fill();
   }
 
   if (s.stats.combo >= 3) {
-    ctx.fillStyle = 'rgba(12,16,20,0.88)';
-    roundRect(ctx, x - 24, footY - mh - 24, 48, 18, 6);
+    ctx.fillStyle = 'rgba(12,16,20,0.82)';
+    roundRect(ctx, hx - 18, footY - mh - 18, 36, 14, 5);
     ctx.fill();
     ctx.fillStyle = '#fc1243';
-    ctx.font = '800 12px system-ui,sans-serif';
+    ctx.font = '800 11px system-ui,sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(`${s.stats.combo}×`, x, footY - mh - 11);
+    ctx.fillText(`${s.stats.combo}×`, hx, footY - mh - 7);
   }
 }
 
@@ -653,15 +679,35 @@ function drawEnemy(ctx, e, gy, t) {
 
   if (ready(sprite)) {
     ctx.drawImage(sprite, -size / 2, -size, size, size);
+    // Soft hit bloom (no hard white rectangle)
     if (flash && !dying) {
-      ctx.globalAlpha = 0.35 * alpha;
-      ctx.fillStyle = '#fff';
-      ctx.fillRect(-size / 2, -size, size, size);
+      const flashU = clamp(e.hitFlash / (C.HIT_FLASH || 0.12), 0, 1);
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = 0.55 * flashU * alpha;
+      const cx = 0;
+      const cy = -size * 0.48;
+      const rg = ctx.createRadialGradient(cx, cy, 2, cx, cy, size * 0.52);
+      rg.addColorStop(0, 'rgba(255,255,255,0.95)');
+      rg.addColorStop(0.35, 'rgba(255,180,190,0.45)');
+      rg.addColorStop(1, 'rgba(255,80,100,0)');
+      ctx.fillStyle = rg;
+      ctx.beginPath();
+      ctx.arc(cx, cy, size * 0.52, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     }
   } else {
-    ctx.fillStyle = flash ? '#fff' : e.color;
+    ctx.fillStyle = e.color;
     roundRect(ctx, -16, -44, 32, 44, 6);
     ctx.fill();
+    if (flash && !dying) {
+      ctx.globalAlpha = 0.4 * alpha;
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.arc(0, -22, 18, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 
   // patch note “card shine” on death

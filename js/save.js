@@ -4,7 +4,10 @@ export function save(s) {
   const data = {
     v: 1,
     ts: Date.now(),
-    meta: s.meta,
+    meta: {
+      ...s.meta,
+      gear: s.meta.gear || { weapon: null, armor: null, bag: [] },
+    },
     authority: s.authority,
     run: {
       zone: s.run.zone,
@@ -43,6 +46,15 @@ export function load() {
 export function apply(s, d) {
   if (!d) return 0;
   Object.assign(s.meta, d.meta || {});
+  // migrate gear
+  if (!s.meta.gear) s.meta.gear = { weapon: null, armor: null, bag: [] };
+  if (d.meta?.gear) {
+    s.meta.gear = {
+      weapon: d.meta.gear.weapon || null,
+      armor: d.meta.gear.armor || null,
+      bag: Array.isArray(d.meta.gear.bag) ? d.meta.gear.bag : [],
+    };
+  }
   if (d.authority) {
     s.authority.amount = d.authority.amount || 0;
     s.authority.shippedThisSeason = d.authority.shippedThisSeason || 0;

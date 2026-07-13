@@ -24,13 +24,18 @@ import {
   castSummary,
   metaLv,
   isSprinting,
+  equipGear,
+  rarityColor,
+  rarityLabel,
 } from './game.js';
+import { formatAffix } from './loot.js';
 import { save, clear } from './save.js';
 import { sfx, unlockAudio, setMuted } from './sfx.js';
 
 const PANEL_TITLES = {
   skills: 'Build',
   ship: 'Ship Notes',
+  gear: 'Gear',
   meta: 'Boosts',
   settings: 'Menu',
 };
@@ -161,6 +166,15 @@ export function bindUI(s) {
     }
     renderMeta(s);
   });
+
+  $('panel-gear')?.addEventListener('click', (e) => {
+    const t = e.target.closest('[data-equip]');
+    if (!t) return;
+    if (equipGear(s, t.dataset.equip)) {
+      save(s);
+      renderGear(s);
+    }
+  });
 }
 
 function popSpend(el) {
@@ -182,13 +196,14 @@ function openSheet(s, panel) {
   });
   const title = document.getElementById('sheet-title');
   if (title) title.textContent = PANEL_TITLES[panel] || panel;
-  ['skills', 'meta', 'ship', 'settings'].forEach((p) => {
+  ['skills', 'meta', 'ship', 'gear', 'settings'].forEach((p) => {
     const el = document.getElementById(`panel-${p}`);
     if (el) el.hidden = p !== panel;
   });
   if (panel === 'skills') renderSkills(s);
   if (panel === 'meta') renderMeta(s);
   if (panel === 'ship') fillShip(s);
+  if (panel === 'gear') renderGear(s);
   if (panel === 'settings') {
     const a = document.getElementById('v-attrs');
     if (a) {
@@ -224,7 +239,7 @@ function fillShip(s) {
     row('Live Mult', `×${s.meta.live.toFixed(2)}`, 'ok'),
     row('Shipped this season', `${formatNum(s.authority.shippedThisSeason)} Rep`, ''),
     seasonReady
-      ? row('End Season', `+${liveNext.toFixed(3)} Live · boosts stay`, 'hi')
+      ? row('End Season', `+${liveNext.toFixed(3)} Live · gear+boosts stay`, 'hi')
       : row('Next checkpoint', `Zone ${nextZ}`, ''),
   ].join('');
   const leave = document.getElementById('btn-leave');
@@ -374,6 +389,57 @@ function renderMeta(s) {
   root.innerHTML = html;
 }
 
+function pieceBlock(label, item) {
+  if (!item) {
+    return `<div class="gear-slot empty">
+      <div class="gear-slot-lab">${label}</div>
+      <div class="gear-slot-name" style="color:#5c6878">Empty</div>
+      <div class="gear-slot-aff">Bosses drop gear</div>
+    </div>`;
+  }
+  const col = rarityColor(item.rarity);
+  const aff = (item.affixes || []).map((a) => formatAffix(a)).join(' · ');
+  return `<div class="gear-slot">
+    <div class="gear-slot-lab">${label}</div>
+    <div class="gear-slot-r" style="color:${col}">${rarityLabel(item.rarity)} · i${item.ilvl}</div>
+    <div class="gear-slot-name" style="color:${col}">${item.name}</div>
+    <div class="gear-slot-aff">${aff}</div>
+  </div>`;
+}
+
+function renderGear(s) {
+  const root = document.getElementById('gear-body');
+  if (!root) return;
+  const g = s.meta.gear || { weapon: null, armor: null, bag: [] };
+  let html = `
+  <p class="lead">Boss drops · <strong>permanent</strong> across seasons. Better score auto-equips.</p>
+  <div class="gear-slots">
+    ${pieceBlock('Weapon', g.weapon)}
+    ${pieceBlock('Armor', g.armor)}
+  </div>
+  <div class="section-lab">Bag · tap to equip</div>
+  <div class="gear-bag">`;
+  const bag = g.bag || [];
+  if (!bag.length) {
+    html += `<p class="fine">No spare gear yet. Clear Version Gates.</p>`;
+  } else {
+    for (const it of bag.slice(0, 16)) {
+      const col = rarityColor(it.rarity);
+      const aff = (it.affixes || []).map((a) => formatAffix(a)).slice(0, 2).join(' · ');
+      html += `
+      <button type="button" class="gear-item" data-equip="${it.id}">
+        <div>
+          <div class="gi-name" style="color:${col}">${it.name}</div>
+          <div class="gi-meta">${rarityLabel(it.rarity)} ${it.slot} · i${it.ilvl}${aff ? ` · ${aff}` : ''}</div>
+        </div>
+        <span class="gi-cta">Equip</span>
+      </button>`;
+    }
+  }
+  html += '</div>';
+  root.innerHTML = html;
+}
+
 export function renderHUD(s) {
   const $ = (id) => document.getElementById(id);
   const st = combatStats(s);
@@ -409,6 +475,23 @@ export function renderHUD(s) {
   const needXp = xpToNext(h.level);
   set($('v-kills'), `${s.run.killsInZone}/${need}`);
   set($('v-xp-lab'), `${formatNum(h.xp | 0)}/${formatNum(needXp)}`);
+
+  // Compact equipped gear in header
+  const gp = $('v-gear-pill');
+  if (gp) {
+    const gear = s.meta.gear || {};
+    const bits = [];
+    if (gear.weapon) bits.push(gear.weapon.name);
+    if (gear.armor) bits.push(gear.armor.name);
+    if (bits.length) {
+      gp.hidden = false;
+      set(gp, bits.join(' · '));
+      gp.style.color = rarityColor(gear.weapon?.rarity || gear.armor?.rarity || 'white');
+    } else {
+      gp.hidden = true;
+      set(gp, '');
+    }
+  }
 
   const combo = $('v-combo');
   if (combo) {
@@ -489,6 +572,7 @@ export function renderHUD(s) {
     if (s.ui.panel === 'skills') renderSkills(s);
     if (s.ui.panel === 'meta') renderMeta(s);
     if (s.ui.panel === 'ship') fillShip(s);
+    if (s.ui.panel === 'gear') renderGear(s);
     lastPanel = s.ui.panel;
     s.ui.panelDirty = false;
   }
