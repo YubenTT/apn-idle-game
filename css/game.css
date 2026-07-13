@@ -796,73 +796,69 @@ body {
   margin-top: 4px;
 }
 
-/* ---- Left bag FAB (Gear) — in-stage, not bottom nav ---- */
+/* ---- Left bag FAB (Gear) — icon-only, colorful ---- */
 .bag-fab {
   position: absolute;
   left: 10px;
-  bottom: 12px;
+  bottom: 14px;
   z-index: 8;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1px;
-  width: 52px;
-  height: 56px;
-  padding: 6px 4px 5px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 14px;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 1.5px solid rgba(252, 18, 67, 0.35);
+  border-radius: 16px;
   background:
-    linear-gradient(165deg, rgba(30, 38, 48, 0.94) 0%, rgba(12, 16, 20, 0.96) 100%);
+    radial-gradient(circle at 30% 25%, rgba(255, 180, 120, 0.18), transparent 55%),
+    linear-gradient(160deg, #1a222c 0%, #0c1016 100%);
   box-shadow:
-    0 8px 22px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  color: #c5ced8;
+    0 10px 24px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
   cursor: pointer;
   font: inherit;
   -webkit-tap-highlight-color: transparent;
-  transition: transform 0.1s ease, border-color 0.12s, box-shadow 0.12s, color 0.12s;
+  transition: transform 0.1s ease, border-color 0.1s, box-shadow 0.12s, filter 0.12s;
   pointer-events: auto;
 }
 
 .bag-fab:hover {
-  border-color: rgba(252, 18, 67, 0.45);
-  color: #fff;
+  border-color: rgba(252, 18, 67, 0.7);
+  filter: brightness(1.08);
+  box-shadow:
+    0 12px 28px rgba(252, 18, 67, 0.22),
+    0 0 0 1px rgba(252, 18, 67, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .bag-fab:active {
-  transform: scale(0.94);
+  transform: scale(0.92);
 }
 
 .bag-fab.active {
-  color: #fff;
-  border-color: rgba(252, 18, 67, 0.65);
+  border-color: #fc1243;
   background:
-    linear-gradient(165deg, rgba(252, 18, 67, 0.28) 0%, rgba(18, 12, 16, 0.96) 100%);
+    radial-gradient(circle at 30% 25%, rgba(255, 120, 140, 0.25), transparent 55%),
+    linear-gradient(160deg, #2a1520 0%, #140c10 100%);
   box-shadow:
-    0 0 0 1px rgba(252, 18, 67, 0.35),
-    0 10px 24px rgba(252, 18, 67, 0.2);
+    0 0 0 2px rgba(252, 18, 67, 0.35),
+    0 12px 28px rgba(252, 18, 67, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .bag-fab-ico {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   display: block;
-}
-
-.bag-fab-lab {
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  line-height: 1;
-  opacity: 0.9;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
 }
 
 .bag-fab-badge {
   position: absolute;
-  top: -4px;
-  right: -4px;
+  top: -5px;
+  right: -5px;
   min-width: 18px;
   height: 18px;
   padding: 0 5px;
@@ -873,21 +869,21 @@ body {
   font-weight: 800;
   line-height: 18px;
   text-align: center;
-  box-shadow: 0 2px 8px rgba(252, 18, 67, 0.45);
+  box-shadow: 0 2px 8px rgba(252, 18, 67, 0.5);
   pointer-events: none;
+  border: 1.5px solid #0c1014;
 }
 
 .bag-fab.has-up {
-  border-color: rgba(62, 207, 142, 0.55);
+  border-color: rgba(62, 207, 142, 0.65);
 }
 
 .bag-fab.has-up .bag-fab-badge {
   background: #3ecf8e;
-  box-shadow: 0 2px 8px rgba(62, 207, 142, 0.4);
+  box-shadow: 0 2px 8px rgba(62, 207, 142, 0.45);
 }
 
 #app.sheet-open .bag-fab {
-  /* stay tappable above sheet chrome if needed; sheet covers stage */
   z-index: 8;
 }
 
@@ -2769,6 +2765,36 @@ button[hidden] {
   display: none;
 }
 
+/* Boosts: effect always visible as mini line */
+.skill-card.compact.meta-row {
+  padding: 7px 8px;
+  min-height: 48px;
+  align-items: center;
+}
+
+.skill-card.compact.meta-row .sk-desc,
+.skill-card.compact .sk-desc.inline {
+  font-size: 10px;
+  font-weight: 600;
+  color: #7d8a99;
+  line-height: 1.25;
+  margin-top: 1px;
+  white-space: normal;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.skill-card.compact.meta-row .sk-bar {
+  margin-top: 4px;
+}
+
+.skill-card.compact.meta-row .sk-name {
+  font-size: 12px;
+  font-weight: 800;
+}
+
 .skill-card.compact .sk-type {
   font-size: 8px;
   padding: 1px 4px;
@@ -3080,15 +3106,16 @@ button[hidden] {
   white-space: nowrap;
 }
 
-/* Hover tooltips for gear */
+/* Hover tooltips — near-instant (no browser title delay) */
 .eq-slot .tip-pop,
-.inv-slot .tip-pop {
-  display: none;
+.inv-slot .tip-pop,
+.gcard .tip-pop,
+.icard .tip-pop {
   position: absolute;
-  z-index: 20;
+  z-index: 30;
   left: 50%;
   bottom: calc(100% + 6px);
-  transform: translateX(-50%);
+  transform: translateX(-50%) translateY(2px);
   min-width: 140px;
   max-width: 200px;
   padding: 8px 10px;
@@ -3100,16 +3127,25 @@ button[hidden] {
   text-align: left;
   flex-direction: column;
   gap: 2px;
+  display: flex;
+  opacity: 0;
+  visibility: hidden;
+  /* ~instant appear */
+  transition: opacity 0.04s linear, visibility 0.04s linear, transform 0.04s linear;
 }
 
 .eq-slot .tip-pop strong,
-.inv-slot .tip-pop strong {
+.inv-slot .tip-pop strong,
+.gcard .tip-pop strong,
+.icard .tip-pop strong {
   font-size: 12px;
   font-weight: 800;
 }
 
 .eq-slot .tip-pop span,
-.inv-slot .tip-pop span {
+.inv-slot .tip-pop span,
+.gcard .tip-pop span,
+.icard .tip-pop span {
   display: block;
   font-size: 10px;
   color: #8b97a6;
@@ -3128,8 +3164,12 @@ button[hidden] {
 
 @media (hover: hover) and (pointer: fine) {
   .eq-slot:hover .tip-pop,
-  .inv-slot:hover .tip-pop {
-    display: flex;
+  .inv-slot:hover .tip-pop,
+  .gcard:hover .tip-pop,
+  .icard:hover .tip-pop {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
   }
 }
 

@@ -7,7 +7,7 @@
     <meta name="color-scheme" content="dark" />
     <title>APN Idle</title>
     <link rel="icon" href="./assets/apn-logo.svg" />
-    <link rel="stylesheet" href="./css/game.css?v=bag2" />
+    <link rel="stylesheet" href="./css/game.css?v=ux1" />
   </head>
   <body>
     <div id="app">
@@ -61,12 +61,31 @@
           </div>
         </div>
         <canvas id="game"></canvas>
-        <!-- In-stage bag FAB (Gear) — left rail, not bottom nav -->
-        <button type="button" class="bag-fab" id="btn-bag" data-panel="gear" title="Gear · Inventory" aria-label="Open Gear">
-          <svg class="bag-fab-ico" viewBox="0 0 24 24" aria-hidden="true">
-            <path fill="currentColor" d="M8 7V6a4 4 0 018 0v1h3.2c.7 0 1.3.6 1.3 1.3v10.4c0 1.3-1 2.3-2.3 2.3H5.8c-1.3 0-2.3-1-2.3-2.3V8.3C3.5 7.6 4.1 7 4.8 7H8zm2 0h4V6a2 2 0 10-4 0v1zm-3.5 4.5h11v7.2c0 .2-.1.3-.3.3H6.8c-.2 0-.3-.1-.3-.3v-7.2zm3 1.5v4h1.5v-4H9.5zm4 0v4H15v-4h-1.5z"/>
+        <!-- In-stage bag FAB (Gear) — icon-only, left rail -->
+        <button type="button" class="bag-fab" id="btn-bag" data-panel="gear" title="Gear" aria-label="Open Gear">
+          <svg class="bag-fab-ico" viewBox="0 0 32 32" aria-hidden="true">
+            <defs>
+              <linearGradient id="bagBody" x1="0%" y1="0%" x2="40%" y2="100%">
+                <stop offset="0%" stop-color="#ff8a5c"/>
+                <stop offset="55%" stop-color="#fc1243"/>
+                <stop offset="100%" stop-color="#b80d32"/>
+              </linearGradient>
+              <linearGradient id="bagTop" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#ffd27a"/>
+                <stop offset="100%" stop-color="#e6b84d"/>
+              </linearGradient>
+            </defs>
+            <!-- strap -->
+            <path fill="none" stroke="#e6b84d" stroke-width="2.2" stroke-linecap="round"
+              d="M11 12V9.2a5 5 0 0110 0V12"/>
+            <!-- body -->
+            <path fill="url(#bagBody)" d="M7.5 12.5h17a2.2 2.2 0 012.2 2.2v11.6a2.7 2.7 0 01-2.7 2.7H8a2.7 2.7 0 01-2.7-2.7V14.7a2.2 2.2 0 012.2-2.2z"/>
+            <!-- flap highlight -->
+            <path fill="url(#bagTop)" opacity="0.95" d="M7.5 12.5h17a2.2 2.2 0 012.2 2.2v1.6H5.3v-1.6a2.2 2.2 0 012.2-2.2z"/>
+            <!-- clasp -->
+            <circle cx="16" cy="17.2" r="1.6" fill="#fff6d6"/>
+            <path fill="#1a0c10" opacity="0.25" d="M14.2 20.5h3.6v5.2h-3.6z"/>
           </svg>
-          <span class="bag-fab-lab">Bag</span>
           <span class="bag-fab-badge" id="bag-badge" hidden>0</span>
         </button>
         <div id="toast" hidden></div>
@@ -222,6 +241,6 @@
       </div>
     </div>
 
-    <script type="module" src="./js/main.js?v=bag2"></script>
+    <script type="module" src="./js/main.js?v=ux1"></script>
   </body>
 </html>

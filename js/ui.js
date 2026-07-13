@@ -649,19 +649,21 @@ function renderMeta(s) {
     <strong class="sp-bank-val gold">${formatNum(rep)}</strong>
     <span class="sp-bank-hint">Permanent</span>
   </div>
-  <div class="skill-grid">`;
+  <div class="skill-grid meta-grid">`;
   for (const u of Object.values(META)) {
     const lv = metaLv(s, u.id);
     const cost = metaCost(u.base, u.growth, lv);
     const ok = rep >= cost;
     const barPct = Math.min(100, lv * 8);
+    // desc always visible — no hover tooltip
     html += `
-    <button type="button" class="skill-card compact ${ok ? 'can' : 'locked'}" data-meta="${u.id}" title="${u.desc.replace(/"/g, '&quot;')}">
+    <button type="button" class="skill-card compact meta-row ${ok ? 'can' : 'locked'}" data-meta="${u.id}">
       <div class="sk-ico gold" aria-hidden="true">${metaIco(u.id)}</div>
       <div class="sk-main">
         <div class="sk-top">
           <span class="sk-name">${u.name}</span>
         </div>
+        <div class="sk-desc inline">${u.desc}</div>
         <div class="sk-bar"><i style="width:${barPct}%"></i></div>
       </div>
       <div class="sk-side">
@@ -758,6 +760,17 @@ function itemTooltip(item) {
   return `${item.name} · ${rarityLabel(item.rarity)} · ${slotLabel(item.slot)} · ${prim.text}${aff ? ` · ${aff}` : ''}`;
 }
 
+function tipPopHtml(item, col, extra = '') {
+  if (!item) return '';
+  return `
+    <div class="tip-pop" role="tooltip">
+      <strong style="color:${col}">${item.name}</strong>
+      <span>${rarityLabel(item.rarity)} · ${slotLabel(item.slot)} · i${item.ilvl}</span>
+      ${(item.affixes || []).map((a) => `<span class="tip-aff">${formatAffix(a)}</span>`).join('')}
+      ${extra}
+    </div>`;
+}
+
 /** Brand equip card — large rarity frame + primary stat (mock) */
 function brandEqCard(slot, item, selected) {
   const lab = slotLabel(slot).toUpperCase();
@@ -774,12 +787,13 @@ function brandEqCard(slot, item, selected) {
   const col = rarityColor(item.rarity);
   const prim = primaryStat(item);
   return `
-  <button type="button" class="gcard filled r-${item.rarity}${sel}" data-eq-slot="${slot}" style="--rc:${col}" title="${itemTooltip(item).replace(/"/g, '&quot;')}">
+  <button type="button" class="gcard filled r-${item.rarity}${sel}" data-eq-slot="${slot}" style="--rc:${col}">
     <span class="gcard-slot">${lab}</span>
     <span class="gcard-art" style="color:${col}">${gearIcon(item)}</span>
     <span class="gcard-name" style="color:${col}">${item.name}</span>
     <span class="gcard-stat">${prim.text}</span>
     <span class="gcard-ilvl">${item.ilvl}</span>
+    ${tipPopHtml(item, col)}
   </button>`;
 }
 
@@ -790,12 +804,13 @@ function invCard(it, g, focusId) {
   const prim = primaryStat(it);
   return `
   <button type="button" class="icard r-${it.rarity}${sel}${up ? ' up' : ''}"
-    data-inv="${it.id}" style="--rc:${col}" title="${itemTooltip(it).replace(/"/g, '&quot;')}">
+    data-inv="${it.id}" style="--rc:${col}">
     <span class="icard-art" style="color:${col}">${gearIcon(it)}</span>
     <span class="icard-name" style="color:${col}">${it.name}</span>
     <span class="icard-stat">${prim.text}</span>
     <span class="icard-ilvl">${it.ilvl}</span>
     ${up ? '<span class="inv-up">↑</span>' : ''}
+    ${tipPopHtml(it, col, `<span class="tip-sell">Hold to sell · ${sellValue(it)} sig</span>`)}
   </button>`;
 }
 
