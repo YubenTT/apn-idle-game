@@ -16,10 +16,10 @@ import {
   shipPatches,
   combatStats,
   leaveSeason,
-  buyMeta,
   setSprint,
   isSprinting,
 } from '../js/game.js';
+import { emptyGear, rollItem, offerItem } from '../js/loot.js';
 
 let fails = 0;
 const ok = (c, m) => {
@@ -174,6 +174,21 @@ ok(!isSprinting(s9), 'sprint off when empty');
 const growEarly = scannerDamage(20) / scannerDamage(10);
 const growLate = scannerDamage(60) / scannerDamage(50);
 ok(growLate < growEarly, `weapon soft DR late (${growLate.toFixed(3)} < ${growEarly.toFixed(3)})`);
+
+// Gear permanence across End Season
+const s10 = createState();
+s10.meta.gear = emptyGear();
+const drop = rollItem(25, 'weapon');
+offerItem(s10.meta.gear, drop);
+s10.ui.seasonDone = true;
+s10.run.zone = 20;
+s10.run.hero.scanner = 15;
+s10.authority.shippedThisSeason = 30;
+const gearName = s10.meta.gear.weapon?.name;
+ok(!!gearName, `gear equipped pre-season (${gearName})`);
+ok(leaveSeason(s10), 'leave with gear');
+ok(s10.meta.gear.weapon?.name === gearName, 'gear survives End Season');
+ok(s10.run.hero.scanner === 0, 'signal weapon still resets');
 
 console.log(fails ? `${fails} FAILURES` : 'ALL PASS');
 process.exit(fails ? 1 : 0);
