@@ -13,6 +13,14 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 - PWA manifest
 - Wire real IAP receipts for APN Pro / coin packs
 
+## [1.4.1] — 2026-07-13
+
+### Changed
+
+- Gear panel: mascot loadout showcase + per-item icons
+- Loot drops: center fade card (no top toast/floater spam)
+- Tighter copy on Ship / Hub / Premium
+
 ## [1.4.0] — 2026-07-13
 
 ### Added

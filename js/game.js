@@ -522,23 +522,14 @@ function onKill(s, e) {
     }
     const res = offerItem(s.meta.gear, item);
     hubOnGear(s);
-    const col = rarityColor(item.rarity);
-    const tag = rarityLabel(item.rarity);
-    floater(
-      s,
-      e.displayX,
-      95,
-      res.equipped ? `EQUIP ${item.name}` : `+${item.name}`,
-      col,
-      true
-    );
-    confetti(s, e.displayX, 160, [col, '#fff', '#FC1243'], e.type === 'boss' ? 28 : 14);
-    toast(
-      s,
-      res.equipped
-        ? `${tag} ${item.slot}: ${item.name} equipped`
-        : `${tag} ${item.name} → bag`
-    );
+    // Center loot card only — no floaters / toast spam at top
+    s.ui.lootDrop = {
+      item,
+      equipped: res.equipped,
+      t: 2.35,
+      life: 2.35,
+    };
+    confetti(s, e.displayX, 160, [rarityColor(item.rarity), '#fff', '#FC1243'], e.type === 'boss' ? 28 : 14);
     tip(s, 'gear');
     s.ui.panelDirty = true;
     if (s.settings.sfx !== false) sfx('upgrade');
@@ -609,6 +600,10 @@ export function step(s, dt) {
   if (s.ui.toastT > 0) {
     s.ui.toastT -= dt;
     if (s.ui.toastT <= 0) s.ui.toast = null;
+  }
+  if (s.ui.lootDrop) {
+    s.ui.lootDrop.t -= dt;
+    if (s.ui.lootDrop.t <= 0) s.ui.lootDrop = null;
   }
   if (s.world.shake > 0) s.world.shake = Math.max(0, s.world.shake - dt * 18);
 

@@ -85,3 +85,32 @@ export function metaIco(id) {
 export function hubIco(id) {
   return ICO[id] || ICO.quest;
 }
+
+/** Compact item glyph — unique look by slot + rarity + name seed */
+export function gearIcon(item) {
+  if (!item) {
+    return SVG(p('M6 6h12v12H6z'), '0 0 24 24');
+  }
+  const seed = [...(item.name || '')].reduce((a, ch) => a + ch.charCodeAt(0), 0);
+  const r = item.rarity || 'white';
+  if (item.slot === 'weapon') {
+    // beam / lance variants
+    if (seed % 3 === 0) {
+      return SVG(
+        `${p('M4 12h14l-3-3 1.2-1.2L22 12l-5.8 5.8L15 16.6l3-3H4v-1.6z')}${c(5, 12, 2)}`
+      );
+    }
+    if (seed % 3 === 1) {
+      return SVG(p('M12 2l1.5 7H20l-5.5 4 2 8L12 16l-4.5 5 2-8L4 9h6.5L12 2z'));
+    }
+    return SVG(p('M7 2h2v9l7 11H5l7-11V2z'));
+  }
+  // armor
+  if (r === 'unique' || seed % 4 === 0) {
+    return SVG(p('M12 2l8 3v6c0 5-3.5 9.5-8 11-4.5-1.5-8-6-8-11V5l8-3zm0 3.2L7 7v4.2c0 3.2 2.1 6.1 5 7.3 2.9-1.2 5-4.1 5-7.3V7l-5-1.8z'));
+  }
+  if (seed % 4 === 1) {
+    return SVG(p('M4 7l8-4 8 4v3c0 5.5-3.2 10.2-8 12-4.8-1.8-8-6.5-8-12V7zm8 2a3 3 0 100 6 3 3 0 000-6z'));
+  }
+  return SVG(p('M8 4h8l2 4v12H6V8l2-4zm2 2l-1 2h6l-1-2h-4zm-1 5h8v1.5H9V11zm0 3h8v1.5H9V14z'));
+}
