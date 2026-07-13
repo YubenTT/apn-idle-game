@@ -26,10 +26,11 @@ Living plan — not a commitment calendar.
 - [x] Runtime token foundation — `brand/tokens.css` imported by `css/game.css`,
       532 color literals migrated with exact pixel preservation, and static token
       contract enforced in headless QA
+- [x] Economy color de-collision — Notes use canonical rose and SP canonical
+      violet across DOM + Canvas roles, with contrast and semantic-role QA
 
 ## Near term
 
-- [ ] Apply the 2 staged token changes (Notes → rose, SP → violet) during redesign
 - [ ] Redesign screens against [SCREEN-SPECS](./SCREEN-SPECS.md) (Run HUD, Gear,
       Build, Ship, Hub, Boosts, Menu) — one screen at a time, each through
       [QA-CHECKLIST](./QA-CHECKLIST.md)

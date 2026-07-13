@@ -27,20 +27,27 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 - Runtime design-token foundation: `css/game.css` now imports `brand/tokens.css`;
   all 532 CSS color literals resolve through canonical or exact-value compatibility
   tokens, with a zero-dependency headless guard against regression.
-- Two deliberate token changes staged but not yet applied: Notes crimson → rose
-  `#ff6a8f`, SP crimson → violet `#b07cff` (de-collide from primary in I-002).
+- Economy-color contract for canonical Notes/SP values, explicit DOM roles,
+  semantic Canvas tones, contrast floors, and retained primary-crimson roles.
 
 ### Changed
 
 - All font sizes, touch minimums, and safe-area values use exact design tokens.
   Screen-specific legacy geometry remains unchanged until its owning redesign issue.
+- Notes now use canonical rose `#ff6a8f`; SP uses canonical violet `#b07cff`
+  across HUD values, Ship/Hub rows, Build badges/costs, and Canvas floaters. Canvas
+  token reads are cached, and small filled violet controls use dark ink.
 
 ### Tests
 
 - Added CSS token-contract checks for first-rule import order, raw color literals,
-  unresolved custom properties, and premature Notes/SP token application.
+  unresolved custom properties, and active canonical Notes/SP tokens.
+- Added economy-role checks for legacy alias retirement, exact DOM selectors,
+  cached Canvas role mapping, semantic domain events, and 4.5:1 contrast.
 - Verified pixel-identical masked Run/Gear chrome against clean `origin/main` at
   428×926, 375×812, and 844×390 in a real browser.
+- Reviewed the intentional I-002 browser diff against merged I-001 across Run,
+  Build, Ship, and Hub at 375×812, 428×926, and 844×390 with zero console errors.
 
 ### Fixed
 

@@ -154,11 +154,22 @@ lower than the research's 460–520 h because no rewrite and no framework onboar
 - **Goal:** de-collide Notes and SP from primary crimson.
 - **Scope:** Notes → `--c-notes` rose; SP → `--c-sp` violet, everywhere they render.
 - **Acceptance:**
-  - [ ] Notes value/pills/floaters use rose; SP badges/costs use violet.
-  - [ ] No remaining crimson used for a Notes or SP role.
-  - [ ] Contrast floors still met ([DESIGN-TOKENS §A11y](../brand/DESIGN-TOKENS.md)).
-  - [ ] Screenshot diff reviewed against the plan-lock approval (intentional change).
-- **Files:** `css/game.css`, `js/render.js` (floater colors), `js/ui.js`.
+  - [x] Notes value/pills/floaters use rose; SP badges/costs use violet.
+  - [x] No remaining crimson is used for a Notes or SP role; APN primary,
+        combat/crit, PATCH/LIVE, generic Hub badge, and unique rarity stay crimson.
+  - [x] Contrast floors still met: Notes is 7.01:1 and SP is 6.52:1 on shipped
+        ink; filled violet badges/costs use dark ink.
+  - [x] Controlled real-browser diff reviewed against merged I-001 at Run
+        428×926, Run/Build 375×812, Run/Build 844×390, Ship 375×812, and Hub
+        375×812. Computed colors match the locked tokens, layout is unchanged,
+        and browser console errors are zero. Session 2 remains the sole visual
+        user gate.
+  - [x] Semantic Canvas proof renders Notes/SP floaters through a cached
+        `render.js` token map; domain events carry roles, not palette values.
+  - [x] `node qa/run-tests.mjs` green with the economy-color contract.
+- **Files:** `brand/tokens.css`, `css/game.css`, `js/game.js`, `js/render.js`,
+  `js/ui.js`, `qa/check-css-tokens.mjs`, `qa/check-economy-colors.mjs`,
+  `qa/run-tests.mjs`, plan/status docs.
 
 ## Wave 1 — Run screen
 

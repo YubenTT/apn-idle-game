@@ -64,8 +64,8 @@
    * Rules:
    * - do not use --compat-* in new or redesigned components;
    * - replace aliases with canonical role tokens in the owning screen issue;
-   * - I-002 alone replaces --compat-notes-* and --compat-sp* with --c-notes /
-   *   --c-sp, preserving the two intentional color changes as a focused diff.
+   * - I-002 retired the Notes/SP bridge aliases in favor of their canonical
+   *   economy tokens, preserving the two intentional changes as a focused diff.
    */
   --compat-brand-overloaded: var(--apn-primary);
   --compat-green:            var(--c-positive);
@@ -116,12 +116,7 @@
   --compat-text-danger-muted:  #c07070;
 
   /* Shipped accent ramps and intentionally overloaded economy roles. */
-  --compat-sp:                var(--apn-primary);
-  --compat-sp-muted:          #a33a52;
-  --compat-sp-a06:            var(--compat-brand-a06);
-  --compat-sp-a40:            var(--compat-brand-a40);
-  --compat-notes-value:       #ff5a78;
-  --compat-notes-soft:        #ff6b8a;
+  --compat-combo:             #ff6b8a;
   --compat-brand-deep:        #8a0a24;
   --compat-brand-dark:        #6e0820;
   --compat-brand-mid:         #d40d38;
