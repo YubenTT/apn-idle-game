@@ -7,7 +7,7 @@
     <meta name="color-scheme" content="dark" />
     <title>APN Idle</title>
     <link rel="icon" href="./assets/apn-logo.svg" />
-    <link rel="stylesheet" href="./css/game.css?v=hud1" />
+    <link rel="stylesheet" href="./css/game.css?v=sheet1" />
   </head>
   <body>
     <div id="app">
@@ -147,14 +147,13 @@
           </section>
           <section id="panel-ship" hidden>
             <p class="lead">
-              Turn red <strong>Notes</strong> into permanent <strong>Reputation</strong>.
-              Spend Rep on <strong>Boosts</strong> (never reset). Every 20 zones you can
-              <strong>End Season</strong> for more Live Mult — weapon &amp; build reset, Boosts stay.
+              Banked red Notes → permanent <strong>Rep</strong> for Boosts.
+              Checkpoint every 20 zones: End Season for Live Mult (weapon resets, Boosts stay).
             </p>
-            <pre id="ship-info" class="box"></pre>
+            <div id="ship-info" class="ship-stats" role="status"></div>
             <button type="button" id="btn-ship" class="btn-primary">
               <span class="btn-primary-title">Ship Notes → Rep</span>
-              <span class="btn-primary-sub">Convert banked Notes</span>
+              <span class="btn-primary-sub">Permanent reputation</span>
             </button>
             <button type="button" id="btn-leave" class="btn-ghost" hidden>End Season · keep Boosts</button>
           </section>
@@ -162,11 +161,13 @@
             <div id="meta-body"></div>
           </section>
           <section id="panel-settings" hidden>
-            <p class="lead">allpatchnotes.com mini-game</p>
-            <label class="chk"><input type="checkbox" id="chk-motion" /> Reduced motion</label>
-            <label class="chk"><input type="checkbox" id="chk-sfx" checked /> Sound effects</label>
+            <p class="menu-brand">allpatchnotes.com · APN Idle</p>
+            <div class="menu-block">
+              <label class="chk"><input type="checkbox" id="chk-motion" /> Reduced motion</label>
+              <label class="chk"><input type="checkbox" id="chk-sfx" checked /> Sound effects</label>
+            </div>
             <p class="fine" id="v-attrs">Damage 0 · Crit 0 · Skills 0</p>
-            <p class="fine">Hold Sprint = ×1.85 game speed · Hover orbs for energy · Weapon resets each season</p>
+            <p class="fine">Sprint ×1.85 · hover orbs · weapon resets each season</p>
             <button type="button" id="btn-wipe" class="btn-ghost">New Game</button>
           </section>
         </div>
@@ -191,6 +192,6 @@
       </div>
     </div>
 
-    <script type="module" src="./js/main.js?v=hud1"></script>
+    <script type="module" src="./js/main.js?v=sheet1"></script>
   </body>
 </html>
