@@ -3460,3 +3460,294 @@ button[hidden] {
     transition: none;
   }
 }
+
+/* ═══════════════════════════════════════════
+   Brand Gear UI — Weapon · Chest · Legs · Visor
+   Matches owner mock: mascot + 4 cards + inv grid
+   ═══════════════════════════════════════════ */
+.brand-loadout {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 8px;
+  align-items: stretch;
+  margin-bottom: 10px;
+  padding: 8px;
+  border-radius: 14px;
+  background:
+    radial-gradient(ellipse 55% 70% at 12% 50%, rgba(252, 18, 67, 0.12), transparent 65%),
+    linear-gradient(180deg, #0e141c 0%, #0a0e13 100%);
+  border: 1px solid #1a222c;
+}
+
+.brand-host {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.brand-mascot {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.45));
+}
+
+.brand-eq-n {
+  font-size: 10px;
+  font-weight: 800;
+  color: #7d8a99;
+  letter-spacing: 0.04em;
+}
+
+.brand-slots {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  min-width: 0;
+}
+
+.gcard {
+  --rc: #3a4656;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 6px 6px;
+  border-radius: 12px;
+  border: 1.5px solid color-mix(in srgb, var(--rc) 55%, #1e2733);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--rc) 14%, #121820) 0%, #0c1014 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  min-height: 96px;
+  transition: border-color 0.12s, transform 0.08s;
+}
+
+.gcard:active {
+  transform: scale(0.98);
+}
+
+.gcard.empty {
+  opacity: 0.5;
+  border-style: dashed;
+  border-color: #2a3645;
+}
+
+.gcard.sel {
+  border-color: #fc1243;
+  box-shadow: 0 0 0 1px rgba(252, 18, 67, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.gcard-slot {
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #6b7787;
+  text-transform: uppercase;
+}
+
+.gcard-art {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 2px 0;
+}
+
+.gcard-art .ico {
+  width: 28px;
+  height: 28px;
+}
+
+.gcard-art.muted {
+  color: #4a5564;
+}
+
+.gcard-name {
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.15;
+  text-align: center;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gcard-stat {
+  font-size: 10px;
+  font-weight: 700;
+  color: #9aa6b5;
+  margin-top: 1px;
+}
+
+.gcard-ilvl {
+  position: absolute;
+  right: 5px;
+  bottom: 4px;
+  font-size: 9px;
+  font-weight: 800;
+  color: #5c6878;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 4px;
+  padding: 1px 4px;
+  line-height: 1.2;
+}
+
+.gcard.r-green { --rc: #3ecf8e; }
+.gcard.r-blue { --rc: #5eb0ff; }
+.gcard.r-yellow { --rc: #e6b84d; }
+.gcard.r-unique { --rc: #fc1243; }
+
+.inv-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.inv-head .section-lab {
+  margin: 0;
+}
+
+.rarity-filters {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.rf {
+  border: 1px solid #1e2733;
+  background: #0c1014;
+  color: #6b7787;
+  font: inherit;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 3px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.rf.on {
+  border-color: #fc1243;
+  color: #fff;
+  background: rgba(252, 18, 67, 0.15);
+}
+
+.inv-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.icard {
+  --rc: #3a4656;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 4px 6px;
+  border-radius: 12px;
+  border: 1.5px solid color-mix(in srgb, var(--rc) 50%, #1e2733);
+  background: color-mix(in srgb, var(--rc) 10%, #0c1014);
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  min-height: 92px;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+.icard.empty {
+  border-style: dashed;
+  border-color: #1a222c;
+  background: #0a0e13;
+  min-height: 92px;
+  pointer-events: none;
+}
+
+.icard.sel {
+  border-color: #fc1243;
+  box-shadow: 0 0 0 1px rgba(252, 18, 67, 0.4);
+}
+
+.icard.holding {
+  outline: 2px solid #6cb8ff;
+  outline-offset: 1px;
+}
+
+.icard.r-green { --rc: #3ecf8e; }
+.icard.r-blue { --rc: #5eb0ff; }
+.icard.r-yellow { --rc: #e6b84d; }
+.icard.r-unique { --rc: #fc1243; }
+
+.icard-art {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icard-art .ico {
+  width: 26px;
+  height: 26px;
+}
+
+.icard-name {
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1.15;
+  text-align: center;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 2px;
+}
+
+.icard-stat {
+  font-size: 9px;
+  font-weight: 700;
+  color: #8b97a6;
+}
+
+.icard-ilvl {
+  position: absolute;
+  right: 4px;
+  bottom: 3px;
+  font-size: 8px;
+  font-weight: 800;
+  color: #5c6878;
+}
+
+.inv-empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  font-size: 11px;
+  color: #5c6878;
+  padding: 16px 8px;
+}
+
+@media (max-width: 360px) {
+  .brand-loadout {
+    grid-template-columns: 56px 1fr;
+  }
+  .brand-mascot {
+    width: 56px;
+    height: 56px;
+  }
+  .inv-cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

@@ -308,7 +308,7 @@ export const TIPS = {
   combo: 'Feed streak! Bonus Signal while it holds.',
   season:
     'Checkpoint! Ship Notes, End Season: +Live Mult · Gear, Boosts & Pro stay · Signal Lv resets.',
-  gear: '6-slot loadout (Weapon · Head · Chest · Legs · Boots · Trinket). Sell junk for Signal. Boxes in Menu.',
+  gear: 'Loadout: Weapon · Chest · Legs · Visor. Tap stats · Hold sell junk for Signal. Boxes in Menu.',
   premium: 'APN Pro optional. Coins → Boosts & Gear Boxes. Free drops still fill the loadout.',
 };
 

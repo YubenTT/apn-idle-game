@@ -1,4 +1,4 @@
-/** Multi-slot gear — permanent across seasons. Sell junk for Signal; buy boxes with coins. */
+/** Brand gear — Weapon · Chest · Legs · Visor. Permanent. Sell junk for Signal; boxes with coins. */
 
 export const RARITY = {
   white: { id: 'white', label: 'Common', color: '#b8c0cc', weight: 52, affixes: 1, power: 1, order: 0 },
@@ -8,16 +8,26 @@ export const RARITY = {
   unique: { id: 'unique', label: 'Unique', color: '#fc1243', weight: 1, affixes: 3, power: 3, order: 4 },
 };
 
-/** Equipment slots (paper-doll order for UI) */
-export const SLOTS = ['weapon', 'head', 'chest', 'legs', 'boots', 'trinket'];
+/**
+ * Brand loadout (owner mock):
+ * Weapon · Chest · Legs · Visor
+ */
+export const SLOTS = ['weapon', 'chest', 'legs', 'visor'];
 
 export const SLOT_META = {
-  weapon: { id: 'weapon', label: 'Weapon', short: 'Wpn' },
-  head: { id: 'head', label: 'Head', short: 'Head' },
-  chest: { id: 'chest', label: 'Chest', short: 'Chest' },
-  legs: { id: 'legs', label: 'Legs', short: 'Legs' },
-  boots: { id: 'boots', label: 'Boots', short: 'Boots' },
-  trinket: { id: 'trinket', label: 'Trinket', short: 'Trink' },
+  weapon: { id: 'weapon', label: 'Weapon', short: 'Wpn', primary: 'Signal' },
+  chest: { id: 'chest', label: 'Chest', short: 'Chest', primary: 'Defense' },
+  legs: { id: 'legs', label: 'Legs', short: 'Legs', primary: 'Sprint' },
+  visor: { id: 'visor', label: 'Visor', short: 'Visor', primary: 'Signal' },
+};
+
+/** Legacy slot → brand slot */
+const SLOT_MIGRATE = {
+  armor: 'chest',
+  head: 'visor',
+  boots: 'legs',
+  trinket: 'visor',
+  module: 'visor',
 };
 
 const SLOT_NAMES = {
@@ -26,14 +36,7 @@ const SLOT_NAMES = {
     green: ['Verify Beam', 'Mod Stick', 'Scan Lance'],
     blue: ['Live Tracker', 'Hotfix Rail', 'Trust Rifle'],
     yellow: ["Editor's Edge", 'Season Core', 'Changelog'],
-    unique: ['APN Eye', 'Host Visor', 'All Notes'],
-  },
-  head: {
-    white: ['Draft Cap', 'Mod Beanie', 'Intern Hood'],
-    green: ['Verify Visor', 'Scan Cap', 'Patch Lid'],
-    blue: ['Trust Helm', 'Source Goggles', 'CDN Hood'],
-    yellow: ['Season Crown', 'Gate Visor', 'Launch Helm'],
-    unique: ['Host Crown', 'All-Seeing Cap', 'Zero Lag Lid'],
+    unique: ['APN Eye', 'Host Beam', 'All Notes'],
   },
   chest: {
     white: ['Draft Vest', 'Mod Hoodie', 'Intern Jacket'],
@@ -44,64 +47,184 @@ const SLOT_NAMES = {
   },
   legs: {
     white: ['Draft Pants', 'Mod Joggers', 'Intern Slacks'],
-    green: ['Verify Greaves', 'Live Pants', 'Patch Legs'],
+    green: ['Verify Greaves', 'Sprint Leggings', 'Patch Legs'],
     blue: ['Trust Plates', 'Source Greaves', 'CDN Leggings'],
     yellow: ['Season Greaves', 'Gate Legs', 'Launch Pants'],
     unique: ['Host Stride', 'Never Stuck', 'Full Uptime'],
   },
-  boots: {
-    white: ['Draft Soles', 'Mod Runners', 'Intern Boots'],
-    green: ['Verify Boots', 'Live Soles', 'Patch Runners'],
-    blue: ['Trust Treads', 'Source Boots', 'CDN Soles'],
-    yellow: ['Season Boots', 'Gate Treads', 'Launch Soles'],
-    unique: ['Host Dash', 'Instant Load', 'Zero Ping'],
-  },
-  trinket: {
-    white: ['Draft Pin', 'Mod Badge', 'Intern Token'],
-    green: ['Verify Badge', 'Live Pin', 'Patch Charm'],
-    blue: ['Trust Core', 'Source Seal', 'CDN Token'],
-    yellow: ['Season Seal', 'Gate Core', 'Launch Badge'],
-    unique: ['Host Mark', 'Pro Emblem', 'APN Seal'],
+  visor: {
+    white: ['Draft Goggles', 'Mod Visor', 'Intern Specs'],
+    green: ['Verify Visor', 'Signal Visor', 'Scan Specs'],
+    blue: ['Trust Visor', 'Source Goggles', 'CDN Lens'],
+    yellow: ['Season Visor', 'Gate Lens', 'Launch Specs'],
+    unique: ['Host Crown', 'All-Seeing', 'Zero Lag Lens'],
   },
 };
 
-/** Affix pools — slot-tagged for meaningful loadouts */
+/**
+ * Affixes — slot-tagged.
+ * Brand primary display maps these to Signal / Defense / Sprint.
+ */
 const AFFIX = {
-  dmg_pct: { key: 'dmg_pct', label: 'Damage', unit: '%', min: 3, max: 9, slots: ['weapon', 'trinket'] },
-  flat_dmg: { key: 'flat_dmg', label: 'Flat Dmg', unit: '', min: 2, max: 8, slots: ['weapon', 'chest'] },
-  crit_pct: { key: 'crit_pct', label: 'Crit', unit: '%', min: 1, max: 4, slots: ['weapon', 'head', 'trinket'] },
-  atk_spd: { key: 'atk_spd', label: 'Atk Speed', unit: '%', min: 2, max: 6, slots: ['weapon', 'boots'] },
-  signal_pct: { key: 'signal_pct', label: 'Signal', unit: '%', min: 3, max: 10, slots: ['chest', 'head', 'trinket'] },
-  notes_pct: { key: 'notes_pct', label: 'Notes', unit: '%', min: 3, max: 10, slots: ['chest', 'legs', 'trinket'] },
-  energy: { key: 'energy', label: 'Energy', unit: '', min: 5, max: 18, slots: ['chest', 'head', 'legs'] },
-  e_regen: { key: 'e_regen', label: 'E-Regen', unit: '', min: 1, max: 4, slots: ['boots', 'head', 'legs'] },
-  move_pct: { key: 'move_pct', label: 'Move', unit: '%', min: 2, max: 7, slots: ['boots', 'legs'] },
+  // Signal / damage cluster
+  signal_pct: {
+    key: 'signal_pct',
+    label: 'Signal',
+    brand: 'Signal',
+    unit: '%',
+    min: 6,
+    max: 28,
+    slots: ['weapon', 'visor', 'chest'],
+  },
+  dmg_pct: {
+    key: 'dmg_pct',
+    label: 'Damage',
+    brand: 'Signal',
+    unit: '%',
+    min: 3,
+    max: 12,
+    slots: ['weapon'],
+  },
+  flat_dmg: {
+    key: 'flat_dmg',
+    label: 'Flat Dmg',
+    brand: 'Signal',
+    unit: '',
+    min: 4,
+    max: 22,
+    slots: ['weapon', 'chest'],
+  },
+  // Defense cluster (energy shell)
+  energy: {
+    key: 'energy',
+    label: 'Energy',
+    brand: 'Defense',
+    unit: '',
+    min: 8,
+    max: 26,
+    slots: ['chest', 'visor'],
+  },
+  notes_pct: {
+    key: 'notes_pct',
+    label: 'Notes',
+    brand: 'Defense',
+    unit: '%',
+    min: 3,
+    max: 12,
+    slots: ['chest', 'legs'],
+  },
+  // Sprint cluster
+  move_pct: {
+    key: 'move_pct',
+    label: 'Move',
+    brand: 'Sprint',
+    unit: '%',
+    min: 4,
+    max: 16,
+    slots: ['legs'],
+  },
+  atk_spd: {
+    key: 'atk_spd',
+    label: 'Atk Speed',
+    brand: 'Sprint',
+    unit: '%',
+    min: 2,
+    max: 8,
+    slots: ['weapon', 'legs'],
+  },
+  e_regen: {
+    key: 'e_regen',
+    label: 'E-Regen',
+    brand: 'Sprint',
+    unit: '',
+    min: 1,
+    max: 5,
+    slots: ['legs', 'visor'],
+  },
+  // Crit (visor secondary)
+  crit_pct: {
+    key: 'crit_pct',
+    label: 'Crit',
+    brand: 'Signal',
+    unit: '%',
+    min: 1,
+    max: 6,
+    slots: ['weapon', 'visor'],
+  },
 };
 
 const UNIQUE_BY_SLOT = {
   weapon: [
-    { name: 'APN Eye', affixes: [{ key: 'dmg_pct', value: 18 }, { key: 'crit_pct', value: 6 }, { key: 'atk_spd', value: 8 }] },
-    { name: 'Host Visor', affixes: [{ key: 'dmg_pct', value: 14 }, { key: 'flat_dmg', value: 22 }, { key: 'crit_pct', value: 5 }] },
-  ],
-  head: [
-    { name: 'Host Crown', affixes: [{ key: 'crit_pct', value: 7 }, { key: 'energy', value: 22 }, { key: 'signal_pct', value: 12 }] },
-    { name: 'All-Seeing Cap', affixes: [{ key: 'crit_pct', value: 8 }, { key: 'e_regen', value: 5 }, { key: 'energy', value: 18 }] },
+    {
+      name: 'APN Eye',
+      affixes: [
+        { key: 'signal_pct', value: 24 },
+        { key: 'dmg_pct', value: 14 },
+        { key: 'crit_pct', value: 6 },
+      ],
+    },
+    {
+      name: 'Host Beam',
+      affixes: [
+        { key: 'signal_pct', value: 22 },
+        { key: 'flat_dmg', value: 20 },
+        { key: 'atk_spd', value: 8 },
+      ],
+    },
   ],
   chest: [
-    { name: 'Live Forever', affixes: [{ key: 'signal_pct', value: 16 }, { key: 'notes_pct', value: 14 }, { key: 'energy', value: 25 }] },
-    { name: 'Zero Downtime', affixes: [{ key: 'flat_dmg', value: 16 }, { key: 'energy', value: 20 }, { key: 'signal_pct', value: 12 }] },
+    {
+      name: 'Live Forever',
+      affixes: [
+        { key: 'energy', value: 28 },
+        { key: 'notes_pct', value: 14 },
+        { key: 'signal_pct', value: 12 },
+      ],
+    },
+    {
+      name: 'Zero Downtime',
+      affixes: [
+        { key: 'energy', value: 24 },
+        { key: 'flat_dmg', value: 14 },
+        { key: 'signal_pct', value: 10 },
+      ],
+    },
   ],
   legs: [
-    { name: 'Host Stride', affixes: [{ key: 'move_pct', value: 10 }, { key: 'notes_pct', value: 14 }, { key: 'energy', value: 16 }] },
-    { name: 'Never Stuck', affixes: [{ key: 'notes_pct', value: 16 }, { key: 'e_regen', value: 5 }, { key: 'move_pct', value: 8 }] },
+    {
+      name: 'Host Stride',
+      affixes: [
+        { key: 'move_pct', value: 16 },
+        { key: 'atk_spd', value: 8 },
+        { key: 'notes_pct', value: 10 },
+      ],
+    },
+    {
+      name: 'Never Stuck',
+      affixes: [
+        { key: 'move_pct', value: 14 },
+        { key: 'e_regen', value: 6 },
+        { key: 'atk_spd', value: 6 },
+      ],
+    },
   ],
-  boots: [
-    { name: 'Host Dash', affixes: [{ key: 'move_pct', value: 14 }, { key: 'atk_spd', value: 8 }, { key: 'e_regen', value: 6 }] },
-    { name: 'Zero Ping', affixes: [{ key: 'move_pct', value: 12 }, { key: 'e_regen', value: 7 }, { key: 'atk_spd', value: 6 }] },
-  ],
-  trinket: [
-    { name: 'Host Mark', affixes: [{ key: 'dmg_pct', value: 12 }, { key: 'crit_pct', value: 5 }, { key: 'signal_pct', value: 10 }] },
-    { name: 'APN Seal', affixes: [{ key: 'dmg_pct', value: 10 }, { key: 'notes_pct', value: 12 }, { key: 'crit_pct', value: 4 }] },
+  visor: [
+    {
+      name: 'All-Seeing',
+      affixes: [
+        { key: 'signal_pct', value: 18 },
+        { key: 'crit_pct', value: 8 },
+        { key: 'energy', value: 14 },
+      ],
+    },
+    {
+      name: 'Zero Lag Lens',
+      affixes: [
+        { key: 'signal_pct', value: 16 },
+        { key: 'crit_pct', value: 7 },
+        { key: 'e_regen', value: 5 },
+      ],
+    },
   ],
 };
 
@@ -141,7 +264,7 @@ function rollAffix(slot, rarity, ilvl) {
   let value = base * mult;
   if (def.unit === '%') value = Math.round(value * 10) / 10;
   else value = Math.round(value);
-  return { key: def.key, label: def.label, unit: def.unit, value };
+  return { key: def.key, label: def.label, brand: def.brand, unit: def.unit, value };
 }
 
 function scoreItem(item) {
@@ -163,18 +286,23 @@ function mapUniqueAffixes(affixes, ilvl) {
     return {
       key: a.key,
       label: def?.label || a.key,
+      brand: def?.brand || def?.label || a.key,
       unit: def?.unit || '',
       value: Math.round(a.value * (0.9 + Math.min(0.4, ilvl / 100)) * 10) / 10,
     };
   });
 }
 
-/** Migrate legacy `armor` → `chest` and invalid slots */
+export function canonicalSlot(slot) {
+  if (!slot) return 'chest';
+  if (SLOTS.includes(slot)) return slot;
+  return SLOT_MIGRATE[slot] || 'chest';
+}
+
+/** Migrate legacy armor/head/boots/trinket → brand slots */
 export function migrateItem(item) {
   if (!item || typeof item !== 'object') return item;
-  let slot = item.slot;
-  if (slot === 'armor') slot = 'chest';
-  if (!SLOTS.includes(slot)) slot = 'chest';
+  const slot = canonicalSlot(item.slot);
   if (slot === item.slot) return item;
   return { ...item, slot };
 }
@@ -182,35 +310,82 @@ export function migrateItem(item) {
 export function emptyGear() {
   return {
     weapon: null,
-    head: null,
     chest: null,
     legs: null,
-    boots: null,
-    trinket: null,
+    visor: null,
     bag: [],
   };
 }
 
-/** Normalize any save/runtime gear blob into full multi-slot shape */
+/** Normalize any save/runtime gear blob into brand 4-slot shape */
 export function normalizeGear(raw) {
   const g = emptyGear();
   if (!raw || typeof raw !== 'object') return g;
+
+  // Direct brand slots
   for (const slot of SLOTS) {
     let piece = raw[slot] || null;
-    if (slot === 'chest' && !piece && raw.armor) piece = raw.armor;
+    // legacy keys landing on brand slots
+    if (!piece && slot === 'chest' && raw.armor) piece = raw.armor;
+    if (!piece && slot === 'visor' && raw.head) piece = raw.head;
+    if (!piece && slot === 'legs' && raw.boots) piece = raw.boots;
+    if (!piece && slot === 'visor' && raw.trinket) piece = raw.trinket;
     if (piece) {
       piece = migrateItem(piece);
       if (piece.slot !== slot) piece = { ...piece, slot };
-      g[slot] = piece;
+      // if slot already filled, push weaker to bag later
+      if (!g[slot]) g[slot] = piece;
+      else {
+        g.bag.push(piece);
+      }
     }
   }
-  g.bag = Array.isArray(raw.bag) ? raw.bag.map(migrateItem).filter(Boolean) : [];
+
+  const bagIn = Array.isArray(raw.bag) ? raw.bag : [];
+  // also orphan legacy equipped pieces not mapped above
+  for (const leg of ['armor', 'head', 'boots', 'trinket', 'module']) {
+    if (raw[leg] && !SLOTS.includes(leg)) {
+      // already handled via mapping if slot empty
+    }
+  }
+  g.bag = [...g.bag, ...bagIn.map(migrateItem).filter(Boolean)];
+  // dedupe by id
+  const seen = new Set();
+  g.bag = g.bag.filter((it) => {
+    if (!it?.id || seen.has(it.id)) return false;
+    seen.add(it.id);
+    return true;
+  });
   return g;
 }
 
 /**
+ * Brand primary line for cards: "+24 Signal"
+ * Picks strongest affix by brand weight.
+ */
+export function primaryStat(item) {
+  if (!item?.affixes?.length) {
+    const fb = SLOT_META[item?.slot]?.primary || 'Signal';
+    return { value: 0, brand: fb, text: `+0 ${fb}` };
+  }
+  let best = item.affixes[0];
+  let bestW = -1;
+  for (const a of item.affixes) {
+    const brand = a.brand || AFFIX[a.key]?.brand || a.label || 'Signal';
+    const w = a.value * (a.unit === '%' ? 1.2 : 1);
+    if (w > bestW) {
+      bestW = w;
+      best = { ...a, brand };
+    }
+  }
+  const brand = best.brand || SLOT_META[item.slot]?.primary || 'Signal';
+  const val = Math.round(best.value);
+  return { value: val, brand, text: `+${val} ${brand}` };
+}
+
+/**
  * Generate a gear piece.
- * @param {number} zone 0-based zone
+ * @param {number} zone 0-based
  * @param {string|null} forcedSlot
  * @param {{ luck?: number, minRarity?: string }} [opts]
  */
@@ -221,9 +396,8 @@ export function rollItem(zone, forcedSlot = null, opts = {}) {
   let rarity = rollRarity(luck);
   rarity = floorRarity(rarity, opts.minRarity);
 
-  let slot = forcedSlot;
-  if (slot === 'armor') slot = 'chest';
-  if (!slot || !SLOTS.includes(slot)) slot = pick(SLOTS);
+  let slot = canonicalSlot(forcedSlot);
+  if (!forcedSlot || !SLOTS.includes(slot)) slot = pick(SLOTS);
 
   if (rarity.id === 'unique') {
     const pool = UNIQUE_BY_SLOT[slot] || UNIQUE_BY_SLOT.weapon;
@@ -268,7 +442,6 @@ export function rollItem(zone, forcedSlot = null, opts = {}) {
   return item;
 }
 
-/** Prefer empty slots when rolling box/loadout rewards */
 export function pickSlotForGear(gear, preferEmpty = true) {
   if (preferEmpty && gear) {
     const empty = SLOTS.filter((s) => !gear[s]);
@@ -277,7 +450,6 @@ export function pickSlotForGear(gear, preferEmpty = true) {
   return pick(SLOTS);
 }
 
-/** Sum equipped affixes across all slots */
 export function gearBonuses(gear) {
   const b = {
     dmg_pct: 0,
@@ -302,8 +474,8 @@ export function gearBonuses(gear) {
 }
 
 /**
- * Place item: equip only if slot empty or strictly better score.
- * Never equips a worse piece. Overflow bag drops oldest.
+ * Equip only if slot empty or strictly better score.
+ * Never equips worse. Overflow bag drops oldest.
  */
 export function offerItem(gear, item, bagCap = 24) {
   if (!gear || !item) return { equipped: false, replaced: null, item };
@@ -348,7 +520,6 @@ export function equipFromBag(gear, itemId) {
   return true;
 }
 
-/** Move equipped piece into bag (if room) */
 export function unequipSlot(gear, slot, bagCap = 24) {
   if (!gear || !SLOTS.includes(slot) || !gear[slot]) return false;
   gear.bag = gear.bag || [];
@@ -358,7 +529,6 @@ export function unequipSlot(gear, slot, bagCap = 24) {
   return true;
 }
 
-/** Sell bag item → Signal (season soft currency). Higher rarity pays more. */
 export function sellValue(item) {
   if (!item) return 0;
   const p = RARITY[item.rarity]?.power || 1;
@@ -366,10 +536,6 @@ export function sellValue(item) {
   return Math.max(4, Math.round(base * p * (item.rarity === 'unique' ? 1.35 : 1)));
 }
 
-/**
- * Remove item from bag and return sell value, or null if missing.
- * Does not sell equipped pieces (unequip first).
- */
 export function sellFromBag(gear, itemId) {
   if (!gear?.bag) return null;
   const idx = gear.bag.findIndex((x) => x.id === itemId);
@@ -412,14 +578,15 @@ export function rarityLabel(id) {
 }
 
 export function slotLabel(slot) {
-  return SLOT_META[slot]?.label || (slot === 'armor' ? 'Chest' : slot);
+  const c = canonicalSlot(slot);
+  return SLOT_META[c]?.label || c;
 }
 
 export function slotShort(slot) {
-  return SLOT_META[slot]?.short || slot?.slice(0, 3) || '?';
+  const c = canonicalSlot(slot);
+  return SLOT_META[c]?.short || c?.slice(0, 4) || '?';
 }
 
-/** Drop chance helpers */
 export function shouldDropOnKill(type) {
   if (type === 'boss') return true;
   if (type === 'patch') return Math.random() < 0.12;

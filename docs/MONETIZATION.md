@@ -31,9 +31,9 @@ Applied to:
 
 ## Gear loadout (permanent)
 
-Six slots: **Weapon · Head · Chest · Legs · Boots · Trinket**.  
+Four brand slots: **Weapon · Chest · Legs · Visor** (see `docs/IDLE-DESIGN-CONTEXT.md`).  
 Boss/elite drops fill for free. Boxes are optional power/convenience.  
-Sell bag junk for **Signal** (season soft currency). Worse items never auto-equip.
+Sell bag junk for **Signal** (tap detail or **hold** on card). Worse items never auto-equip.
 
 ## Free coin sinks & sources
 

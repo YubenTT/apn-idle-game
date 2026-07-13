@@ -12,13 +12,27 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 - Save schema rename (bytes → signal) with migration
 - PWA manifest
 - Wire real IAP receipts for APN Pro / coin packs / boxes
+- Rewarded-ad stubs (MindStudios monetization playbook)
+
+## [1.7.0] — 2026-07-13
+
+### Added
+
+- **Brand Gear UI** (owner mock): Host + Weapon/Chest/Legs/Visor cards
+- Inventory item cards with primary stat (Signal / Defense / Sprint)
+- Hold-to-sell junk · rarity filter chips
+- `docs/IDLE-DESIGN-CONTEXT.md` — MindStudios idle design/monetization archive + APN map
+
+### Changed
+
+- Loadout simplified to **4 brand slots** (head→visor, boots→legs, trinket→visor migrate)
+- Primary-stat-forward copy on cards; detail bar for Equip/Swap/Unequip
 
 ## [1.6.0] — 2026-07-13
 
 ### Added
 
-- **6-slot gear loadout**: Weapon · Head · Chest · Legs · Boots · Trinket
-- Paper-doll Gear UI, unequip, bag slot tags, stacked bonuses summary
+- Multi-slot gear loadout + paper-doll
 - **Premium Gear Boxes** (Signal Crate / Rare Bundle / Epic Cache / Loadout Box)
 - Legacy `armor` → `chest` save migration
 

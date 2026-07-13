@@ -86,23 +86,30 @@ export function hubIco(id) {
   return ICO[id] || ICO.quest;
 }
 
-/** Empty-slot silhouettes for paper-doll */
+/** Empty-slot silhouettes — brand 4-slot */
 const SLOT_EMPTY = {
   weapon: SVG(`${p('M4 12h14l-3-3 1.2-1.2L22 12l-5.8 5.8L15 16.6l3-3H4v-1.6z')}${c(5, 12, 2)}`),
-  head: SVG(`${p('M8 14c0-3 1.8-5.5 4-5.5s4 2.5 4 5.5')}${p('M7 14h10v2H7z')}${c(12, 7, 2.5)}`),
   chest: SVG(p('M8 4h8l2 3v13H6V7l2-3zm2 2l-1 1.5h6L14 6h-4z')),
   legs: SVG(p('M8 3h8v6l-1.5 12h-2.2L11 12l-1.3 9H7.5L6 9V3h2z')),
-  boots: SVG(p('M6 10h8l1 4h3l1 3H5l1-3V10zm0 0V8h6v2')),
-  trinket: SVG(`${c(12, 12, 6)}${c(12, 12, 2.5)}`),
+  visor: SVG(
+    `${p('M3 12h18')}${p('M5 12c0-2 1.5-4 3.5-4h7c2 0 3.5 2 3.5 4')}${c(9, 12, 1.5)}${c(15, 12, 1.5)}`
+  ),
 };
 
-/** Compact item glyph — multi-slot (weapon/head/chest/legs/boots/trinket) */
+function normSlot(slot) {
+  if (slot === 'armor') return 'chest';
+  if (slot === 'head' || slot === 'trinket' || slot === 'module') return 'visor';
+  if (slot === 'boots') return 'legs';
+  return slot || 'chest';
+}
+
+/** Compact item glyph — brand slots weapon/chest/legs/visor */
 export function gearIcon(item) {
   if (!item) {
     return SVG(p('M6 6h12v12H6z'), '0 0 24 24');
   }
   const name = (item.name || '').toLowerCase();
-  const slot = item.slot === 'armor' ? 'chest' : item.slot || 'chest';
+  const slot = normSlot(item.slot);
   const r = item.rarity || 'white';
 
   if (!item.name || name === 'empty') {
@@ -110,7 +117,7 @@ export function gearIcon(item) {
   }
 
   if (slot === 'weapon') {
-    if (name.includes('eye') || name.includes('visor')) {
+    if (name.includes('eye')) {
       return SVG(
         `${c(12, 12, 3)}${p('M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12zm11 4a4 4 0 100-8 4 4 0 000 8z')}`
       );
@@ -126,25 +133,17 @@ export function gearIcon(item) {
     if (name.includes('rifle') || name.includes('tracker') || name.includes('changelog')) {
       return SVG(p('M4 10h10l2-3h4v2h-3l-2 3 2 3h3v2h-4l-2-3H4v-4zm0 0v4H2v-4h2z'));
     }
-    if (name.includes('core') || name.includes('all notes') || name.includes('star')) {
-      return SVG(p('M12 2l2.4 6.5H21l-5.2 4 2 6.5L12 15.5 6.2 19l2-6.5L3 8.5h6.6L12 2z'));
-    }
     return SLOT_EMPTY.weapon;
   }
 
-  if (slot === 'head') {
-    if (name.includes('visor') || name.includes('goggles') || name.includes('seeing')) {
-      return SVG(
-        `${p('M3 12h18')}${p('M5 12c0-2 1.5-4 3.5-4h7c2 0 3.5 2 3.5 4')}${c(9, 12, 1.5)}${c(15, 12, 1.5)}`
-      );
+  if (slot === 'visor') {
+    if (name.includes('seeing') || name.includes('crown') || name.includes('lag')) {
+      return SVG(`${c(12, 12, 7)}${p('M12 7v5l3 2')}${c(12, 12, 1.5)}`);
     }
-    if (name.includes('crown') || name.includes('helm')) {
-      return SVG(p('M5 16l1-8 3 3 3-5 3 5 3-3 1 8H5z'));
-    }
-    return SLOT_EMPTY.head;
+    return SLOT_EMPTY.visor;
   }
 
-  if (slot === 'chest' || slot === 'armor') {
+  if (slot === 'chest') {
     if (name.includes('cloak') || name.includes('coat') || name.includes('hoodie')) {
       return SVG(
         p(
@@ -173,27 +172,10 @@ export function gearIcon(item) {
   }
 
   if (slot === 'legs') {
-    if (name.includes('greave') || name.includes('plate')) {
+    if (name.includes('sprint') || name.includes('legging') || name.includes('greave')) {
       return SVG(p('M7 3h10v5l-1 13h-3l-1-9-1 9H8L7 8V3zm2 2v3h6V5H9z'));
     }
     return SLOT_EMPTY.legs;
-  }
-
-  if (slot === 'boots') {
-    if (name.includes('dash') || name.includes('ping') || name.includes('tread')) {
-      return SVG(p('M4 11h9l2 3h4l1 4H4l1-4V11zm9 0V8h4v3'));
-    }
-    return SLOT_EMPTY.boots;
-  }
-
-  if (slot === 'trinket') {
-    if (name.includes('seal') || name.includes('mark') || name.includes('emblem')) {
-      return SVG(`${c(12, 12, 7)}${p('M12 7v5l3 2')}${c(12, 12, 1.5)}`);
-    }
-    if (name.includes('core') || name.includes('token')) {
-      return SVG(p('M12 3l7 4v5c0 4-3 7.5-7 9-4-1.5-7-5-7-9V7l7-4zm0 4a3 3 0 100 6 3 3 0 000-6z'));
-    }
-    return SLOT_EMPTY.trinket;
   }
 
   return SLOT_EMPTY.chest;
