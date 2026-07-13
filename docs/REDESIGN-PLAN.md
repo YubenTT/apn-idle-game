@@ -19,25 +19,53 @@ every box is ticked and `node qa/run-tests.mjs` is green.
 **Legend** — Priority: 🔴 Must · 🟡 Fix · ⚪ Optional. Size: S ≤ ½ day · M ≈ 1–2 days
 · L ≈ 3–5 days · XL ≈ 1–1.5 weeks (single contributor, includes art where noted).
 
+## Autonomous delivery sessions
+
+The 24 focused issues still land as one issue = one PR, but execution is grouped
+into seven long-running delivery sessions in one autonomous chain. Sessions are
+work packages, not separate chats or one-agent-per-issue handoffs.
+
+| Session | Issues / work | Outcome | User action |
+|--------:|---------------|---------|-------------|
+| 1 | I-000, I-001, I-002 | Deterministic QA + token foundation | None |
+| 2 | UI/UX North Star preproduction | Real-browser Run + Gear comps, component states, motion/perf proof | **One combined visual evidence approval** |
+| 3 | I-021 | Gear vertical slice | None |
+| 4 | I-010–I-014 | Run hero experience | None |
+| 5 | I-020, I-022, I-023, I-025, I-024 | Decision sheets | None |
+| 6 | I-030–I-034 | Canonical art system | None |
+| 7 | I-040–I-042, I-044, I-043 | Feel, pipeline, copy, locked nav, final QA | Final evidence review only |
+
+Session 2 is the only blocking visual gate. The user sees one coherent, interactive
+Run + Gear direction backed by mobile browser evidence and either approves it or
+returns one consolidated correction list. All later visual and technical gates are
+self-reviewed against the source docs; they never pause the autonomous chain.
+
 ## Phasing (dependency waves — do in order)
 
 ```
-Wave 0  Foundation → code      I-001, I-002            (unblocks everything)
+Wave 0  Foundation → code      I-000, I-001, I-002     (unblocks everything)
 Wave 1  Run screen (hero)      I-010 → I-014           (first visible leap)
 Wave 2  Sheets (decisions)     I-021*, I-020, I-022–025 (*Gear first = biggest ROI)
 Wave 3  Art system             I-030 → I-034           (mascot canon first)
 Wave 4  Feel · pipeline · QA   I-040 → I-044           (polish + gates)
 ```
 
+Locked execution order:
+`I-000 → I-001 → I-002 → I-021 → I-010 → I-011 → I-012 → I-013 → I-014 →
+I-020 → I-022 → I-023 → I-025 → I-024 → I-030 → I-031 → I-032 → I-033 →
+I-034 → I-040 → I-041 → I-042 → I-044 → I-043`.
+
 Rule: **do not start a wave until the prior wave's 🔴 Must issues are merged.**
-Art (Wave 3) can run in parallel with Waves 1–2 as a separate art track, but its
-integration issues land after the screen that consumes them.
+The locked order makes one explicit exception: I-021 lands immediately after Wave
+0 because Gear is the highest-ROI visible surface and depends only on I-001. Art
+does not run as a separate parallel track in this delivery; the chain stays linear.
 
 ## Master issue table
 
 | ID | Epic | Title | Pri | Size | Depends on | Source of truth |
 |----|------|-------|:---:|:----:|------------|-----------------|
-| I-001 | Foundation | Wire `tokens.css` into `game.css` (staged) | 🔴 | M | — | [DESIGN-TOKENS](../brand/DESIGN-TOKENS.md) |
+| I-000 | Foundation | Deterministic QA baseline + backlog integrity | 🔴 | S | — | [QA-CHECKLIST](./QA-CHECKLIST.md) |
+| I-001 | Foundation | Wire `tokens.css` into `game.css` (staged) | 🔴 | M | I-000 | [DESIGN-TOKENS](../brand/DESIGN-TOKENS.md) |
 | I-002 | Foundation | Apply 2 token changes (Notes→rose, SP→violet) | 🔴 | S | I-001 | [DESIGN-TOKENS §Change](../brand/DESIGN-TOKENS.md) |
 | I-010 | Run | Resource strip around notch (Signal/Notes/SP) | 🔴 | M | I-001 | [SCREEN-SPECS §RUN](./SCREEN-SPECS.md) |
 | I-011 | Run | Feed rail (single line, run-context) | 🔴 | M | I-001 | [SCREEN-SPECS §RUN](./SCREEN-SPECS.md) |
@@ -58,15 +86,15 @@ integration issues land after the screen that consumes them.
 | I-040 | Feel | Motion / haptic / SFX pass | 🟡 | M | Wave 1 | [DESIGN-TOKENS §Motion](../brand/DESIGN-TOKENS.md) |
 | I-041 | Pipeline | Asset pipeline + size gates | 🟡 | M | I-030 | [ART-PIPELINE](./ART-PIPELINE.md), [PERF-BUDGET](./PERF-BUDGET.md) |
 | I-042 | Copy | Copy + naming pass (all screens) | 🔴 | S | Wave 1–2 | [NAMING](../brand/NAMING.md), [GLOSSARY](./GLOSSARY.md) |
-| I-043 | QA | Device matrix + visual regression | 🔴 | M | Wave 1–2 | [QA-CHECKLIST](./QA-CHECKLIST.md) |
-| I-044 | Nav | Nav decision (keep-5 vs research) + impl | 🟡 | S | I-010 | [SCREEN-SPECS §Navigation](./SCREEN-SPECS.md) |
+| I-043 | QA | Device matrix + visual regression | 🔴 | M | I-042, I-044 | [QA-CHECKLIST](./QA-CHECKLIST.md) |
+| I-044 | Nav | Keep-5 navigation refinement + implementation | 🟡 | S | I-010 | [SCREEN-SPECS §Navigation](./SCREEN-SPECS.md) |
 
 ## Effort roll-up
 
 | Priority | Issues | Rough range |
 |----------|-------:|------------:|
-| 🔴 Must | 14 | ~150–210 h |
-| 🟡 Fix | 7 | ~110–160 h |
+| 🔴 Must | 17 | ~180–330 h |
+| 🟡 Fix | 7 | ~95–175 h |
 | ⚪ Optional | (seasonal swaps, cosmetics, PWA — see ROADMAP) | ~60–90 h |
 
 Hours are single-contributor, vanilla-stack, docs-already-written estimates — much
@@ -77,6 +105,27 @@ lower than the research's 460–520 h because no rewrite and no framework onboar
 # Issue detail cards
 
 ## Wave 0 — Foundation
+
+### I-000 · Deterministic QA baseline + backlog integrity — 🔴 S
+- **Goal:** every redesign issue starts from a reproducible test and an internally
+  consistent execution plan.
+- **Scope:** install a suite-local seeded RNG in `qa/run-tests.mjs`; preserve the
+  three gear assertions; correct issue/wave/session counts, dependencies, and the
+  locked execution order in this backlog.
+- **Acceptance:**
+  - [x] The pre-fix failure is reproduced with a controlled seed: the same three
+        gear assertions fail together.
+  - [x] Test randomness is seeded locally with `0x41504e` (`APN`); production RNG
+        behavior is untouched.
+  - [x] `worse weapon stays bag`, `best weapon kept`, and `weak in bag` remain
+        unchanged and pass reproducibly.
+  - [x] Ten consecutive suite runs produce one output hash and end `ALL PASS`.
+  - [x] Backlog truth is explicit: 24 issues, 17 Must + 7 Fix, 5 waves, 7 delivery
+        sessions, and one blocking visual user gate.
+- **Files:** `qa/run-tests.mjs`, `docs/REDESIGN-PLAN.md`, `docs/ROADMAP.md`,
+  `CHANGELOG.md`.
+- **Out of scope:** production/gameplay RNG, gear balance, UI changes, runtime
+  dependencies.
 
 ### I-001 · Wire `tokens.css` into `game.css` (staged) — 🔴 M
 - **Goal:** every color/size in the UI comes from a token, not a literal.
@@ -97,7 +146,7 @@ lower than the research's 460–520 h because no rewrite and no framework onboar
   - [ ] Notes value/pills/floaters use rose; SP badges/costs use violet.
   - [ ] No remaining crimson used for a Notes or SP role.
   - [ ] Contrast floors still met ([DESIGN-TOKENS §A11y](../brand/DESIGN-TOKENS.md)).
-  - [ ] Screenshot diff reviewed + approved (intentional change).
+  - [ ] Screenshot diff reviewed against the plan-lock approval (intentional change).
 - **Files:** `css/game.css`, `js/render.js` (floater colors), `js/ui.js`.
 
 ## Wave 1 — Run screen
@@ -253,9 +302,11 @@ lower than the research's 460–520 h because no rewrite and no framework onboar
 - **Acceptance:** all [QA-CHECKLIST](./QA-CHECKLIST.md) gates green on the device
   matrix; screenshot diffs refreshed + approved. Files: `qa/*`.
 
-### I-044 · Nav decision + implement — 🟡 S
-- **Acceptance:** pick Option A (keep 5) or B (research-aligned) in an ADR; implement;
-  one primary-crimson element per screen. Files: `docs/decisions/ADR-0004-*.md`, `index.html`, `js/ui.js`.
+### I-044 · Keep-5 navigation refinement + implement — 🟡 S
+- **Acceptance:** record locked Option A in an ADR; keep Build · Ship · Hub ·
+  Boosts · Menu with the Gear FAB; use a minimal active fill; keep one
+  primary-crimson element per screen. Files: `docs/decisions/ADR-0004-*.md`,
+  `index.html`, `css/game.css`, `js/ui.js`.
 
 ---
 
@@ -268,6 +319,7 @@ release.
 
 ## Release gate (redesign V1)
 
-Ship redesign V1 when: Waves 0–2 🔴 Must merged · Mascot canon (I-030) merged ·
-Copy pass (I-042) + QA matrix (I-043) green · no Blocker/Critical open · every
-shipping screen passes Silhouette / Contrast / Touch / Decision gates.
+Ship redesign V1 when: all 24 issue acceptance lists are complete · all 17 Must +
+7 Fix PRs are merged · Sessions 1–7 are complete · QA matrix (I-043) is green ·
+no Blocker/Critical is open · every shipping screen passes Silhouette / Contrast /
+Touch / Decision gates.

@@ -18,13 +18,22 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
     · `SCREEN-SPECS.md` (mobile-first per-screen redesign) · `ART-PIPELINE.md` ·
     `PERF-BUDGET.md` · `QA-CHECKLIST.md` · `GLOSSARY.md` · `DEFINITION-OF-DONE.md` ·
     `DOC-UPDATE-POLICY.md`
-  - `docs/REDESIGN-PLAN.md` — sequenced issue backlog (22 issues, 4 waves) with
-    per-issue acceptance criteria, dependencies, and release gate
+  - `docs/REDESIGN-PLAN.md` — sequenced issue backlog (24 issues, 5 waves) grouped
+    into 7 autonomous delivery sessions, with per-issue acceptance criteria,
+    dependencies, one visual user gate, and a release gate
   - `docs/decisions/` ADRs — **ADR-0001** keep vanilla ES + Canvas 2D (reject
     PixiJS/React rewrite), **ADR-0002** token-driven design system, **ADR-0003**
     GLB single-source mascot
 - Two deliberate token changes staged for the redesign pass (not yet wired): Notes
   crimson → rose `#ff6a8f`, SP crimson → violet `#b07cff` (de-collide from primary).
+
+### Fixed
+
+- Seeded the headless test RNG with the suite-local `0x41504e` (`APN`) seed so the
+  three gear ordering assertions are reproducible without weakening them or
+  changing production randomness.
+- Corrected redesign backlog counts, dependencies, execution order, and session
+  ownership so the repository plan matches the autonomous delivery control plane.
 
 ### Planned
 
