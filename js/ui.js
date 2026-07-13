@@ -86,19 +86,32 @@ export function bindUI(s) {
   document.addEventListener('keydown', unlock, { once: true });
 
   document.querySelectorAll('[data-panel]').forEach((btn) => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
       unlockAudio();
       const p = btn.dataset.panel;
-      if (s.ui.panel === p) closeSheet(s);
-      else {
+      // Same tab stays open (no toggle-close flap). Only Close / Esc / backdrop close.
+      if (s.ui.panel === p) {
+        // soft refresh content, keep sheet up
+        s.ui.panelDirty = true;
         openSheet(s, p);
-        if (s.settings.sfx !== false) sfx('click');
+        return;
       }
+      openSheet(s, p);
+      if (s.settings.sfx !== false) sfx('click');
     });
   });
 
   $('sheet-close')?.addEventListener('click', () => closeSheet(s));
   $('sheet-backdrop')?.addEventListener('click', () => closeSheet(s));
+
+  // Header gear pill → Gear panel (icons only, no name spam)
+  $('v-gear-pill')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    unlockAudio();
+    openSheet(s, 'gear');
+    if (s.settings.sfx !== false) sfx('click');
+  });
 
   $('btn-scanner')?.addEventListener('click', () => {
     unlockAudio();
@@ -267,7 +280,11 @@ function openSheet(s, panel) {
   s.ui.panel = panel;
   s.ui.panelDirty = true;
   const root = document.getElementById('sheet-root');
-  if (root) root.hidden = false;
+  if (root) {
+    root.hidden = false;
+    root.classList.add('is-open');
+  }
+  document.getElementById('app')?.classList.add('sheet-open');
   document.querySelectorAll('.hud-nav button').forEach((b) => {
     b.classList.toggle('active', b.dataset.panel === panel);
   });
@@ -294,12 +311,19 @@ function openSheet(s, panel) {
     if (mo) mo.checked = !!s.settings.reducedMotion;
     renderPremium(s);
   }
+  lastPanel = panel;
+  s.ui.panelDirty = false;
 }
 
 function closeSheet(s) {
   s.ui.panel = null;
+  lastPanel = null;
   const root = document.getElementById('sheet-root');
-  if (root) root.hidden = true;
+  if (root) {
+    root.hidden = true;
+    root.classList.remove('is-open');
+  }
+  document.getElementById('app')?.classList.remove('sheet-open');
   document.querySelectorAll('.hud-nav button').forEach((b) => b.classList.remove('active'));
 }
 
@@ -691,15 +715,19 @@ function equipCard(slot, item) {
       <div class="eq-ico muted">${gearIcon({ slot, name: 'empty', rarity: 'white' })}</div>
       <div class="eq-lab">${lab}</div>
       <div class="eq-empty">Empty</div>
-      <div class="eq-hint">Boss drop</div>
+      <div class="eq-hint">Boss / elite drop</div>
     </div>`;
   }
   const col = rarityColor(item.rarity);
   return `
   <div class="eq-card r-${item.rarity}" style="--rc:${col}">
-    <div class="eq-ico" style="color:${col}">${gearIcon(item)}</div>
-    <div class="eq-lab">${lab}</div>
-    <div class="eq-rarity" style="color:${col}">${rarityLabel(item.rarity)} · ${item.ilvl}</div>
+    <div class="eq-top">
+      <div class="eq-ico" style="color:${col}">${gearIcon(item)}</div>
+      <div class="eq-head">
+        <div class="eq-lab">${lab}</div>
+        <div class="eq-rarity" style="color:${col}">${rarityLabel(item.rarity)} · i${item.ilvl}</div>
+      </div>
+    </div>
     <div class="eq-name" style="color:${col}">${item.name}</div>
     <div class="eq-affs">${affixLines(item, 3)}</div>
   </div>`;
@@ -711,39 +739,48 @@ function renderGear(s) {
   const g = s.meta.gear || { weapon: null, armor: null, bag: [] };
   const wCol = g.weapon ? rarityColor(g.weapon.rarity) : '#3a4656';
   const aCol = g.armor ? rarityColor(g.armor.rarity) : '#3a4656';
+  const bag = g.bag || [];
 
   let html = `
   <div class="loadout">
     <div class="loadout-stage">
       <div class="loadout-glow" style="--wc:${wCol};--ac:${aCol}"></div>
-      <img class="loadout-mascot" src="./assets/mascot-host.png" alt="" width="120" height="120" />
-      <div class="loadout-tags">
-        <span class="ltag" style="color:${wCol}">${g.weapon ? g.weapon.name : 'No weapon'}</span>
-        <span class="ltag" style="color:${aCol}">${g.armor ? g.armor.name : 'No armor'}</span>
+      <div class="loadout-mascot-wrap">
+        <img class="loadout-mascot" src="./assets/mascot-host.png" alt="" width="112" height="112" />
+        <div class="loadout-slots">
+          <div class="ls-chip" style="--rc:${wCol}" title="${g.weapon ? g.weapon.name : 'Weapon empty'}">
+            <span class="ls-ico">${gearIcon(g.weapon || { slot: 'weapon', name: 'empty', rarity: 'white' })}</span>
+            <span class="ls-lab">W</span>
+          </div>
+          <div class="ls-chip" style="--rc:${aCol}" title="${g.armor ? g.armor.name : 'Armor empty'}">
+            <span class="ls-ico">${gearIcon(g.armor || { slot: 'armor', name: 'empty', rarity: 'white' })}</span>
+            <span class="ls-lab">A</span>
+          </div>
+        </div>
       </div>
     </div>
     <div class="eq-row">
       ${equipCard('weapon', g.weapon)}
       ${equipCard('armor', g.armor)}
     </div>
-    <p class="fine loadout-note">Permanent · better score auto-equips · bosses drop gear</p>
+    <p class="fine loadout-note">Permanent · auto-equip if better · bag for the rest</p>
   </div>
-  <div class="section-lab">Bag</div>
+  <div class="section-lab">Inventory <span class="section-count">${bag.length}</span></div>
   <div class="gear-bag">`;
 
-  const bag = g.bag || [];
   if (!bag.length) {
-    html += `<p class="fine bag-empty">Bag empty — clear Version Gates for drops.</p>`;
+    html += `<p class="fine bag-empty">Empty — clear Version Gates for gear drops.</p>`;
   } else {
-    for (const it of bag.slice(0, 20)) {
+    for (const it of bag.slice(0, 24)) {
       const col = rarityColor(it.rarity);
       const top = (it.affixes || [])[0];
+      const slotLab = it.slot === 'weapon' ? 'W' : 'A';
       html += `
       <button type="button" class="gear-item r-${it.rarity}" data-equip="${it.id}" style="--rc:${col}">
         <div class="gi-ico" style="color:${col}">${gearIcon(it)}</div>
         <div class="gi-body">
           <div class="gi-name" style="color:${col}">${it.name}</div>
-          <div class="gi-meta">${rarityLabel(it.rarity)} · ${it.slot} · ${it.ilvl}${
+          <div class="gi-meta">${rarityLabel(it.rarity)} · ${slotLab} · i${it.ilvl}${
             top ? ` · ${formatAffix(top)}` : ''
           }</div>
         </div>
@@ -755,48 +792,57 @@ function renderGear(s) {
   root.innerHTML = html;
 }
 
-/** Center-screen loot drop card */
+/** Center-screen loot drop card — smooth fade in/out, icon + compact stats */
 function updateLootDrop(s) {
   const el = document.getElementById('loot-toast');
   if (!el) return;
   const drop = s.ui.lootDrop;
   if (!drop || !drop.item) {
-    if (!el.hidden) {
-      el.classList.remove('show', 'out');
-      el.hidden = true;
+    if (!el.hidden && el.classList.contains('show')) {
+      el.classList.add('out');
+      // let fade finish then hide
+      if (!el._hideTimer) {
+        el._hideTimer = setTimeout(() => {
+          el.classList.remove('show', 'out');
+          el.hidden = true;
+          el.dataset.dropId = '';
+          el._hideTimer = null;
+        }, 320);
+      }
     }
     return;
   }
+  if (el._hideTimer) {
+    clearTimeout(el._hideTimer);
+    el._hideTimer = null;
+  }
   const item = drop.item;
   const col = rarityColor(item.rarity);
-  const life = drop.life || 2.35;
+  const life = drop.life || 2.5;
   const u = drop.t / life;
   // rebuild content when new drop id
   if (el.dataset.dropId !== item.id) {
     el.dataset.dropId = item.id;
+    const slotLab = item.slot === 'weapon' ? 'Weapon' : 'Armor';
     el.innerHTML = `
       <div class="loot-card r-${item.rarity}" style="--rc:${col}">
-        <div class="loot-badge">${drop.equipped ? 'Equipped' : 'Bag'}</div>
+        <div class="loot-badge">${drop.equipped ? 'Equipped' : 'Bag'} · ${slotLab}</div>
         <div class="loot-ico" style="color:${col}">${gearIcon(item)}</div>
         <div class="loot-rarity" style="color:${col}">${rarityLabel(item.rarity)}</div>
-        <div class="loot-name">${item.name}</div>
+        <div class="loot-name" style="color:${col}">${item.name}</div>
         <div class="loot-aff">${(item.affixes || [])
           .slice(0, 2)
           .map((a) => formatAffix(a))
           .join(' · ')}</div>
       </div>`;
     el.hidden = false;
-    el.classList.remove('out');
-    // force reflow for enter anim
+    el.classList.remove('out', 'show');
     void el.offsetWidth;
     el.classList.add('show');
   }
-  // fade out last 0.4s
-  if (u < 0.22) {
-    el.classList.add('out');
-  } else {
-    el.classList.remove('out');
-  }
+  // fade out last ~0.45s
+  if (u < 0.2) el.classList.add('out');
+  else el.classList.remove('out');
 }
 
 export function renderHUD(s) {
@@ -849,20 +895,30 @@ export function renderHUD(s) {
   set($('v-kills'), `${s.run.killsInZone}/${need}`);
   set($('v-xp-lab'), `${formatNum(h.xp | 0)}/${formatNum(needXp)}`);
 
-  // Compact equipped gear in header
+  // Compact equipped gear in header — icons only (no name spam)
   const gp = $('v-gear-pill');
   if (gp) {
     const gear = s.meta.gear || {};
-    const bits = [];
-    if (gear.weapon) bits.push(gear.weapon.name);
-    if (gear.armor) bits.push(gear.armor.name);
-    if (bits.length) {
+    const has = !!(gear.weapon || gear.armor);
+    if (has) {
       gp.hidden = false;
-      set(gp, bits.join(' · '));
-      gp.style.color = rarityColor(gear.weapon?.rarity || gear.armor?.rarity || 'white');
+      const wCol = gear.weapon ? rarityColor(gear.weapon.rarity) : '#5c6878';
+      const aCol = gear.armor ? rarityColor(gear.armor.rarity) : '#5c6878';
+      const key = `${gear.weapon?.id || ''}|${gear.armor?.id || ''}`;
+      if (gp.dataset.gkey !== key) {
+        gp.dataset.gkey = key;
+        gp.innerHTML = `
+          <span class="gp-ico" style="color:${wCol}">${gearIcon(
+            gear.weapon || { slot: 'weapon', name: 'empty', rarity: 'white' }
+          )}</span>
+          <span class="gp-ico" style="color:${aCol}">${gearIcon(
+            gear.armor || { slot: 'armor', name: 'empty', rarity: 'white' }
+          )}</span>`;
+      }
     } else {
       gp.hidden = true;
-      set(gp, '');
+      gp.dataset.gkey = '';
+      gp.innerHTML = '';
     }
   }
 
@@ -940,9 +996,20 @@ export function renderHUD(s) {
     if (!el) continue;
     el.hidden = skillLv(s, sk) < 1;
     el.classList.toggle('on', !!on);
+    el.setAttribute('aria-pressed', on ? 'true' : 'false');
     const def = SKILLS[sk];
-    if (def?.short && el.textContent !== def.short) el.textContent = def.short;
+    // Keep short labels stable; Overdrive shows live state
+    if (sk === 'deep_dive') {
+      const lab = on ? 'Overdrive · ON' : def?.short || 'Overdrive';
+      if (el.textContent !== lab) el.textContent = lab;
+    } else if (sk === 'live_tracker') {
+      const lab = on ? 'Ramp · ON' : def?.short || 'Ramp';
+      if (el.textContent !== lab) el.textContent = lab;
+    } else if (def?.short && el.textContent !== def.short) {
+      el.textContent = def.short;
+    }
   }
+  document.getElementById('app')?.classList.toggle('is-overdrive', !!h.deepOn);
 
   if (s.ui.offline) {
     const m = $('offline-modal');
@@ -956,16 +1023,19 @@ export function renderHUD(s) {
     }
   }
 
-  if (s.ui.panel && (s.ui.panelDirty || s.ui.panel !== lastPanel)) {
+  // Only re-render open panel when dirty — preserve scroll, no flap
+  if (s.ui.panel && s.ui.panelDirty) {
+    const body = document.querySelector('.sheet-body');
+    const scrollY = body ? body.scrollTop : 0;
     if (s.ui.panel === 'skills') renderSkills(s);
     if (s.ui.panel === 'meta') renderMeta(s);
     if (s.ui.panel === 'ship') fillShip(s);
     if (s.ui.panel === 'gear') renderGear(s);
     if (s.ui.panel === 'hub') renderHub(s);
+    if (body) body.scrollTop = scrollY;
     lastPanel = s.ui.panel;
     s.ui.panelDirty = false;
   }
-  if (!s.ui.panel) lastPanel = null;
 }
 
 function set(el, t) {

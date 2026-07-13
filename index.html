@@ -7,7 +7,7 @@
     <meta name="color-scheme" content="dark" />
     <title>APN Idle</title>
     <link rel="icon" href="./assets/apn-logo.svg" />
-    <link rel="stylesheet" href="./css/game.css?v=gearui1" />
+    <link rel="stylesheet" href="./css/game.css?v=gearuix2" />
   </head>
   <body>
     <div id="app">
@@ -19,7 +19,7 @@
             <span class="meta-pill" title="Economy mult (Live × Pro × Boost)"><span class="meta-k">×</span><em id="v-live">1.00</em></span>
             <span class="meta-pill pro-badge" id="v-pro" hidden title="APN Pro">PRO</span>
             <span class="meta-pill sp" title="Unspent skill points"><em id="v-sp">0</em><span class="meta-k">sp</span></span>
-            <span class="meta-pill gear-pill" id="v-gear-pill" title="Equipped gear"></span>
+            <button type="button" class="meta-pill gear-pill" id="v-gear-pill" title="Open Gear" hidden></button>
           </div>
         </div>
         <div class="hud-res">
@@ -118,6 +118,15 @@
           /></svg>
           <span>Ship</span>
         </button>
+        <button type="button" data-panel="gear" class="nav-btn">
+          <svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"
+            ><path
+              fill="currentColor"
+              d="M12 2l2 4h4l-3 3 1 5-4-2.5L8 14l1-5-3-3h4L12 2zm-7 14v2h14v-2H5zm2 4v2h10v-2H7z"
+            /></svg
+          >
+          <span>Gear</span>
+        </button>
         <button type="button" data-panel="hub" class="nav-btn">
           <svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"
             ><path
@@ -193,13 +202,19 @@
       </div>
     </div>
 
-    <div id="title-screen" class="modal">
-      <div class="modal-card">
-        <img src="./assets/mascot-title.png" alt="" width="88" height="88" />
-        <h1>APN <span>Idle</span></h1>
-        <p id="title-tagline">Clear noise. Ship notes. Stay live.</p>
-        <p class="fine">Clear feed noise → Notes → Ship for permanent Rep &amp; Boosts → End Season for Live Mult.</p>
-        <button type="button" id="btn-start" class="btn-primary">Play</button>
+    <div id="title-screen" class="modal title-modal">
+      <div class="title-bg" aria-hidden="true">
+        <span class="title-orb o1"></span>
+        <span class="title-orb o2"></span>
+        <span class="title-orb o3"></span>
+        <span class="title-grid"></span>
+      </div>
+      <div class="modal-card title-card">
+        <div class="title-mark" aria-hidden="true">
+          <img src="./assets/apn-logo.svg" alt="" width="72" height="72" />
+        </div>
+        <h1 class="title-word">APN <span>Idle</span></h1>
+        <button type="button" id="btn-start" class="btn-primary title-play">Play</button>
       </div>
     </div>
 
@@ -211,6 +226,6 @@
       </div>
     </div>
 
-    <script type="module" src="./js/main.js?v=gearui1"></script>
+    <script type="module" src="./js/main.js?v=gearuix2"></script>
   </body>
 </html>

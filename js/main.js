@@ -6,7 +6,6 @@ import { sizeCanvas, draw } from './render.js';
 import { bindUI, renderHUD } from './ui.js';
 import { save, load, apply } from './save.js';
 import { TICKER_ITEMS } from './content.js';
-import { TITLE_TAGLINES, pick } from './comedy.js';
 
 const canvas = document.getElementById('game');
 const s = createState();
@@ -207,9 +206,7 @@ if (new URLSearchParams(location.search).has('autostart')) {
 
 document.getElementById('chk-motion').checked = s.settings.reducedMotion;
 
-// comedy + slow game-icon ticker (duplicated for seamless loop)
-const tag = document.getElementById('title-tagline');
-if (tag) tag.textContent = pick(TITLE_TAGLINES);
+// slow game-icon ticker (duplicated for seamless loop)
 const track = document.getElementById('ticker-track');
 if (track) {
   const items = [...TICKER_ITEMS, ...TICKER_ITEMS];

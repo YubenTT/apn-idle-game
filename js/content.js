@@ -264,7 +264,7 @@ export const TIPS = {
   combo: 'Feed streak! Bonus Signal while it holds.',
   season:
     'Checkpoint! Ship Notes, End Season: +Live Mult · Gear, Boosts & Pro stay · Signal Lv resets.',
-  gear: 'Gear equipped — permanent. Open Gear tab anytime.',
+  gear: 'Gear is permanent. Open Gear in the bottom nav anytime.',
   premium: 'APN Pro is optional permanent mult. 2× Boost spends coins (earn from bosses).',
 };
 

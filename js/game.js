@@ -397,8 +397,8 @@ export function spawnEnemy(s) {
 
   const hp = enemyHp(zone, typeHpMult(type));
   const alive = s.world.enemies.filter((e) => e.hp > 0);
-  // Spawn just ahead — short walk into melee (no empty highway)
-  const x = s.world.heroX + 130 + Math.random() * 24;
+  // Spawn ahead of melee stop so approach is clear (enemy not glued to mascot)
+  const x = s.world.heroX + 150 + Math.random() * 28;
   const flavor = ENEMY_FLAVOR[type] || ENEMY_FLAVOR.stale;
 
   return {
@@ -522,15 +522,19 @@ function onKill(s, e) {
     }
     const res = offerItem(s.meta.gear, item);
     hubOnGear(s);
-    // Center loot card only — no floaters / toast spam at top
+    // Center loot card only — never float item names top/side
     s.ui.lootDrop = {
       item,
       equipped: res.equipped,
-      t: 2.35,
-      life: 2.35,
+      t: 2.55,
+      life: 2.55,
     };
     confetti(s, e.displayX, 160, [rarityColor(item.rarity), '#fff', '#FC1243'], e.type === 'boss' ? 28 : 14);
-    tip(s, 'gear');
+    // Soft tip once; no item-name toast spam
+    if (!s.ui.seenGearTip) {
+      s.ui.seenGearTip = true;
+      tip(s, 'gear');
+    }
     s.ui.panelDirty = true;
     if (s.settings.sfx !== false) sfx('upgrade');
   }
@@ -1025,7 +1029,7 @@ export function leaveSeason(s) {
 export function equipGear(s, itemId) {
   if (!s.meta.gear) s.meta.gear = emptyGear();
   if (!equipFromBag(s.meta.gear, itemId)) return false;
-  toast(s, 'Equipped');
+  // No toast name spam — gear panel + center drop cover feedback
   s.ui.panelDirty = true;
   if (s.settings.sfx !== false) sfx('click');
   return true;
