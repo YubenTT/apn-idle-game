@@ -796,11 +796,106 @@ body {
   margin-top: 4px;
 }
 
-/* ---- NAV (44–48px targets, clear active) ---- */
+/* ---- Left bag FAB (Gear) — in-stage, not bottom nav ---- */
+.bag-fab {
+  position: absolute;
+  left: 10px;
+  bottom: 12px;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  width: 52px;
+  height: 56px;
+  padding: 6px 4px 5px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background:
+    linear-gradient(165deg, rgba(30, 38, 48, 0.94) 0%, rgba(12, 16, 20, 0.96) 100%);
+  box-shadow:
+    0 8px 22px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  color: #c5ced8;
+  cursor: pointer;
+  font: inherit;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.1s ease, border-color 0.12s, box-shadow 0.12s, color 0.12s;
+  pointer-events: auto;
+}
+
+.bag-fab:hover {
+  border-color: rgba(252, 18, 67, 0.45);
+  color: #fff;
+}
+
+.bag-fab:active {
+  transform: scale(0.94);
+}
+
+.bag-fab.active {
+  color: #fff;
+  border-color: rgba(252, 18, 67, 0.65);
+  background:
+    linear-gradient(165deg, rgba(252, 18, 67, 0.28) 0%, rgba(18, 12, 16, 0.96) 100%);
+  box-shadow:
+    0 0 0 1px rgba(252, 18, 67, 0.35),
+    0 10px 24px rgba(252, 18, 67, 0.2);
+}
+
+.bag-fab-ico {
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+
+.bag-fab-lab {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1;
+  opacity: 0.9;
+}
+
+.bag-fab-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 99px;
+  background: #fc1243;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 18px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(252, 18, 67, 0.45);
+  pointer-events: none;
+}
+
+.bag-fab.has-up {
+  border-color: rgba(62, 207, 142, 0.55);
+}
+
+.bag-fab.has-up .bag-fab-badge {
+  background: #3ecf8e;
+  box-shadow: 0 2px 8px rgba(62, 207, 142, 0.4);
+}
+
+#app.sheet-open .bag-fab {
+  /* stay tappable above sheet chrome if needed; sheet covers stage */
+  z-index: 8;
+}
+
+/* ---- NAV (44–48px targets, clear active) — 5 tabs, Gear is left bag ---- */
 .hud-nav {
   flex: 0 0 auto;
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 1px;
   border-top: 1px solid #243040;
   background: #0a0e13;

@@ -14,6 +14,14 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 - Wire real IAP receipts for APN Pro / coin packs / boxes
 - Rewarded-ad stubs (MindStudios monetization playbook)
 
+## [1.7.2] — 2026-07-13
+
+### Changed
+
+- **Gear** removed from bottom nav → left in-stage **Bag** FAB
+- Bottom nav is 5 tabs (Build · Ship · Hub · Boosts · Menu)
+- Bag badge: inventory count / green when upgrades ready
+
 ## [1.7.1] — 2026-07-13
 
 ### Fixed
