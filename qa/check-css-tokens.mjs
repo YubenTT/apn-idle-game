@@ -81,11 +81,14 @@ export function checkCssTokenContract() {
     )
     .sort();
 
-  const prematureEconomyTokens = [
+  const canonicalEconomyTokens = [
     ...new Set(
       [...gameCss.matchAll(/var\(\s*(--c-(?:notes|sp))\b/g)].map((match) => match[1]),
     ),
   ].sort();
+  const missingEconomyTokens = ['--c-notes', '--c-sp'].filter(
+    (name) => !canonicalEconomyTokens.includes(name),
+  );
 
   return [
     {
@@ -119,9 +122,9 @@ export function checkCssTokenContract() {
       detail: unresolvedTokenReferences.join(', ') || 'all resolved',
     },
     {
-      pass: prematureEconomyTokens.length === 0,
-      message: 'I-001 does not apply the I-002 Notes/SP color tokens early',
-      detail: prematureEconomyTokens.join(', ') || 'no premature references',
+      pass: missingEconomyTokens.length === 0,
+      message: 'canonical Notes/SP economy tokens are active',
+      detail: missingEconomyTokens.join(', ') || canonicalEconomyTokens.join(', '),
     },
   ];
 }

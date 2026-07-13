@@ -45,6 +45,7 @@ import {
 import { SKILLS, PREMIUM } from '../js/content.js';
 import { hubOnKill } from '../js/hub.js';
 import { checkCssTokenContract } from './check-css-tokens.mjs';
+import { checkEconomyColorContract } from './check-economy-colors.mjs';
 
 function installSeededRandom(seed) {
   let state = seed >>> 0;
@@ -70,6 +71,9 @@ const ok = (c, m) => {
 
 // —— CSS token contract ——
 for (const check of checkCssTokenContract()) {
+  ok(check.pass, `${check.message} (${check.detail})`);
+}
+for (const check of checkEconomyColorContract()) {
   ok(check.pass, `${check.message} (${check.detail})`);
 }
 

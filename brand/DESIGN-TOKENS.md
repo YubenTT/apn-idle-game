@@ -33,8 +33,14 @@ overloaded jobs their own hue.
 
 These two are the only **value** changes; everything else is formalization.
 I-001 wired the token layer with exact-value compatibility aliases, so it produced
-no visual change. I-002 applies these two intentional changes as a separate,
-reviewable diff, gated by [QA-CHECKLIST](../docs/QA-CHECKLIST.md).
+no visual change. I-002 then applied both changes as a separate, reviewable diff:
+DOM roles use the canonical tokens, while Canvas effects carry semantic Notes/SP
+tones that `render.js` resolves through the same CSS tokens.
+
+On the shipped ink surface, Notes measures **7.01:1** and SP **6.52:1**. Small
+filled SP badges/cost chips use dark ink rather than white, preserving the 4.5:1
+floor. The economy-color contract in `qa/check-economy-colors.mjs` locks the
+values, roles, render mapping, and contrast.
 
 ## Compatibility bridge (I-001)
 
@@ -51,14 +57,18 @@ inside a foundation issue and failed the no-drift gate.
   aliases;
 - each owning screen issue retires its compatibility aliases as that screen moves
   onto the canonical palette and component scale;
+- the Notes/SP bridge aliases were retired by I-002; combo's visually identical
+  legacy rose remains a separate `--compat-combo` role because combo is combat,
+  not Notes;
 - every `font-size` now resolves through canonical or exact compatibility type
   tokens; screen-specific legacy layout geometry stays frozen until its owning
   redesign issue so I-001 cannot silently reflow the UI.
 
 The zero-dependency `qa/check-css-tokens.mjs` guard enforces the import, rejects raw
 palette literals and font-size lengths in `game.css`, verifies custom-property
-resolution, and prevents the I-002 Notes/SP tokens from being applied early. CSS
-control values `transparent` and `currentColor` remain valid.
+resolution, and requires the canonical Notes/SP tokens. The companion economy
+guard rejects legacy role aliases and combat-crimson economy events. CSS control
+values `transparent` and `currentColor` remain valid.
 
 ## Full palette
 
@@ -139,6 +149,6 @@ raised to these floors — verified in [QA-CHECKLIST](../docs/QA-CHECKLIST.md).
 2. Shipped literals are represented by canonical tokens when values and roles
    match, otherwise by the exact compatibility bridge above.
 3. `node qa/run-tests.mjs` runs the token guard on every change.
-4. I-002 owns the only two planned global value changes: Notes and SP.
+4. I-002 applied the only two planned global value changes: Notes and SP.
 5. Later screen issues replace compatibility aliases with canonical component
    tokens and verify portrait + landscape browser evidence in the same PR.

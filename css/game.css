@@ -102,19 +102,19 @@ body {
 }
 
 .meta-pill.sp {
-  color: var(--compat-sp);
+  color: var(--c-sp);
 }
 
 .meta-pill.sp em {
-  color: var(--compat-sp);
+  color: var(--c-sp);
 }
 
 .meta-pill.sp .meta-k {
-  color: var(--compat-sp-muted);
+  color: var(--c-sp);
 }
 
 .meta-pill.combo {
-  color: var(--compat-notes-soft);
+  color: var(--compat-combo);
   font-weight: 800;
   font-size: var(--fs-label-s);
 }
@@ -182,7 +182,7 @@ body {
   color: var(--compat-signal-bright);
 }
 .chip:nth-child(2) strong {
-  color: var(--compat-notes-value);
+  color: var(--c-notes);
 }
 .chip:nth-child(3) strong {
   color: var(--compat-gold-value);
@@ -976,6 +976,12 @@ body {
   animation: badge-pop 0.35s ease;
 }
 
+.nav-btn[data-panel="skills"].has-badge::after {
+  background: var(--c-sp);
+  color: var(--compat-ink);
+  box-shadow: 0 2px 0 color-mix(in srgb, var(--c-sp) 55%, var(--compat-ink));
+}
+
 @keyframes badge-pop {
   0% {
     transform: scale(0.6);
@@ -1179,6 +1185,10 @@ body {
   color: var(--compat-brand-overloaded);
 }
 
+.ship-row.t-notes .v {
+  color: var(--c-notes);
+}
+
 .fine {
   margin: 6px 0;
   font-size: var(--fs-label-s);
@@ -1248,8 +1258,8 @@ body {
 }
 
 .sp-bank.has-sp {
-  border-color: var(--compat-sp-a40);
-  background: var(--compat-sp-a06);
+  border-color: color-mix(in srgb, var(--c-sp) 40%, transparent);
+  background: color-mix(in srgb, var(--c-sp) 6%, transparent);
 }
 
 .sp-bank-left {
@@ -1273,7 +1283,7 @@ body {
   font-weight: 800;
   line-height: 1;
   letter-spacing: -0.03em;
-  color: var(--compat-sp);
+  color: var(--c-sp);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1443,9 +1453,14 @@ body {
   font-size: var(--compat-fs-compact-body);
   font-weight: 800;
   line-height: 1;
-  color: var(--compat-text-white);
-  background: var(--compat-brand-overloaded);
+  color: var(--compat-ink);
+  background: var(--c-sp);
   box-shadow: none;
+}
+
+.attr-card.can .attr-plus {
+  color: var(--compat-ink);
+  background: var(--c-sp);
 }
 
 .attr-card.locked .attr-plus {
@@ -1995,9 +2010,9 @@ body {
   white-space: nowrap;
 }
 
-.skill-card.can .sk-cta {
-  color: var(--compat-text-white);
-  background: var(--compat-brand-overloaded);
+.skill-card:not([data-meta]).can .sk-cta {
+  color: var(--compat-ink);
+  background: var(--c-sp);
   border: 0;
   box-shadow: none;
 }
@@ -2972,10 +2987,10 @@ button[hidden] {
 }
 
 .rw-chip.k-sig { color: var(--compat-signal-bright); }
-.rw-chip.k-sp { color: var(--compat-sp); }
+.rw-chip.k-sp { color: var(--c-sp); }
 .rw-chip.k-rep { color: var(--compat-gold-mid); }
 .rw-chip.k-coin { color: var(--compat-gold); }
-.rw-chip.k-notes { color: var(--compat-notes-soft); }
+.rw-chip.k-notes { color: var(--c-notes); }
 
 /* Gear loadout — 6-slot paper doll + inventory */
 .loadout.compact {
