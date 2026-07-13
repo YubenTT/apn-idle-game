@@ -48,6 +48,7 @@ import {
   rollItem,
   offerItem,
   equipFromBag,
+  sellFromBag,
   gearBonuses,
   shouldDropOnKill,
   rarityColor,
@@ -1029,10 +1030,22 @@ export function leaveSeason(s) {
 export function equipGear(s, itemId) {
   if (!s.meta.gear) s.meta.gear = emptyGear();
   if (!equipFromBag(s.meta.gear, itemId)) return false;
-  // No toast name spam — gear panel + center drop cover feedback
   s.ui.panelDirty = true;
   if (s.settings.sfx !== false) sfx('click');
   return true;
+}
+
+/** Sell bag item for Signal */
+export function sellGear(s, itemId) {
+  if (!s.meta.gear) s.meta.gear = emptyGear();
+  const res = sellFromBag(s.meta.gear, itemId);
+  if (!res) return false;
+  s.run.bytes += res.signal;
+  s.ui.chipPulse = s.ui.chipPulse || {};
+  s.ui.chipPulse.bytes = 0.45;
+  s.ui.panelDirty = true;
+  if (s.settings.sfx !== false) sfx('coin');
+  return res;
 }
 
 /** Unlock APN Pro (IAP hook — demo unlock in Menu) */
