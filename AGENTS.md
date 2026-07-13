@@ -6,7 +6,7 @@ Instructions for coding agents working in this repo.
 
 **APN Idle** is a zero-dependency, vanilla ES-module + Canvas 2D idle mini-game for
 [allpatchnotes.com](https://allpatchnotes.com). Players clear feed noise, collect
-Notes, publish for Rep, and prestige for Live Mult — while learning APN brand language.
+Notes, ship for permanent Rep/Boosts, and prestige for Live Mult (weapon resets) — while learning APN brand language.
 
 ## Non-negotiables
 

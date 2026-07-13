@@ -12,12 +12,27 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 - Save schema rename (bytes → signal) with migration
 - PWA manifest
 
+## [1.1.0] — 2026-07-13
+
+### Changed
+
+- **Sprint** multiplies full sim speed (**×1.85**) — not just walk animation
+- **Combat rebalance**: HP tracks pace weapon; multi-hit forever; weapon soft DR late
+- **Ship Notes** renames confusing “Publish” (Notes → permanent Rep)
+- **Boosts + Rep permanent** across End Season; **weapon fully resets** each season
+- **Live Mult** multiplies combat damage (prestige always felt)
+- Hover-collect orbs (prior)
+
+### Tests
+
+- Prestige permanence, sprint timeScale, multi-hit targets
+
 ## [1.0.0] — 2026-07-13
 
 ### Added
 
 - Playable idle loop: combat, Signal, Notes, Rep, SP, Live Mult
-- Upgrade Weapon, Build (Damage / Crit / Skills), Publish, Boosts
+- Upgrade Weapon, Build (Damage / Crit / Skills), Ship, Boosts
 - Endless zones with 20-zone prestige checkpoints
 - Hold Sprint (button + stage + Space) with attack-speed and damage buffs
 - Host mascot, feed-noise enemies, LIVE ticker icons

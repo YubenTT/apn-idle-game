@@ -11,7 +11,7 @@ You are the **APN signal scout** — Host mascot on the Signal Road.
 
 - **Noise** (stale posts, rumor bots, lag spikes) blocks the feed.  
 - **Patch Notes** (crimson) carry real **Notes**.  
-- You **Publish** them for **Rep** and grow **Live Mult** across seasons.
+- You **Ship** them for permanent **Rep**, buy **Boosts**, and grow **Live Mult** across seasons (weapon resets each season).
 
 ## Mapping to the site
 

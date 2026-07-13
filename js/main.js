@@ -1,7 +1,7 @@
 /** APN Idle bootstrap */
 
 import { C } from './formulas.js';
-import { createState, step, collectAlert, simulateOffline, setSprint } from './game.js';
+import { createState, step, collectAlert, simulateOffline, setSprint, isSprinting } from './game.js';
 import { sizeCanvas, draw } from './render.js';
 import { bindUI, renderHUD } from './ui.js';
 import { save, load, apply } from './save.js';
@@ -229,11 +229,17 @@ let saveT = 0;
 function frame(now) {
   let dt = Math.min(0.05, (now - last) / 1000);
   last = now;
-  acc += dt;
-  while (acc >= C.FIXED_DT) {
+  // Sprint multiplies sim speed — whole game (combat, spawn, regen) runs faster
+  const sprintScale = isSprinting(s) ? C.SPRINT_TIME : 1;
+  acc += dt * sprintScale;
+  // Cap catch-up so a long tab-hide doesn't explode
+  let steps = 0;
+  while (acc >= C.FIXED_DT && steps < 8) {
     step(s, C.FIXED_DT);
     acc -= C.FIXED_DT;
+    steps++;
   }
+  if (acc > C.FIXED_DT * 4) acc = 0;
 
   draw(view.ctx, view.w, view.h, s);
 
