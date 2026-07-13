@@ -38,12 +38,35 @@ function pos(ev) {
   return { x: p.clientX - r.left, y: p.clientY - r.top };
 }
 
+/** Hit radius for orb bubbles (hover + click) */
+const ORB_HIT_R = 36;
+const ORB_HIT_R2 = ORB_HIT_R * ORB_HIT_R;
+
+/** Collect any orbs under (x,y). Returns true if at least one was collected. */
 function tryAlert(x, y) {
+  let got = false;
   for (const a of [...s.world.alerts]) {
     const dx = a.x - x;
     const dy = a.y - y;
-    if (dx * dx + dy * dy < 30 * 30) collectAlert(s, a);
+    if (dx * dx + dy * dy < ORB_HIT_R2) {
+      collectAlert(s, a);
+      got = true;
+    }
   }
+  return got;
+}
+
+function nearAlert(x, y) {
+  for (const a of s.world.alerts) {
+    const dx = a.x - x;
+    const dy = a.y - y;
+    if (dx * dx + dy * dy < (ORB_HIT_R + 6) ** 2) return true;
+  }
+  return false;
+}
+
+function updateOrbCursor(x, y) {
+  canvas.style.cursor = nearAlert(x, y) ? 'pointer' : sprintHold.canvas ? 'grabbing' : 'crosshair';
 }
 
 /** Sprint sources (OR together — any hold keeps sprint on) */
@@ -60,23 +83,30 @@ function syncSprint() {
   document.getElementById('app')?.classList.toggle('is-sprinting', sprintHold.canvas || sprintHold.button || sprintHold.space);
 }
 
-// Stage: hold to sprint + tap orbs
+// Stage: hold to sprint · hover/click orbs to collect
 canvas.addEventListener('pointerdown', (ev) => {
   ev.preventDefault();
   sprintHold.canvas = true;
   syncSprint();
   const p = pos(ev);
   tryAlert(p.x, p.y);
+  updateOrbCursor(p.x, p.y);
   try {
     canvas.setPointerCapture(ev.pointerId);
   } catch {
     /* ignore */
   }
 });
+// Hover counts as collect (mouse) — also while dragging/sprinting
 canvas.addEventListener('pointermove', (ev) => {
-  if (!sprintHold.canvas) return;
   const p = pos(ev);
   tryAlert(p.x, p.y);
+  updateOrbCursor(p.x, p.y);
+});
+canvas.addEventListener('pointerenter', (ev) => {
+  const p = pos(ev);
+  tryAlert(p.x, p.y);
+  updateOrbCursor(p.x, p.y);
 });
 function endCanvasSprint(ev) {
   sprintHold.canvas = false;
@@ -88,14 +118,25 @@ function endCanvasSprint(ev) {
       /* ignore */
     }
   }
+  if (ev) {
+    const p = pos(ev);
+    updateOrbCursor(p.x, p.y);
+  } else {
+    canvas.style.cursor = 'crosshair';
+  }
 }
 canvas.addEventListener('pointerup', endCanvasSprint);
 canvas.addEventListener('pointercancel', endCanvasSprint);
 canvas.addEventListener('lostpointercapture', () => {
   sprintHold.canvas = false;
   syncSprint();
+  canvas.style.cursor = 'crosshair';
+});
+canvas.addEventListener('pointerleave', () => {
+  if (!sprintHold.canvas) canvas.style.cursor = 'default';
 });
 canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+canvas.style.cursor = 'crosshair';
 
 // Big Sprint button — primary mobile control
 const sprintBtn = document.getElementById('btn-sprint');

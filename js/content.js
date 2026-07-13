@@ -198,7 +198,7 @@ export const TIPS = {
   kill: 'Spend Signal on Upgrade Weapon for more damage.',
   level: 'Rank up! Open Build — spend SP on Damage / Crit / Skills.',
   patch: 'Red Patch Notes drop Notes. Publish them for Rep.',
-  alert: 'Tap glowing orbs for energy and Signal.',
+  alert: 'Hover or tap glowing orbs for energy and Signal.',
   boss: 'Version Gate: kill it before the timer or it full-heals.',
   ship: 'Stuck? Publish Notes → Boosts → keep clearing.',
   combo: 'Feed streak! Bonus Signal while the streak holds.',
