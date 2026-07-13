@@ -7,7 +7,14 @@ export function save(s) {
     meta: {
       ...s.meta,
       gear: s.meta.gear || { weapon: null, armor: null, bag: [] },
-      premium: s.meta.premium || { pro: false, coins: 0, boostEndsAt: 0 },
+      premium: s.meta.premium || {
+        pro: false,
+        coins: 0,
+        boostEndsAt: 0,
+        autoSprint: false,
+        warpCdUntil: 0,
+      },
+      hub: s.meta.hub || null,
     },
     authority: s.authority,
     run: {
@@ -56,14 +63,25 @@ export function apply(s, d) {
       bag: Array.isArray(d.meta.gear.bag) ? d.meta.gear.bag : [],
     };
   }
-  if (!s.meta.premium) s.meta.premium = { pro: false, coins: 0, boostEndsAt: 0 };
+  if (!s.meta.premium) {
+    s.meta.premium = {
+      pro: false,
+      coins: 0,
+      boostEndsAt: 0,
+      autoSprint: false,
+      warpCdUntil: 0,
+    };
+  }
   if (d.meta?.premium) {
     s.meta.premium = {
       pro: !!d.meta.premium.pro,
       coins: d.meta.premium.coins || 0,
       boostEndsAt: d.meta.premium.boostEndsAt || 0,
+      autoSprint: !!(d.meta.premium.autoSprint || d.meta.premium.pro),
+      warpCdUntil: d.meta.premium.warpCdUntil || 0,
     };
   }
+  if (d.meta?.hub) s.meta.hub = d.meta.hub;
   // strip legacy mask skills from save
   if (s.run.hero) {
     delete s.run.hero.mask;

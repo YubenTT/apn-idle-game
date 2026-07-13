@@ -15,7 +15,23 @@ import {
   lerp,
   isSeasonCheckpoint,
 } from './formulas.js';
-import { SEASON, META, SKILLS, ENEMY_FLAVOR, PREMIUM } from './content.js';
+import { SEASON, META, SKILLS, ENEMY_FLAVOR, PREMIUM, skillSpCost } from './content.js';
+import {
+  ensureHub,
+  hubOnKill,
+  hubOnZone,
+  hubOnShip,
+  hubOnOrb,
+  hubOnGear,
+  emptyHub,
+  DAILY_DEFS,
+  WEEKLY_DEFS,
+  hubDone,
+  hubClaimed,
+  applyReward,
+  seasonLevel,
+  SEASON_MILESTONES,
+} from './hub.js';
 import {
   killLine,
   pick,
@@ -56,7 +72,14 @@ export function createState() {
        * coins: premium soft currency (bosses/ships/IAP packs)
        * boostEndsAt: ms timestamp for timed 2× boost
        */
-      premium: { pro: false, coins: 0, boostEndsAt: 0 },
+      premium: {
+        pro: false,
+        coins: 0,
+        boostEndsAt: 0,
+        autoSprint: false,
+        warpCdUntil: 0,
+      },
+      hub: emptyHub(),
     },
     authority: {
       amount: 0,
@@ -137,22 +160,42 @@ export function metaPer(s, id) {
   return d.per * metaLv(s, id);
 }
 
-/** Hold-sprint only when energy remains */
+/** Auto-sprint = Pro or paid unlock (not free mask) */
+export function hasAutoSprint(s) {
+  ensurePremium(s);
+  return !!(s.meta.premium.pro || s.meta.premium.autoSprint);
+}
+
+/** Sprint when holding OR auto-sprint, while energy remains */
 export function isSprinting(s) {
-  return !!(s.world.sprinting && s.run.hero.energy > 0.5);
+  const want = s.world.sprinting || hasAutoSprint(s);
+  return !!(want && s.run.hero.energy > 0.5);
 }
 
 export function setSprint(s, on) {
   s.world.sprinting = !!on;
-  s.ui.sprintWanted = !!on && s.run.hero.energy <= 0.5 ? true : !!on;
+  s.ui.sprintWanted = !!on || hasAutoSprint(s);
 }
 
 /** Ensure premium blob exists (save migration) */
 export function ensurePremium(s) {
-  if (!s.meta.premium) s.meta.premium = { pro: false, coins: 0, boostEndsAt: 0 };
-  if (typeof s.meta.premium.coins !== 'number') s.meta.premium.coins = 0;
-  if (typeof s.meta.premium.boostEndsAt !== 'number') s.meta.premium.boostEndsAt = 0;
-  return s.meta.premium;
+  if (!s.meta.premium) {
+    s.meta.premium = {
+      pro: false,
+      coins: 0,
+      boostEndsAt: 0,
+      autoSprint: false,
+      warpCdUntil: 0,
+    };
+  }
+  const p = s.meta.premium;
+  if (typeof p.coins !== 'number') p.coins = 0;
+  if (typeof p.boostEndsAt !== 'number') p.boostEndsAt = 0;
+  if (typeof p.autoSprint !== 'boolean') p.autoSprint = false;
+  if (typeof p.warpCdUntil !== 'number') p.warpCdUntil = 0;
+  // Pro includes auto-sprint
+  if (p.pro) p.autoSprint = true;
+  return p;
 }
 
 /** Live × Pro × timed 2× — multiplies damage + Signal/Notes income */
@@ -186,8 +229,8 @@ export function combatStats(s) {
 
   const sharp = skillLv(s, 'sharp_eye');
   let crit = Math.min(
-    0.7,
-    0.012 * h.verify + (g.crit_pct || 0) / 100 + 0.02 * sharp
+    0.72,
+    0.012 * h.verify + (g.crit_pct || 0) / 100 + 0.015 * sharp
   );
   let interval = C.ATTACK_INTERVAL / (1 + (g.atk_spd || 0) / 100);
   let move = C.MOVE_SPEED * (1 + metaPer(s, 'feed_speed')) * (1 + (g.move_pct || 0) / 100);
@@ -478,6 +521,7 @@ function onKill(s, e) {
       item = rollItem(zone, item.slot);
     }
     const res = offerItem(s.meta.gear, item);
+    hubOnGear(s);
     const col = rarityColor(item.rarity);
     const tag = rarityLabel(item.rarity);
     floater(
@@ -505,6 +549,8 @@ function onKill(s, e) {
   tip(s, 'kill');
   s.ui.panelDirty = true;
 
+  hubOnKill(s, e);
+
   // zone progress — endless; checkpoints every SEASON.zones for prestige
   const need = killsNeeded(zone);
   if (s.run.killsInZone >= need) {
@@ -514,6 +560,7 @@ function onKill(s, e) {
     s.world.bossActive = false;
     s.world.spawnCd = 0.35;
     if (s.settings.sfx !== false) sfx('zone');
+    hubOnZone(s);
 
     if (isSeasonCheckpoint(s.run.zone)) {
       s.ui.seasonDone = true;
@@ -592,11 +639,12 @@ export function step(s, dt) {
   if (h.summaryT > 0) h.summaryT -= dt;
 
   // sprint drain + empty feedback
-  if (s.world.sprinting) {
+  // Drain while sprint is active (hold OR auto-sprint via isSprinting)
+  if (sprintOn) {
     if (h.energy > 0) {
       h.energy = Math.max(0, h.energy - st.sprintDrain * dt);
       s.ui.sprintEmptyToast = false;
-    } else if (s.ui.sprintWanted && !s.ui.sprintEmptyToast) {
+    } else if ((s.ui.sprintWanted || hasAutoSprint(s)) && !s.ui.sprintEmptyToast) {
       s.ui.sprintEmptyToast = true;
       toast(s, 'Energy empty — grab green orbs or wait', 1.8);
     }
@@ -773,11 +821,12 @@ export function collectAlert(s, a) {
     );
     floater(s, a.x, a.y, '+ENERGY', '#10B981');
   } else {
-    const b = (4 + 0.6 * s.run.zone) * bonus * n;
+    const b = (4 + 0.6 * s.run.zone) * bonus * n * economyMult(s);
     s.run.bytes += b;
     floater(s, a.x, a.y, `+${b | 0} Signal`, '#6cb8ff');
   }
   particles(s, a.x, a.y, '#FC1243', 8);
+  hubOnOrb(s);
   tip(s, 'alert');
   s.world.alerts = s.world.alerts.filter((x) => x.id !== a.id);
 }
@@ -822,12 +871,17 @@ export function canLearn(s, id) {
   if (!d) return false;
   const cur = skillLv(s, id);
   if (cur >= d.max) return false;
-  if (s.run.hero.sp < 1) return false;
+  const cost = skillSpCost(cur);
+  if (s.run.hero.sp < cost) return false;
   const h = s.run.hero;
   if (d.req.scan && h.scan < d.req.scan) return false;
   if (d.req.verify && h.verify < d.req.verify) return false;
   if (d.req.amplify && h.amplify < d.req.amplify) return false;
   return true;
+}
+
+export function nextSkillCost(s, id) {
+  return skillSpCost(skillLv(s, id));
 }
 
 export function allocAttr(s, attr) {
@@ -846,12 +900,13 @@ export function allocAttr(s, attr) {
 export function allocSkill(s, id) {
   if (!canLearn(s, id)) return false;
   const d = SKILLS[id];
-  s.run.hero.sp -= 1;
+  const cost = skillSpCost(skillLv(s, id));
+  s.run.hero.sp -= cost;
   s.run.hero.skills[id] = (s.run.hero.skills[id] || 0) + 1;
   if (id === 'live_tracker') s.run.hero.trackerOn = true;
   s.ui.panelDirty = true;
   confetti(s, s.world.heroX, 190, ['#FC1243', '#fff', '#3ecf8e'], 16);
-  floater(s, s.world.heroX, 145, d.name, '#FC1243', true);
+  floater(s, s.world.heroX, 145, `${d.name} ·${cost}SP`, '#FC1243', true);
   if (s.settings.sfx !== false) sfx('buy');
   return true;
 }
@@ -888,6 +943,7 @@ export function shipPatches(s) {
   s.meta.postsShippedTotal += gained;
   ensurePremium(s);
   s.meta.premium.coins += PREMIUM.coinsPerShip;
+  hubOnShip(s, p);
   s.run.hero.energy = combatStats(s).eMax;
   toast(s, pick(SHIP_LINES) + ` (+${gained} Rep)`);
   tip(s, 'ship');
@@ -988,11 +1044,32 @@ export function unlockPro(s) {
     return false;
   }
   s.meta.premium.pro = true;
-  toast(s, `APN Pro unlocked · permanent ×${PREMIUM.pro.mult} economy`);
+  s.meta.premium.autoSprint = true;
+  toast(s, `APN Pro · ×${PREMIUM.pro.mult} + Auto-Sprint`);
   tip(s, 'premium');
   s.ui.panelDirty = true;
   confetti(s, s.world.heroX, 180, ['#e6b84d', '#FC1243', '#fff'], 28);
   if (s.settings.sfx !== false) sfx('rank');
+  return true;
+}
+
+/** Buy Auto-Sprint without full Pro (coin sink) */
+export function unlockAutoSprint(s) {
+  ensurePremium(s);
+  if (s.meta.premium.autoSprint || s.meta.premium.pro) {
+    toast(s, 'Auto-Sprint already on');
+    return false;
+  }
+  const cost = PREMIUM.auto_sprint.coinCost;
+  if (s.meta.premium.coins < cost) {
+    toast(s, `Need ${cost} coins`);
+    return false;
+  }
+  s.meta.premium.coins -= cost;
+  s.meta.premium.autoSprint = true;
+  toast(s, 'Auto-Sprint on · still drains energy');
+  s.ui.panelDirty = true;
+  if (s.settings.sfx !== false) sfx('upgrade');
   return true;
 }
 
@@ -1001,7 +1078,7 @@ export function buyBoost2x(s) {
   ensurePremium(s);
   const cost = PREMIUM.boost_2x.coinCost;
   if (s.meta.premium.coins < cost) {
-    toast(s, `Need ${cost} coins (earn from bosses & ships)`);
+    toast(s, `Need ${cost} coins (bosses, ships, hub rewards)`);
     return false;
   }
   s.meta.premium.coins -= cost;
@@ -1012,6 +1089,34 @@ export function buyBoost2x(s) {
   s.ui.panelDirty = true;
   confetti(s, s.world.heroX, 180, ['#e6b84d', '#fff'], 20);
   if (s.settings.sfx !== false) sfx('upgrade');
+  return true;
+}
+
+/** Time Warp +1h idle (cooldown) */
+export function timeWarp(s) {
+  ensurePremium(s);
+  const def = PREMIUM.time_warp;
+  if (Date.now() < (s.meta.premium.warpCdUntil || 0)) {
+    const m = Math.ceil((s.meta.premium.warpCdUntil - Date.now()) / 60000);
+    toast(s, `Time Warp cooling down · ${m}m`);
+    return false;
+  }
+  if (s.meta.premium.coins < def.coinCost) {
+    toast(s, `Need ${def.coinCost} coins`);
+    return false;
+  }
+  s.meta.premium.coins -= def.coinCost;
+  s.meta.premium.warpCdUntil = Date.now() + 8 * 60 * 1000; // 8 min CD
+  const summary = simulateOffline(s, def.seconds);
+  toast(
+    s,
+    summary
+      ? `Time Warp +1h · +${Math.floor(summary.bytes)} Signal · Z+${summary.zones}`
+      : 'Time Warp complete'
+  );
+  s.ui.panelDirty = true;
+  confetti(s, s.world.heroX, 180, ['#5eb0ff', '#fff', '#FC1243'], 24);
+  if (s.settings.sfx !== false) sfx('zone');
   return true;
 }
 
@@ -1027,7 +1132,52 @@ export function buyCoinPack(s, packId) {
   return true;
 }
 
-export { gearBonuses, rarityColor, rarityLabel, PREMIUM };
+/** Claim a daily/weekly hub objective */
+export function claimHubObjective(s, period, id) {
+  ensureHub(s);
+  const defs = period === 'daily' ? DAILY_DEFS : WEEKLY_DEFS;
+  const def = defs.find((d) => d.id === id);
+  if (!def) return false;
+  const hub = s.meta.hub;
+  if (!hubDone(hub, def, period) || hubClaimed(hub, def, period)) {
+    toast(s, 'Not ready');
+    return false;
+  }
+  const bag = period === 'daily' ? hub.daily : hub.weekly;
+  bag.claimed[id] = true;
+  applyReward(s, def.reward);
+  toast(s, `Claimed · ${def.label}`);
+  confetti(s, s.world.heroX, 180, ['#FC1243', '#e6b84d', '#fff'], 22);
+  floater(s, s.world.heroX, 140, 'QUEST!', '#e6b84d', true);
+  s.ui.panelDirty = true;
+  if (s.settings.sfx !== false) sfx('rank');
+  return true;
+}
+
+export function claimSeasonMilestone(s, lv) {
+  ensureHub(s);
+  const mil = SEASON_MILESTONES.find((m) => m.lv === lv);
+  if (!mil) return false;
+  const cur = seasonLevel(s.meta.hub.seasonXp || 0).level;
+  if (cur < lv) {
+    toast(s, 'Season level too low');
+    return false;
+  }
+  if (s.meta.hub.seasonClaimed?.[lv]) {
+    toast(s, 'Already claimed');
+    return false;
+  }
+  if (!s.meta.hub.seasonClaimed) s.meta.hub.seasonClaimed = {};
+  s.meta.hub.seasonClaimed[lv] = true;
+  applyReward(s, mil.reward);
+  toast(s, `Season ${mil.label} reward!`);
+  confetti(s, s.world.heroX, 180, ['#c084fc', '#fff', '#FC1243'], 28);
+  s.ui.panelDirty = true;
+  if (s.settings.sfx !== false) sfx('rank');
+  return true;
+}
+
+export { gearBonuses, rarityColor, rarityLabel, PREMIUM, ensureHub };
 
 export function simulateOffline(s, seconds) {
   const T = Math.min(seconds, C.OFFLINE_CAP);

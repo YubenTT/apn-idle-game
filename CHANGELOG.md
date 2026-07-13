@@ -13,6 +13,16 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 - PWA manifest
 - Wire real IAP receipts for APN Pro / coin packs
 
+## [1.4.0] — 2026-07-13
+
+### Added
+
+- **Hub**: daily/weekly objectives, season track, patch feed, claim rewards
+- Icons for every skill + boost
+- Skill SP cost scales every 5 ranks (long-session sink); higher max ranks
+- Premium: Auto-Sprint (was free mask OP), Time Warp +1h
+- Gear via Hub quick chips (nav: Build · Ship · Hub · Boosts · Menu)
+
 ## [1.3.0] — 2026-07-13
 
 ### Changed
