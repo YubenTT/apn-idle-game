@@ -35,6 +35,7 @@ import {
   metaLv,
   isSprinting,
   equipGear,
+  sellGear,
   rarityColor,
   rarityLabel,
   unlockPro,
@@ -51,7 +52,13 @@ import {
   claimSeasonMilestone,
   ensureHub,
 } from './game.js';
-import { formatAffix } from './loot.js';
+import {
+  formatAffix,
+  sellValue,
+  isUpgrade,
+  BAG_CAP,
+  itemScore,
+} from './loot.js';
 import {
   DAILY_DEFS,
   WEEKLY_DEFS,
@@ -60,7 +67,8 @@ import {
   hubClaimed,
   seasonLevel,
   SEASON_MILESTONES,
-  hubFeed,
+  formatReward,
+  formatRewardText,
 } from './hub.js';
 import { skillIco, attrIco, metaIco, hubIco, gearIcon } from './icons.js';
 import { save, clear } from './save.js';
@@ -216,10 +224,41 @@ export function bindUI(s) {
   });
 
   $('panel-gear')?.addEventListener('click', (e) => {
-    const t = e.target.closest('[data-equip]');
-    if (!t) return;
-    if (equipGear(s, t.dataset.equip)) {
-      save(s);
+    const sellBtn = e.target.closest('[data-sell]');
+    if (sellBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      const res = sellGear(s, sellBtn.dataset.sell);
+      if (res) {
+        save(s);
+        s.ui.gearFocus = null;
+        renderGear(s);
+        if (s.settings.sfx !== false) sfx('coin');
+      }
+      return;
+    }
+    const equipBtn = e.target.closest('[data-equip]');
+    if (equipBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (equipGear(s, equipBtn.dataset.equip)) {
+        save(s);
+        s.ui.gearFocus = null;
+        renderGear(s);
+      }
+      return;
+    }
+    const slot = e.target.closest('[data-inv]');
+    if (slot) {
+      const id = slot.dataset.inv;
+      s.ui.gearFocus = s.ui.gearFocus === id ? null : id;
+      renderGear(s);
+      return;
+    }
+    // click empty area clears focus
+    if (e.target.closest('.gear-detail') || e.target.closest('.eq-slot')) return;
+    if (s.ui.gearFocus) {
+      s.ui.gearFocus = null;
       renderGear(s);
     }
   });
@@ -336,15 +375,14 @@ function fillShip(s) {
   const seasonReady = s.ui.seasonDone || s.run.zone >= SEASON.zones;
   const nextZ = SEASON.zones * (Math.floor(s.run.zone / SEASON.zones) + 1);
   const eco = economyMult(s);
-  el.className = 'ship-stats';
+  el.className = 'ship-stats compact';
   el.innerHTML = [
-    row('Notes ready', formatNum(notes), notes > 0 ? 'hi' : ''),
-    row('Ship for', `+${formatNum(gain)} Rep`, gain > 0 ? 'hi' : ''),
-    row('Economy mult', `×${eco.toFixed(2)} (Live×Pro×Boost)`, 'ok'),
-    row('Shipped this season', `${formatNum(s.authority.shippedThisSeason)} Rep`, ''),
+    row('Notes', formatNum(notes), notes > 0 ? 'hi' : ''),
+    row('→ Rep', `+${formatNum(gain)}`, gain > 0 ? 'hi' : ''),
+    row('Mult', `×${eco.toFixed(2)}`, ''),
     seasonReady
-      ? row('End Season', `+${liveNext.toFixed(3)} Live · gear+boosts+pro stay`, 'hi')
-      : row('Next checkpoint', `Zone ${nextZ}`, ''),
+      ? row('End Season', `+${liveNext.toFixed(3)} Live`, 'hi')
+      : row('Checkpoint', `Z${nextZ}`, ''),
   ].join('');
   const leave = document.getElementById('btn-leave');
   if (leave) leave.hidden = !seasonReady;
@@ -388,22 +426,22 @@ function skillCard(s, sk) {
 
   let cta = '—';
   if (maxed) cta = 'Max';
-  else if (ok) cta = `+${cost} SP`;
-  else if (h.sp < cost) cta = `${cost} SP`;
-  else cta = 'Locked';
+  else cta = `${cost} SP`;
 
   const reqs = Object.keys(sk.req || {}).length ? reqBadges(sk.req, h) : '';
+  const tip = [sk.desc, reqs ? `Needs: ${Object.entries(sk.req).map(([k, v]) => `${ATTR_LABEL[k] || k} ${v}`).join(', ')}` : '']
+    .filter(Boolean)
+    .join(' · ');
 
   return `
-  <button type="button" class="skill-card ${state}"
-    data-alloc="skill" data-id="${sk.id}" ${maxed ? 'disabled' : ''}>
+  <button type="button" class="skill-card compact ${state}"
+    data-alloc="skill" data-id="${sk.id}" ${maxed ? 'disabled' : ''} title="${tip.replace(/"/g, '&quot;')}">
     <div class="sk-ico" aria-hidden="true">${skillIco(sk.id)}</div>
     <div class="sk-main">
       <div class="sk-top">
-        <span class="sk-name">${sk.name}</span>
+        <span class="sk-name">${sk.short || sk.name}</span>
         <span class="sk-type t-${sk.type}">${typeTag(sk.type)}</span>
       </div>
-      <div class="sk-desc">${sk.desc}</div>
       ${reqs ? `<div class="sk-reqs">${reqs}</div>` : ''}
       <div class="sk-bar"><i style="width:${pct}%"></i></div>
     </div>
@@ -419,29 +457,22 @@ function renderSkills(s) {
   if (!root) return;
   const h = s.run.hero;
   const hasSp = h.sp > 0;
-  const totalSkillRanks = Object.values(h.skills || {}).reduce((a, b) => a + b, 0);
 
   let html = `
-  <div class="sp-bank ${hasSp ? 'has-sp' : ''}">
-    <div class="sp-bank-left">
-      <span class="sp-bank-label">SP</span>
-      <strong class="sp-bank-val">${h.sp}</strong>
-      <span class="sp-bank-hint">${
-        hasSp
-          ? 'Attrs 1 SP · Skills cost more every 5 ranks'
-          : 'Rank up for skill points'
-      } · ${totalSkillRanks} ranks trained</span>
-    </div>
+  <div class="sp-bank compact ${hasSp ? 'has-sp' : ''}">
+    <span class="sp-bank-label">SP</span>
+    <strong class="sp-bank-val">${h.sp}</strong>
+    <span class="sp-bank-hint">${hasSp ? 'Tap attrs / skills' : 'Rank up for SP'}</span>
   </div>
 
-  <div class="section-lab">Attributes · 1 SP</div>
+  <div class="section-lab">Attributes</div>
   <div class="attr-row">`;
 
   for (const id of ['scan', 'verify', 'amplify']) {
     const m = ATTR_META[id];
     const val = h[id] || 0;
     html += `
-    <button type="button" class="attr-card ${hasSp ? 'can' : 'locked'}" data-alloc="attr" data-id="${id}" title="${m.sub}">
+    <button type="button" class="attr-card ${hasSp ? 'can' : 'locked'}" data-alloc="attr" data-id="${id}" title="${m.sub} · 1 SP">
       <span class="attr-ico" aria-hidden="true">${attrIco(id)}</span>
       <span class="attr-lab">${m.label}</span>
       <span class="attr-lv">${val}</span>
@@ -474,76 +505,47 @@ function renderPremium(s) {
   const auto = hasAutoSprint(s);
 
   let html = `
-  <div class="sp-bank rep-bank">
-    <div class="sp-bank-left">
-      <span class="sp-bank-label">Coins</span>
-      <strong class="sp-bank-val gold">${formatNum(p.coins)}</strong>
-      <span class="sp-bank-hint">×${eco.toFixed(2)}${boostOn ? ` · 2× ${leftM}m` : ''}${
-        auto ? ' · Auto-Sprint' : ''
-      }</span>
-    </div>
+  <div class="sp-bank compact rep-bank">
+    <span class="sp-bank-label">Coins</span>
+    <strong class="sp-bank-val gold">${formatNum(p.coins)}</strong>
+    <span class="sp-bank-hint">×${eco.toFixed(2)}${boostOn ? ` · 2× ${leftM}m` : ''}${auto ? ' · Auto' : ''}</span>
   </div>
-  <p class="lead">Optional. Free path stays complete.</p>
-  <div class="premium-card ${p.pro ? 'owned' : ''}">
+  <div class="premium-card compact ${p.pro ? 'owned' : ''}">
     <div class="premium-card-top">
       <span class="premium-ico">${hubIco('pro')}</span>
       <strong>APN Pro</strong>
-      <span class="premium-tag">${p.pro ? 'OWNED' : 'ONE-TIME'}</span>
+      <span class="premium-tag">${p.pro ? 'ON' : 'IAP'}</span>
     </div>
-    <ul class="premium-list">
-      ${PREMIUM.pro.benefits.map((b) => `<li>${b}</li>`).join('')}
-    </ul>
+    <p class="fine prem-one">${PREMIUM.pro.benefits.slice(0, 2).join(' · ')}</p>
     <button type="button" class="btn-primary" data-premium="pro" ${p.pro ? 'disabled' : ''}>
-      <span class="btn-primary-title">${p.pro ? 'Pro Active' : 'Unlock APN Pro'}</span>
-      <span class="btn-primary-sub">${p.pro ? `×${PREMIUM.pro.mult} + Auto-Sprint` : 'Demo IAP'}</span>
+      <span class="btn-primary-title">${p.pro ? 'Pro Active' : 'Unlock Pro'}</span>
+      <span class="btn-primary-sub">${p.pro ? `×${PREMIUM.pro.mult}` : 'Demo'}</span>
     </button>
   </div>
-  <div class="premium-card ${auto ? 'owned' : ''}">
-    <div class="premium-card-top">
-      <span class="premium-ico">${hubIco('auto_sprint')}</span>
+  <div class="prem-row">
+    <button type="button" class="prem-chip ${auto ? 'on' : ''}" data-premium="auto" ${auto ? 'disabled' : ''} title="${PREMIUM.auto_sprint.desc}">
       <strong>Auto-Sprint</strong>
-      <span class="premium-tag">${auto ? 'ON' : `${PREMIUM.auto_sprint.coinCost} coins`}</span>
-    </div>
-    <p class="fine" style="margin:6px 0 10px">${PREMIUM.auto_sprint.desc}</p>
-    <button type="button" class="btn-ghost" data-premium="auto" style="margin-top:0" ${auto ? 'disabled' : ''}>
-      ${auto ? 'Active' : 'Unlock Auto-Sprint'}
+      <span>${auto ? 'ON' : `${PREMIUM.auto_sprint.coinCost}¢`}</span>
     </button>
-  </div>
-  <div class="premium-card">
-    <div class="premium-card-top">
-      <span class="premium-ico">${hubIco('boost')}</span>
+    <button type="button" class="prem-chip" data-premium="boost" title="${PREMIUM.boost_2x.desc}">
       <strong>2× Boost</strong>
-      <span class="premium-tag">${PREMIUM.boost_2x.coinCost} coins</span>
-    </div>
-    <p class="fine" style="margin:6px 0 10px">${PREMIUM.boost_2x.desc}</p>
-    <button type="button" class="btn-ghost" data-premium="boost" style="margin-top:0">
-      ${boostOn ? `Extend 2× (+${PREMIUM.boost_2x.minutes}m)` : `Activate 2× · ${PREMIUM.boost_2x.minutes}m`}
+      <span>${boostOn ? `+${PREMIUM.boost_2x.minutes}m` : `${PREMIUM.boost_2x.coinCost}¢`}</span>
+    </button>
+    <button type="button" class="prem-chip" data-premium="warp" title="${PREMIUM.time_warp.desc}">
+      <strong>Warp +1h</strong>
+      <span>${PREMIUM.time_warp.coinCost}¢</span>
     </button>
   </div>
-  <div class="premium-card">
-    <div class="premium-card-top">
-      <span class="premium-ico">${hubIco('warp')}</span>
-      <strong>Time Warp +1h</strong>
-      <span class="premium-tag">${PREMIUM.time_warp.coinCost} coins</span>
-    </div>
-    <p class="fine" style="margin:6px 0 10px">${PREMIUM.time_warp.desc}</p>
-    <button type="button" class="btn-ghost" data-premium="warp" style="margin-top:0">Warp +1 hour</button>
-  </div>
-  <div class="section-lab">Coin packs · demo IAP</div>
-  <div class="premium-packs">`;
+  <div class="section-lab">Coins</div>
+  <div class="premium-packs compact">`;
   for (const pack of PREMIUM.packs) {
     html += `
-    <button type="button" class="gear-item" data-premium="${pack.id}">
-      <div class="sk-ico gold" aria-hidden="true">${hubIco('coin')}</div>
-      <div>
-        <div class="gi-name">+${pack.coins} coins</div>
-        <div class="gi-meta">${pack.priceLabel}${pack.tag ? ` · ${pack.tag}` : ''}</div>
-      </div>
-      <span class="gi-cta">Get</span>
+    <button type="button" class="pack-chip" data-premium="${pack.id}">
+      <strong>+${pack.coins}</strong>
+      <span>${pack.priceLabel}</span>
     </button>`;
   }
-  html += `</div>
-  <p class="fine">Free coins: boss +${PREMIUM.coinsPerBoss} · ship +${PREMIUM.coinsPerShip} · season +${PREMIUM.coinsPerSeason} · hub quests</p>`;
+  html += `</div>`;
   root.innerHTML = html;
 }
 
@@ -552,14 +554,11 @@ function renderMeta(s) {
   if (!root) return;
   const rep = s.authority.amount;
   let html = `
-  <div class="sp-bank rep-bank">
-    <div class="sp-bank-left">
-      <span class="sp-bank-label">Rep</span>
-      <strong class="sp-bank-val gold">${formatNum(rep)}</strong>
-      <span class="sp-bank-hint">Permanent · never resets</span>
-    </div>
+  <div class="sp-bank compact rep-bank">
+    <span class="sp-bank-label">Rep</span>
+    <strong class="sp-bank-val gold">${formatNum(rep)}</strong>
+    <span class="sp-bank-hint">Permanent</span>
   </div>
-  <div class="section-lab">Permanent boosts</div>
   <div class="skill-grid">`;
   for (const u of Object.values(META)) {
     const lv = metaLv(s, u.id);
@@ -567,23 +566,28 @@ function renderMeta(s) {
     const ok = rep >= cost;
     const barPct = Math.min(100, lv * 8);
     html += `
-    <button type="button" class="skill-card ${ok ? 'can' : 'locked'}" data-meta="${u.id}">
+    <button type="button" class="skill-card compact ${ok ? 'can' : 'locked'}" data-meta="${u.id}" title="${u.desc.replace(/"/g, '&quot;')}">
       <div class="sk-ico gold" aria-hidden="true">${metaIco(u.id)}</div>
       <div class="sk-main">
         <div class="sk-top">
           <span class="sk-name">${u.name}</span>
         </div>
-        <div class="sk-desc">${u.desc}</div>
         <div class="sk-bar"><i style="width:${barPct}%"></i></div>
       </div>
       <div class="sk-side">
         <span class="sk-lv">Lv ${lv}</span>
-        <span class="sk-cta">${formatNum(cost)} rep</span>
+        <span class="sk-cta">${formatNum(cost)}</span>
       </div>
     </button>`;
   }
   html += '</div>';
   root.innerHTML = html;
+}
+
+function rewardChips(reward) {
+  return formatReward(reward)
+    .map((r) => `<span class="rw-chip k-${r.k}">${r.v} ${r.k === 'coin' ? '¢' : r.k}</span>`)
+    .join('');
 }
 
 function questRow(s, def, period) {
@@ -593,32 +597,25 @@ function questRow(s, def, period) {
   const done = hubDone(hub, def, period);
   const claimed = hubClaimed(hub, def, period);
   const pct = Math.round((prog / def.target) * 100);
-  const rewardBits = Object.entries(def.reward)
-    .map(([k, v]) => `+${v} ${k === 'authority' ? 'rep' : k}`)
-    .join(' · ');
-  let cta = `${prog}/${def.target}`;
-  let cls = 'quest-row';
-  if (claimed) {
-    cta = 'Done';
-    cls += ' claimed';
-  } else if (done) {
-    cta = 'Claim';
-    cls += ' ready';
-  }
+  let cls = 'quest-row compact';
+  if (claimed) cls += ' claimed';
+  else if (done) cls += ' ready';
   return `
   <div class="${cls}">
-    <div class="quest-ico" aria-hidden="true">${hubIco(period === 'daily' ? 'daily' : 'weekly')}</div>
     <div class="quest-main">
-      <div class="quest-name">${def.label}</div>
-      <div class="quest-desc">${def.desc} · ${rewardBits}</div>
-      <div class="sk-bar"><i style="width:${pct}%"></i></div>
+      <div class="quest-top">
+        <span class="quest-name">${def.label}</span>
+        <span class="quest-prog">${claimed ? '✓' : `${prog}/${def.target}`}</span>
+      </div>
+      <div class="sk-bar thin"><i style="width:${pct}%"></i></div>
+      <div class="quest-rw">${rewardChips(def.reward)}</div>
     </div>
     ${
       claimed
-        ? `<span class="quest-cta muted">✓</span>`
+        ? ''
         : done
           ? `<button type="button" class="quest-cta" data-claim="${period}:${def.id}">Claim</button>`
-          : `<span class="quest-cta muted">${prog}/${def.target}</span>`
+          : ''
     }
   </div>`;
 }
@@ -629,107 +626,67 @@ function renderHub(s) {
   ensureHub(s);
   const hub = s.meta.hub;
   const season = seasonLevel(hub.seasonXp || 0);
-  const gear = s.meta.gear || {};
-  const feed = hubFeed(4);
+  const pct = Math.round((season.into / season.need) * 100);
 
   let html = `
-  <div class="hub-hero">
-    <div class="hub-hero-copy">
-      <span class="hub-kicker">HUB</span>
-      <strong>Daily goals</strong>
-      <p>Claim rewards · keep the feed live</p>
-    </div>
-    <div class="hub-hero-meta">
-      <span>Z${s.run.zone + 1}</span>
-      <span>×${economyMult(s).toFixed(2)}</span>
-    </div>
-  </div>
-
-  <div class="hub-quick">
-    <button type="button" class="hub-chip" data-go="gear">Gear ${gear.weapon ? '●' : '○'}</button>
-    <button type="button" class="hub-chip" data-go="meta">Boosts</button>
-    <button type="button" class="hub-chip" data-go="ship">Ship</button>
-    <button type="button" class="hub-chip" data-go="settings">Premium</button>
-  </div>
-
-  <div class="section-lab">Daily objectives</div>
-  <div class="quest-list">
-    ${DAILY_DEFS.map((d) => questRow(s, d, 'daily')).join('')}
-  </div>
-
-  <div class="section-lab">Weekly objectives</div>
-  <div class="quest-list">
-    ${WEEKLY_DEFS.map((d) => questRow(s, d, 'weekly')).join('')}
-  </div>
-
-  <div class="section-lab">Season progress</div>
-  <div class="season-card">
-    <div class="season-top">
-      <span>Patch Season</span>
+  <div class="hub-season">
+    <div class="hub-season-top">
+      <span class="hub-season-lab">Season</span>
       <strong>Lv ${season.level}</strong>
+      <span class="hub-season-xp">${formatNum(season.into)}/${formatNum(season.need)}</span>
     </div>
-    <div class="sk-bar season-bar"><i style="width:${Math.round((season.into / season.need) * 100)}%"></i></div>
-    <div class="season-sub">${formatNum(season.into)} / ${formatNum(season.need)} XP</div>
+    <div class="sk-bar season-bar"><i style="width:${pct}%"></i></div>
     <div class="season-milestones">`;
   for (const m of SEASON_MILESTONES) {
     const unlocked = season.level >= m.lv;
     const claimed = !!hub.seasonClaimed?.[m.lv];
+    const tip = formatRewardText(m.reward);
     html += `
     <button type="button" class="season-mil ${unlocked ? 'on' : ''} ${claimed ? 'claimed' : ''}"
-      data-season-lv="${m.lv}" ${!unlocked || claimed ? 'disabled' : ''}>
-      <span class="sm-lv">${m.lv}</span>
-      <span class="sm-lab">${claimed ? '✓' : unlocked ? 'Claim' : '···'}</span>
+      data-season-lv="${m.lv}" ${!unlocked || claimed ? 'disabled' : ''} title="${tip}">
+      <span class="sm-lv">${m.label}</span>
     </button>`;
   }
   html += `</div></div>
 
-  <div class="section-lab">Patch feed</div>
-  <div class="hub-feed">`;
-  for (const it of feed) {
-    html += `
-    <div class="feed-row">
-      <img class="feed-ico" src="./assets/icons/${it.icon}.svg" alt="" width="28" height="28" />
-      <div class="feed-main">
-        <div class="feed-title">${it.name} · <span class="kind ${it.kind}">${it.kind}</span></div>
-        <div class="feed-text">${it.text}</div>
-      </div>
-      <span class="feed-ago">${it.ago}</span>
-    </div>`;
-  }
-  html += `</div>`;
+  <div class="section-lab">Daily</div>
+  <div class="quest-list">
+    ${DAILY_DEFS.map((d) => questRow(s, d, 'daily')).join('')}
+  </div>
+
+  <div class="section-lab">Weekly</div>
+  <div class="quest-list">
+    ${WEEKLY_DEFS.map((d) => questRow(s, d, 'weekly')).join('')}
+  </div>`;
   root.innerHTML = html;
 }
 
-function affixLines(item, max = 3) {
-  return (item?.affixes || [])
-    .slice(0, max)
-    .map((a) => `<span class="gi-aff">${formatAffix(a)}</span>`)
-    .join('');
+function itemTooltip(item) {
+  if (!item) return '';
+  const aff = (item.affixes || []).map((a) => formatAffix(a)).join(' · ');
+  return `${item.name} · ${rarityLabel(item.rarity)} i${item.ilvl}${aff ? ` · ${aff}` : ''}`;
 }
 
-function equipCard(slot, item) {
-  const lab = slot === 'weapon' ? 'Weapon' : 'Armor';
+function eqSlot(slot, item) {
+  const lab = slot === 'weapon' ? 'W' : 'A';
   if (!item) {
     return `
-    <div class="eq-card empty" data-slot="${slot}">
-      <div class="eq-ico muted">${gearIcon({ slot, name: 'empty', rarity: 'white' })}</div>
-      <div class="eq-lab">${lab}</div>
-      <div class="eq-empty">Empty</div>
-      <div class="eq-hint">Boss / elite drop</div>
+    <div class="eq-slot empty" data-slot="${slot}">
+      <div class="eq-slot-ico muted">${gearIcon({ slot, name: 'empty', rarity: 'white' })}</div>
+      <span class="eq-slot-lab">${lab}</span>
     </div>`;
   }
   const col = rarityColor(item.rarity);
   return `
-  <div class="eq-card r-${item.rarity}" style="--rc:${col}">
-    <div class="eq-top">
-      <div class="eq-ico" style="color:${col}">${gearIcon(item)}</div>
-      <div class="eq-head">
-        <div class="eq-lab">${lab}</div>
-        <div class="eq-rarity" style="color:${col}">${rarityLabel(item.rarity)} · i${item.ilvl}</div>
-      </div>
+  <div class="eq-slot filled r-${item.rarity}" style="--rc:${col}" title="${itemTooltip(item).replace(/"/g, '&quot;')}">
+    <div class="eq-slot-ico" style="color:${col}">${gearIcon(item)}</div>
+    <span class="eq-slot-lab">${lab}</span>
+    <span class="eq-slot-name" style="color:${col}">${item.name}</span>
+    <div class="tip-pop" role="tooltip">
+      <strong style="color:${col}">${item.name}</strong>
+      <span>${rarityLabel(item.rarity)} · i${item.ilvl}</span>
+      ${(item.affixes || []).map((a) => `<span class="tip-aff">${formatAffix(a)}</span>`).join('')}
     </div>
-    <div class="eq-name" style="color:${col}">${item.name}</div>
-    <div class="eq-affs">${affixLines(item, 3)}</div>
   </div>`;
 }
 
@@ -737,58 +694,79 @@ function renderGear(s) {
   const root = document.getElementById('gear-body');
   if (!root) return;
   const g = s.meta.gear || { weapon: null, armor: null, bag: [] };
+  const bag = g.bag || [];
+  const focusId = s.ui.gearFocus || null;
+  const focus = bag.find((x) => x.id === focusId) || null;
   const wCol = g.weapon ? rarityColor(g.weapon.rarity) : '#3a4656';
   const aCol = g.armor ? rarityColor(g.armor.rarity) : '#3a4656';
-  const bag = g.bag || [];
 
   let html = `
-  <div class="loadout">
-    <div class="loadout-stage">
-      <div class="loadout-glow" style="--wc:${wCol};--ac:${aCol}"></div>
-      <div class="loadout-mascot-wrap">
-        <img class="loadout-mascot" src="./assets/mascot-host.png" alt="" width="112" height="112" />
-        <div class="loadout-slots">
-          <div class="ls-chip" style="--rc:${wCol}" title="${g.weapon ? g.weapon.name : 'Weapon empty'}">
-            <span class="ls-ico">${gearIcon(g.weapon || { slot: 'weapon', name: 'empty', rarity: 'white' })}</span>
-            <span class="ls-lab">W</span>
-          </div>
-          <div class="ls-chip" style="--rc:${aCol}" title="${g.armor ? g.armor.name : 'Armor empty'}">
-            <span class="ls-ico">${gearIcon(g.armor || { slot: 'armor', name: 'empty', rarity: 'white' })}</span>
-            <span class="ls-lab">A</span>
-          </div>
-        </div>
+  <div class="loadout compact">
+    <div class="loadout-stage tight" style="--wc:${wCol};--ac:${aCol}">
+      <img class="loadout-mascot sm" src="./assets/mascot-host.png" alt="" width="72" height="72" />
+      <div class="eq-slots">
+        ${eqSlot('weapon', g.weapon)}
+        ${eqSlot('armor', g.armor)}
       </div>
     </div>
-    <div class="eq-row">
-      ${equipCard('weapon', g.weapon)}
-      ${equipCard('armor', g.armor)}
-    </div>
-    <p class="fine loadout-note">Permanent · auto-equip if better · bag for the rest</p>
   </div>
-  <div class="section-lab">Inventory <span class="section-count">${bag.length}</span></div>
-  <div class="gear-bag">`;
 
-  if (!bag.length) {
-    html += `<p class="fine bag-empty">Empty — clear Version Gates for gear drops.</p>`;
-  } else {
-    for (const it of bag.slice(0, 24)) {
-      const col = rarityColor(it.rarity);
-      const top = (it.affixes || [])[0];
-      const slotLab = it.slot === 'weapon' ? 'W' : 'A';
-      html += `
-      <button type="button" class="gear-item r-${it.rarity}" data-equip="${it.id}" style="--rc:${col}">
-        <div class="gi-ico" style="color:${col}">${gearIcon(it)}</div>
-        <div class="gi-body">
-          <div class="gi-name" style="color:${col}">${it.name}</div>
-          <div class="gi-meta">${rarityLabel(it.rarity)} · ${slotLab} · i${it.ilvl}${
-            top ? ` · ${formatAffix(top)}` : ''
-          }</div>
-        </div>
-        <span class="gi-cta">Equip</span>
-      </button>`;
+  <div class="section-lab">Inventory <span class="section-count">${bag.length}/${BAG_CAP}</span></div>
+  <div class="inv-grid">`;
+
+  for (let i = 0; i < BAG_CAP; i++) {
+    const it = bag[i];
+    if (!it) {
+      html += `<div class="inv-slot empty" aria-hidden="true"></div>`;
+      continue;
     }
+    const col = rarityColor(it.rarity);
+    const up = isUpgrade(g, it);
+    const sel = focusId === it.id ? ' sel' : '';
+    html += `
+    <button type="button" class="inv-slot r-${it.rarity}${sel}${up ? ' up' : ''}"
+      data-inv="${it.id}" style="--rc:${col}" title="${itemTooltip(it).replace(/"/g, '&quot;')}">
+      <span class="inv-ico" style="color:${col}">${gearIcon(it)}</span>
+      ${up ? '<span class="inv-up">↑</span>' : ''}
+      <div class="tip-pop" role="tooltip">
+        <strong style="color:${col}">${it.name}</strong>
+        <span>${rarityLabel(it.rarity)} · i${it.ilvl} · ${it.slot}</span>
+        ${(it.affixes || []).map((a) => `<span class="tip-aff">${formatAffix(a)}</span>`).join('')}
+        <span class="tip-sell">Sell ${sellValue(it)} sig</span>
+      </div>
+    </button>`;
   }
-  html += '</div>';
+  html += `</div>`;
+
+  if (focus) {
+    const col = rarityColor(focus.rarity);
+    const up = isUpgrade(g, focus);
+    const cur = g[focus.slot];
+    const cmp = cur
+      ? itemScore(focus) > itemScore(cur)
+        ? 'Better than equipped'
+        : itemScore(focus) < itemScore(cur)
+          ? 'Weaker than equipped'
+          : 'Similar score'
+      : 'Empty slot';
+    html += `
+    <div class="gear-detail" style="--rc:${col}">
+      <div class="gd-ico" style="color:${col}">${gearIcon(focus)}</div>
+      <div class="gd-main">
+        <div class="gd-name" style="color:${col}">${focus.name}</div>
+        <div class="gd-meta">${rarityLabel(focus.rarity)} · ${focus.slot} · i${focus.ilvl}</div>
+        <div class="gd-affs">${(focus.affixes || []).map((a) => formatAffix(a)).join(' · ')}</div>
+        <div class="gd-cmp ${up ? 'better' : ''}">${cmp}</div>
+      </div>
+      <div class="gd-actions">
+        <button type="button" class="gd-equip" data-equip="${focus.id}">${up || !cur ? 'Equip' : 'Swap'}</button>
+        <button type="button" class="gd-sell" data-sell="${focus.id}">Sell · ${sellValue(focus)} sig</button>
+      </div>
+    </div>`;
+  } else {
+    html += `<p class="fine bag-empty">Tap a slot · hover for stats · sell junk for Signal</p>`;
+  }
+
   root.innerHTML = html;
 }
 

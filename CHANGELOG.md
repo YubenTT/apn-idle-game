@@ -13,6 +13,16 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 - PWA manifest
 - Wire real IAP receipts for APN Pro / coin packs
 
+## [1.5.1] — 2026-07-13
+
+### Changed
+
+- All sheets compacted: Build / Ship / Gear / Hub / Boosts / Menu
+- Gear: 6×4 slot inventory, hover stats, Equip/Swap detail, sell → Signal
+- No worse-item auto-equip; upgrade marker on bag slots
+- Hub: fixed rewards (signal/sp/rep/coins — no “bytes”), dense quest rows
+- Premium chips row; skill desc on hover only
+
 ## [1.5.0] — 2026-07-13
 
 ### Changed

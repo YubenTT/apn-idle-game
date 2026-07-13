@@ -176,6 +176,10 @@ export function gearBonuses(gear) {
  * Try to place item: auto-equip if better score, else bag.
  * Returns { equipped: boolean, replaced: item|null, item }
  */
+/**
+ * Place item: equip only if slot empty or strictly better score.
+ * Never equips a worse piece. Overflow bag drops oldest.
+ */
 export function offerItem(gear, item, bagCap = 24) {
   if (!gear || !item) return { equipped: false, replaced: null, item };
   const slot = item.slot;
@@ -206,6 +210,39 @@ export function equipFromBag(gear, itemId) {
   if (cur) gear.bag.unshift(cur);
   return true;
 }
+
+/** Sell bag item → Signal (season soft currency). Higher rarity pays more. */
+export function sellValue(item) {
+  if (!item) return 0;
+  const p = RARITY[item.rarity]?.power || 1;
+  const base = 6 + (item.ilvl | 0) * 1.4;
+  return Math.max(4, Math.round(base * p * (item.rarity === 'unique' ? 1.35 : 1)));
+}
+
+/**
+ * Remove item from bag and return sell value, or null if missing.
+ * Does not sell equipped pieces (must unequip first via bag swap).
+ */
+export function sellFromBag(gear, itemId) {
+  if (!gear?.bag) return null;
+  const idx = gear.bag.findIndex((x) => x.id === itemId);
+  if (idx < 0) return null;
+  const [item] = gear.bag.splice(idx, 1);
+  return { item, signal: sellValue(item) };
+}
+
+export function itemScore(item) {
+  return scoreItem(item);
+}
+
+export function isUpgrade(gear, item) {
+  if (!item || !gear) return false;
+  const cur = gear[item.slot];
+  if (!cur) return true;
+  return scoreItem(item) > scoreItem(cur);
+}
+
+export const BAG_CAP = 24;
 
 export function formatAffix(a) {
   if (!a) return '';
