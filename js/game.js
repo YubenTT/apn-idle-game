@@ -45,14 +45,19 @@ import {
 import { sfx } from './sfx.js';
 import {
   emptyGear,
+  normalizeGear,
   rollItem,
   offerItem,
   equipFromBag,
+  unequipSlot,
   sellFromBag,
   gearBonuses,
   shouldDropOnKill,
   rarityColor,
   rarityLabel,
+  pickSlotForGear,
+  SLOTS,
+  BAG_CAP,
 } from './loot.js';
 
 export function createState() {
@@ -512,10 +517,14 @@ function onKill(s, e) {
     floater(s, e.displayX, 125, killLine(e.type), '#F5F6F8');
   }
 
-  // Gear drops — bosses guaranteed, elites/patch rare
+  // Gear drops — bosses guaranteed, elites/patch rare (all 6 slots)
   if (shouldDropOnKill(e.type)) {
-    if (!s.meta.gear) s.meta.gear = emptyGear();
-    const forced = e.type === 'boss' ? null : Math.random() < 0.5 ? 'weapon' : 'armor';
+    s.meta.gear = normalizeGear(s.meta.gear);
+    // Prefer empty slots on non-boss so loadout fills naturally
+    const forced =
+      e.type === 'boss'
+        ? pickSlotForGear(s.meta.gear, Math.random() < 0.55)
+        : pickSlotForGear(s.meta.gear, true);
     let item = rollItem(zone, forced);
     // Bosses: re-roll pure whites once for better feel
     if (e.type === 'boss' && item.rarity === 'white' && Math.random() < 0.55) {
@@ -993,8 +1002,8 @@ export function leaveSeason(s) {
   s.meta.live += gain;
   s.meta.season += 1;
   s.authority.shippedThisSeason = 0;
-  // gear is on meta — intentionally untouched
-  if (!s.meta.gear) s.meta.gear = emptyGear();
+  // gear is on meta — intentionally untouched (normalize for multi-slot)
+  s.meta.gear = normalizeGear(s.meta.gear);
   s.run.zone = 0;
   s.run.killsInZone = 0;
   s.run.bytes = Math.floor(s.run.bytes * 0.15);
@@ -1028,8 +1037,20 @@ export function leaveSeason(s) {
 }
 
 export function equipGear(s, itemId) {
-  if (!s.meta.gear) s.meta.gear = emptyGear();
+  s.meta.gear = normalizeGear(s.meta.gear);
   if (!equipFromBag(s.meta.gear, itemId)) return false;
+  s.ui.panelDirty = true;
+  if (s.settings.sfx !== false) sfx('click');
+  return true;
+}
+
+/** Unequip a slot into bag (if inventory room) */
+export function unequipGear(s, slot) {
+  s.meta.gear = normalizeGear(s.meta.gear);
+  if (!unequipSlot(s.meta.gear, slot, BAG_CAP)) {
+    toast(s, 'Inventory full — sell junk first');
+    return false;
+  }
   s.ui.panelDirty = true;
   if (s.settings.sfx !== false) sfx('click');
   return true;
@@ -1037,7 +1058,7 @@ export function equipGear(s, itemId) {
 
 /** Sell bag item for Signal */
 export function sellGear(s, itemId) {
-  if (!s.meta.gear) s.meta.gear = emptyGear();
+  s.meta.gear = normalizeGear(s.meta.gear);
   const res = sellFromBag(s.meta.gear, itemId);
   if (!res) return false;
   s.run.bytes += res.signal;
@@ -1046,6 +1067,56 @@ export function sellGear(s, itemId) {
   s.ui.panelDirty = true;
   if (s.settings.sfx !== false) sfx('coin');
   return res;
+}
+
+/**
+ * Open a premium gear box (coin sink).
+ * Rolls N pieces, offers each (equip if empty/better), shows last as loot card.
+ */
+export function buyGearBox(s, boxId) {
+  ensurePremium(s);
+  const def = PREMIUM.boxes?.find((b) => b.id === boxId);
+  if (!def) return false;
+  if (s.meta.premium.coins < def.coinCost) {
+    toast(s, `Need ${def.coinCost} coins`);
+    return false;
+  }
+  s.meta.gear = normalizeGear(s.meta.gear);
+  s.meta.premium.coins -= def.coinCost;
+
+  const rolls = Math.max(1, def.rolls | 0);
+  let last = null;
+  let equippedAny = false;
+  for (let i = 0; i < rolls; i++) {
+    const slot = pickSlotForGear(s.meta.gear, def.preferEmpty !== false);
+    const item = rollItem(s.run.zone, slot, {
+      luck: def.luck || 1.5,
+      minRarity: def.minRarity || null,
+    });
+    const res = offerItem(s.meta.gear, item);
+    if (res.equipped) equippedAny = true;
+    last = { item, equipped: res.equipped };
+  }
+
+  if (last) {
+    s.ui.lootDrop = {
+      item: last.item,
+      equipped: last.equipped,
+      t: 2.8,
+      life: 2.8,
+    };
+  }
+  hubOnGear(s);
+  const nLab = rolls > 1 ? `${rolls} pieces` : '1 piece';
+  toast(
+    s,
+    `${def.name} · ${nLab}${equippedAny ? ' · equipped upgrades' : ' · bag'}`
+  );
+  confetti(s, s.world.heroX, 180, ['#e6b84d', '#5eb0ff', '#FC1243', '#fff'], 26);
+  tip(s, 'gear');
+  s.ui.panelDirty = true;
+  if (s.settings.sfx !== false) sfx('upgrade');
+  return true;
 }
 
 /** Unlock APN Pro (IAP hook — demo unlock in Menu) */
@@ -1189,7 +1260,15 @@ export function claimSeasonMilestone(s, lv) {
   return true;
 }
 
-export { gearBonuses, rarityColor, rarityLabel, PREMIUM, ensureHub };
+export {
+  gearBonuses,
+  rarityColor,
+  rarityLabel,
+  PREMIUM,
+  ensureHub,
+  normalizeGear,
+  SLOTS,
+};
 
 export function simulateOffline(s, seconds) {
   const T = Math.min(seconds, C.OFFLINE_CAP);

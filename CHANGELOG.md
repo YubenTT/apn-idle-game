@@ -11,7 +11,22 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 - Save schema rename (bytes → signal) with migration
 - PWA manifest
-- Wire real IAP receipts for APN Pro / coin packs
+- Wire real IAP receipts for APN Pro / coin packs / boxes
+
+## [1.6.0] — 2026-07-13
+
+### Added
+
+- **6-slot gear loadout**: Weapon · Head · Chest · Legs · Boots · Trinket
+- Paper-doll Gear UI, unequip, bag slot tags, stacked bonuses summary
+- **Premium Gear Boxes** (Signal Crate / Rare Bundle / Epic Cache / Loadout Box)
+- Legacy `armor` → `chest` save migration
+
+### Changed
+
+- Drops prefer empty slots; affixes are slot-tagged
+- Never auto-equip worse pieces; sell junk → Signal only from bag
+- Menu Premium: boxes grid + coin packs
 
 ## [1.5.1] — 2026-07-13
 
