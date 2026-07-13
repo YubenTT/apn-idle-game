@@ -18,6 +18,8 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
     · `SCREEN-SPECS.md` (mobile-first per-screen redesign) · `ART-PIPELINE.md` ·
     `PERF-BUDGET.md` · `QA-CHECKLIST.md` · `GLOSSARY.md` · `DEFINITION-OF-DONE.md` ·
     `DOC-UPDATE-POLICY.md`
+  - `docs/REDESIGN-PLAN.md` — sequenced issue backlog (22 issues, 4 waves) with
+    per-issue acceptance criteria, dependencies, and release gate
   - `docs/decisions/` ADRs — **ADR-0001** keep vanilla ES + Canvas 2D (reject
     PixiJS/React rewrite), **ADR-0002** token-driven design system, **ADR-0003**
     GLB single-source mascot

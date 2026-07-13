@@ -48,6 +48,7 @@ must be updated to match, not argued with.
 | Which doc to update on which change | [DOC-UPDATE-POLICY.md](./DOC-UPDATE-POLICY.md) | All |
 | Architectural decisions (why we chose X) | [decisions/](./decisions/) (ADRs) | All |
 | Monetization posture | [MONETIZATION.md](./MONETIZATION.md) | Design |
+| Redesign execution plan (issues) | [REDESIGN-PLAN.md](./REDESIGN-PLAN.md) | Producer |
 | Roadmap | [ROADMAP.md](./ROADMAP.md) | Producer |
 | Site embed | [EMBED.md](./EMBED.md) | Eng |
 | Agent working rules | [../AGENTS.md](../AGENTS.md) | All |
