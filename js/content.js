@@ -1,27 +1,25 @@
-/** APN Idle content — plain-language names + comedy */
+/** APN Idle content — skills, boosts, premium, tips */
 
-/** Season length = prestige checkpoint (zones continue forever) */
 export const SEASON = {
   id: 'season_01',
   name: 'Launch Week Feed',
   zones: 20,
 };
 
-/** Display labels for attributes (internal: scan / verify / amplify) */
+/** Attributes (SP bank) */
 export const ATTR_LABEL = {
   scan: 'Damage',
   verify: 'Crit',
-  amplify: 'Skills',
+  amplify: 'Utility',
 };
 
-/** Build panel — clear first-read meaning */
 export const ATTR_META = {
-  scan: { label: 'Damage', sub: 'weapon power', accent: '#fc1243' },
-  verify: { label: 'Crit', sub: 'crit chance', accent: '#e6b84d' },
-  amplify: { label: 'Skills', sub: 'skill power', accent: '#5eb0ff' },
+  scan: { label: 'Damage', sub: '+weapon power', accent: '#fc1243' },
+  verify: { label: 'Crit', sub: '+crit chance', accent: '#e6b84d' },
+  amplify: { label: 'Utility', sub: '+skills & mana', accent: '#5eb0ff' },
 };
 
-/** Permanent meta upgrades — bought with Rep, never wiped on End Season */
+/** Permanent Rep boosts — survive End Season */
 export const META = {
   xp_posts: {
     id: 'xp_posts',
@@ -42,7 +40,7 @@ export const META = {
   signal_power: {
     id: 'signal_power',
     name: 'Signal Power',
-    desc: '+5% damage · stacks with Live Mult',
+    desc: '+5% damage · stacks with Live & Pro',
     base: 8,
     growth: 1.48,
     per: 0.05,
@@ -81,73 +79,44 @@ export const META = {
   },
 };
 
+/**
+ * Skills — no masks, no exclusive slots.
+ * Three clear trees matching attributes. All stackable.
+ * Unlock by putting SP into the matching attribute first.
+ */
 export const SKILLS = {
+  // —— Damage tree ——
   hotfix: {
     id: 'hotfix',
     tree: 'scan',
     name: 'Burst Hit',
     short: 'Burst',
-    max: 12,
+    max: 10,
     req: { scan: 1 },
     type: 'active',
-    accent: '#fc1243',
-    desc: 'Instant heavy hit on the nearest enemy. Costs mana.',
+    desc: 'Heavy hit on the nearest enemy. Costs mana.',
+  },
+  scroll_speed: {
+    id: 'scroll_speed',
+    tree: 'scan',
+    name: 'Attack Speed',
+    short: 'Speed',
+    max: 10,
+    req: { scan: 3 },
+    type: 'passive',
+    desc: 'Faster auto-attacks and cheaper Sprint.',
   },
   live_tracker: {
     id: 'live_tracker',
     tree: 'scan',
     name: 'Damage Ramp',
     short: 'Ramp',
-    max: 15,
+    max: 12,
     req: { scan: 5 },
     type: 'toggle',
-    accent: '#3ecf8e',
-    desc: 'Damage grows while you keep fighting. Great on bosses.',
+    desc: 'Damage ramps while you keep fighting. Strong on bosses.',
   },
-  summary_burst: {
-    id: 'summary_burst',
-    tree: 'verify',
-    name: 'Area Blast',
-    short: 'Area',
-    max: 10,
-    req: { verify: 1 },
-    type: 'active',
-    accent: '#5eb0ff',
-    desc: 'Damage all nearby enemies + better orb rewards briefly.',
-  },
-  verified_mask: {
-    id: 'verified_mask',
-    tree: 'verify',
-    name: 'Crit Mask',
-    short: 'Crit',
-    max: 1,
-    req: { verify: 4 },
-    type: 'mask',
-    accent: '#fc1243',
-    desc: 'One mask active: always crit + bonus damage.',
-  },
-  amplify: {
-    id: 'amplify',
-    tree: 'amplify',
-    name: 'Skill Power',
-    short: 'Power',
-    max: 10,
-    req: { amplify: 4 },
-    type: 'passive',
-    accent: '#c084fc',
-    desc: 'All skills and Damage Ramp hit harder.',
-  },
-  deep_dive: {
-    id: 'deep_dive',
-    tree: 'amplify',
-    name: 'Overdrive',
-    short: 'Overdrive',
-    max: 10,
-    req: { amplify: 1 },
-    type: 'toggle',
-    accent: '#ff6b4a',
-    desc: 'Big damage boost, drains energy. Grab orbs to sustain.',
-  },
+  // —— Crit tree ——
   notify: {
     id: 'notify',
     tree: 'verify',
@@ -156,34 +125,105 @@ export const SKILLS = {
     max: 8,
     req: { verify: 1 },
     type: 'passive',
-    accent: '#e6b84d',
-    desc: 'More energy/Signal orbs spawn, better pickups.',
+    desc: 'More energy/Signal orbs, better pickups.',
   },
-  scroll_speed: {
-    id: 'scroll_speed',
-    tree: 'scan',
-    name: 'Attack Speed',
-    short: 'Speed',
-    max: 12,
-    req: { scan: 5 },
+  summary_burst: {
+    id: 'summary_burst',
+    tree: 'verify',
+    name: 'Area Blast',
+    short: 'Area',
+    max: 8,
+    req: { verify: 3 },
+    type: 'active',
+    desc: 'Brief AoE damage + better orb rewards.',
+  },
+  sharp_eye: {
+    id: 'sharp_eye',
+    tree: 'verify',
+    name: 'Sharp Eye',
+    short: 'Crit+',
+    max: 10,
+    req: { verify: 5 },
     type: 'passive',
-    accent: '#5eb0ff',
-    desc: 'Faster auto-attacks and cheaper sprint.',
+    desc: '+2% crit chance per rank (stacks with Crit attr).',
   },
-  editor_pick: {
-    id: 'editor_pick',
+  // —— Utility tree ——
+  deep_dive: {
+    id: 'deep_dive',
     tree: 'amplify',
-    name: 'Endless Sprint',
-    short: 'Sprint',
-    max: 1,
-    req: { amplify: 8 },
-    type: 'mask',
-    accent: '#e6b84d',
-    desc: 'One mask active: strong energy regen + free sprint feel.',
+    name: 'Overdrive',
+    short: 'Overdrive',
+    max: 10,
+    req: { amplify: 1 },
+    type: 'toggle',
+    desc: 'Big damage boost while active. Drains energy — grab orbs.',
+  },
+  amplify: {
+    id: 'amplify',
+    tree: 'amplify',
+    name: 'Skill Power',
+    short: 'Power',
+    max: 10,
+    req: { amplify: 3 },
+    type: 'passive',
+    desc: 'Actives, Ramp, and Overdrive hit harder.',
+  },
+  marathon: {
+    id: 'marathon',
+    tree: 'amplify',
+    name: 'Marathon',
+    short: 'Stamina',
+    max: 8,
+    req: { amplify: 5 },
+    type: 'passive',
+    desc: '+energy regen and lower Sprint drain.',
   },
 };
 
-/** Enemies = feed noise types */
+/** Tree section order for Build UI */
+export const SKILL_TREES = [
+  { id: 'scan', label: 'Damage skills', attr: 'scan' },
+  { id: 'verify', label: 'Crit skills', attr: 'verify' },
+  { id: 'amplify', label: 'Utility skills', attr: 'amplify' },
+];
+
+/**
+ * Premium / monetization catalog (structure ready for real IAP).
+ * Free path is complete; Pro & boosts are optional power/convenience.
+ */
+export const PREMIUM = {
+  /** Permanent IAP */
+  pro: {
+    id: 'pro',
+    name: 'APN Pro',
+    priceLabel: 'One-time',
+    mult: 1.25,
+    benefits: [
+      '×1.25 damage, Signal & Notes forever',
+      'Slightly better offline gains',
+      'Pro badge in header',
+    ],
+  },
+  /** Spend coins for timed power */
+  boost_2x: {
+    id: 'boost_2x',
+    name: '2× Boost',
+    minutes: 30,
+    mult: 2,
+    coinCost: 40,
+    desc: '2× damage, Signal & Notes for 30 minutes.',
+  },
+  /** Coin packs (mock IAP) */
+  packs: [
+    { id: 'coins_100', coins: 100, priceLabel: 'Starter', tag: null },
+    { id: 'coins_500', coins: 500, priceLabel: 'Bundle', tag: 'Best' },
+  ],
+  /** Free earn rates */
+  coinsPerBoss: 3,
+  coinsPerShip: 1,
+  coinsPerSeason: 15,
+};
+
 export const ENEMY_FLAVOR = {
   stale: { label: 'Stale Post', color: '#697384', kind: 'normal' },
   rumor: { label: 'Fake Leak', color: '#A7AFBC', kind: 'normal' },
@@ -196,22 +236,20 @@ export const ENEMY_FLAVOR = {
 
 export const TIPS = {
   start:
-    'Kill noise. Notes → Ship for Rep. Bosses drop Gear (permanent). Signal Lv is this season only.',
-  kill: 'Spend Signal on Upgrade Signal. Gear from bosses is permanent.',
-  level: 'Rank up! Open Build — spend SP on Damage / Crit / Skills.',
-  patch: 'Notes banked. Open Ship → convert to permanent Reputation.',
-  alert: 'Hover or tap glowing orbs for energy and Signal.',
-  boss: 'Version Gate: kill before timer · gear drop guaranteed.',
-  ship: 'Stuck? Ship Notes → Boosts · check Gear · Upgrade Signal.',
-  combo: 'Feed streak! Bonus Signal while the streak holds.',
+    'Clear noise → Signal upgrades + Build SP. Red Notes → Ship for Rep. Bosses drop permanent Gear.',
+  kill: 'Upgrade Signal each season. Put SP into Damage / Crit / Utility, then unlock skills.',
+  level: 'Rank up! Open Build — attributes first, then skills in that tree.',
+  patch: 'Notes banked. Ship → permanent Rep → Boosts.',
+  alert: 'Hover orbs for energy and Signal. Sprint burns energy.',
+  boss: 'Version Gate drops gear and coins. Kill before the timer.',
+  ship: 'Ship Notes for Rep. Stuck? Boosts + Gear + Signal upgrade.',
+  combo: 'Feed streak! Bonus Signal while it holds.',
   season:
-    'Checkpoint! Ship Notes, End Season: +Live Mult · Gear & Boosts stay · Signal Lv resets.',
-  gear: 'Gear equipped! Check Gear tab — permanent across seasons.',
+    'Checkpoint! Ship Notes, End Season: +Live Mult · Gear, Boosts & Pro stay · Signal Lv resets.',
+  gear: 'Gear equipped — permanent. Open Gear tab anytime.',
+  premium: 'APN Pro is optional permanent mult. 2× Boost spends coins (earn from bosses).',
 };
 
-/**
- * Live ticker — real icon files under assets/icons/
- */
 export const TICKER_ITEMS = [
   { icon: 'valorant', color: '#ff4655', name: 'Valorant', kind: 'patch', text: 'Agent update notes live' },
   { icon: 'league', color: '#c8aa6e', name: 'League', kind: 'patch', text: '14.x balance patch' },

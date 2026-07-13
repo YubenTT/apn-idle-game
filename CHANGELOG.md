@@ -11,6 +11,18 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 - Save schema rename (bytes → signal) with migration
 - PWA manifest
+- Wire real IAP receipts for APN Pro / coin packs
+
+## [1.3.0] — 2026-07-13
+
+### Changed
+
+- **Removed masks** (Crit Mask, Endless Sprint) — skills are all stackable
+- Build: 3 clear trees (Damage / Crit / Utility) + Sharp Eye & Marathon
+- Attribute “Skills” → **Utility**
+- Premium: APN Pro ×1.25, 2× Boost (coins), coin packs (demo IAP)
+- Economy mult = Live × Pro × Boost on damage + income + Ship
+- Headless playthrough QA (`qa/playthrough.mjs`)
 
 ## [1.2.0] — 2026-07-13
 
