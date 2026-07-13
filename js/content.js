@@ -237,6 +237,50 @@ export const PREMIUM = {
     { id: 'coins_100', coins: 100, priceLabel: 'Starter', tag: null },
     { id: 'coins_500', coins: 500, priceLabel: 'Bundle', tag: 'Best' },
   ],
+  /**
+   * Premium gear boxes — coin sink that fills the 6-slot loadout.
+   * Free path still gets boss/elite drops; boxes are optional power.
+   */
+  boxes: [
+    {
+      id: 'box_signal',
+      name: 'Signal Crate',
+      coinCost: 25,
+      luck: 1.25,
+      rolls: 1,
+      preferEmpty: true,
+      desc: '1 random piece. Fills empty slots first.',
+    },
+    {
+      id: 'box_rare',
+      name: 'Rare Bundle',
+      coinCost: 70,
+      luck: 1.9,
+      minRarity: 'green',
+      rolls: 1,
+      preferEmpty: true,
+      desc: '1 piece · Uncommon+ bias. Solid slot filler.',
+    },
+    {
+      id: 'box_epic',
+      name: 'Epic Cache',
+      coinCost: 160,
+      luck: 2.7,
+      minRarity: 'blue',
+      rolls: 1,
+      preferEmpty: false,
+      desc: '1 piece · Rare+ bias · Unique chance.',
+    },
+    {
+      id: 'box_loadout',
+      name: 'Loadout Box',
+      coinCost: 110,
+      luck: 1.55,
+      rolls: 2,
+      preferEmpty: true,
+      desc: '2 pieces · prioritizes empty slots.',
+    },
+  ],
   coinsPerBoss: 3,
   coinsPerShip: 1,
   coinsPerSeason: 15,
@@ -264,8 +308,8 @@ export const TIPS = {
   combo: 'Feed streak! Bonus Signal while it holds.',
   season:
     'Checkpoint! Ship Notes, End Season: +Live Mult · Gear, Boosts & Pro stay · Signal Lv resets.',
-  gear: 'Gear permanent. Open Gear · sell junk for Signal.',
-  premium: 'APN Pro is optional permanent mult. 2× Boost spends coins (earn from bosses).',
+  gear: '6-slot loadout (Weapon · Head · Chest · Legs · Boots · Trinket). Sell junk for Signal. Boxes in Menu.',
+  premium: 'APN Pro optional. Coins → Boosts & Gear Boxes. Free drops still fill the loadout.',
 };
 
 export const TICKER_ITEMS = [

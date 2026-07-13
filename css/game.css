@@ -2338,6 +2338,13 @@ body {
   height: 12px;
 }
 
+.meta-pill.gear-pill .gp-n {
+  font-size: 9px;
+  font-weight: 800;
+  color: #6b7787;
+  margin-left: 1px;
+}
+
 .meta-pill.pro-badge {
   color: #e6b84d;
   font-size: 9px;
@@ -2884,54 +2891,88 @@ button[hidden] {
 .rw-chip.k-coin { color: #e6b84d; }
 .rw-chip.k-notes { color: #ff6b8a; }
 
-/* Gear loadout compact + slot inventory */
+/* Gear loadout — 6-slot paper doll + inventory */
 .loadout.compact {
   margin-bottom: 2px;
 }
 
-.loadout-stage.tight {
-  flex-direction: row;
+.loadout-stage.doll {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: center;
-  gap: 14px;
-  padding: 10px 12px;
+  gap: 6px 8px;
+  padding: 8px 8px 6px;
   margin-bottom: 6px;
+  border-radius: 12px;
   background:
-    radial-gradient(ellipse 50% 60% at 30% 50%, color-mix(in srgb, var(--wc, #3a4656) 18%, transparent), transparent 70%),
-    radial-gradient(ellipse 50% 60% at 70% 50%, color-mix(in srgb, var(--ac, #3a4656) 14%, transparent), transparent 70%),
+    radial-gradient(ellipse 40% 50% at 50% 45%, rgba(252, 18, 67, 0.08), transparent 70%),
     #0a0e13;
+  border: 1px solid #161d26;
+}
+
+.eq-col {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.loadout-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 72px;
+  flex-shrink: 0;
 }
 
 .loadout-mascot.sm {
-  width: 72px;
-  height: 72px;
+  width: 56px;
+  height: 56px;
   object-fit: contain;
   filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.4));
   flex-shrink: 0;
 }
 
-.eq-slots {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-  flex: 1;
-  max-width: 180px;
+.loadout-count {
+  font-size: 10px;
+  font-weight: 800;
+  color: #8b97a6;
+  letter-spacing: 0.04em;
+}
+
+.loadout-bon {
+  font-size: 9px;
+  font-weight: 700;
+  color: #6cb8ff;
+  text-align: center;
+  line-height: 1.25;
+  max-width: 88px;
+}
+
+.loadout-bon.muted {
+  color: #4a5564;
+  font-weight: 600;
 }
 
 .eq-slot {
   --rc: #3a4656;
   position: relative;
   display: grid;
-  grid-template-columns: 34px 1fr;
+  grid-template-columns: 30px 1fr;
   grid-template-rows: auto auto;
-  gap: 0 8px;
+  gap: 0 6px;
   align-items: center;
-  padding: 6px 8px;
+  padding: 5px 6px;
   border-radius: 9px;
   border: 1px solid color-mix(in srgb, var(--rc) 40%, #1e2733);
   background: color-mix(in srgb, var(--rc) 8%, #0c1014);
-  min-height: 44px;
+  min-height: 40px;
+  width: 100%;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  text-align: left;
 }
 
 .eq-slot.empty {
@@ -2939,11 +2980,16 @@ button[hidden] {
   border-style: dashed;
 }
 
+.eq-slot.sel {
+  border-color: #fc1243;
+  box-shadow: 0 0 0 1px rgba(252, 18, 67, 0.4);
+}
+
 .eq-slot-ico {
   grid-row: 1 / span 2;
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2951,8 +2997,8 @@ button[hidden] {
 }
 
 .eq-slot-ico .ico {
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
 }
 
 .eq-slot-ico.muted {
@@ -2960,14 +3006,15 @@ button[hidden] {
 }
 
 .eq-slot-lab {
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 800;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   color: #5c6878;
 }
 
 .eq-slot-name {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   line-height: 1.15;
   overflow: hidden;
@@ -3096,6 +3143,19 @@ button[hidden] {
   line-height: 1;
 }
 
+.inv-slot-tag {
+  position: absolute;
+  left: 2px;
+  bottom: 1px;
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #5c6878;
+  line-height: 1;
+  pointer-events: none;
+}
+
 /* Gear detail action bar */
 .gear-detail {
   --rc: #fc1243;
@@ -3154,6 +3214,14 @@ button[hidden] {
   color: #3ecf8e;
 }
 
+.gd-cmp.worse {
+  color: #c07070;
+}
+
+.gd-cmp.empty {
+  color: #6cb8ff;
+}
+
 .gd-actions {
   grid-column: 1 / -1;
   display: grid;
@@ -3163,7 +3231,8 @@ button[hidden] {
 }
 
 .gd-equip,
-.gd-sell {
+.gd-sell,
+.gd-unequip {
   border: 0;
   border-radius: 8px;
   font: inherit;
@@ -3179,14 +3248,26 @@ button[hidden] {
   color: #fff;
 }
 
+.gd-unequip {
+  background: #1a2430;
+  color: #c5ced8;
+  border: 1px solid #2a3645;
+}
+
 .gd-sell {
   background: #161d26;
   color: #6cb8ff;
   border: 1px solid #2a3645;
 }
 
+.gd-sell:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .gd-equip:active,
-.gd-sell:active {
+.gd-sell:active,
+.gd-unequip:active {
   transform: scale(0.98);
 }
 
@@ -3194,6 +3275,75 @@ button[hidden] {
   margin: 4px 0 0;
   text-align: center;
   font-size: 10px;
+}
+
+/* Premium gear boxes */
+.box-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.box-card {
+  display: grid;
+  grid-template-columns: 22px 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 1px 6px;
+  align-items: center;
+  padding: 8px;
+  border-radius: 9px;
+  border: 1px solid #1e2733;
+  background: #0c1014;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  opacity: 0.72;
+}
+
+.box-card.can {
+  opacity: 1;
+  border-color: color-mix(in srgb, #e6b84d 35%, #1e2733);
+}
+
+.box-card:active {
+  transform: scale(0.98);
+}
+
+.box-ico {
+  grid-row: 1 / span 2;
+  color: #e6b84d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.box-ico .ico {
+  width: 16px;
+  height: 16px;
+}
+
+.box-name {
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.15;
+  grid-column: 2;
+}
+
+.box-meta {
+  font-size: 9px;
+  color: #6b7787;
+  grid-column: 2;
+  line-height: 1.2;
+}
+
+.box-cost {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  font-size: 11px;
+  font-weight: 800;
+  color: #e6b84d;
 }
 
 /* Premium compact */

@@ -35,7 +35,9 @@ import {
   metaLv,
   isSprinting,
   equipGear,
+  unequipGear,
   sellGear,
+  buyGearBox,
   rarityColor,
   rarityLabel,
   unlockPro,
@@ -51,6 +53,7 @@ import {
   claimHubObjective,
   claimSeasonMilestone,
   ensureHub,
+  normalizeGear,
 } from './game.js';
 import {
   formatAffix,
@@ -58,6 +61,11 @@ import {
   isUpgrade,
   BAG_CAP,
   itemScore,
+  SLOTS,
+  slotLabel,
+  slotShort,
+  equippedCount,
+  gearBonuses,
 } from './loot.js';
 import {
   DAILY_DEFS,
@@ -232,8 +240,8 @@ export function bindUI(s) {
       if (res) {
         save(s);
         s.ui.gearFocus = null;
+        s.ui.gearEqFocus = null;
         renderGear(s);
-        if (s.settings.sfx !== false) sfx('coin');
       }
       return;
     }
@@ -244,21 +252,42 @@ export function bindUI(s) {
       if (equipGear(s, equipBtn.dataset.equip)) {
         save(s);
         s.ui.gearFocus = null;
+        s.ui.gearEqFocus = null;
         renderGear(s);
       }
       return;
     }
-    const slot = e.target.closest('[data-inv]');
-    if (slot) {
-      const id = slot.dataset.inv;
+    const unequipBtn = e.target.closest('[data-unequip]');
+    if (unequipBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (unequipGear(s, unequipBtn.dataset.unequip)) {
+        save(s);
+        s.ui.gearEqFocus = null;
+        renderGear(s);
+      } else if (s.settings.sfx !== false) sfx('error');
+      return;
+    }
+    const eq = e.target.closest('[data-eq-slot]');
+    if (eq) {
+      const slot = eq.dataset.eqSlot;
+      s.ui.gearFocus = null;
+      s.ui.gearEqFocus = s.ui.gearEqFocus === slot ? null : slot;
+      renderGear(s);
+      return;
+    }
+    const inv = e.target.closest('[data-inv]');
+    if (inv) {
+      const id = inv.dataset.inv;
+      s.ui.gearEqFocus = null;
       s.ui.gearFocus = s.ui.gearFocus === id ? null : id;
       renderGear(s);
       return;
     }
-    // click empty area clears focus
-    if (e.target.closest('.gear-detail') || e.target.closest('.eq-slot')) return;
-    if (s.ui.gearFocus) {
+    if (e.target.closest('.gear-detail')) return;
+    if (s.ui.gearFocus || s.ui.gearEqFocus) {
       s.ui.gearFocus = null;
+      s.ui.gearEqFocus = null;
       renderGear(s);
     }
   });
@@ -272,6 +301,7 @@ export function bindUI(s) {
     else if (act === 'boost') ok = buyBoost2x(s);
     else if (act === 'auto') ok = unlockAutoSprint(s);
     else if (act === 'warp') ok = timeWarp(s);
+    else if (act.startsWith('box_')) ok = buyGearBox(s, act);
     else if (act.startsWith('coins_')) ok = buyCoinPack(s, act);
     if (ok) {
       save(s);
@@ -503,12 +533,13 @@ function renderPremium(s) {
   const left = boostSecondsLeft(s);
   const leftM = Math.ceil(left / 60);
   const auto = hasAutoSprint(s);
+  const loadout = equippedCount(normalizeGear(s.meta.gear));
 
   let html = `
   <div class="sp-bank compact rep-bank">
     <span class="sp-bank-label">Coins</span>
     <strong class="sp-bank-val gold">${formatNum(p.coins)}</strong>
-    <span class="sp-bank-hint">×${eco.toFixed(2)}${boostOn ? ` · 2× ${leftM}m` : ''}${auto ? ' · Auto' : ''}</span>
+    <span class="sp-bank-hint">×${eco.toFixed(2)}${boostOn ? ` · 2× ${leftM}m` : ''}${auto ? ' · Auto' : ''} · ${loadout}/6 gear</span>
   </div>
   <div class="premium-card compact ${p.pro ? 'owned' : ''}">
     <div class="premium-card-top">
@@ -536,6 +567,19 @@ function renderPremium(s) {
       <span>${PREMIUM.time_warp.coinCost}¢</span>
     </button>
   </div>
+  <div class="section-lab">Gear Boxes <span class="section-count">coins</span></div>
+  <div class="box-grid">`;
+  for (const box of PREMIUM.boxes || []) {
+    const can = p.coins >= box.coinCost;
+    html += `
+    <button type="button" class="box-card ${can ? 'can' : ''}" data-premium="${box.id}" title="${box.desc.replace(/"/g, '&quot;')}">
+      <span class="box-ico">${hubIco('gift')}</span>
+      <strong class="box-name">${box.name}</strong>
+      <span class="box-meta">${box.rolls}× gear${box.minRarity ? ` · ${box.minRarity}+` : ''}</span>
+      <span class="box-cost">${box.coinCost}¢</span>
+    </button>`;
+  }
+  html += `</div>
   <div class="section-lab">Coins</div>
   <div class="premium-packs compact">`;
   for (const pack of PREMIUM.packs) {
@@ -664,49 +708,82 @@ function renderHub(s) {
 function itemTooltip(item) {
   if (!item) return '';
   const aff = (item.affixes || []).map((a) => formatAffix(a)).join(' · ');
-  return `${item.name} · ${rarityLabel(item.rarity)} i${item.ilvl}${aff ? ` · ${aff}` : ''}`;
+  return `${item.name} · ${rarityLabel(item.rarity)} · ${slotLabel(item.slot)} i${item.ilvl}${aff ? ` · ${aff}` : ''}`;
 }
 
-function eqSlot(slot, item) {
-  const lab = slot === 'weapon' ? 'W' : 'A';
+function eqSlot(slot, item, selected) {
+  const lab = slotShort(slot);
+  const sel = selected ? ' sel' : '';
   if (!item) {
     return `
-    <div class="eq-slot empty" data-slot="${slot}">
+    <button type="button" class="eq-slot empty${sel}" data-eq-slot="${slot}" title="${slotLabel(slot)} — empty">
       <div class="eq-slot-ico muted">${gearIcon({ slot, name: 'empty', rarity: 'white' })}</div>
       <span class="eq-slot-lab">${lab}</span>
-    </div>`;
+    </button>`;
   }
   const col = rarityColor(item.rarity);
   return `
-  <div class="eq-slot filled r-${item.rarity}" style="--rc:${col}" title="${itemTooltip(item).replace(/"/g, '&quot;')}">
+  <button type="button" class="eq-slot filled r-${item.rarity}${sel}" data-eq-slot="${slot}" style="--rc:${col}" title="${itemTooltip(item).replace(/"/g, '&quot;')}">
     <div class="eq-slot-ico" style="color:${col}">${gearIcon(item)}</div>
     <span class="eq-slot-lab">${lab}</span>
     <span class="eq-slot-name" style="color:${col}">${item.name}</span>
     <div class="tip-pop" role="tooltip">
       <strong style="color:${col}">${item.name}</strong>
-      <span>${rarityLabel(item.rarity)} · i${item.ilvl}</span>
+      <span>${rarityLabel(item.rarity)} · ${slotLabel(slot)} · i${item.ilvl}</span>
       ${(item.affixes || []).map((a) => `<span class="tip-aff">${formatAffix(a)}</span>`).join('')}
     </div>
-  </div>`;
+  </button>`;
 }
 
 function renderGear(s) {
   const root = document.getElementById('gear-body');
   if (!root) return;
-  const g = s.meta.gear || { weapon: null, armor: null, bag: [] };
+  const g = normalizeGear(s.meta.gear);
+  s.meta.gear = g;
   const bag = g.bag || [];
   const focusId = s.ui.gearFocus || null;
+  const eqFocus = s.ui.gearEqFocus || null;
   const focus = bag.find((x) => x.id === focusId) || null;
-  const wCol = g.weapon ? rarityColor(g.weapon.rarity) : '#3a4656';
-  const aCol = g.armor ? rarityColor(g.armor.rarity) : '#3a4656';
+  const eqItem = eqFocus && g[eqFocus] ? g[eqFocus] : null;
+  const nEq = equippedCount(g);
+  const bon = gearBonuses(g);
+  const topBon = Object.entries(bon)
+    .filter(([, v]) => v > 0)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([k, v]) => {
+      const labels = {
+        dmg_pct: 'Dmg',
+        flat_dmg: 'Flat',
+        crit_pct: 'Crit',
+        atk_spd: 'Atk',
+        signal_pct: 'Sig',
+        notes_pct: 'Notes',
+        energy: 'E',
+        e_regen: 'Regen',
+        move_pct: 'Move',
+      };
+      const unit = k.endsWith('_pct') ? '%' : '';
+      return `+${Math.round(v * 10) / 10}${unit} ${labels[k] || k}`;
+    });
+
+  // paper-doll: left / center mascot / right
+  const left = ['weapon', 'head', 'chest'];
+  const right = ['legs', 'boots', 'trinket'];
 
   let html = `
   <div class="loadout compact">
-    <div class="loadout-stage tight" style="--wc:${wCol};--ac:${aCol}">
-      <img class="loadout-mascot sm" src="./assets/mascot-host.png" alt="" width="72" height="72" />
-      <div class="eq-slots">
-        ${eqSlot('weapon', g.weapon)}
-        ${eqSlot('armor', g.armor)}
+    <div class="loadout-stage doll">
+      <div class="eq-col left">
+        ${left.map((sl) => eqSlot(sl, g[sl], eqFocus === sl)).join('')}
+      </div>
+      <div class="loadout-center">
+        <img class="loadout-mascot sm" src="./assets/mascot-host.png" alt="" width="64" height="64" />
+        <div class="loadout-count">${nEq}/6</div>
+        ${topBon.length ? `<div class="loadout-bon">${topBon.join(' · ')}</div>` : '<div class="loadout-bon muted">Empty loadout</div>'}
+      </div>
+      <div class="eq-col right">
+        ${right.map((sl) => eqSlot(sl, g[sl], eqFocus === sl)).join('')}
       </div>
     </div>
   </div>
@@ -727,10 +804,11 @@ function renderGear(s) {
     <button type="button" class="inv-slot r-${it.rarity}${sel}${up ? ' up' : ''}"
       data-inv="${it.id}" style="--rc:${col}" title="${itemTooltip(it).replace(/"/g, '&quot;')}">
       <span class="inv-ico" style="color:${col}">${gearIcon(it)}</span>
+      <span class="inv-slot-tag">${slotShort(it.slot)}</span>
       ${up ? '<span class="inv-up">↑</span>' : ''}
       <div class="tip-pop" role="tooltip">
         <strong style="color:${col}">${it.name}</strong>
-        <span>${rarityLabel(it.rarity)} · i${it.ilvl} · ${it.slot}</span>
+        <span>${rarityLabel(it.rarity)} · ${slotLabel(it.slot)} · i${it.ilvl}</span>
         ${(it.affixes || []).map((a) => `<span class="tip-aff">${formatAffix(a)}</span>`).join('')}
         <span class="tip-sell">Sell ${sellValue(it)} sig</span>
       </div>
@@ -748,23 +826,38 @@ function renderGear(s) {
         : itemScore(focus) < itemScore(cur)
           ? 'Weaker than equipped'
           : 'Similar score'
-      : 'Empty slot';
+      : 'Empty slot — safe to equip';
     html += `
     <div class="gear-detail" style="--rc:${col}">
       <div class="gd-ico" style="color:${col}">${gearIcon(focus)}</div>
       <div class="gd-main">
         <div class="gd-name" style="color:${col}">${focus.name}</div>
-        <div class="gd-meta">${rarityLabel(focus.rarity)} · ${focus.slot} · i${focus.ilvl}</div>
+        <div class="gd-meta">${rarityLabel(focus.rarity)} · ${slotLabel(focus.slot)} · i${focus.ilvl}</div>
         <div class="gd-affs">${(focus.affixes || []).map((a) => formatAffix(a)).join(' · ')}</div>
-        <div class="gd-cmp ${up ? 'better' : ''}">${cmp}</div>
+        <div class="gd-cmp ${up ? 'better' : cur ? 'worse' : 'empty'}">${cmp}</div>
       </div>
       <div class="gd-actions">
         <button type="button" class="gd-equip" data-equip="${focus.id}">${up || !cur ? 'Equip' : 'Swap'}</button>
         <button type="button" class="gd-sell" data-sell="${focus.id}">Sell · ${sellValue(focus)} sig</button>
       </div>
     </div>`;
+  } else if (eqItem) {
+    const col = rarityColor(eqItem.rarity);
+    html += `
+    <div class="gear-detail equipped" style="--rc:${col}">
+      <div class="gd-ico" style="color:${col}">${gearIcon(eqItem)}</div>
+      <div class="gd-main">
+        <div class="gd-name" style="color:${col}">${eqItem.name}</div>
+        <div class="gd-meta">Equipped · ${slotLabel(eqFocus)} · ${rarityLabel(eqItem.rarity)} · i${eqItem.ilvl}</div>
+        <div class="gd-affs">${(eqItem.affixes || []).map((a) => formatAffix(a)).join(' · ')}</div>
+      </div>
+      <div class="gd-actions">
+        <button type="button" class="gd-unequip" data-unequip="${eqFocus}">Unequip</button>
+        <button type="button" class="gd-sell" disabled title="Unequip first">Sell bag only</button>
+      </div>
+    </div>`;
   } else {
-    html += `<p class="fine bag-empty">Tap a slot · hover for stats · sell junk for Signal</p>`;
+    html += `<p class="fine bag-empty">Tap loadout or bag · hover stats · sell junk for Signal · boxes in Menu</p>`;
   }
 
   root.innerHTML = html;
@@ -801,7 +894,7 @@ function updateLootDrop(s) {
   // rebuild content when new drop id
   if (el.dataset.dropId !== item.id) {
     el.dataset.dropId = item.id;
-    const slotLab = item.slot === 'weapon' ? 'Weapon' : 'Armor';
+    const slotLab = slotLabel(item.slot);
     el.innerHTML = `
       <div class="loot-card r-${item.rarity}" style="--rc:${col}">
         <div class="loot-badge">${drop.equipped ? 'Equipped' : 'Bag'} · ${slotLab}</div>
@@ -873,25 +966,27 @@ export function renderHUD(s) {
   set($('v-kills'), `${s.run.killsInZone}/${need}`);
   set($('v-xp-lab'), `${formatNum(h.xp | 0)}/${formatNum(needXp)}`);
 
-  // Compact equipped gear in header — icons only (no name spam)
+  // Compact equipped gear in header — up to 3 icons + count
   const gp = $('v-gear-pill');
   if (gp) {
-    const gear = s.meta.gear || {};
-    const has = !!(gear.weapon || gear.armor);
-    if (has) {
+    const gear = normalizeGear(s.meta.gear);
+    const pieces = SLOTS.map((sl) => gear[sl]).filter(Boolean);
+    if (pieces.length) {
       gp.hidden = false;
-      const wCol = gear.weapon ? rarityColor(gear.weapon.rarity) : '#5c6878';
-      const aCol = gear.armor ? rarityColor(gear.armor.rarity) : '#5c6878';
-      const key = `${gear.weapon?.id || ''}|${gear.armor?.id || ''}`;
+      const show = pieces.slice(0, 3);
+      const key = pieces.map((p) => p.id).join('|');
       if (gp.dataset.gkey !== key) {
         gp.dataset.gkey = key;
-        gp.innerHTML = `
-          <span class="gp-ico" style="color:${wCol}">${gearIcon(
-            gear.weapon || { slot: 'weapon', name: 'empty', rarity: 'white' }
-          )}</span>
-          <span class="gp-ico" style="color:${aCol}">${gearIcon(
-            gear.armor || { slot: 'armor', name: 'empty', rarity: 'white' }
-          )}</span>`;
+        gp.innerHTML =
+          show
+            .map((it) => {
+              const col = rarityColor(it.rarity);
+              return `<span class="gp-ico" style="color:${col}">${gearIcon(it)}</span>`;
+            })
+            .join('') +
+          (pieces.length > 3
+            ? `<span class="gp-n">+${pieces.length - 3}</span>`
+            : `<span class="gp-n">${pieces.length}/6</span>`);
       }
     } else {
       gp.hidden = true;

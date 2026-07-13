@@ -1,3 +1,5 @@
+import { normalizeGear, emptyGear } from './loot.js';
+
 const KEY = 'apn_idle_save_v1';
 
 export function save(s) {
@@ -6,7 +8,7 @@ export function save(s) {
     ts: Date.now(),
     meta: {
       ...s.meta,
-      gear: s.meta.gear || { weapon: null, armor: null, bag: [] },
+      gear: normalizeGear(s.meta.gear),
       premium: s.meta.premium || {
         pro: false,
         coins: 0,
@@ -54,15 +56,8 @@ export function load() {
 export function apply(s, d) {
   if (!d) return 0;
   Object.assign(s.meta, d.meta || {});
-  // migrate gear + premium
-  if (!s.meta.gear) s.meta.gear = { weapon: null, armor: null, bag: [] };
-  if (d.meta?.gear) {
-    s.meta.gear = {
-      weapon: d.meta.gear.weapon || null,
-      armor: d.meta.gear.armor || null,
-      bag: Array.isArray(d.meta.gear.bag) ? d.meta.gear.bag : [],
-    };
-  }
+  // migrate gear (armor → chest, full 6-slot) + premium
+  s.meta.gear = normalizeGear(d.meta?.gear || s.meta.gear || emptyGear());
   if (!s.meta.premium) {
     s.meta.premium = {
       pro: false,

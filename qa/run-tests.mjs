@@ -21,12 +21,27 @@ import {
   unlockPro,
   buyBoost2x,
   buyCoinPack,
+  buyGearBox,
+  equipGear,
+  unequipGear,
   economyMult,
   skillLv,
   claimHubObjective,
+  normalizeGear,
 } from '../js/game.js';
-import { emptyGear, rollItem, offerItem } from '../js/loot.js';
-import { SKILLS } from '../js/content.js';
+import {
+  emptyGear,
+  rollItem,
+  offerItem,
+  equipFromBag,
+  isUpgrade,
+  gearBonuses,
+  normalizeGear as ng,
+  SLOTS,
+  sellFromBag,
+  sellValue,
+} from '../js/loot.js';
+import { SKILLS, PREMIUM } from '../js/content.js';
 import { hubOnKill } from '../js/hub.js';
 
 let fails = 0;
@@ -119,6 +134,45 @@ for (let i = 0; i < 60 * 60; i++) {
 }
 ok(s6.run.zone >= 20, `past Z20 zone=${s6.run.zone}`);
 
+// —— Multi-slot gear ——
+ok(SLOTS.length === 6, '6 gear slots');
+ok(SLOTS.includes('chest') && SLOTS.includes('legs') && SLOTS.includes('boots'), 'armor slots');
+const gSlots = emptyGear();
+for (const slot of SLOTS) {
+  const it = rollItem(10, slot);
+  ok(it.slot === slot, `roll ${slot}`);
+  offerItem(gSlots, it);
+  ok(gSlots[slot]?.id === it.id, `equip ${slot}`);
+}
+const bon = gearBonuses(gSlots);
+ok(Object.values(bon).some((v) => v > 0), 'multi-slot bonuses stack');
+
+// worse item never auto-equips
+const weak = rollItem(1, 'weapon');
+weak.score = 1;
+const strong = gSlots.weapon;
+const resW = offerItem(gSlots, weak);
+ok(!resW.equipped, 'worse weapon stays bag');
+ok(gSlots.weapon?.id === strong.id, 'best weapon kept');
+ok(gSlots.bag.some((x) => x.id === weak.id), 'weak in bag');
+
+// legacy armor → chest migration
+const legacy = ng({ weapon: rollItem(5, 'weapon'), armor: { ...rollItem(5, 'chest'), slot: 'armor' }, bag: [] });
+ok(legacy.chest && legacy.chest.slot === 'chest', 'armor migrates to chest');
+ok(!('armor' in legacy) || legacy.armor == null, 'no armor key needed');
+
+// sell bag for signal
+const sellG = emptyGear();
+const junk = rollItem(3, 'trinket');
+offerItem(sellG, junk);
+// force into bag
+const junk2 = rollItem(1, 'trinket');
+junk2.score = 0.1;
+offerItem(sellG, junk2);
+const bagId = sellG.bag[0]?.id;
+const sv = sellFromBag(sellG, bagId);
+ok(sv && sv.signal === sellValue(sv.item), 'sell returns signal');
+
 // —— Prestige keeps gear + boosts + pro, resets signal ——
 const s7 = createState();
 s7.run.zone = 20;
@@ -133,7 +187,10 @@ s7.meta.premium.coins = 10;
 s7.meta.gear = emptyGear();
 const drop = rollItem(25, 'weapon');
 offerItem(s7.meta.gear, drop);
+const chestDrop = rollItem(25, 'chest');
+offerItem(s7.meta.gear, chestDrop);
 const gearName = s7.meta.gear.weapon.name;
+const chestName = s7.meta.gear.chest.name;
 const liveBefore = s7.meta.live;
 ok(leaveSeason(s7), 'end season');
 ok(s7.run.hero.scanner === 0, 'signal reset');
@@ -142,6 +199,7 @@ ok(s7.authority.amount === 100, 'rep kept');
 ok(s7.meta.premium.pro === true, 'pro kept');
 ok(s7.meta.premium.coins >= 10 + 15, 'season coins granted');
 ok(s7.meta.gear.weapon?.name === gearName, 'gear kept');
+ok(s7.meta.gear.chest?.name === chestName, 'chest kept');
 ok(s7.meta.live > liveBefore, 'live grew');
 
 // —— Premium mult (energy empty so Auto-Sprint doesn’t add SPRINT_DMG) ——
@@ -159,6 +217,33 @@ ok(buyBoost2x(s8), 'buy 2x boost');
 ok(economyMult(s8) >= 2.4, `boost stacks (${economyMult(s8).toFixed(2)})`);
 ok(buyCoinPack(s8, 'coins_100'), 'coin pack');
 ok(s8.meta.premium.coins >= 100, 'pack coins');
+
+// —— Premium gear boxes ——
+ok(Array.isArray(PREMIUM.boxes) && PREMIUM.boxes.length >= 3, 'box catalog');
+const sBox = createState();
+sBox.meta.premium.coins = 500;
+sBox.run.zone = 12;
+ok(buyGearBox(sBox, 'box_signal'), 'open signal crate');
+const after1 = Object.values(sBox.meta.gear).filter((x) => x && typeof x === 'object' && x.id).length
+  + (sBox.meta.gear.bag?.length || 0);
+// count properly via slots
+let pieces = SLOTS.filter((sl) => sBox.meta.gear[sl]).length + (sBox.meta.gear.bag?.length || 0);
+ok(pieces >= 1, `box gave gear (${pieces})`);
+ok(buyGearBox(sBox, 'box_loadout'), 'open loadout box');
+pieces = SLOTS.filter((sl) => sBox.meta.gear[sl]).length + (sBox.meta.gear.bag?.length || 0);
+ok(pieces >= 3, `loadout box stacked (${pieces})`);
+ok(sBox.meta.premium.coins < 500, 'coins spent on boxes');
+
+// equip / unequip
+const sEq = createState();
+sEq.meta.gear = emptyGear();
+const bagItem = rollItem(8, 'boots');
+sEq.meta.gear.bag = [bagItem];
+ok(equipGear(sEq, bagItem.id), 'equip from bag');
+ok(sEq.meta.gear.boots?.id === bagItem.id, 'boots equipped');
+ok(unequipGear(sEq, 'boots'), 'unequip boots');
+ok(!sEq.meta.gear.boots, 'boots empty');
+ok(sEq.meta.gear.bag.some((x) => x.id === bagItem.id), 'back in bag');
 
 // —— Sprint ——
 const s9 = createState();
