@@ -15,8 +15,19 @@ Living plan — not a commitment calendar.
 - [x] Headless domain tests + CI
 - [x] Host mascot + enemy sprites + GLB kit files
 
+## Shipped (docs / system)
+
+- [x] Design-system + docs backbone ([00_START_HERE](./00_START_HERE.md),
+      [brand/](../brand/), [SCREEN-SPECS](./SCREEN-SPECS.md), ADRs) — system-first
+      redesign foundation; runtime unchanged
+
 ## Near term
 
+- [ ] Wire `brand/tokens.css` into `css/game.css` (staged, visual-regression gated)
+- [ ] Apply the 2 staged token changes (Notes → rose, SP → violet) during redesign
+- [ ] Redesign screens against [SCREEN-SPECS](./SCREEN-SPECS.md) (Run HUD, Gear,
+      Build, Ship, Hub, Boosts, Menu) — one screen at a time, each through
+      [QA-CHECKLIST](./QA-CHECKLIST.md)
 - [ ] Schema rename bytes→signal (with save migrate)
 - [ ] Mobile layout polish + PWA manifest
 - [ ] Daily login / offline claim UI polish
