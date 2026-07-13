@@ -4,9 +4,9 @@
  * SINGLE SOURCE OF TRUTH for color, type, space, radius, elevation, motion.
  * Prose rationale + tables: brand/DESIGN-TOKENS.md
  *
- * Status: reference layer. Values reconciled with the shipped css/game.css so
- * migration is additive, not a rewrite. NOT yet imported by index.html — wire it
- * in a later, reversible pass (one @import, then swap literals for var()).
+ * Status: active runtime layer, imported by css/game.css. Canonical tokens are
+ * the destination; the temporary compatibility group preserves exact shipped
+ * pixels while each redesigned screen retires its legacy aliases.
  *
  * Rule: no raw hex in game code once wired. Every color is a token below.
  * ============================================================================ */
@@ -57,8 +57,157 @@
   --rarity-yellow:      #e6b84d;   /* shipped .r-yellow */
   --rarity-unique:      #fc1243;   /* shipped .r-unique */
 
+  /* --- Shipped-value compatibility ---------------------------------------
+   * I-001 migration bridge only. These aliases are exact values from the
+   * pre-token UI, so wiring tokens is additive and screenshot-stable.
+   *
+   * Rules:
+   * - do not use --compat-* in new or redesigned components;
+   * - replace aliases with canonical role tokens in the owning screen issue;
+   * - I-002 alone replaces --compat-notes-* and --compat-sp* with --c-notes /
+   *   --c-sp, preserving the two intentional color changes as a focused diff.
+   */
+  --compat-brand-overloaded: var(--apn-primary);
+  --compat-green:            var(--c-positive);
+  --compat-blue:             var(--c-signal);
+  --compat-gold:             var(--c-rep);
+  --compat-neutral:          var(--rarity-common);
+
+  /* Shipped ink, surfaces, and lines. */
+  --compat-ink:              #0c1014;
+  --compat-ink-deep:         #0a0e13;
+  --compat-ink-blue:         #0c1016;
+  --compat-ink-deepest:      #080b10;
+  --compat-surface-quiet:    #151c24;
+  --compat-surface-raised:   #121820;
+  --compat-surface-deep:     #11161d;
+  --compat-surface-low:      #0e141a;
+  --compat-surface-slate:    #1e2834;
+  --compat-surface-blue:     #141b24;
+  --compat-surface-alt:      #1a222b;
+  --compat-surface-cool:     #101820;
+  --compat-surface-cool-alt: #0e141c;
+  --compat-line:             #1e2733;
+  --compat-line-soft:        #161d26;
+  --compat-line-mid:         #1a222c;
+  --compat-line-strong:      #2a3645;
+  --compat-line-blue:        #243040;
+  --compat-line-slate:       #2a3340;
+  --compat-line-hud:         #1c2530;
+  --compat-line-cool:        #2a3440;
+  --compat-line-cool-alt:    #1a2430;
+
+  /* Shipped text ladder. */
+  --compat-text-white:        #fff;
+  --compat-text-body:         #f0f3f6;
+  --compat-text-high:         #eef2f6;
+  --compat-text-title:        #e8edf2;
+  --compat-text-emphasis:     #d5dce5;
+  --compat-text-strong:       #c5ced8;
+  --compat-text-secondary:    #9aa6b5;
+  --compat-text-subtle:       #8b97a6;
+  --compat-text-muted-high:    #7d8a99;
+  --compat-text-muted-alt:     #7a8796;
+  --compat-text-muted:         #6b7787;
+  --compat-text-faint:         #5c6878;
+  --compat-text-faint-alt:     #5a6675;
+  --compat-text-disabled:      #4a5564;
+  --compat-text-disabled-alt:  #4a5563;
+  --compat-text-danger-muted:  #c07070;
+
+  /* Shipped accent ramps and intentionally overloaded economy roles. */
+  --compat-sp:                var(--apn-primary);
+  --compat-sp-muted:          #a33a52;
+  --compat-sp-a06:            var(--compat-brand-a06);
+  --compat-sp-a40:            var(--compat-brand-a40);
+  --compat-notes-value:       #ff5a78;
+  --compat-notes-soft:        #ff6b8a;
+  --compat-brand-deep:        #8a0a24;
+  --compat-brand-dark:        #6e0820;
+  --compat-brand-mid:         #d40d38;
+  --compat-brand-button-dark: #b80d32;
+  --compat-brand-hot:         #ff2a55;
+  --compat-brand-bright:      #ff2f4b;
+  --compat-signal-bright:     #6cb8ff;
+  --compat-blue-deep:         #3a8fd4;
+  --compat-violet:            #7c5cff;
+  --compat-violet-light:      #c084fc;
+  --compat-gold-mid:          #d4a84b;
+  --compat-gold-value:        #e0b24a;
+  --compat-gold-bright:       #ffd666;
+  --compat-gold-text:         #ffe6a0;
+  --compat-green-deep:        #2db87a;
+  --compat-gold-surface-high: #3a2e14;
+  --compat-gold-surface:      #241c0c;
+  --compat-rose-surface:      #2a1520;
+  --compat-rose-ink:          #140c10;
+  --compat-violet-surface:    #1a1020;
+
+  /* Exact alpha colors used by shipped gradients, borders, and elevation. */
+  --compat-brand-a04: rgba(252,18,67,.04);
+  --compat-brand-a05: rgba(252,18,67,.05);
+  --compat-brand-a06: rgba(252,18,67,.06);
+  --compat-brand-a08: rgba(252,18,67,.08);
+  --compat-brand-a10: rgba(252,18,67,.1);
+  --compat-brand-a12: rgba(252,18,67,.12);
+  --compat-brand-a14: rgba(252,18,67,.14);
+  --compat-brand-a15: rgba(252,18,67,.15);
+  --compat-brand-a18: rgba(252,18,67,.18);
+  --compat-brand-a20: rgba(252,18,67,.2);
+  --compat-brand-a22: rgba(252,18,67,.22);
+  --compat-brand-a25: rgba(252,18,67,.25);
+  --compat-brand-a28: rgba(252,18,67,.28);
+  --compat-brand-a35: rgba(252,18,67,.35);
+  --compat-brand-a38: rgba(252,18,67,.38);
+  --compat-brand-a40: rgba(252,18,67,.4);
+  --compat-brand-a45: rgba(252,18,67,.45);
+  --compat-brand-a50: rgba(252,18,67,.5);
+  --compat-brand-a65: rgba(252,18,67,.65);
+  --compat-brand-a70: rgba(252,18,67,.7);
+  --compat-rep-a10: rgba(230,184,77,.1);
+  --compat-rep-a12: rgba(230,184,77,.12);
+  --compat-rep-a25: rgba(230,184,77,.25);
+  --compat-rep-a28: rgba(230,184,77,.28);
+  --compat-rep-a35: rgba(230,184,77,.35);
+  --compat-rep-a40: rgba(230,184,77,.4);
+  --compat-rep-a45: rgba(230,184,77,.45);
+  --compat-rep-a55: rgba(230,184,77,.55);
+  --compat-positive-a45: rgba(62,207,142,.45);
+  --compat-positive-a65: rgba(62,207,142,.65);
+  --compat-signal-a12: rgba(94,176,255,.12);
+  --compat-violet-a50: rgba(192,132,252,.5);
+  --compat-black-a35: rgba(0,0,0,.35);
+  --compat-black-a40: rgba(0,0,0,.4);
+  --compat-black-a45: rgba(0,0,0,.45);
+  --compat-black-a50: rgba(0,0,0,.5);
+  --compat-black-a55: rgba(0,0,0,.55);
+  --compat-white-a03: rgba(255,255,255,.03);
+  --compat-white-a04: rgba(255,255,255,.04);
+  --compat-white-a06: rgba(255,255,255,.06);
+  --compat-white-a08: rgba(255,255,255,.08);
+  --compat-white-a10: rgba(255,255,255,.1);
+  --compat-overlay-ink-a72: rgba(8,12,16,.72);
+  --compat-overlay-deep-a72: rgba(4,6,9,.72);
+  --compat-sheet-ink-a94: rgba(12,16,20,.94);
+  --compat-sheet-ink-a97: rgba(12,16,20,.97);
+  --compat-panel-ink-a96: rgba(10,14,18,.96);
+  --compat-title-ink-a94: rgba(8,10,12,.94);
+  --compat-panel-blue-a88: rgba(16,22,30,.88);
+  --compat-line-strong-a90: rgba(42,54,69,.9);
+  --compat-highlight-warm-a18: rgba(255,180,120,.18);
+  --compat-highlight-rose-a25: rgba(255,120,140,.25);
+
   /* --- Type scale (pt on mobile canvas; use rem in CSS) ------------------- */
   --font-sans: system-ui, -apple-system, "Segoe UI", Inter, Roboto, sans-serif;
+  --compat-font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --compat-fs-micro:        7px;
+  --compat-fs-icon:         8px;
+  --compat-fs-meta:         9px;
+  --compat-fs-caption:     10px;
+  --compat-fs-compact:     12px;
+  --compat-fs-compact-body: 14px;
+  --compat-fs-legacy-body: 16px;
+  --compat-fs-legacy-metric: 20px;
   --fs-display-l:  28px;  --lh-display-l:  32px;   /* sheet title */
   --fs-display-m:  22px;  --lh-display-m:  26px;   /* target name */
   --fs-body-l:     17px;  --lh-body-l:     22px;   /* primary button, item name */
