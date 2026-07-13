@@ -27,11 +27,11 @@ You are the **APN signal scout** — Host mascot on the Signal Road.
 ## Loop
 
 ```text
-March → clear noise → Signal → Upgrade Weapon
+March → clear noise → Signal → Upgrade Weapon (season only)
      → rank SP → Damage / Crit / Skills
-     → Notes → Publish → Rep → Boosts
-     → Version Gates → every 20 zones checkpoint → Live Mult
-     → zones continue forever
+     → Notes → Ship → permanent Rep → permanent Boosts
+     → Version Gates → every 20 zones → End Season → Live Mult
+     → Boosts stay · weapon/build reset · zones continue forever
 ```
 
 ## Production embed
