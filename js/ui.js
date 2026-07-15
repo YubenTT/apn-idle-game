@@ -448,8 +448,8 @@ function fillShip(s) {
   const notes = Math.floor(s.run.patches);
   const gain = Math.floor(notes * economyMult(s));
   const liveNext = liveGain(s.authority.shippedThisSeason);
-  const seasonReady = s.ui.seasonDone || s.run.zone >= SEASON.zones;
-  const nextZ = SEASON.zones * (Math.floor(s.run.zone / SEASON.zones) + 1);
+  const seasonReady = s.ui.seasonDone;
+  const nextZ = SEASON.zones * (Math.floor(s.route.zone / SEASON.zones) + 1);
   const eco = economyMult(s);
   el.className = 'ship-stats compact';
   el.innerHTML = [
@@ -996,7 +996,7 @@ export function renderHUD(s) {
     b.classList.toggle('has-badge', s.run.hero.sp > 0);
     b.dataset.badge = s.run.hero.sp > 0 ? String(s.run.hero.sp) : '';
   });
-  set($('v-zone'), String(s.run.zone + 1));
+  set($('v-zone'), String(s.route.zone + 1));
   // Show full economy mult when boost/pro active, else base Live
   const eco = economyMult(s);
   set($('v-live'), eco.toFixed(2));
@@ -1021,9 +1021,9 @@ export function renderHUD(s) {
   if (costEl) costEl.textContent = formatNum(cost);
   if (scEl) scEl.textContent = String(h.scanner);
   if (cta) cta.classList.toggle('is-locked', s.run.bytes < cost);
-  const need = killsNeeded(s.run.zone);
+  const need = killsNeeded(s.route.zone);
   const needXp = xpToNext(h.level);
-  set($('v-kills'), `${s.run.killsInZone}/${need}`);
+  set($('v-kills'), `${s.route.killsInZone}/${need}`);
   set($('v-xp-lab'), `${formatNum(h.xp | 0)}/${formatNum(needXp)}`);
 
   // Left bag FAB badge: upgrades (green) or bag count
@@ -1063,7 +1063,7 @@ export function renderHUD(s) {
   }
 
   bar($('bar-xp'), (h.xp / needXp) * 100);
-  bar($('bar-zone'), (s.run.killsInZone / Math.max(1, need)) * 100);
+  bar($('bar-zone'), (s.route.killsInZone / Math.max(1, need)) * 100);
   bar($('bar-energy'), (h.energy / st.eMax) * 100);
   bar($('bar-mana'), (h.mana / st.mMax) * 100);
 

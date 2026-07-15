@@ -4,7 +4,7 @@
 
 1. **Playable as static files** — no build step required for players.
 2. **Testable domain** — Node can import `game.js` / `formulas.js` without DOM.
-3. **Safe to grow** — skills, meta, biomes, embed, optional bundler later.
+3. **Safe to grow** — skills, meta, catalog-driven Game Packs, embed, optional bundler later.
 4. **Clear ownership** — one place for balance, one place for copy, one place for draw.
 
 ## Runtime diagram
@@ -35,6 +35,11 @@ flowchart TB
     FN[scannerCost · enemyHp · xpToNext]
   end
 
+  subgraph Route["route.js"]
+    RS[global Route state]
+    RF[display · season-boundary helpers]
+  end
+
   subgraph Data["content.js"]
     SK[SKILLS · META]
     TK[TICKER · TIPS]
@@ -44,6 +49,7 @@ flowchart TB
   B --> AC
   FT --> Domain
   Domain --> Pure
+  Domain --> Route
   Domain --> Data
   DR --> ST
   HUD --> ST
@@ -61,8 +67,15 @@ flowchart TB
 ### `game.js`
 
 - `createState()`, `step(s, dt)`, economy actions (`buyScanner`, `allocSkill`, …).
-- Owns `s.world` (enemies, particles, sprint flag) and `s.run` / `s.meta`.
+- Owns `s.world` (enemies, particles, sprint flag), `s.run`, `s.meta`, and Route
+  state transitions. Combat reads world progress from `s.route`.
 - May import comedy / content; must still run under Node with stubbed optional SFX.
+
+### `route.js`
+
+- Pure global Route state construction, sanitization, display, and boundary helpers.
+- Stable string IDs and route history survive End Season; no DOM or storage access.
+- Catalog scheduling joins this module in I-005; renderer never chooses route content.
 
 ### `content.js`
 
@@ -74,7 +87,7 @@ flowchart TB
 ### `render.js`
 
 - Stateless draw from `s` (except image cache).
-- Procedural biomes + sprite blit.
+- Procedural biomes remain a temporary fallback until I-007's catalog renderer.
 - Never grant currency.
 
 ### `ui.js`
@@ -85,8 +98,10 @@ flowchart TB
 
 ### `save.js`
 
-- Schema version `v: 1`.
-- Persist run + meta + settings; strip ephemeral anim fields.
+- Schema version `v: 2`; writes `apn_idle_save_v2` only.
+- Loads v2 first, then v1; v1 `run.zone` / `run.killsInZone` migrate to `s.route`.
+- The v1 key remains rollback evidence until explicit New Game clears both keys.
+- Persist Route + run + meta + settings; strip ephemeral animation fields.
 
 ### `sfx.js`
 
@@ -98,8 +113,8 @@ flowchart TB
 s
 ├── meta        live, season, kills, ships, bosses
 ├── authority   amount (Rep), shippedThisSeason, upgrades{}
+├── route       zone, killsInZone, currentPackId, history, deck, seed, catalogVersion
 ├── run
-│   ├── zone, killsInZone
 │   ├── bytes (Signal), patches (Notes)
 │   └── hero { level, xp, sp, scan, verify, amplify, scanner, skills, mask, energy, mana, … }
 ├── world       enemies, alerts, floaters, particles, confetti, sprinting, scroll
@@ -128,8 +143,8 @@ Keeps combat deterministic enough for headless tests and fair offline simulation
 |------|--------|
 | New skill | `content.SKILLS` + `game.combatStats` / cast + optional chip |
 | New boost | `content.META` + `metaPer` usage |
-| New enemy type | `ENEMY_FLAVOR` + sprite + `typeHpMult` / rewards |
-| New biome | `render.js` BIOMES array |
+| New Game Pack | manifest + generated catalog + static atlas; schedule at End Season |
+| New fallback enemy type | `ENEMY_FLAVOR` + sprite + `typeHpMult` / rewards |
 | New currency | formulas + game grant + HUD chip + save migrate |
 | 3D hero | GLB assets already in `assets/`; replace `drawHero` path |
 | Bundler | Optional later; keep import map simple |

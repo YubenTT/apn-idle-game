@@ -101,7 +101,7 @@ export function ensureHub(s) {
       zones: 0,
       ships: 0,
       orbs: 0,
-      zoneBase: s.run?.zone || 0,
+      zoneBase: s.route?.zone || 0,
       claimed: {},
     };
   }
@@ -109,7 +109,7 @@ export function ensureHub(s) {
     h.weekKey = wk;
     h.weekly = { bosses: 0, notes: 0, gear: 0, claimed: {} };
   }
-  if (h.daily.zoneBase == null) h.daily.zoneBase = s.run?.zone || 0;
+  if (h.daily.zoneBase == null) h.daily.zoneBase = s.route?.zone || 0;
   return h;
 }
 
@@ -144,7 +144,7 @@ export function hubOnKill(s, e) {
 
 export function hubOnZone(s) {
   const h = ensureHub(s);
-  const advanced = Math.max(0, s.run.zone - (h.daily.zoneBase || 0));
+  const advanced = Math.max(0, s.route.zone - (h.daily.zoneBase || 0));
   h.daily.zones = advanced;
   h.seasonXp = (h.seasonXp || 0) + 12;
 }

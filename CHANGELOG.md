@@ -39,6 +39,11 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Changed
 
+- Save schema v2 moves world progress from season-scoped `run` into persistent
+  `route` state. End Season now keeps Route Zone and pack history.
+- Loading checks v2 first and migrates v1 Zone/kills without deleting the legacy
+  key; explicit New Game clears both keys.
+
 - All font sizes, touch minimums, and safe-area values use exact design tokens.
   Screen-specific legacy geometry remains unchanged until its owning redesign issue.
 - Notes now use canonical rose `#ff6a8f`; SP uses canonical violet `#b07cff`

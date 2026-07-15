@@ -29,7 +29,7 @@ and you get stronger the longer the feed stays live.
 
 | Track | Unit | Cap |
 |-------|------|-----|
-| Zone | kills to clear | **Endless** |
+| Route Zone | kills to clear | **Endless; survives End Season** |
 | Rank | XP → SP | Soft infinite |
 | Weapon | Signal cost curve | Soft infinite |
 | Skills | SP + attr reqs | Per-skill max |
@@ -38,8 +38,9 @@ and you get stronger the longer the feed stays live.
 
 ### Softlock policy
 
-**Never stop spawning or advancing zones.**  
-Checkpoints set `seasonDone` and unlock **End Season**; combat continues at Z21+.
+**Never reset or hide world progress.** Checkpoints set `seasonDone` and unlock
+**End Season**. End Season resets run power, not `route.zone`; combat resumes on
+the same global Route after the reset.
 
 ### Satisfaction (juice)
 
