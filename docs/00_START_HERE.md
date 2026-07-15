@@ -32,6 +32,7 @@ must be updated to match, not argued with.
 | Why the game exists / fantasy | [CONCEPT.md](./CONCEPT.md), [GAME-DESIGN.md](./GAME-DESIGN.md) | Design |
 | Design pillars & non-goals (the decision filter) | [VISION.md](./VISION.md) | Design |
 | Core loop & systems | [GAME-DESIGN.md](./GAME-DESIGN.md) | Design |
+| Long-form Game Pack route / Corruption proposal | [GAME-PACK-ROUTE.md](./GAME-PACK-ROUTE.md) | Design + Art + Eng |
 | Balance curves & costs | [BALANCE.md](./BALANCE.md) + `js/formulas.js` (`C`) | Design + Eng |
 | Code architecture & module contracts | [ARCHITECTURE.md](./ARCHITECTURE.md) | Eng |
 | Visual tokens (color, type, spacing, motion) | [../brand/DESIGN-TOKENS.md](../brand/DESIGN-TOKENS.md) + [../brand/tokens.css](../brand/tokens.css) | Design |
