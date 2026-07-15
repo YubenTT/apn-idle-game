@@ -9,6 +9,9 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Added
 
+- Added ADR-0007 to lock the five-destination navigation with Gear as a separate
+  stage FAB; every launcher now exposes its sheet expansion state to assistive
+  technology.
 - Added coordinated hit, crit, loot, rank-up, sheet-open, and afford feedback
   cues with throttled mobile haptics; mute, OS reduced-motion, and the in-app
   reduced-motion setting gate the complete feedback layer.

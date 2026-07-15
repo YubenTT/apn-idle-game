@@ -404,8 +404,11 @@ function openSheet(s, panel) {
   document.getElementById('app')?.classList.add('sheet-open');
   document.querySelectorAll('.hud-nav button').forEach((b) => {
     b.classList.toggle('active', b.dataset.panel === panel);
+    b.setAttribute('aria-expanded', String(b.dataset.panel === panel));
   });
-  document.getElementById('btn-bag')?.classList.toggle('active', panel === 'gear');
+  const gearButton = document.getElementById('btn-bag');
+  gearButton?.classList.toggle('active', panel === 'gear');
+  gearButton?.setAttribute('aria-expanded', String(panel === 'gear'));
   const title = document.getElementById('sheet-title');
   if (title) title.textContent = PANEL_TITLES[panel] || panel;
   ['skills', 'meta', 'ship', 'gear', 'hub', 'settings'].forEach((p) => {
@@ -441,8 +444,13 @@ function closeSheet(s) {
     delete root.dataset.panel;
   }
   document.getElementById('app')?.classList.remove('sheet-open');
-  document.querySelectorAll('.hud-nav button').forEach((b) => b.classList.remove('active'));
-  document.getElementById('btn-bag')?.classList.remove('active');
+  document.querySelectorAll('.hud-nav button').forEach((b) => {
+    b.classList.remove('active');
+    b.setAttribute('aria-expanded', 'false');
+  });
+  const gearButton = document.getElementById('btn-bag');
+  gearButton?.classList.remove('active');
+  gearButton?.setAttribute('aria-expanded', 'false');
   const resetConfirm = document.getElementById('reset-confirm');
   if (resetConfirm) resetConfirm.hidden = true;
 }

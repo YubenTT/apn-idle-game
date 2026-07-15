@@ -64,7 +64,7 @@
         </div>
         <canvas id="game"></canvas>
         <!-- In-stage bag FAB (Gear) — icon-only, left rail -->
-        <button type="button" class="bag-fab" id="btn-bag" data-panel="gear" title="Gear" aria-label="Open Gear">
+        <button type="button" class="bag-fab" id="btn-bag" data-panel="gear" title="Gear" aria-label="Open Gear" aria-controls="sheet-root" aria-expanded="false">
           <svg class="bag-fab-ico" viewBox="0 0 32 32" aria-hidden="true">
             <path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"
               d="M10 12V9a6 6 0 0112 0v3M6 12h20v16H6zM6 17h20M14 21h4" />
@@ -117,7 +117,7 @@
       </section>
 
       <nav class="hud-nav" aria-label="Main">
-        <button type="button" data-panel="skills" class="nav-btn">
+        <button type="button" data-panel="skills" class="nav-btn" aria-controls="sheet-root" aria-expanded="false">
           <svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"
             ><path
               fill="currentColor"
@@ -126,13 +126,13 @@
           >
           <span>Build</span>
         </button>
-        <button type="button" data-panel="ship" class="nav-btn">
+        <button type="button" data-panel="ship" class="nav-btn" aria-controls="sheet-root" aria-expanded="false">
           <svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"
             ><path fill="currentColor" d="M4 18h16v2H4v-2zm2-4l4-8 2 4 4-6 4 10H6z"
           /></svg>
           <span>Ship</span>
         </button>
-        <button type="button" data-panel="hub" class="nav-btn">
+        <button type="button" data-panel="hub" class="nav-btn" aria-controls="sheet-root" aria-expanded="false">
           <svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"
             ><path
               fill="currentColor"
@@ -141,7 +141,7 @@
           >
           <span>Hub</span>
         </button>
-        <button type="button" data-panel="meta" class="nav-btn">
+        <button type="button" data-panel="meta" class="nav-btn" aria-controls="sheet-root" aria-expanded="false">
           <svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"
             ><path
               fill="currentColor"
@@ -150,7 +150,7 @@
           >
           <span>Boosts</span>
         </button>
-        <button type="button" data-panel="settings" class="nav-btn">
+        <button type="button" data-panel="settings" class="nav-btn" aria-controls="sheet-root" aria-expanded="false">
           <svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"
             ><path
               fill="currentColor"

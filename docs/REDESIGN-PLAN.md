@@ -398,9 +398,9 @@ acceptance boxes, fresh tests, browser proof, and one focused commit per issue.
   matrix; screenshot diffs refreshed + approved. Files: `qa/*`.
 
 ### I-044 · Keep-5 navigation refinement + implement — 🟡 S
-- **Acceptance:** record locked Option A in an ADR; keep Build · Ship · Hub ·
+- **Acceptance:** [x] record locked Option A in an ADR; keep Build · Ship · Hub ·
   Boosts · Menu with the Gear FAB; use a minimal active fill; keep one
-  primary-crimson element per screen. Files: `docs/decisions/ADR-0004-*.md`,
+  primary-crimson element per screen. Files: `docs/decisions/ADR-0007-*.md`,
   `index.html`, `css/game.css`, `js/ui.js`.
 
 ---

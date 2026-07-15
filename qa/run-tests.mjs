@@ -137,6 +137,14 @@ ok(hubObjectiveState(hubStateFixture, DAILY_DEFS[0], 'daily') === 'claimable', '
 hubStateFixture.daily.claimed[DAILY_DEFS[0].id] = true;
 ok(hubObjectiveState(hubStateFixture, DAILY_DEFS[0], 'daily') === 'claimed', 'Hub objective becomes claimed');
 const shellMarkup = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+const navAdr = readFileSync(new URL('../docs/decisions/ADR-0007-keep-five-navigation.md', import.meta.url), 'utf8');
+ok((shellMarkup.match(/class="nav-btn"/g) || []).length === 5, 'Navigation keeps exactly five tabs');
+for (const label of ['Build', 'Ship', 'Hub', 'Boosts', 'Menu']) {
+  ok(shellMarkup.includes(`<span>${label}</span>`), `Navigation keeps ${label}`);
+}
+ok(shellMarkup.includes('id="btn-bag"') && shellMarkup.includes('data-panel="gear"'), 'Gear remains a separate FAB');
+ok((shellMarkup.match(/aria-controls="sheet-root"/g) || []).length === 6, 'All six sheet launchers expose their controlled surface');
+ok(navAdr.includes('Option A') && navAdr.includes('minimal active fill'), 'Keep-five Option A is locked in ADR-0007');
 for (const section of ['Accessibility', 'Audio', 'Account', 'Purchases', 'Reset']) {
   ok(shellMarkup.includes(`menu-section-title">${section}`), `Menu has ${section} section`);
 }

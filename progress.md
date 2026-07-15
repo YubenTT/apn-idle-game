@@ -26,9 +26,11 @@ Original prompt: Complete the APN Idle redesign autonomously, including QA, revi
 - I-042 copy is complete: all five player-facing sources pass the banned-copy
   contract, Focus replaces Mana with save migration, and glossary target names
   plus object/effect/cost language are aligned.
+- I-044 navigation is locked by ADR-0007: five stable destinations, Gear FAB,
+  minimal info-color active fill, 44pt targets, and explicit expansion state.
 - Browser QA uses Chrome Extension or isolated direct Chrome with `mute=1`; no
   standalone Playwright process is used.
 
 ## Open chain
 
-- I-044 nav → I-043 device-matrix QA.
+- I-043 device-matrix QA.
