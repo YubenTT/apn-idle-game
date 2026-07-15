@@ -50,6 +50,9 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Changed
 
+- Framed the Patchline as a real stage card, replaced tiny enemy meters with
+  target-owned HP banners, anchored damage to targets, and added reduced-motion-
+  aware Signal/Notes flights to their HUD chips.
 - Folded Zone, Rank, and Live into one compact in-stage header with independent
   8px progress tracks for Route and Rank growth.
 - Replaced the scrolling website-style ticker with a single-line live feed rail

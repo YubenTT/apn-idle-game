@@ -4313,6 +4313,33 @@ button[hidden] {
 .stage-combo { color: var(--c-notes); }
 .stage-pro { color: var(--c-rep); }
 
+/* I-013 · framed Patchline gameplay stage */
+.hud-stage {
+  flex: 1 1 auto;
+  min-height: calc(var(--size-inventory-slot) * 3);
+  margin: var(--sp-2) var(--sp-4) 0;
+  border: var(--border-1);
+  border-radius: var(--r-stage);
+  background: var(--surface-900);
+  box-shadow: var(--elev-card);
+  overflow: hidden;
+}
+
+.hud-stage #game {
+  border-radius: inherit;
+}
+
+.hud-stage #toast {
+  top: calc(var(--touch-min) + var(--sp-4));
+}
+
+@media (orientation: landscape) {
+  .hud-stage {
+    min-height: calc(var(--size-inventory-slot) * 2);
+    margin-top: var(--sp-1);
+  }
+}
+
 
 
 @media (prefers-reduced-motion: reduce) {

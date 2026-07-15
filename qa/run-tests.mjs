@@ -184,9 +184,17 @@ ok(!saveMemory.has(SAVE_KEY_V1) && !saveMemory.has(SAVE_KEY_V2), 'New Game clear
 // —— Basic combat ——
 const s = createState();
 s.run.hero.scanner = 5;
-for (let i = 0; i < 60 * 8; i++) step(s, C.FIXED_DT);
+let sawAnchoredDamage = false;
+let sawSignalFlight = false;
+for (let i = 0; i < 60 * 8; i++) {
+  step(s, C.FIXED_DT);
+  if (s.world.floaters.some((floater) => floater.anchorId)) sawAnchoredDamage = true;
+  if (s.world.lootFlights?.some((flight) => flight.target === 'signal')) sawSignalFlight = true;
+}
 ok(s.meta.kills > 0, `kills occur (${s.meta.kills})`);
 ok(s.run.bytes > 0, `bytes drop (${s.run.bytes | 0})`);
+ok(sawAnchoredDamage, 'damage numbers anchor to target');
+ok(sawSignalFlight, 'Signal reward flies to resource strip');
 
 // —— No masks in catalog ——
 ok(!SKILLS.verified_mask, 'no crit mask skill');
