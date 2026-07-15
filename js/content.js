@@ -118,7 +118,7 @@ export const SKILLS = {
     max: 20,
     req: { scan: 1 },
     type: 'active',
-    desc: 'Heavy hit on the nearest enemy. Costs mana.',
+    desc: 'Heavy hit on the nearest target. Costs 10 Focus.',
   },
   scroll_speed: {
     id: 'scroll_speed',
@@ -316,28 +316,28 @@ export const PREMIUM = {
 };
 
 export const ENEMY_FLAVOR = {
-  stale: { label: 'Stale Post', color: '#697384', kind: 'normal' },
+  stale: { label: 'Broken Link', color: '#697384', kind: 'normal' },
   rumor: { label: 'Fake Leak', color: '#A7AFBC', kind: 'normal' },
   lag: { label: 'Broken Link', color: '#3B82F6', kind: 'elite' },
-  spoiler: { label: 'Spoiler', color: '#d180ff', kind: 'elite' },
+  spoiler: { label: 'Fake Leak', color: '#d180ff', kind: 'elite' },
   patch: { label: 'Patch Note', color: '#FC1243', kind: 'patch' },
-  event: { label: 'Event Spam', color: '#10B981', kind: 'elite' },
+  event: { label: 'Event Surge', color: '#10B981', kind: 'elite' },
   boss: { label: 'Version Gate', color: '#FF2F4B', kind: 'boss' },
 };
 
 export const TIPS = {
   start:
-    'Clear noise → Signal upgrades + Build SP. Red Notes → Ship for Rep. Bosses drop permanent Gear.',
+    'Clear noise → Signal funds Weapon upgrades. Build spends SP. Ship Notes for permanent Rep.',
   kill: 'Upgrade Weapon each season. Put SP into Damage / Crit / Utility, then unlock skills.',
   level: 'Rank up! Open Build — attributes first, then skills in that tree.',
   patch: 'Notes banked. Ship → permanent Rep → Boosts.',
-  alert: 'Hover orbs for energy and Signal. Sprint burns energy.',
+  alert: 'Collect orbs for Energy and Signal. Sprint spends Energy.',
   boss: 'Version Gate drops gear and coins. Kill before the timer.',
-  ship: 'Ship Notes for Rep. Stuck? Boosts + Gear + Signal upgrade.',
+  ship: 'Ship Notes for Rep. Stuck? Improve Boosts, Gear, or Weapon.',
   combo: 'Feed streak! Bonus Signal while it holds.',
   season:
-    'Checkpoint! Ship Notes, End Season: +Live Mult · Gear, Boosts & Pro stay · Signal Lv resets.',
-  gear: 'Loadout: Weapon · Chest · Legs · Visor. Tap stats · Hold sell junk for Signal. Boxes in Menu.',
+    'Checkpoint! Ship Notes, End Season: +Live Mult · Gear, Boosts & Pro stay · Weapon Lv resets.',
+  gear: 'Loadout: Weapon · Chest · Legs · Visor. Tap an item to compare, equip, mark, or scrap.',
   premium: 'APN Pro optional. Coins → Boosts & Gear Boxes. Free drops still fill the loadout.',
 };
 

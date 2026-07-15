@@ -100,7 +100,12 @@ export function apply(s, d) {
   if (d.run) {
     s.run.bytes = d.run.bytes || 0;
     s.run.patches = d.run.patches || 0;
-    if (d.run.hero) Object.assign(s.run.hero, d.run.hero);
+    if (d.run.hero) {
+      const hero = { ...d.run.hero };
+      if (!Number.isFinite(hero.focus) && Number.isFinite(hero.mana)) hero.focus = hero.mana;
+      delete hero.mana;
+      Object.assign(s.run.hero, hero);
+    }
   }
   if (d.ui) {
     s.ui.tips = d.ui.tips || {};

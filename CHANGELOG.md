@@ -56,6 +56,9 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Changed
 
+- Completed the player-copy contract across all screens: active skills now spend
+  Focus, legacy Mana saves migrate safely, target names match the glossary, and
+  automated QA rejects fantasy, desktop-only, debug, and currency-object copy.
 - Locked every Clean Era background to the shared APN editorial cityline grammar:
   modular billboards, signal rails, patchline routing, and archive lights now sit
   inside each pack's own environment silhouette and remain below 150 KB.

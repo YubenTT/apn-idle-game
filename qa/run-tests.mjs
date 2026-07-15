@@ -101,6 +101,11 @@ process.stdout.write(
     encoding: 'utf8',
   })
 );
+process.stdout.write(
+  execFileSync(process.execPath, [fileURLToPath(new URL('./check-copy.mjs', import.meta.url))], {
+    encoding: 'utf8',
+  })
+);
 
 let fails = 0;
 const ok = (c, m) => {
@@ -198,6 +203,11 @@ ok(malformedRoute.route.deck.join(',') === 'league', 'route deck sanitizes and d
 ok(JSON.stringify(malformedRoute.route.corruptionByPack) === '{"league":2}', 'corruption map sanitizes');
 ok(JSON.stringify(malformedRoute.route.lastSeenByPack) === '{"valorant":20}', 'last-seen map sanitizes');
 
+const legacyFocusState = createState();
+applySave(legacyFocusState, { v: 2, ts: Date.now(), run: { hero: { mana: 33 } } });
+ok(legacyFocusState.run.hero.focus === 33, 'legacy Mana meter migrates to Focus');
+ok(!('mana' in legacyFocusState.run.hero), 'legacy Mana field is retired after migration');
+
 const saveMemory = new Map();
 globalThis.localStorage = {
   getItem: (key) => saveMemory.get(key) ?? null,
@@ -249,7 +259,7 @@ const s3 = createState();
 s3.run.hero.sp = 40;
 ok(allocAttr(s3, 'scan'), 'alloc damage');
 ok(allocSkill(s3, 'hotfix'), 'learn burst');
-s3.run.hero.mana = 60;
+s3.run.hero.focus = 60;
 s3.run.hero.scanner = 8;
 for (let i = 0; i < 30; i++) step(s3, C.FIXED_DT);
 ok(castHotfix(s3) || s3.world.enemies.length === 0, 'hotfix cast');
@@ -298,7 +308,7 @@ allocSkill(s5, 'live_tracker');
 s5.run.hero.trackerOn = true;
 for (let i = 0; i < 60 * 60 * 10; i++) {
   s5.run.hero.energy = 100;
-  s5.run.hero.mana = 60;
+  s5.run.hero.focus = 60;
   step(s5, C.FIXED_DT);
   if (s5.ui.seasonDone) break;
 }

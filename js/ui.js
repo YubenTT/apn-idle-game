@@ -1095,7 +1095,7 @@ export function renderHUD(s) {
   bar($('bar-xp'), (h.xp / needXp) * 100);
   bar($('bar-zone'), (s.route.killsInZone / Math.max(1, need)) * 100);
   bar($('bar-energy'), (h.energy / st.eMax) * 100);
-  bar($('bar-mana'), (h.mana / st.mMax) * 100);
+  bar($('bar-focus'), (h.focus / st.fMax) * 100);
 
   // Sprint feedback on energy bar + button
   const sprinting = isSprinting(s);

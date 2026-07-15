@@ -107,7 +107,7 @@ export function createState() {
         verify: 0,
         amplify: 0,
         energy: C.ENERGY_MAX,
-        mana: C.MANA_MAX,
+        focus: C.FOCUS_MAX,
         scanner: 0,
         skills: {},
         trackerOn: false,
@@ -287,8 +287,8 @@ export function combatStats(s) {
   let move = C.MOVE_SPEED * (1 + metaPer(s, 'feed_speed')) * (1 + (g.move_pct || 0) / 100);
   let eMax = C.ENERGY_MAX + 4 * h.verify + (g.energy || 0);
   let eRegen = C.ENERGY_REGEN + (g.e_regen || 0);
-  let mMax = C.MANA_MAX + 8 * h.amplify;
-  let mRegen = C.MANA_REGEN + 0.08 * h.amplify;
+  let fMax = C.FOCUS_MAX + 8 * h.amplify;
+  let fRegen = C.FOCUS_REGEN + 0.08 * h.amplify;
   let skillMult = 1;
   let sprintDrain = C.SPRINT_DRAIN;
   let timeScale = 1;
@@ -335,8 +335,8 @@ export function combatStats(s) {
     move,
     eMax,
     eRegen,
-    mMax,
-    mRegen,
+    fMax,
+    fRegen,
     skillMult,
     sprintDrain,
     sprintOn,
@@ -733,7 +733,7 @@ export function step(s, dt) {
   const sprintOn = isSprinting(s);
   const eRegenNow = sprintOn ? st.eRegen * 0.25 : st.eRegen;
   h.energy = clamp(h.energy + eRegenNow * dt, 0, st.eMax);
-  h.mana = clamp(h.mana + st.mRegen * dt, 0, st.mMax);
+  h.focus = clamp(h.focus + st.fRegen * dt, 0, st.fMax);
   h.attackAnim = Math.max(0, h.attackAnim - dt * 4);
   h.hitRecoil = Math.max(0, h.hitRecoil - dt * 5);
 
@@ -949,11 +949,11 @@ export function castHotfix(s) {
   if (lv < 1) return false;
   const st = combatStats(s);
   const cost = 10;
-  if (s.run.hero.mana < cost) {
-    toast(s, 'Not enough mana');
+  if (s.run.hero.focus < cost) {
+    toast(s, `Burst Hit needs ${cost} Focus`);
     return false;
   }
-  s.run.hero.mana -= cost;
+  s.run.hero.focus -= cost;
   const target = s.world.enemies.find((e) => e.hp > 0);
   if (!target) {
     toast(s, 'Hotfix ready — no target');
@@ -968,11 +968,11 @@ export function castHotfix(s) {
 export function castSummary(s) {
   const lv = skillLv(s, 'summary_burst');
   if (lv < 1) return false;
-  if (s.run.hero.mana < 12) {
-    toast(s, 'Not enough mana');
+  if (s.run.hero.focus < 12) {
+    toast(s, 'Summary Burst needs 12 Focus');
     return false;
   }
-  s.run.hero.mana -= 12;
+  s.run.hero.focus -= 12;
   s.run.hero.summaryT = 3.2 + 0.25 * lv;
   toast(s, 'Summary Burst!');
   particles(s, s.world.heroX, 200, '#6cb8ff', 14);
@@ -1032,14 +1032,14 @@ export function buyScanner(s) {
   toast(s, pick(SCANNER_LINES) + ` (Lv ${s.run.hero.scanner})`);
   particles(s, s.world.heroX, 200, '#FC1243', 16);
   confetti(s, s.world.heroX, 190, ['#FC1243', '#ff6b8a', '#fff'], 16);
-  floater(s, s.world.heroX, 150, `SIGNAL Lv ${s.run.hero.scanner}`, '#FC1243', true);
+  floater(s, s.world.heroX, 150, `WEAPON Lv ${s.run.hero.scanner}`, '#FC1243', true);
   s.ui.chipPulse = s.ui.chipPulse || {};
   s.ui.chipPulse.bytes = 0.3;
   if (s.settings.sfx !== false) sfx('upgrade');
   return true;
 }
 
-/** Convert banked Notes → permanent Reputation */
+/** Convert banked Notes → permanent Rep */
 export function shipPatches(s) {
   const p = Math.floor(s.run.patches);
   if (p < 1) {
@@ -1076,7 +1076,7 @@ export function buyMeta(s, id) {
   const lv = metaLv(s, id);
   const cost = metaCost(d.base, d.growth, lv);
   if (s.authority.amount < cost) {
-    toast(s, 'Not enough Reputation');
+    toast(s, 'Not enough Rep');
     return false;
   }
   s.authority.amount -= cost;
@@ -1120,7 +1120,7 @@ export function leaveSeason(s) {
   h.skills = {};
   h.scanner = 0; // Signal level is season-only
   h.energy = C.ENERGY_MAX;
-  h.mana = C.MANA_MAX;
+  h.focus = C.FOCUS_MAX;
   h.trackerOn = false;
   h.deepOn = false;
   h.trackerStacks = 0;
@@ -1132,7 +1132,7 @@ export function leaveSeason(s) {
   s.meta.premium.coins += PREMIUM.coinsPerSeason;
   toast(
     s,
-    `New season! Live ×${s.meta.live.toFixed(2)} (+${gain.toFixed(3)}). Gear · Boosts · Pro kept · Signal Lv reset · +${PREMIUM.coinsPerSeason} coins`
+    `New season! Live ×${s.meta.live.toFixed(2)} (+${gain.toFixed(3)}). Gear · Boosts · Pro kept · Weapon Lv reset · +${PREMIUM.coinsPerSeason} coins`
   );
   s.ui.panelDirty = true;
   confetti(s, s.world.heroX, 180, ['#e6b84d', '#FC1243', '#fff', '#3ecf8e'], 36);
