@@ -47,6 +47,27 @@ assert(oversized.errors.some((error) => error.includes('hot packs: 3 exceeds 2')
 const manifests = validateAllManifests();
 assert(manifests.files.length === 20 && manifests.errors.length === 0, '20 pack manifests valid');
 
+const productionNames = ['background.webp', 'targets.webp', 'targets.json', 'props.webp', 'corruption-mask.webp', 'source-board.md'];
+const productionPacks = [];
+for (const manifestFile of manifests.files) {
+  const directory = path.dirname(manifestFile);
+  const present = productionNames.filter((name) => fs.existsSync(path.join(directory, name)));
+  if (!present.length) continue;
+  const packId = path.basename(directory);
+  assert(present.length === productionNames.length, `${packId} production set complete`);
+  const targetData = readJson(path.join(directory, 'targets.json'));
+  const targetErrors = validateAtlasData(targetData, `${packId}/targets`);
+  assert(targetErrors.length === 0, `${packId} target atlas valid`);
+  const frames = ['common-a', 'common-b', 'common-c', 'elite', 'event', 'boss', 'boss-break'];
+  assert(frames.every((name) => targetData.frames?.[name]), `${packId} has five targets, boss, and break state`);
+  assert(frames.every((name) => targetData.frames[name].pivot?.x === 0.5 && targetData.frames[name].pivot?.y === 1), `${packId} foot-center pivots locked`);
+  assert(frames.every((name) => targetData.frames[name].metrics?.direction === 'right-to-left'), `${packId} target direction locked`);
+  const sourceBoard = fs.readFileSync(path.join(directory, 'source-board.md'), 'utf8');
+  assert(sourceBoard.includes('textless APN Patchline') && sourceBoard.includes('no screenshot pixels or official logos ship'), `${packId} source evidence recorded`);
+  productionPacks.push(packId);
+}
+assert([0, 5, 10, 15, 20].includes(productionPacks.length), `production lands in five-pack groups (${productionPacks.length})`);
+
 const first = generateManifest();
 const firstBytes = fs.readFileSync(path.join(root, 'assets/manifest.json'));
 const firstHash = crypto.createHash('sha256').update(firstBytes).digest('hex');

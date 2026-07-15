@@ -143,11 +143,66 @@
       "firstPlayable": null
     },
     {
+      "id": "game-packs/fc-26/background.webp",
+      "path": "assets/game-packs/fc-26/background.webp",
+      "bytes": 6004,
+      "sha256": "c85389018bb17ec54a10785897ec07bc764f68a35512b74911c5bb61f92535dd",
+      "kind": "background",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/fc-26/corruption-mask.webp",
+      "path": "assets/game-packs/fc-26/corruption-mask.webp",
+      "bytes": 2570,
+      "sha256": "8bd92d608eb671202005445c6b8c15073e97bf3c15a65f7c72426511efc92279",
+      "kind": "propsAndMasks",
+      "firstPlayable": false
+    },
+    {
       "id": "game-packs/fc-26/pack.json",
       "path": "assets/game-packs/fc-26/pack.json",
       "bytes": 1704,
       "sha256": "b1fd70b75b0ca602eeb13a6a186273aeabc4263eb95841d134920360d1a73c9b",
       "firstPlayable": null
+    },
+    {
+      "id": "game-packs/fc-26/props.webp",
+      "path": "assets/game-packs/fc-26/props.webp",
+      "bytes": 5012,
+      "sha256": "b0b889cbd78099ef0dea0f9ce4ae34a749d4188eba7bd7fa170af0dc2a40f0b3",
+      "kind": "propsAndMasks",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/fc-26/targets.json",
+      "path": "assets/game-packs/fc-26/targets.json",
+      "bytes": 3190,
+      "sha256": "d5098360f8a9c640db2e3533fb1750a71b8394fe9bce32a8bd58ebee897a1d2e",
+      "firstPlayable": null
+    },
+    {
+      "id": "game-packs/fc-26/targets.webp",
+      "path": "assets/game-packs/fc-26/targets.webp",
+      "bytes": 24000,
+      "sha256": "85e0bbe8abc9b68a93d0795795cabbde5c3d0fc49c641035060d496c8f9d10c0",
+      "kind": "targets",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/fortnite/background.webp",
+      "path": "assets/game-packs/fortnite/background.webp",
+      "bytes": 6584,
+      "sha256": "f55f3f60fe61444a5e0c51b27ff7d412828fac253e15e1169f8c8e4bbcd9feeb",
+      "kind": "background",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/fortnite/corruption-mask.webp",
+      "path": "assets/game-packs/fortnite/corruption-mask.webp",
+      "bytes": 3076,
+      "sha256": "da6deca1c54c9d9034f86f3aa4d3005e7093cf3ee0fef6d55cd837da0db6c606",
+      "kind": "propsAndMasks",
+      "firstPlayable": false
     },
     {
       "id": "game-packs/fortnite/pack.json",
@@ -157,6 +212,29 @@
       "firstPlayable": null
     },
     {
+      "id": "game-packs/fortnite/props.webp",
+      "path": "assets/game-packs/fortnite/props.webp",
+      "bytes": 4878,
+      "sha256": "e1132cb5bc5090380554c16795419ea379b76bfcc6d480c32d593397b4814aee",
+      "kind": "propsAndMasks",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/fortnite/targets.json",
+      "path": "assets/game-packs/fortnite/targets.json",
+      "bytes": 3193,
+      "sha256": "6fee5f4848a233c8f7ded22ebd09d13cb46f8c1c579b25da0e1431db1d13c4e7",
+      "firstPlayable": null
+    },
+    {
+      "id": "game-packs/fortnite/targets.webp",
+      "path": "assets/game-packs/fortnite/targets.webp",
+      "bytes": 23898,
+      "sha256": "8b3012cbd2c7486677adbd31251d248d84927215f2fd9b50caaa026083271fe3",
+      "kind": "targets",
+      "firstPlayable": false
+    },
+    {
       "id": "game-packs/grand-theft-auto-v/pack.json",
       "path": "assets/game-packs/grand-theft-auto-v/pack.json",
       "bytes": 1815,
@@ -164,11 +242,50 @@
       "firstPlayable": null
     },
     {
+      "id": "game-packs/league/background.webp",
+      "path": "assets/game-packs/league/background.webp",
+      "bytes": 5266,
+      "sha256": "b4587d2391b2a81a48bb7036d84a00404b60d7433f7e393d4555a61068226501",
+      "kind": "background",
+      "firstPlayable": true
+    },
+    {
+      "id": "game-packs/league/corruption-mask.webp",
+      "path": "assets/game-packs/league/corruption-mask.webp",
+      "bytes": 3066,
+      "sha256": "5f62d38a7fe26cd778996d27a921eb7a83f8c85a0f963e14ccc687b3525c4a2f",
+      "kind": "propsAndMasks",
+      "firstPlayable": true
+    },
+    {
       "id": "game-packs/league/pack.json",
       "path": "assets/game-packs/league/pack.json",
       "bytes": 1672,
       "sha256": "39e185708a40f54b3a40a916a9a3b48fb190848ba56816e55dab9a785ddaeed8",
       "firstPlayable": null
+    },
+    {
+      "id": "game-packs/league/props.webp",
+      "path": "assets/game-packs/league/props.webp",
+      "bytes": 4922,
+      "sha256": "3f436ff2a1f5c6a20a4465d53caebac5ae154ceea41ad47028c991ccb0efce28",
+      "kind": "propsAndMasks",
+      "firstPlayable": true
+    },
+    {
+      "id": "game-packs/league/targets.json",
+      "path": "assets/game-packs/league/targets.json",
+      "bytes": 3191,
+      "sha256": "eb8661631e798ae9393d5bdfcfc6871ddc02b4d2ae3da2ec944e0c06b0858997",
+      "firstPlayable": null
+    },
+    {
+      "id": "game-packs/league/targets.webp",
+      "path": "assets/game-packs/league/targets.webp",
+      "bytes": 27432,
+      "sha256": "6d442975a8d9a469c7a947461f041edb1ecb57fdf7aeb95614dfcaf80867e5d8",
+      "kind": "targets",
+      "firstPlayable": true
     },
     {
       "id": "game-packs/madden-nfl-26/pack.json",
@@ -227,6 +344,22 @@
       "firstPlayable": null
     },
     {
+      "id": "game-packs/valorant/background.webp",
+      "path": "assets/game-packs/valorant/background.webp",
+      "bytes": 4444,
+      "sha256": "b614c889cea19f8c6b04ae8bafce3824d5c0e3a4aab490fddc6773850fce82de",
+      "kind": "background",
+      "firstPlayable": true
+    },
+    {
+      "id": "game-packs/valorant/corruption-mask.webp",
+      "path": "assets/game-packs/valorant/corruption-mask.webp",
+      "bytes": 3158,
+      "sha256": "466e6aca56ca15dd5128ef721199715c6086da2c73652035ebf51c2f68e7192e",
+      "kind": "propsAndMasks",
+      "firstPlayable": true
+    },
+    {
       "id": "game-packs/valorant/pack.json",
       "path": "assets/game-packs/valorant/pack.json",
       "bytes": 1717,
@@ -234,11 +367,73 @@
       "firstPlayable": null
     },
     {
+      "id": "game-packs/valorant/props.webp",
+      "path": "assets/game-packs/valorant/props.webp",
+      "bytes": 5112,
+      "sha256": "c577c45d41b56b47a882fe1d84a7fd20177054965bf6ad844e01f7d4bfd4cf74",
+      "kind": "propsAndMasks",
+      "firstPlayable": true
+    },
+    {
+      "id": "game-packs/valorant/targets.json",
+      "path": "assets/game-packs/valorant/targets.json",
+      "bytes": 3193,
+      "sha256": "6a6ddb1c6eb146618061cdf158e13e53dc75dd4d8981685af3e0b53f4d50be1b",
+      "firstPlayable": null
+    },
+    {
+      "id": "game-packs/valorant/targets.webp",
+      "path": "assets/game-packs/valorant/targets.webp",
+      "bytes": 30280,
+      "sha256": "2a2266de9b1bba338695b51190a5782aa763469709d9c5efd8d304ceed4b42f4",
+      "kind": "targets",
+      "firstPlayable": true
+    },
+    {
+      "id": "game-packs/world-of-warcraft/background.webp",
+      "path": "assets/game-packs/world-of-warcraft/background.webp",
+      "bytes": 5992,
+      "sha256": "464eb9b8c53934ffd5b8580a91543b9bea68a165650f6b4ad5deea8367550b85",
+      "kind": "background",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/world-of-warcraft/corruption-mask.webp",
+      "path": "assets/game-packs/world-of-warcraft/corruption-mask.webp",
+      "bytes": 2470,
+      "sha256": "d5a2693eb6e76e9902729f4389f62dd744ecb0cf1062c37e2a19a18e60bc8fdf",
+      "kind": "propsAndMasks",
+      "firstPlayable": false
+    },
+    {
       "id": "game-packs/world-of-warcraft/pack.json",
       "path": "assets/game-packs/world-of-warcraft/pack.json",
       "bytes": 1761,
       "sha256": "853bd9e824208642e39e7edc64bc9bbb1ed0499fe58fae583d664e2cf681c4cb",
       "firstPlayable": null
+    },
+    {
+      "id": "game-packs/world-of-warcraft/props.webp",
+      "path": "assets/game-packs/world-of-warcraft/props.webp",
+      "bytes": 4594,
+      "sha256": "05da270a2598d22357d53916745648e9ab28c0016bdf3c14933426c31fe442b7",
+      "kind": "propsAndMasks",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/world-of-warcraft/targets.json",
+      "path": "assets/game-packs/world-of-warcraft/targets.json",
+      "bytes": 3202,
+      "sha256": "c7eb8ea3f2c0cb7e70085ed38bc7935724b9c25a41dd56e585341e974fc69444",
+      "firstPlayable": null
+    },
+    {
+      "id": "game-packs/world-of-warcraft/targets.webp",
+      "path": "assets/game-packs/world-of-warcraft/targets.webp",
+      "bytes": 21562,
+      "sha256": "d97521b5603d7514cfa8f664fd3b4625f19420a20c92aa770f3996579713d502",
+      "kind": "targets",
+      "firstPlayable": false
     },
     {
       "id": "icons/apex.svg",

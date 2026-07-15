@@ -50,6 +50,9 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Changed
 
+- Produced Clean Era Game Packs 01–05 as deterministic APN Patchline runtime
+  sets, including approved target atlases, authored environments, props, masks,
+  source records, and locked right-to-left foot pivots.
 - Unified inline, Gear, and feed marks under one monochrome 2px rounded-stroke
   grammar; removed per-icon gradients/colors and added a static grammar gate.
 - Reworked combat scaling around season-local Weapon power, bounded Route
