@@ -175,7 +175,7 @@ git commit -m "docs: accept the game pack route"
 - Later tasks consume `s.route.zone`; `s.run.zone` must no longer exist after the
   migration.
 
-- [ ] **Step 1: Write failing state/migration tests**
+- [x] **Step 1: Write failing state/migration tests**
 
 Add fixtures for a fresh save, a real v1-style Zone 1905 save, malformed route
 fields, and a v2 round trip.
@@ -192,13 +192,13 @@ assert(migrated.route.killsInZone === 2, 'v1 kills migrate');
 assert(!('zone' in migrated.run), 'run zone retired');
 ```
 
-- [ ] **Step 2: Verify red**
+- [x] **Step 2: Verify red**
 
 Run: `node qa/run-tests.mjs`
 
 Expected: failure because `route` and schema v2 do not exist.
 
-- [ ] **Step 3: Implement the pure route state**
+- [x] **Step 3: Implement the pure route state**
 
 ```js
 export function createRouteState(seed = 0x41504e) {
@@ -223,13 +223,13 @@ export const nextSeasonBoundary = (zone) => (Math.floor(Math.max(0, zone) / 20) 
 Move all `zone` and `killsInZone` reads/writes to `s.route`. `leaveSeason()` resets
 run power but never resets `s.route.zone` or pack history.
 
-- [ ] **Step 4: Implement dual-key migration**
+- [x] **Step 4: Implement dual-key migration**
 
 `load()` checks `apn_idle_save_v2`, then legacy `apn_idle_save_v1`. `save()` writes
 only v2. Do not delete the legacy key during migration; preserve it as rollback
 evidence until the user explicitly starts a New Game.
 
-- [ ] **Step 5: Verify green and commit**
+- [x] **Step 5: Verify green and commit**
 
 Run: `node qa/run-tests.mjs`
 

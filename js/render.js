@@ -210,7 +210,7 @@ export function draw(ctx, w, h, s) {
   const scroll = s.world.scrollSmooth;
   const shakeX = s.world.shake ? (Math.random() - 0.5) * s.world.shake : 0;
   const shakeY = s.world.shake ? (Math.random() - 0.5) * s.world.shake : 0;
-  const bio = biomeFor(s.run.zone);
+  const bio = biomeFor(s.route.zone);
 
   ctx.save();
   ctx.translate(shakeX, shakeY);
@@ -309,7 +309,7 @@ export function draw(ctx, w, h, s) {
   }
 
   // biome name (subtle — header already shows zone #)
-  if (s.run.zone > 0 || s.world.time > 1) {
+  if (s.route.zone > 0 || s.world.time > 1) {
     drawBiomeTag(ctx, w, bio);
   }
 

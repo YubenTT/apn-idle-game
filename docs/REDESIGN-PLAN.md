@@ -195,11 +195,11 @@ acceptance boxes, fresh tests, browser proof, and one focused commit per issue.
 ### I-004 · Persistent global Route + save v2 migration — 🔴 L
 - **Goal:** world progress survives End Season and legacy saves load without loss.
 - **Acceptance:**
-  - [ ] `s.route` owns zone, pack history, seed, deck, and catalog version; `s.run.zone` is retired.
-  - [ ] v1 Zone/kills migrate deterministically to v2; malformed fields sanitize safely.
-  - [ ] v2 writes to a new key while the legacy key remains rollback evidence.
-  - [ ] End Season resets run power but never global Route progress.
-  - [ ] Fresh, v1→v2, malformed, and round-trip tests pass.
+  - [x] `s.route` owns zone, pack history, seed, deck, and catalog version; `s.run.zone` is retired.
+  - [x] v1 Zone/kills migrate deterministically to v2; malformed fields sanitize safely.
+  - [x] v2 writes to a new key while the legacy key remains rollback evidence.
+  - [x] End Season resets run power but never global Route progress.
+  - [x] Fresh, v1→v2, malformed, and round-trip tests pass.
 - **Files:** `js/route.js`, `js/game.js`, `js/save.js`, `js/formulas.js`, QA, architecture.
 
 ### I-005 · Game Pack catalog + deterministic scheduler — 🔴 L

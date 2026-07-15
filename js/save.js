@@ -1,10 +1,12 @@
 import { normalizeGear, emptyGear } from './loot.js';
+import { normalizeRoute } from './route.js';
 
-const KEY = 'apn_idle_save_v1';
+export const SAVE_KEY_V1 = 'apn_idle_save_v1';
+export const SAVE_KEY_V2 = 'apn_idle_save_v2';
 
 export function save(s) {
   const data = {
-    v: 1,
+    v: 2,
     ts: Date.now(),
     meta: {
       ...s.meta,
@@ -19,9 +21,8 @@ export function save(s) {
       hub: s.meta.hub || null,
     },
     authority: s.authority,
+    route: normalizeRoute(s.route),
     run: {
-      zone: s.run.zone,
-      killsInZone: s.run.killsInZone,
       bytes: s.run.bytes,
       patches: s.run.patches,
       hero: { ...s.run.hero, attackAnim: 0, hitRecoil: 0 },
@@ -33,7 +34,7 @@ export function save(s) {
     },
   };
   try {
-    localStorage.setItem(KEY, JSON.stringify(data));
+    localStorage.setItem(SAVE_KEY_V2, JSON.stringify(data));
     s.settings.lastTs = data.ts;
     return true;
   } catch {
@@ -42,19 +43,23 @@ export function save(s) {
 }
 
 export function load() {
-  try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return null;
-    const d = JSON.parse(raw);
-    if (!d || d.v !== 1) return null;
-    return d;
-  } catch {
-    return null;
-  }
+  const readVersion = (key, version) => {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return null;
+      const data = JSON.parse(raw);
+      return data?.v === version ? data : null;
+    } catch {
+      return null;
+    }
+  };
+  return readVersion(SAVE_KEY_V2, 2) || readVersion(SAVE_KEY_V1, 1);
 }
 
 export function apply(s, d) {
   if (!d) return 0;
+  s.v = 2;
+  s.route = normalizeRoute(d.v === 2 ? d.route : null, d.v === 1 ? d.run : null);
   Object.assign(s.meta, d.meta || {});
   // migrate gear (armor → chest, full 6-slot) + premium
   s.meta.gear = normalizeGear(d.meta?.gear || s.meta.gear || emptyGear());
@@ -91,8 +96,6 @@ export function apply(s, d) {
     s.authority.upgrades = { ...s.authority.upgrades, ...(d.authority.upgrades || {}) };
   }
   if (d.run) {
-    s.run.zone = d.run.zone || 0;
-    s.run.killsInZone = d.run.killsInZone || 0;
     s.run.bytes = d.run.bytes || 0;
     s.run.patches = d.run.patches || 0;
     if (d.run.hero) Object.assign(s.run.hero, d.run.hero);
@@ -109,5 +112,6 @@ export function apply(s, d) {
 }
 
 export function clear() {
-  localStorage.removeItem(KEY);
+  localStorage.removeItem(SAVE_KEY_V2);
+  localStorage.removeItem(SAVE_KEY_V1);
 }

@@ -59,10 +59,11 @@ import {
   SLOTS,
   BAG_CAP,
 } from './loot.js';
+import { createRouteState, nextSeasonBoundary } from './route.js';
 
 export function createState() {
   return {
-    v: 1,
+    v: 2,
     meta: {
       live: 1,
       season: 0,
@@ -92,9 +93,8 @@ export function createState() {
       shippedThisSeason: 0,
       upgrades: Object.fromEntries(Object.keys(META).map((k) => [k, 0])),
     },
+    route: createRouteState(),
     run: {
-      zone: 0,
-      killsInZone: 0,
       bytes: 0,
       patches: 0,
       hero: {
@@ -391,10 +391,10 @@ function pickEnemyType(zone, forceBoss) {
 }
 
 export function spawnEnemy(s) {
-  const zone = s.run.zone;
+  const zone = s.route.zone;
   const boss = isBossZone(zone);
   if (boss && s.world.bossActive) return null;
-  if (boss && s.run.killsInZone > 0) return null;
+  if (boss && s.route.killsInZone > 0) return null;
 
   const type = pickEnemyType(zone, boss && !s.world.bossActive);
   if (type === 'boss') {
@@ -449,7 +449,7 @@ function grantXp(s, amount) {
 
 function onKill(s, e) {
   s.meta.kills += 1;
-  s.run.killsInZone += 1;
+  s.route.killsInZone += 1;
 
   // combo juice
   s.stats.combo += 1;
@@ -461,7 +461,7 @@ function onKill(s, e) {
     tip(s, 'combo');
   }
 
-  const zone = s.run.zone;
+  const zone = s.route.zone;
   const gb = gearBonuses(s.meta.gear);
   const eco = economyMult(s);
   const byteM =
@@ -561,23 +561,23 @@ function onKill(s, e) {
 
   // zone progress — endless; checkpoints every SEASON.zones for prestige
   const need = killsNeeded(zone);
-  if (s.run.killsInZone >= need) {
-    s.run.zone += 1;
-    s.run.killsInZone = 0;
+  if (s.route.killsInZone >= need) {
+    s.route.zone += 1;
+    s.route.killsInZone = 0;
     s.world.enemies = [];
     s.world.bossActive = false;
     s.world.spawnCd = 0.35;
     if (s.settings.sfx !== false) sfx('zone');
     hubOnZone(s);
 
-    if (isSeasonCheckpoint(s.run.zone)) {
+    if (isSeasonCheckpoint(s.route.zone)) {
       s.ui.seasonDone = true;
-      toast(s, `Zone ${s.run.zone} checkpoint! Ship Notes, then End Season for Live Mult.`);
+      toast(s, `Zone ${s.route.zone} checkpoint! Ship Notes, then End Season for Live Mult.`);
       tip(s, 'season');
     } else {
-      toast(s, `Zone ${s.run.zone + 1}`, 1.4);
+      toast(s, `Zone ${s.route.zone + 1}`, 1.4);
     }
-    if (isBossZone(s.run.zone)) tip(s, 'boss');
+    if (isBossZone(s.route.zone)) tip(s, 'boss');
   }
 }
 
@@ -833,7 +833,7 @@ export function collectAlert(s, a) {
     );
     floater(s, a.x, a.y, '+ENERGY', '#10B981');
   } else {
-    const b = (4 + 0.6 * s.run.zone) * bonus * n * economyMult(s);
+    const b = (4 + 0.6 * s.route.zone) * bonus * n * economyMult(s);
     s.run.bytes += b;
     floater(s, a.x, a.y, `+${b | 0} Signal`, '#6cb8ff');
   }
@@ -991,14 +991,15 @@ export function buyMeta(s, id) {
 /**
  * End Season (prestige).
  * KEEP: Live Mult, Boosts, Rep, gear (weapon+armor+bag).
- * RESET: zone, Signal weapon Lv, rank, attrs, skills, Notes.
+ * KEEP: global Route Zone + pack history.
+ * RESET: Signal weapon Lv, rank, attrs, skills, Notes.
  */
 export function leaveSeason(s) {
-  if (!s.ui.seasonDone && s.run.zone < SEASON.zones) {
-    toast(s, `Reach Zone ${SEASON.zones} checkpoint to End Season`);
+  if (!s.ui.seasonDone && !isSeasonCheckpoint(s.route.zone)) {
+    toast(s, `Reach Zone ${nextSeasonBoundary(s.route.zone)} checkpoint to End Season`);
     return false;
   }
-  if (!s.ui.seasonDone && s.run.zone >= SEASON.zones) {
+  if (!s.ui.seasonDone && isSeasonCheckpoint(s.route.zone)) {
     s.ui.seasonDone = true;
   }
   const gain = liveGain(s.authority.shippedThisSeason);
@@ -1007,8 +1008,7 @@ export function leaveSeason(s) {
   s.authority.shippedThisSeason = 0;
   // gear is on meta — intentionally untouched (normalize for multi-slot)
   s.meta.gear = normalizeGear(s.meta.gear);
-  s.run.zone = 0;
-  s.run.killsInZone = 0;
+  s.route.killsInZone = 0;
   s.run.bytes = Math.floor(s.run.bytes * 0.15);
   s.run.patches = 0;
   const h = s.run.hero;
@@ -1092,7 +1092,7 @@ export function buyGearBox(s, boxId) {
   let equippedAny = false;
   for (let i = 0; i < rolls; i++) {
     const slot = pickSlotForGear(s.meta.gear, def.preferEmpty !== false);
-    const item = rollItem(s.run.zone, slot, {
+    const item = rollItem(s.route.zone, slot, {
       luck: def.luck || 1.5,
       minRarity: def.minRarity || null,
     });
@@ -1280,7 +1280,7 @@ export function simulateOffline(s, seconds) {
     bytes: s.run.bytes,
     patches: s.run.patches,
     level: s.run.hero.level,
-    zone: s.run.zone,
+    zone: s.route.zone,
     kills: s.meta.kills,
   };
   s.world.sprinting = false;
@@ -1299,12 +1299,12 @@ export function simulateOffline(s, seconds) {
     const dk = Math.max(0, s.meta.kills - before.kills) * ratio;
     let rem = Math.floor(dk);
     while (rem-- > 0) {
-      s.run.killsInZone += 1;
+      s.route.killsInZone += 1;
       s.meta.kills += 1;
-      if (s.run.killsInZone >= killsNeeded(s.run.zone)) {
-        s.run.zone += 1;
-        s.run.killsInZone = 0;
-        if (isSeasonCheckpoint(s.run.zone)) s.ui.seasonDone = true;
+      if (s.route.killsInZone >= killsNeeded(s.route.zone)) {
+        s.route.zone += 1;
+        s.route.killsInZone = 0;
+        if (isSeasonCheckpoint(s.route.zone)) s.ui.seasonDone = true;
       }
     }
   }
@@ -1313,7 +1313,7 @@ export function simulateOffline(s, seconds) {
     bytes: s.run.bytes - before.bytes,
     patches: s.run.patches - before.patches,
     levels: s.run.hero.level - before.level,
-    zones: s.run.zone - before.zone,
+    zones: s.route.zone - before.zone,
     kills: s.meta.kills - before.kills,
   };
 }

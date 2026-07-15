@@ -13,7 +13,7 @@
 | **SP** | Skill Points from ranking up; spent in Build | `--c-sp` (violet) | No (reset) |
 | **Live Mult** | Prestige multiplier from End Season; multiplies damage + Ship | `--apn-primary` | **Yes** |
 | **DPS** | Displayed damage-per-second (derived, not stored) | `--c-positive` (green) | n/a |
-| **Zone** | Endless stage counter; kills-to-clear | `--c-zone` (cyan) | resets per season path |
+| **Route Zone** | Endless world-stage counter; kills-to-clear | `--c-zone` (cyan) | **Yes** |
 | **Rank** | XP track that grants SP | `--c-rep` context | soft-infinite |
 | **Boosts** | Permanent meta upgrades bought with Rep | `--c-rep` | **Yes** |
 | **Build** | Season skill/attribute allocation (Damage/Crit/Utility + skills) | — | No (reset) |
@@ -52,6 +52,8 @@ is how you read the code.
 | `hero.energy` / `hero.mana` | Energy / (Mana → rename) | see flag below |
 | `meta.live` | **Live Mult** | prestige |
 | `seasonDone` | season checkpoint reached | unlocks End Season |
+| `route.zone` / `route.killsInZone` | **Route Zone** progress | v2 owner; never reset by End Season |
+| legacy `run.zone` / `run.killsInZone` | **Route Zone** progress | read-only v1 migration input |
 
 ## Flagged renames (open)
 

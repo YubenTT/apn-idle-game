@@ -44,6 +44,20 @@ import {
 } from '../js/loot.js';
 import { SKILLS, PREMIUM } from '../js/content.js';
 import { hubOnKill } from '../js/hub.js';
+import {
+  createRouteState,
+  routeZoneDisplay,
+  packZoneDisplay,
+  nextSeasonBoundary,
+} from '../js/route.js';
+import {
+  apply as applySave,
+  save as saveState,
+  load as loadState,
+  clear as clearSave,
+  SAVE_KEY_V1,
+  SAVE_KEY_V2,
+} from '../js/save.js';
 import { checkCssTokenContract } from './check-css-tokens.mjs';
 import { checkEconomyColorContract } from './check-economy-colors.mjs';
 
@@ -76,6 +90,69 @@ for (const check of checkCssTokenContract()) {
 for (const check of checkEconomyColorContract()) {
   ok(check.pass, `${check.message} (${check.detail})`);
 }
+
+// —— Persistent global Route + save v2 migration ——
+const freshRoute = createState();
+ok(freshRoute.v === 2, 'fresh state schema v2');
+ok(freshRoute.route.zone === 0, 'fresh global route');
+ok(freshRoute.route.currentPackId === 'valorant', 'fresh first pack');
+ok(!('zone' in freshRoute.run), 'fresh run zone retired');
+ok(routeZoneDisplay(freshRoute.route) === 1, 'route display starts at 1');
+ok(packZoneDisplay({ ...freshRoute.route, zone: 19 }) === 10, 'pack display ends at 10');
+ok(nextSeasonBoundary(93) === 100, 'next season boundary');
+
+const migratedRoute = createState();
+applySave(migratedRoute, {
+  v: 1,
+  ts: Date.now(),
+  run: { zone: 1905, killsInZone: 2, bytes: 12, patches: 3 },
+});
+ok(migratedRoute.route.zone === 1905, 'v1 zone migrates');
+ok(migratedRoute.route.killsInZone === 2, 'v1 kills migrate');
+ok(!('zone' in migratedRoute.run), 'migrated run zone retired');
+
+const malformedRoute = createState();
+applySave(malformedRoute, {
+  v: 2,
+  ts: Date.now(),
+  route: {
+    zone: -8,
+    killsInZone: -2,
+    seed: -1,
+    currentPackId: 42,
+    seenPackIds: ['valorant', 42, 'valorant', ''],
+    deck: ['league', 'league', null],
+    corruptionByPack: { valorant: -2, league: 2, broken: 'high' },
+    lastSeenByPack: { valorant: 20, league: -1, broken: 'now' },
+  },
+});
+ok(malformedRoute.route.zone === 0, 'malformed route zone sanitizes');
+ok(malformedRoute.route.killsInZone === 0, 'malformed route kills sanitize');
+ok(malformedRoute.route.currentPackId === 'valorant', 'malformed pack id sanitizes');
+ok(malformedRoute.route.seenPackIds.join(',') === 'valorant', 'route history sanitizes and deduplicates');
+ok(malformedRoute.route.deck.join(',') === 'league', 'route deck sanitizes and deduplicates');
+ok(JSON.stringify(malformedRoute.route.corruptionByPack) === '{"league":2}', 'corruption map sanitizes');
+ok(JSON.stringify(malformedRoute.route.lastSeenByPack) === '{"valorant":20}', 'last-seen map sanitizes');
+
+const saveMemory = new Map();
+globalThis.localStorage = {
+  getItem: (key) => saveMemory.get(key) ?? null,
+  setItem: (key, value) => saveMemory.set(key, String(value)),
+  removeItem: (key) => saveMemory.delete(key),
+};
+saveState(migratedRoute);
+ok(saveMemory.has(SAVE_KEY_V2), 'save writes v2 key');
+ok(!saveMemory.has(SAVE_KEY_V1), 'save does not write legacy key');
+const roundTrip = loadState();
+ok(roundTrip?.v === 2 && roundTrip.route?.zone === 1905, 'v2 save round trip');
+saveMemory.clear();
+saveMemory.set(SAVE_KEY_V1, JSON.stringify({ v: 1, ts: 1, run: { zone: 77 } }));
+ok(loadState()?.v === 1, 'load falls back to legacy key');
+ok(saveMemory.has(SAVE_KEY_V1), 'legacy key preserved during migration');
+saveMemory.set(SAVE_KEY_V2, '{corrupt-json');
+ok(loadState()?.v === 1, 'corrupt v2 falls back to valid legacy save');
+clearSave();
+ok(!saveMemory.has(SAVE_KEY_V1) && !saveMemory.has(SAVE_KEY_V2), 'New Game clears both save keys');
 
 // —— Basic combat ——
 const s = createState();
@@ -146,18 +223,18 @@ for (let i = 0; i < 60 * 60 * 10; i++) {
   if (s5.ui.seasonDone) break;
 }
 ok(s5.meta.bosses >= 1, `bosses (${s5.meta.bosses})`);
-ok(s5.run.zone >= 5 || s5.ui.seasonDone, `progress zone ${s5.run.zone}`);
+ok(s5.route.zone >= 5 || s5.ui.seasonDone, `progress zone ${s5.route.zone}`);
 
 // —— Endless past 20 ——
 const s6 = createState();
-s6.run.zone = 19;
+s6.route.zone = 19;
 s6.run.hero.scanner = 45;
 for (let i = 0; i < 60 * 60; i++) {
   s6.run.hero.energy = 100;
   step(s6, C.FIXED_DT);
-  if (s6.run.zone >= 21) break;
+  if (s6.route.zone >= 21) break;
 }
-ok(s6.run.zone >= 20, `past Z20 zone=${s6.run.zone}`);
+ok(s6.route.zone >= 20, `past Z20 zone=${s6.route.zone}`);
 
 // —— Brand 4-slot gear (Weapon · Chest · Legs · Visor) ——
 ok(SLOTS.length === 4, '4 brand gear slots');
@@ -221,7 +298,7 @@ ok(sv && sv.signal === sellValue(sv.item), 'sell returns signal');
 
 // —— Prestige keeps gear + boosts + pro, resets signal ——
 const s7 = createState();
-s7.run.zone = 20;
+s7.route.zone = 20;
 s7.ui.seasonDone = true;
 s7.run.hero.scanner = 40;
 s7.authority.amount = 100;
@@ -238,7 +315,9 @@ offerItem(s7.meta.gear, chestDrop);
 const gearName = s7.meta.gear.weapon.name;
 const chestName = s7.meta.gear.chest.name;
 const liveBefore = s7.meta.live;
+const routeBefore = s7.route.zone;
 ok(leaveSeason(s7), 'end season');
+ok(s7.route.zone === routeBefore, 'global route kept');
 ok(s7.run.hero.scanner === 0, 'signal reset');
 ok(s7.authority.upgrades.signal_power === 3, 'boosts kept');
 ok(s7.authority.amount === 100, 'rep kept');
@@ -268,7 +347,7 @@ ok(s8.meta.premium.coins >= 100, 'pack coins');
 ok(Array.isArray(PREMIUM.boxes) && PREMIUM.boxes.length >= 3, 'box catalog');
 const sBox = createState();
 sBox.meta.premium.coins = 500;
-sBox.run.zone = 12;
+sBox.route.zone = 12;
 ok(buyGearBox(sBox, 'box_signal'), 'open signal crate');
 const after1 = Object.values(sBox.meta.gear).filter((x) => x && typeof x === 'object' && x.id).length
   + (sBox.meta.gear.bag?.length || 0);
