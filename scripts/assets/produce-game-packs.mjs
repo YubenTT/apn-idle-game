@@ -9,7 +9,7 @@ import { stableJson } from './lib.mjs';
 const run = promisify(execFile);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const packsRoot = path.join(root, 'assets/game-packs');
-const RSVG = '/opt/homebrew/bin/rsvg-convert';
+const RSVG = process.env.RSVG || 'rsvg-convert';
 const INK = '#07111d';
 const SHADOW = '#03070d';
 

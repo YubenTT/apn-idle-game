@@ -4,7 +4,7 @@ import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
 
 const run = promisify(execFile);
-const CWEBP = '/opt/homebrew/bin/cwebp';
+const CWEBP = process.env.CWEBP || 'cwebp';
 
 export async function convertWebp(input, output, kind = 'targets') {
   const quality = kind === 'background' ? 78 : 82;

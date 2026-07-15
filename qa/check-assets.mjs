@@ -17,6 +17,20 @@ const assert = (condition, message) => {
   console.log(`OK ${message}`);
 };
 
+for (const script of [
+  'scripts/assets/pack-atlas.mjs',
+  'scripts/assets/convert-webp.mjs',
+  'scripts/assets/export-mascot.mjs',
+  'scripts/assets/extract-approved-pack-art.mjs',
+  'scripts/assets/produce-game-packs.mjs',
+]) {
+  const source = fs.readFileSync(path.join(root, script), 'utf8');
+  const signedTokenPrefix = ['?token=', 'eyJ'].join('');
+  assert(!source.includes('/opt/homebrew/bin/'), `${script} has no Homebrew-only tool path`);
+  assert(!source.includes('/Users/talatongu/'), `${script} has no developer-only tool path`);
+  assert(!source.includes(signedTokenPrefix), `${script} contains no signed source token`);
+}
+
 const validErrors = validateAtlasData(readJson(path.join(fixtures, 'valid/atlas.json')), 'valid');
 assert(validErrors.length === 0, 'valid atlas keeps rect and foot pivot');
 

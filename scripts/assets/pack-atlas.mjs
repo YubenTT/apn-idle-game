@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { readJson, stableJson, validateAtlasData } from './lib.mjs';
 
 const run = promisify(execFile);
-const FFMPEG = '/opt/homebrew/bin/ffmpeg';
+const FFMPEG = process.env.FFMPEG || 'ffmpeg';
 
 export function layoutFrames(spec) {
   const padding = Math.max(0, spec.padding ?? 2);

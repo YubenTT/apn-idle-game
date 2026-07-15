@@ -19,6 +19,11 @@ jobs:
         with:
           node-version: "20"
 
+      - name: Install asset tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes ffmpeg webp
+
       - name: Run headless tests
         run: node qa/run-tests.mjs
 
