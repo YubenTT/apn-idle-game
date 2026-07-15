@@ -15,9 +15,12 @@ Original prompt: Complete the APN Idle redesign autonomously, including QA, revi
   player debug copy, explicit demo-store semantics, and a tested safe reset gate.
 - I-024 Boosts is implemented as a domain-driven permanent ROI tree with exact
   deltas/costs, one recommendation, 44pt touch, and clean 428/375 Chrome evidence.
+- I-033 item art is implemented as a 12-piece, three-material APN techwear atlas;
+  Gear uses authored sprites with zero filled-slot SVG fallbacks, 44pt touch, and
+  zero horizontal overflow in direct Chrome evidence.
 - Browser QA uses Chrome Extension or isolated direct Chrome with `mute=1`; no
   standalone Playwright process is used.
 
 ## Open chain
 
-- I-021 → I-010–I-014 → decision sheets → remaining art/feel/copy/nav → device-matrix QA.
+- I-034 backgrounds → I-040 feel → I-042 copy → I-044 nav → I-043 device-matrix QA.

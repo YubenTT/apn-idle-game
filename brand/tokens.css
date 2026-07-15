@@ -220,6 +220,7 @@
   /* --- Component measurements ------------------------------------------- */
   --size-inventory-slot: 72px;
   --size-host-niche: 104px;
+  --item-atlas-cell-ratio: 1.1261;
   --size-notch-reserve: 96px;
   --border-accent: 2px;
 
