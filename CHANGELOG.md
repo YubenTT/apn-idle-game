@@ -50,6 +50,8 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Changed
 
+- Produced Clean Era Game Packs 11–15, retaining the approved heist, stadium,
+  industrial, river, and horror silhouette language under the shared atlas gates.
 - Produced Clean Era Game Packs 06–10 with the same deterministic target,
   environment, prop, corruption, source-evidence, and pivot contract.
 - Produced Clean Era Game Packs 01–05 as deterministic APN Patchline runtime
