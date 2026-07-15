@@ -14,9 +14,9 @@ export const ATTR_LABEL = {
 };
 
 export const ATTR_META = {
-  scan: { label: 'Damage', sub: '+weapon power', accent: '#fc1243' },
-  verify: { label: 'Crit', sub: '+crit chance', accent: '#e6b84d' },
-  amplify: { label: 'Utility', sub: '+skills & mana', accent: '#5eb0ff' },
+  scan: { label: 'Damage', sub: 'Raises weapon power' },
+  verify: { label: 'Crit', sub: 'Raises crit chance' },
+  amplify: { label: 'Utility', sub: 'Raises skill resources' },
 };
 
 /** Permanent Rep boosts — survive End Season */
@@ -192,6 +192,14 @@ export const SKILL_TREES = [
   { id: 'verify', label: 'Crit skills', attr: 'verify' },
   { id: 'amplify', label: 'Utility skills', attr: 'amplify' },
 ];
+
+/** Next skill gate for an attribute; presentation reads the same source as unlock rules. */
+export function nextSkillUnlock(attr, currentLevel) {
+  const level = Math.max(0, Number(currentLevel) || 0);
+  return Object.values(SKILLS)
+    .filter((skill) => skill.tree === attr && Number(skill.req?.[attr] || 0) > level)
+    .sort((a, b) => Number(a.req?.[attr] || 0) - Number(b.req?.[attr] || 0))[0] || null;
+}
 
 /**
  * Premium / monetization catalog (structure ready for real IAP).

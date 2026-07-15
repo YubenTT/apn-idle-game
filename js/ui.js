@@ -18,6 +18,7 @@ import {
   TIPS,
   ATTR_LABEL,
   ATTR_META,
+  nextSkillUnlock,
   PREMIUM,
   FEED_COPY,
   skillSpCost,
@@ -473,7 +474,6 @@ function skillCard(s, sk) {
   const ok = canLearn(s, sk.id);
   const maxed = lv >= sk.max;
   const owned = lv > 0;
-  const pct = Math.round((lv / sk.max) * 100);
   let state = 'locked';
   if (maxed) state = 'maxed';
   else if (ok) state = 'can';
@@ -484,25 +484,25 @@ function skillCard(s, sk) {
   else cta = `${cost} SP`;
 
   const reqs = Object.keys(sk.req || {}).length ? reqBadges(sk.req, h) : '';
-  const tip = [sk.desc, reqs ? `Needs: ${Object.entries(sk.req).map(([k, v]) => `${ATTR_LABEL[k] || k} ${v}`).join(', ')}` : '']
-    .filter(Boolean)
-    .join(' · ');
+  const afford = !maxed && h.sp >= cost && ok;
+  const nextLevel = Math.min(sk.max, lv + 1);
+  const actionLabel = maxed ? `${sk.name} is at maximum rank` : `Raise ${sk.name} from rank ${lv} to ${nextLevel} for ${cost} SP`;
 
   return `
-  <button type="button" class="skill-card compact ${state}"
-    data-alloc="skill" data-id="${sk.id}" ${maxed ? 'disabled' : ''} title="${tip.replace(/"/g, '&quot;')}">
+  <button type="button" class="skill-card build-skill-card ${state}"
+    data-alloc="skill" data-id="${sk.id}" ${maxed ? 'disabled' : ''} aria-label="${actionLabel}">
     <div class="sk-ico" aria-hidden="true">${skillIco(sk.id)}</div>
     <div class="sk-main">
       <div class="sk-top">
         <span class="sk-name">${sk.short || sk.name}</span>
         <span class="sk-type t-${sk.type}">${typeTag(sk.type)}</span>
       </div>
+      <span class="sk-desc inline">${sk.desc}</span>
       ${reqs ? `<div class="sk-reqs">${reqs}</div>` : ''}
-      <div class="sk-bar"><i style="width:${pct}%"></i></div>
     </div>
     <div class="sk-side">
-      <span class="sk-lv">${lv}<small>/${sk.max}</small></span>
-      <span class="sk-cta">${cta}</span>
+      <span class="sk-delta">${lv}<span aria-hidden="true">→</span>${nextLevel}</span>
+      <span class="sp-cost ${afford ? 'afford' : ''}">${cta}</span>
     </div>
   </button>`;
 }
@@ -517,7 +517,7 @@ function renderSkills(s) {
   <div class="sp-bank compact ${hasSp ? 'has-sp' : ''}">
     <span class="sp-bank-label">SP</span>
     <strong class="sp-bank-val">${h.sp}</strong>
-    <span class="sp-bank-hint">${hasSp ? 'Tap attrs / skills' : 'Rank up for SP'}</span>
+    <span class="sp-bank-hint">${hasSp ? 'Ready to invest' : 'Earn SP by ranking up'}</span>
   </div>
 
   <div class="section-lab">Attributes</div>
@@ -526,12 +526,21 @@ function renderSkills(s) {
   for (const id of ['scan', 'verify', 'amplify']) {
     const m = ATTR_META[id];
     const val = h[id] || 0;
+    const unlock = nextSkillUnlock(id, val);
+    const gate = Number(unlock?.req?.[id] || 0);
+    const unlockCopy = !unlock
+      ? 'All skills open'
+      : gate === val + 1
+        ? `Unlocks ${unlock.short || unlock.name}`
+        : `Next: ${unlock.short || unlock.name} at ${gate}`;
     html += `
-    <button type="button" class="attr-card ${hasSp ? 'can' : 'locked'}" data-alloc="attr" data-id="${id}" title="${m.sub} · 1 SP">
+    <button type="button" class="attr-card build-attr-card ${hasSp ? 'can' : 'locked'}" data-alloc="attr" data-id="${id}" aria-label="Raise ${m.label} from ${val} to ${val + 1} for 1 SP. ${unlockCopy}">
       <span class="attr-ico" aria-hidden="true">${attrIco(id)}</span>
       <span class="attr-lab">${m.label}</span>
-      <span class="attr-lv">${val}</span>
-      <span class="attr-plus" aria-hidden="true">+</span>
+      <span class="attr-delta">${val}<span aria-hidden="true">→</span>${val + 1}</span>
+      <span class="attr-effect">${m.sub}</span>
+      <span class="attr-unlock">${unlockCopy}</span>
+      <span class="sp-cost ${hasSp ? 'afford' : ''}">1 SP</span>
     </button>`;
   }
 
