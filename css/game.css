@@ -4206,6 +4206,114 @@ button[hidden] {
   background: var(--c-positive);
 }
 
+/* I-012 · compact in-stage Zone / Rank / Live header */
+.stage-hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 4;
+  min-height: calc(var(--touch-min) + var(--sp-2));
+  display: grid;
+  grid-template-columns: 1fr 1fr minmax(var(--size-inventory-slot), 0.72fr);
+  gap: 0;
+  padding: var(--sp-2) var(--sp-4);
+  border-bottom: var(--border-1);
+  background: color-mix(in srgb, var(--surface-900) 94%, transparent);
+  pointer-events: none;
+}
+
+.stage-stat {
+  min-width: 0;
+  padding: 0 var(--sp-3);
+  border: 0;
+  border-right: var(--border-1);
+  border-radius: 0;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.stage-stat:first-child { padding-left: 0; }
+.stage-stat:last-child {
+  padding-right: 0;
+  border-right: 0;
+}
+
+.stage-stat-top {
+  min-height: var(--sp-6);
+  margin: 0 0 var(--sp-1);
+  gap: var(--sp-1);
+}
+
+.stage-stat-lab {
+  color: var(--text-mid);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+}
+
+.stage-stat-lab em,
+.stage-live-value {
+  color: var(--text-high);
+  font-size: var(--fs-metric-m);
+  line-height: var(--lh-metric-m);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.stage-live-value em {
+  font: inherit;
+}
+
+.stage-stat-val {
+  color: var(--text-mid);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+}
+
+.stage-stat-track {
+  height: var(--sp-2);
+  border-radius: var(--r-pill);
+  background: var(--border-700);
+}
+
+.stage-stat-track i {
+  border-radius: var(--r-pill);
+  transition: width var(--dur-fast) linear;
+}
+
+.stage-stat-track i.zone { background: var(--c-zone); }
+.stage-stat-track i.xp { background: var(--c-info); }
+
+.stage-live-meta {
+  min-height: var(--sp-2);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sp-1);
+  color: var(--text-low);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+  font-weight: 800;
+}
+
+.stage-live-state {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+.stage-live-state i {
+  width: var(--sp-2);
+  height: var(--sp-2);
+  border-radius: var(--r-pill);
+  background: var(--c-positive);
+}
+
+.stage-combo { color: var(--c-notes); }
+.stage-pro { color: var(--c-rep); }
+
+
 
 @media (prefers-reduced-motion: reduce) {
   .eq-slot .tip-pop,

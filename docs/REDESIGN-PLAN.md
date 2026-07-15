@@ -257,9 +257,9 @@ acceptance boxes, fresh tests, browser proof, and one focused commit per issue.
 ### I-012 · Stage header — 🔴 M
 - **Goal:** Zone / Rank / Live folded into a compact strip **inside** the stage card.
 - **Acceptance:**
-  - [ ] Zone + Rank + Live in one stage-header strip; Rank reads as in-run growth.
-  - [ ] Each bar means one thing (Zone ≠ Rank), ≥3:1 contrast, ≥8px track.
-  - [ ] Top HUD no longer carries separate Zone/Rank cards.
+  - [x] Zone + Rank + Live in one stage-header strip; Rank reads as in-run growth.
+  - [x] Each bar means one thing (Zone ≠ Rank), ≥3:1 contrast, ≥8px track.
+  - [x] Top HUD no longer carries separate Zone/Rank cards.
 - **Files:** `index.html`, `css/game.css`, `js/ui.js`.
 
 ### I-013 · Patchline stage framing + juice — 🔴 L

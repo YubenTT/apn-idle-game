@@ -50,6 +50,8 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Changed
 
+- Folded Zone, Rank, and Live into one compact in-stage header with independent
+  8px progress tracks for Route and Rank growth.
 - Replaced the scrolling website-style ticker with a single-line live feed rail
   bound to the currently scheduled Game Pack.
 - Replaced the running wordmark/analytics header with a notch-aware 44pt strip
