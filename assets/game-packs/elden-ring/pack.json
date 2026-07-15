@@ -1,0 +1,83 @@
+{
+  "id": "elden-ring",
+  "order": 20,
+  "title": "Elden Ring",
+  "genre": "action-rpg",
+  "zones": 10,
+  "targets": [
+    {
+      "id": "wandering-soldier",
+      "role": "common-a",
+      "label": "Wandering Soldier",
+      "frame": "common-a",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "glintstone-adept",
+      "role": "common-b",
+      "label": "Glintstone Adept",
+      "frame": "common-b",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "grafted-hound",
+      "role": "common-c",
+      "label": "Grafted Hound",
+      "frame": "common-c",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "crucible-guard",
+      "role": "elite",
+      "label": "Crucible Guard",
+      "frame": "elite",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "black-knife-shade",
+      "role": "event",
+      "label": "Black-Knife Shade",
+      "frame": "event",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    }
+  ],
+  "boss": {
+    "id": "elden-gate-sovereign",
+    "label": "Elden Gate Sovereign",
+    "frame": "boss",
+    "breakFrame": "boss-break",
+    "pivot": {
+      "x": 0.5,
+      "y": 1
+    }
+  },
+  "assets": {
+    "background": "assets/game-packs/elden-ring/background.webp",
+    "targets": "assets/game-packs/elden-ring/targets.webp",
+    "targetData": "assets/game-packs/elden-ring/targets.json",
+    "props": "assets/game-packs/elden-ring/props.webp",
+    "corruptionMask": "assets/game-packs/elden-ring/corruption-mask.webp"
+  },
+  "sourceBoard": "assets/game-packs/elden-ring/source-board.md",
+  "corruptionMasks": [
+    "signal-drift",
+    "corrupted",
+    "overrun",
+    "zero-day"
+  ]
+}

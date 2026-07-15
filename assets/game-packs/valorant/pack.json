@@ -1,0 +1,83 @@
+{
+  "id": "valorant",
+  "order": 1,
+  "title": "Valorant",
+  "genre": "tactical-shooter",
+  "zones": 10,
+  "targets": [
+    {
+      "id": "entry-duelist",
+      "role": "common-a",
+      "label": "Entry Duelist",
+      "frame": "common-a",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "smoke-controller",
+      "role": "common-b",
+      "label": "Smoke Controller",
+      "frame": "common-b",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "recon-initiator",
+      "role": "common-c",
+      "label": "Recon Initiator",
+      "frame": "common-c",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "site-sentinel",
+      "role": "elite",
+      "label": "Site Sentinel",
+      "frame": "elite",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "spike-courier",
+      "role": "event",
+      "label": "Spike Courier",
+      "frame": "event",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    }
+  ],
+  "boss": {
+    "id": "radiant-protocol",
+    "label": "Radiant Protocol",
+    "frame": "boss",
+    "breakFrame": "boss-break",
+    "pivot": {
+      "x": 0.5,
+      "y": 1
+    }
+  },
+  "assets": {
+    "background": "assets/game-packs/valorant/background.webp",
+    "targets": "assets/game-packs/valorant/targets.webp",
+    "targetData": "assets/game-packs/valorant/targets.json",
+    "props": "assets/game-packs/valorant/props.webp",
+    "corruptionMask": "assets/game-packs/valorant/corruption-mask.webp"
+  },
+  "sourceBoard": "assets/game-packs/valorant/source-board.md",
+  "corruptionMasks": [
+    "signal-drift",
+    "corrupted",
+    "overrun",
+    "zero-day"
+  ]
+}

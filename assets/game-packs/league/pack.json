@@ -1,0 +1,83 @@
+{
+  "id": "league",
+  "order": 2,
+  "title": "League of Legends",
+  "genre": "moba",
+  "zones": 10,
+  "targets": [
+    {
+      "id": "lane-scout",
+      "role": "common-a",
+      "label": "Lane Scout",
+      "frame": "common-a",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "jungle-stalker",
+      "role": "common-b",
+      "label": "Jungle Stalker",
+      "frame": "common-b",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "siege-minion",
+      "role": "common-c",
+      "label": "Siege Minion",
+      "frame": "common-c",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "river-support",
+      "role": "elite",
+      "label": "River Support",
+      "frame": "elite",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "nexus-herald",
+      "role": "event",
+      "label": "Nexus Herald",
+      "frame": "event",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    }
+  ],
+  "boss": {
+    "id": "baron-patch",
+    "label": "Baron Patch",
+    "frame": "boss",
+    "breakFrame": "boss-break",
+    "pivot": {
+      "x": 0.5,
+      "y": 1
+    }
+  },
+  "assets": {
+    "background": "assets/game-packs/league/background.webp",
+    "targets": "assets/game-packs/league/targets.webp",
+    "targetData": "assets/game-packs/league/targets.json",
+    "props": "assets/game-packs/league/props.webp",
+    "corruptionMask": "assets/game-packs/league/corruption-mask.webp"
+  },
+  "sourceBoard": "assets/game-packs/league/source-board.md",
+  "corruptionMasks": [
+    "signal-drift",
+    "corrupted",
+    "overrun",
+    "zero-day"
+  ]
+}

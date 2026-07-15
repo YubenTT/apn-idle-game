@@ -60,6 +60,7 @@ import {
 } from '../js/save.js';
 import { checkCssTokenContract } from './check-css-tokens.mjs';
 import { checkEconomyColorContract } from './check-economy-colors.mjs';
+import { checkRouteContract } from './check-route.mjs';
 
 function installSeededRandom(seed) {
   let state = seed >>> 0;
@@ -90,6 +91,7 @@ for (const check of checkCssTokenContract()) {
 for (const check of checkEconomyColorContract()) {
   ok(check.pass, `${check.message} (${check.detail})`);
 }
+for (const message of checkRouteContract()) ok(true, `route ${message}`);
 
 // —— Persistent global Route + save v2 migration ——
 const freshRoute = createState();

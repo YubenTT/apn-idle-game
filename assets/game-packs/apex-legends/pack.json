@@ -1,0 +1,83 @@
+{
+  "id": "apex-legends",
+  "order": 13,
+  "title": "Apex Legends",
+  "genre": "battle-royale",
+  "zones": 10,
+  "targets": [
+    {
+      "id": "phase-skirmisher",
+      "role": "common-a",
+      "label": "Phase Skirmisher",
+      "frame": "common-a",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "tracker-scout",
+      "role": "common-b",
+      "label": "Tracker Scout",
+      "frame": "common-b",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "shield-support",
+      "role": "common-c",
+      "label": "Shield Support",
+      "frame": "common-c",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "zipline-hunter",
+      "role": "elite",
+      "label": "Zipline Hunter",
+      "frame": "elite",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "care-package-guard",
+      "role": "event",
+      "label": "Care-Package Guard",
+      "frame": "event",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    }
+  ],
+  "boss": {
+    "id": "apex-predator",
+    "label": "Apex Predator",
+    "frame": "boss",
+    "breakFrame": "boss-break",
+    "pivot": {
+      "x": 0.5,
+      "y": 1
+    }
+  },
+  "assets": {
+    "background": "assets/game-packs/apex-legends/background.webp",
+    "targets": "assets/game-packs/apex-legends/targets.webp",
+    "targetData": "assets/game-packs/apex-legends/targets.json",
+    "props": "assets/game-packs/apex-legends/props.webp",
+    "corruptionMask": "assets/game-packs/apex-legends/corruption-mask.webp"
+  },
+  "sourceBoard": "assets/game-packs/apex-legends/source-board.md",
+  "corruptionMasks": [
+    "signal-drift",
+    "corrupted",
+    "overrun",
+    "zero-day"
+  ]
+}

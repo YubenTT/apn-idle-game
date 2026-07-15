@@ -1,0 +1,83 @@
+{
+  "id": "dota-2",
+  "order": 14,
+  "title": "Dota 2",
+  "genre": "moba",
+  "zones": 10,
+  "targets": [
+    {
+      "id": "lane-creep",
+      "role": "common-a",
+      "label": "Lane Creep",
+      "frame": "common-a",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "roaming-support",
+      "role": "common-b",
+      "label": "Roaming Support",
+      "frame": "common-b",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "jungle-beast",
+      "role": "common-c",
+      "label": "Jungle Beast",
+      "frame": "common-c",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "core-duelist",
+      "role": "elite",
+      "label": "Core Duelist",
+      "frame": "elite",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "ancient-guard",
+      "role": "event",
+      "label": "Ancient Guard",
+      "frame": "event",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    }
+  ],
+  "boss": {
+    "id": "roshan-protocol",
+    "label": "Roshan Protocol",
+    "frame": "boss",
+    "breakFrame": "boss-break",
+    "pivot": {
+      "x": 0.5,
+      "y": 1
+    }
+  },
+  "assets": {
+    "background": "assets/game-packs/dota-2/background.webp",
+    "targets": "assets/game-packs/dota-2/targets.webp",
+    "targetData": "assets/game-packs/dota-2/targets.json",
+    "props": "assets/game-packs/dota-2/props.webp",
+    "corruptionMask": "assets/game-packs/dota-2/corruption-mask.webp"
+  },
+  "sourceBoard": "assets/game-packs/dota-2/source-board.md",
+  "corruptionMasks": [
+    "signal-drift",
+    "corrupted",
+    "overrun",
+    "zero-day"
+  ]
+}

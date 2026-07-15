@@ -1,0 +1,83 @@
+{
+  "id": "marvel-rivals",
+  "order": 17,
+  "title": "Marvel Rivals",
+  "genre": "hero-shooter",
+  "zones": 10,
+  "targets": [
+    {
+      "id": "vanguard",
+      "role": "common-a",
+      "label": "Vanguard",
+      "frame": "common-a",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "duelist",
+      "role": "common-b",
+      "label": "Duelist",
+      "frame": "common-b",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "strategist",
+      "role": "common-c",
+      "label": "Strategist",
+      "frame": "common-c",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "portal-scout",
+      "role": "elite",
+      "label": "Portal Scout",
+      "frame": "elite",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "cosmic-guard",
+      "role": "event",
+      "label": "Cosmic Guard",
+      "frame": "event",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    }
+  ],
+  "boss": {
+    "id": "multiverse-sentinel",
+    "label": "Multiverse Sentinel",
+    "frame": "boss",
+    "breakFrame": "boss-break",
+    "pivot": {
+      "x": 0.5,
+      "y": 1
+    }
+  },
+  "assets": {
+    "background": "assets/game-packs/marvel-rivals/background.webp",
+    "targets": "assets/game-packs/marvel-rivals/targets.webp",
+    "targetData": "assets/game-packs/marvel-rivals/targets.json",
+    "props": "assets/game-packs/marvel-rivals/props.webp",
+    "corruptionMask": "assets/game-packs/marvel-rivals/corruption-mask.webp"
+  },
+  "sourceBoard": "assets/game-packs/marvel-rivals/source-board.md",
+  "corruptionMasks": [
+    "signal-drift",
+    "corrupted",
+    "overrun",
+    "zero-day"
+  ]
+}
