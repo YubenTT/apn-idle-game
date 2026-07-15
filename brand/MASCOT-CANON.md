@@ -7,9 +7,11 @@
 
 ## The one rule
 
-**The GLB is the source of truth.** No new illustration, no AI variant, no "make it
-a bit more fit" mesh edits. A fitter look comes from **camera, pose, and cleanup**
-— never from inventing new proportions.
+**The GLB is the geometry source of truth.** No new mesh and no invented
+proportions. A fitter look comes from **camera, pose, shader, and cleanup**. An AI
+image may be used only as a style/cleanup reference after it is conditioned on
+canonical multi-angle GLB renders; the shipped Host is always re-rendered from the
+GLB under this lock. See [ADR-0005](../docs/decisions/ADR-0005-hybrid-host-render.md).
 
 Canonical source files (already in repo):
 
@@ -39,6 +41,16 @@ Large spherical head · slim body · integrated black visor · short cylindrical
 | Outline | 2px outer line in composite; dark ink/bordo, **not** pure black. |
 | Shadow | Fixed oval drop shadow, opacity 18–22%. |
 | Cleanup | Reduce gloss, sharpen visor edge, kill plastic-toy feel. |
+
+### Hybrid reference boundary
+
+- Input reference sheets must show the canonical GLB from front, locked ¾, side,
+  and back views with the foot pivot marked.
+- Image generation may propose pose energy, flat-light cleanup, and edge economy.
+- It may not change head/body ratio, visor bounds, limb thickness, foot pivot, or
+  the one-piece silhouette.
+- Final runtime frames are deterministic GLB renders plus controlled 2D composite
+  cleanup. If the reference and GLB disagree, the reference is rejected.
 
 ## Role variants (NOT new characters)
 

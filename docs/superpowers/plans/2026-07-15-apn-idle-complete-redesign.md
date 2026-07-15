@@ -101,7 +101,7 @@ and the relevant `CHANGELOG.md` line land in the same commit as the issue.
 - Produces: accepted ADR-0004, a non-contradictory Host derivation rule, and a
   locked issue order used by every later task.
 
-- [ ] **Step 1: Add a failing documentation integrity check**
+- [x] **Step 1: Add a failing documentation integrity check**
 
 Create `qa/check-doc-contracts.mjs` that reads the five owning docs and fails if
 the route is still described as procedural five-biome cycling, if third-party
@@ -115,29 +115,31 @@ const route = read('docs/GAME-PACK-ROUTE.md');
 const vision = read('docs/VISION.md');
 const art = read('brand/ART-DIRECTION.md');
 const adr = read('docs/decisions/ADR-0004-game-pack-route.md');
+const backlog = read('docs/REDESIGN-PLAN.md');
 const fail = [];
 if (!route.includes('20 distinct clean Game Packs')) fail.push('route milestone');
 if (!adr.includes('Status: Accepted')) fail.push('ADR-0004 status');
-if (vision.includes('Do not copy third-party game characters')) fail.push('VISION contradiction');
-if (art.includes('We do **not** copy third-party game characters')) fail.push('art contradiction');
+if (!vision.includes('Game Packs use recognizable homage')) fail.push('VISION route rule');
+if (!art.includes('Game Pack target families')) fail.push('art route rule');
+if (!backlog.includes('I-003') || !backlog.includes('I-007')) fail.push('foundation backlog');
 if (fail.length) throw new Error(`Doc contract: ${fail.join(', ')}`);
 console.log('OK route and art docs agree');
 ```
 
-- [ ] **Step 2: Run the check and verify it fails**
+- [x] **Step 2: Run the check and verify it fails**
 
 Run: `node qa/check-doc-contracts.mjs`
 
 Expected: failure naming ADR-0004 and the two third-party contradictions.
 
-- [ ] **Step 3: Accept the route and supersede only the conflicting clauses**
+- [x] **Step 3: Accept the route and supersede only the conflicting clauses**
 
 Keep ADR-0003's GLB geometry authority. ADR-0005 must permit ImageGen only as a
 render/style cleanup reference derived from GLB views; it must prohibit changing
 head/body ratio, visor geometry, pivot, or silhouette. Update the backlog with the
-new I-003–I-009 foundation issues and the exact execution order in this plan.
+new I-003–I-007 foundation issues and the exact execution order in this plan.
 
-- [ ] **Step 4: Register approved proof files without shipping them**
+- [x] **Step 4: Register approved proof files without shipping them**
 
 Compress the accepted concept boards to review-only WebP under
 `docs/art/proofs/2026-07-15/`; record source PNG, prompt family, approval date,
@@ -147,7 +149,7 @@ Run: `node qa/check-doc-contracts.mjs`
 
 Expected: `OK route and art docs agree`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add docs brand qa/check-doc-contracts.mjs CHANGELOG.md
@@ -518,6 +520,13 @@ I-032D · packs 16–20
 - Each pack exports exactly five target roles, one boss, one break state, three
   background layers, props, and two mask families with foot-center pivots.
 
+- [ ] **Step 0: Complete I-031 art grammar on its own branch and commit**
+
+Unify the shipped icon stroke, terminals, outline, material, shadow, and palette
+contract before producing pack masters. Run token, asset, and primary tests.
+Commit: `art: unify the APN 2D grammar`. I-032A may not start until this commit is
+fast-forwarded into the integration branch.
+
 - [ ] **Step 1: Regenerate the missing Marvel Rivals focused proof**
 
 Use official source-board images and the accepted APN grammar. Do not proceed to
@@ -762,7 +771,7 @@ Chrome screenshots before each focused commit.
 
 ### Task 12: Finish art grammar, copy, motion, navigation, and accessibility
 
-**Issues:** I-031, I-033, I-034, I-040, I-042, I-044
+**Issues:** I-033, I-034, I-040, I-042, I-044
 
 **Files:**
 - Modify: `js/icons.js`

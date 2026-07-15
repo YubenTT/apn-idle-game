@@ -9,6 +9,13 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Added
 
+- Accepted the catalog-driven Game Pack Route: 20 clean ten-zone packs, persistent
+  world progress, bounded Corruption revisits, and one deterministic expansion path.
+- Added ADR-0005 for GLB-locked hybrid Host rendering: image generation may guide
+  pose/cleanup, while shipped geometry and pivots remain canonical GLB derivatives.
+- Added a documentation contract test and a 32-issue, six-session autonomous
+  implementation graph with a single final localhost review gate.
+
 - **Design-system + docs backbone** (system-first redesign foundation; no runtime
   change — the vanilla ES + Canvas 2D game is untouched):
   - `brand/` design system — `tokens.css` (canonical CSS custom properties,
@@ -18,9 +25,9 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
     · `SCREEN-SPECS.md` (mobile-first per-screen redesign) · `ART-PIPELINE.md` ·
     `PERF-BUDGET.md` · `QA-CHECKLIST.md` · `GLOSSARY.md` · `DEFINITION-OF-DONE.md` ·
     `DOC-UPDATE-POLICY.md`
-  - `docs/REDESIGN-PLAN.md` — sequenced issue backlog (24 issues, 5 waves) grouped
-    into 7 autonomous delivery sessions, with per-issue acceptance criteria,
-    dependencies, one visual user gate, and a release gate
+  - `docs/REDESIGN-PLAN.md` — sequenced issue backlog (32 issues) grouped into 6
+    autonomous delivery sessions, with per-issue acceptance criteria,
+    dependencies, one final integrated user gate, and a release gate
   - `docs/decisions/` ADRs — **ADR-0001** keep vanilla ES + Canvas 2D (reject
     PixiJS/React rewrite), **ADR-0002** token-driven design system, **ADR-0003**
     GLB single-source mascot

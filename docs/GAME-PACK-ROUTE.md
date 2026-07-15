@@ -1,9 +1,9 @@
 # Game Pack Route
 
 > Design source of truth for long-form Route progression, pack scheduling,
-> Corruption, pacing targets, and the asset handoff. Proposed by
-> [ADR-0004](./decisions/ADR-0004-game-pack-route.md); production remains unchanged
-> until the visual lock is approved.
+> Corruption, pacing targets, and the asset handoff. Accepted by
+> [ADR-0004](./decisions/ADR-0004-game-pack-route.md); implementation follows the
+> locked issue sequence in [REDESIGN-PLAN](./REDESIGN-PLAN.md).
 
 ## The derived Zone 200 rule
 

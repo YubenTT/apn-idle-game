@@ -31,7 +31,9 @@ under a fixed render-lock (orthographic camera, foot-center pivot, single key li
 2-tone shader, 2px ink outline, grounded oval shadow), documented in
 [MASCOT-CANON](../../brand/MASCOT-CANON.md). Role variants change only a small
 accent/prop — never proportions. A "fitter" look is achieved by camera + cleanup,
-**not** by new meshes or AI re-interpretations (a [VISION](../VISION.md) non-goal).
+**not** by new meshes. [ADR-0005](./ADR-0005-hybrid-host-render.md) permits
+GLB-conditioned image generation as a non-canonical style reference; it does not
+relax this geometry decision.
 
 If a 2D sprite conflicts with the GLB silhouette, the GLB wins and the sprite is
 re-exported. Every mascot appearance passes **Silhouette QA**
@@ -42,8 +44,8 @@ re-exported. Every mascot appearance passes **Silhouette QA**
 **We gain:** one recognizable hero, reproducible variants/animations, and a QA
 criterion that's objective (same geometry, or it fails).
 
-**We accept:** a Blender-based export step for new mascot art
-([ART-PIPELINE](../ART-PIPELINE.md)); interim hand-exports must still obey the
+**We accept:** a deterministic development-only GLB export surface for new mascot
+art ([ART-PIPELINE](../ART-PIPELINE.md)); interim hand-exports must still obey the
 render-lock, which is slower than freehand.
 
 ## Revisit when

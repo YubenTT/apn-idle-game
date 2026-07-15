@@ -50,7 +50,7 @@ cheap; violating it is expensive.
 | Multiplayer / server-authoritative combat | Single-surface waiting-room game; no backend for v1. |
 | New mascot art per screen / AI re-interpretations | Mascot is single-source from GLB. "Fit look" comes from camera + cleanup, not new meshes. |
 | Red as the default accent for everything | Red = APN primary / patch / live only. Other jobs get other hues. |
-| Copying third-party game characters as enemies | Enemies are APN's own target families (Feed Noise, Patch Note, Version Gate…). |
+| Pasting official logos or unmodified third-party art into encounters | Game Packs use recognizable homage as input, then redraw every target, prop, and environment through APN's owned 2D grammar; no source image ships as runtime art. See [ADR-0004](./decisions/ADR-0004-game-pack-route.md). |
 | More than 5 top-level nav destinations | Cognitive load + touch targets. Secondary surfaces are sheets. |
 | Debug / diagnostic text on player-facing screens | e.g. "Damage 3·Crit 0·Utility 1", "hover for stats" — banned in UI. |
 | Full 30-doc AAA production process | Right-sized process for a small web game (see below). |
