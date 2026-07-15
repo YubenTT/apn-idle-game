@@ -1,0 +1,16 @@
+{
+  "assets": [
+    {
+      "id": "fixture-targets",
+      "path": "qa/fixtures/assets/oversized/targets.webp",
+      "kind": "targets",
+      "budgetBytes": 4,
+      "firstPlayable": true
+    }
+  ],
+  "packs": [
+    { "id": "one", "hot": true },
+    { "id": "two", "hot": true },
+    { "id": "three", "hot": true }
+  ]
+}

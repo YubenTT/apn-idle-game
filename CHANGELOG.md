@@ -9,6 +9,9 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Added
 
+- Added a deterministic zero-npm asset pipeline for atlas layout, pivot/trim
+  metadata, fixed WebP profiles, SHA-256 manifests, hot-pack ownership, and hard
+  first-playable/per-pack size gates.
 - Added deterministic active/idle pacing profiles and a silent Zone 1000/offline
   long-run gate. The Clean Era now measures 10.2 active-assisted hours or about
   2.4 mostly-idle calendar days before Corruption.

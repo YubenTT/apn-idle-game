@@ -61,6 +61,8 @@ import {
 import { checkCssTokenContract } from './check-css-tokens.mjs';
 import { checkEconomyColorContract } from './check-economy-colors.mjs';
 import { checkRouteContract } from './check-route.mjs';
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
 function installSeededRandom(seed) {
   let state = seed >>> 0;
@@ -75,6 +77,12 @@ function installSeededRandom(seed) {
 
 // Keep headless assertions reproducible; production/gameplay RNG is untouched.
 installSeededRandom(0x41504e); // "APN"
+
+process.stdout.write(
+  execFileSync(process.execPath, [fileURLToPath(new URL('./check-assets.mjs', import.meta.url))], {
+    encoding: 'utf8',
+  })
+);
 
 let fails = 0;
 const ok = (c, m) => {
