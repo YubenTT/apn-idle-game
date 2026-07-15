@@ -50,6 +50,9 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Changed
 
+- Replaced happy-path procedural biome rotation with scheduled Game Pack
+  backgrounds and target atlases; the loader decodes only current and next packs
+  and releases cold image references across Route transitions.
 - Completed Clean Era Game Packs 16–20, including the focused Marvel source
   closure and the approved Tarkov, Rocket League, and Elden Ring production sets.
 - Produced Clean Era Game Packs 11–15, retaining the approved heist, stadium,
