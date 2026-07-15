@@ -58,4 +58,20 @@ assert(firstHash === secondHash && first.assets.length === second.assets.length,
 const sizes = verifySizes();
 assert(sizes.errors.length === 0, `current assets fit budgets (${sizes.firstPlayable} first-playable bytes)`);
 assert(sizes.hot.length <= 2, 'at most current and next packs marked hot');
+
+const hostAtlasFile = path.join(root, 'assets/mascot/atlas/apn-mascot-base.json');
+if (fs.existsSync(hostAtlasFile)) {
+  const host = readJson(hostAtlasFile);
+  const required = ['idle', 'run', 'scan', 'crit', 'loot', 'sprint', 'overdrive', 'damage', 'level', 'defeat'];
+  assert(required.every((name) => host.frames?.[name]), 'Host atlas contains ten required poses');
+  assert(host.meta?.source === 'assets/apn-mascot-glb-host.glb', 'Host atlas records canonical GLB source');
+  assert(host.meta?.renderLock?.cameraY === 18 && host.meta?.renderLock?.cameraX === 9, 'Host camera lock recorded');
+  const metrics = required.map((name) => host.frames[name].metrics);
+  const footXs = metrics.map((item) => item.footX);
+  const footYs = metrics.map((item) => item.footY);
+  assert(Math.max(...footXs) - Math.min(...footXs) <= 1 && Math.max(...footYs) - Math.min(...footYs) <= 1, 'Host foot pivot stable within one pixel');
+  const ratios = metrics.map((item) => item.headBodyRatio);
+  assert((Math.max(...ratios) - Math.min(...ratios)) / Math.min(...ratios) <= 0.03, 'Host head/body ratio stable within three percent');
+  assert(metrics.every((item) => item.visorCoverage >= 0.18), 'Host visor region non-empty in every pose');
+}
 console.log('ASSETS PASS');
