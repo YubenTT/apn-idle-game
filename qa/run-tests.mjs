@@ -159,6 +159,10 @@ const contentSource = readFileSync(new URL('../js/content.js', import.meta.url),
 const uiSource = readFileSync(new URL('../js/ui.js', import.meta.url), 'utf8');
 const cssSource = readFileSync(new URL('../css/game.css', import.meta.url), 'utf8');
 const navAdr = readFileSync(new URL('../docs/decisions/ADR-0007-keep-five-navigation.md', import.meta.url), 'utf8');
+ok(!uiSource.includes("'Need energy'") && !uiSource.includes("'Low — grab orbs'"), 'Run avoids transient low-energy helper copy');
+ok(/\.hud-stage\s*\{[^}]*margin:\s*0;[^}]*border:\s*0;[^}]*border-radius:\s*0;/s.test(cssSource), 'Run stage is edge-to-edge');
+ok(shellMarkup.includes('id="v-energy-lab"') && shellMarkup.includes('id="v-focus-lab"'), 'Run meters expose live values');
+ok(/\.btn-chip\s*\{[^}]*min-height:\s*calc\(var\(--touch-min\) \+ var\(--sp-1\)\)/s.test(cssSource), 'Run skills preserve touch targets');
 ok((shellMarkup.match(/class="nav-btn"/g) || []).length === 5, 'Navigation keeps exactly five tabs');
 for (const label of ['Build', 'Ship', 'Hub', 'Boosts', 'Menu']) {
   ok(shellMarkup.includes(`<span>${label}</span>`), `Navigation keeps ${label}`);
