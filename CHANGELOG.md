@@ -9,6 +9,9 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Added
 
+- Added the final five-viewport, seven-screen regression pack (35 accepted
+  captures), exact-dimension baseline QA, opt-in browser performance probes, and
+  an integrated release report with zero open Blocker/Critical defects.
 - Added ADR-0007 to lock the five-destination navigation with Gear as a separate
   stage FAB; every launcher now exposes its sheet expansion state to assistive
   technology.

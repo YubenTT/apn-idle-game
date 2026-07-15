@@ -394,7 +394,7 @@ acceptance boxes, fresh tests, browser proof, and one focused commit per issue.
   terms match [GLOSSARY](./GLOSSARY.md); "Mana Flow"/`mana` renamed. Files: `js/content.js`, `js/ui.js`.
 
 ### I-043 · Device matrix + visual regression — 🔴 M
-- **Acceptance:** all [QA-CHECKLIST](./QA-CHECKLIST.md) gates green on the device
+- **Acceptance:** [x] all [QA-CHECKLIST](./QA-CHECKLIST.md) gates green on the device
   matrix; screenshot diffs refreshed + approved. Files: `qa/*`.
 
 ### I-044 · Keep-5 navigation refinement + implement — 🟡 S

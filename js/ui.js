@@ -101,6 +101,7 @@ const PANEL_TITLES = {
 };
 
 let lastPanel = null;
+const QA_METRICS = typeof location !== 'undefined' && new URLSearchParams(location.search).has('qa_metrics');
 
 function applyMotionPreference(value) {
   setReducedMotion(value);
@@ -393,6 +394,7 @@ function popSpend(el) {
 }
 
 function openSheet(s, panel) {
+  const openedAt = QA_METRICS ? performance.now() : 0;
   s.ui.panel = panel;
   s.ui.panelDirty = true;
   const root = document.getElementById('sheet-root');
@@ -431,6 +433,7 @@ function openSheet(s, panel) {
   if (lastPanel !== panel && s.settings.sfx !== false) sfx('sheet');
   lastPanel = panel;
   s.ui.panelDirty = false;
+  if (QA_METRICS) document.documentElement.dataset.qaSheetMs = (performance.now() - openedAt).toFixed(1);
 }
 
 function closeSheet(s) {
