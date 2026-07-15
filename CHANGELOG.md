@@ -9,6 +9,8 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Added
 
+- Added 20 stable Clean Era Game Pack manifests, a byte-stable frozen runtime
+  catalog, seeded different-genre season scheduling, and bounded corruption tiers.
 - Accepted the catalog-driven Game Pack Route: 20 clean ten-zone packs, persistent
   world progress, bounded Corruption revisits, and one deterministic expansion path.
 - Added ADR-0005 for GLB-locked hybrid Host rendering: image generation may guide

@@ -205,11 +205,11 @@ acceptance boxes, fresh tests, browser proof, and one focused commit per issue.
 ### I-005 · Game Pack catalog + deterministic scheduler — 🔴 L
 - **Goal:** make packs stable content records, never renderer-selected array slots.
 - **Acceptance:**
-  - [ ] Twenty manifests generate one byte-stable catalog with unique string IDs.
-  - [ ] A pack defines 10 zones, five target roles, one boss, assets, pivots, genre, and source board.
-  - [ ] First Clean Era order is locked; new packs debut Clean at season boundaries only.
-  - [ ] Revisits use seeded least-recent scheduling without adjacent duplicate pack/genre.
-  - [ ] Catalog generation, scheduler QA, and primary suite pass.
+  - [x] Twenty manifests generate one byte-stable catalog with unique string IDs.
+  - [x] A pack defines 10 zones, five target roles, one boss, assets, pivots, genre, and source board.
+  - [x] First Clean Era order is locked; new packs debut Clean at season boundaries only.
+  - [x] Revisits use seeded least-recent scheduling without adjacent duplicate pack/genre.
+  - [x] Catalog generation, scheduler QA, and primary suite pass.
 - **Files:** pack manifests/catalog, `scripts/assets/generate-catalog.mjs`, `js/route.js`, QA.
 
 ### I-006 · Multi-day pacing + bounded offline progression — 🔴 L

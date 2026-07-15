@@ -259,7 +259,7 @@ git commit -m "feat: add persistent global route state"
   `scheduleNextSeason(route, catalog)`, and `corruptionTierFor(route, packId)`.
 - The renderer never chooses a pack or corruption tier itself.
 
-- [ ] **Step 1: Write the scheduler contract tests**
+- [x] **Step 1: Write the scheduler contract tests**
 
 ```js
 const route = createRouteState(0x41504e);
@@ -278,26 +278,26 @@ Run: `node qa/check-route.mjs`
 
 Expected: module-not-found failure.
 
-- [ ] **Step 2: Define complete manifests**
+- [x] **Step 2: Define complete manifests**
 
 Every manifest contains stable `id`, `order`, `title`, `genre`, `zones: 10`,
 `boss`, five `targets`, asset paths, pivots, source-board path, and corruption-mask
 paths. No array index is persisted as identity.
 
-- [ ] **Step 3: Generate the runtime catalog**
+- [x] **Step 3: Generate the runtime catalog**
 
 `generate-catalog.mjs` validates exactly five targets, one boss, unique IDs and
 orders, then writes a deterministic frozen JS module. Re-running without source
 changes must produce byte-identical output.
 
-- [ ] **Step 4: Implement scheduler rules**
+- [x] **Step 4: Implement scheduler rules**
 
 Use a small seeded xorshift function local to `route.js`. Schedule two unseen
 different-genre Clean packs when available; otherwise select the two
 least-recently-seen eligible packs at the lowest available corruption tier. New
 packs always debut Clean. Never mutate an active two-pack season.
 
-- [ ] **Step 5: Verify and commit**
+- [x] **Step 5: Verify and commit**
 
 Run:
 

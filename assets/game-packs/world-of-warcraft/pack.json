@@ -1,0 +1,83 @@
+{
+  "id": "world-of-warcraft",
+  "order": 4,
+  "title": "World of Warcraft",
+  "genre": "mmorpg",
+  "zones": 10,
+  "targets": [
+    {
+      "id": "kobold-scout",
+      "role": "common-a",
+      "label": "Kobold Scout",
+      "frame": "common-a",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "plague-caster",
+      "role": "common-b",
+      "label": "Plague Caster",
+      "frame": "common-b",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "iron-raider",
+      "role": "common-c",
+      "label": "Iron Raider",
+      "frame": "common-c",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "arcane-keeper",
+      "role": "elite",
+      "label": "Arcane Keeper",
+      "frame": "elite",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "raid-champion",
+      "role": "event",
+      "label": "Raid Champion",
+      "frame": "event",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    }
+  ],
+  "boss": {
+    "id": "lich-gatekeeper",
+    "label": "Lich Gatekeeper",
+    "frame": "boss",
+    "breakFrame": "boss-break",
+    "pivot": {
+      "x": 0.5,
+      "y": 1
+    }
+  },
+  "assets": {
+    "background": "assets/game-packs/world-of-warcraft/background.webp",
+    "targets": "assets/game-packs/world-of-warcraft/targets.webp",
+    "targetData": "assets/game-packs/world-of-warcraft/targets.json",
+    "props": "assets/game-packs/world-of-warcraft/props.webp",
+    "corruptionMask": "assets/game-packs/world-of-warcraft/corruption-mask.webp"
+  },
+  "sourceBoard": "assets/game-packs/world-of-warcraft/source-board.md",
+  "corruptionMasks": [
+    "signal-drift",
+    "corrupted",
+    "overrun",
+    "zero-day"
+  ]
+}

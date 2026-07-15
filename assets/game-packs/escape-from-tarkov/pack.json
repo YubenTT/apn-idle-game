@@ -1,0 +1,83 @@
+{
+  "id": "escape-from-tarkov",
+  "order": 18,
+  "title": "Escape from Tarkov",
+  "genre": "extraction-shooter",
+  "zones": 10,
+  "targets": [
+    {
+      "id": "scav-scout",
+      "role": "common-a",
+      "label": "Scav Scout",
+      "frame": "common-a",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "armored-raider",
+      "role": "common-b",
+      "label": "Armored Raider",
+      "frame": "common-b",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "marksman",
+      "role": "common-c",
+      "label": "Marksman",
+      "frame": "common-c",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "breach-operator",
+      "role": "elite",
+      "label": "Breach Operator",
+      "frame": "elite",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "extraction-guard",
+      "role": "event",
+      "label": "Extraction Guard",
+      "frame": "event",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    }
+  ],
+  "boss": {
+    "id": "labs-overseer",
+    "label": "Labs Overseer",
+    "frame": "boss",
+    "breakFrame": "boss-break",
+    "pivot": {
+      "x": 0.5,
+      "y": 1
+    }
+  },
+  "assets": {
+    "background": "assets/game-packs/escape-from-tarkov/background.webp",
+    "targets": "assets/game-packs/escape-from-tarkov/targets.webp",
+    "targetData": "assets/game-packs/escape-from-tarkov/targets.json",
+    "props": "assets/game-packs/escape-from-tarkov/props.webp",
+    "corruptionMask": "assets/game-packs/escape-from-tarkov/corruption-mask.webp"
+  },
+  "sourceBoard": "assets/game-packs/escape-from-tarkov/source-board.md",
+  "corruptionMasks": [
+    "signal-drift",
+    "corrupted",
+    "overrun",
+    "zero-day"
+  ]
+}

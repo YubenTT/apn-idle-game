@@ -1,0 +1,83 @@
+{
+  "id": "rocket-league",
+  "order": 19,
+  "title": "Rocket League",
+  "genre": "sports-driving",
+  "zones": 10,
+  "targets": [
+    {
+      "id": "boost-striker",
+      "role": "common-a",
+      "label": "Boost Striker",
+      "frame": "common-a",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "aerial-defender",
+      "role": "common-b",
+      "label": "Aerial Defender",
+      "frame": "common-b",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "demo-chaser",
+      "role": "common-c",
+      "label": "Demo Chaser",
+      "frame": "common-c",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "wall-rider",
+      "role": "elite",
+      "label": "Wall Rider",
+      "frame": "elite",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "goalkeeper",
+      "role": "event",
+      "label": "Goalkeeper",
+      "frame": "event",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    }
+  ],
+  "boss": {
+    "id": "supersonic-titan",
+    "label": "Supersonic Titan",
+    "frame": "boss",
+    "breakFrame": "boss-break",
+    "pivot": {
+      "x": 0.5,
+      "y": 1
+    }
+  },
+  "assets": {
+    "background": "assets/game-packs/rocket-league/background.webp",
+    "targets": "assets/game-packs/rocket-league/targets.webp",
+    "targetData": "assets/game-packs/rocket-league/targets.json",
+    "props": "assets/game-packs/rocket-league/props.webp",
+    "corruptionMask": "assets/game-packs/rocket-league/corruption-mask.webp"
+  },
+  "sourceBoard": "assets/game-packs/rocket-league/source-board.md",
+  "corruptionMasks": [
+    "signal-drift",
+    "corrupted",
+    "overrun",
+    "zero-day"
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "id": "minecraft",
+  "order": 6,
+  "title": "Minecraft",
+  "genre": "sandbox-survival",
+  "zones": 10,
+  "targets": [
+    {
+      "id": "block-scout",
+      "role": "common-a",
+      "label": "Block Scout",
+      "frame": "common-a",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "blast-blocker",
+      "role": "common-b",
+      "label": "Blast Blocker",
+      "frame": "common-b",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "skeleton-archer",
+      "role": "common-c",
+      "label": "Skeleton Archer",
+      "frame": "common-c",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "end-walker",
+      "role": "elite",
+      "label": "End Walker",
+      "frame": "elite",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "redstone-golem",
+      "role": "event",
+      "label": "Redstone Golem",
+      "frame": "event",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    }
+  ],
+  "boss": {
+    "id": "ender-titan",
+    "label": "Ender Titan",
+    "frame": "boss",
+    "breakFrame": "boss-break",
+    "pivot": {
+      "x": 0.5,
+      "y": 1
+    }
+  },
+  "assets": {
+    "background": "assets/game-packs/minecraft/background.webp",
+    "targets": "assets/game-packs/minecraft/targets.webp",
+    "targetData": "assets/game-packs/minecraft/targets.json",
+    "props": "assets/game-packs/minecraft/props.webp",
+    "corruptionMask": "assets/game-packs/minecraft/corruption-mask.webp"
+  },
+  "sourceBoard": "assets/game-packs/minecraft/source-board.md",
+  "corruptionMasks": [
+    "signal-drift",
+    "corrupted",
+    "overrun",
+    "zero-day"
+  ]
+}

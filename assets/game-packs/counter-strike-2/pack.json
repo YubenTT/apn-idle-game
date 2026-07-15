@@ -1,0 +1,83 @@
+{
+  "id": "counter-strike-2",
+  "order": 7,
+  "title": "Counter-Strike 2",
+  "genre": "tactical-shooter",
+  "zones": 10,
+  "targets": [
+    {
+      "id": "entry-fragger",
+      "role": "common-a",
+      "label": "Entry Fragger",
+      "frame": "common-a",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "smoke-anchor",
+      "role": "common-b",
+      "label": "Smoke Anchor",
+      "frame": "common-b",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "awp-watcher",
+      "role": "common-c",
+      "label": "AWP Watcher",
+      "frame": "common-c",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "eco-rusher",
+      "role": "elite",
+      "label": "Eco Rusher",
+      "frame": "elite",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "defuse-specialist",
+      "role": "event",
+      "label": "Defuse Specialist",
+      "frame": "event",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    }
+  ],
+  "boss": {
+    "id": "global-sentinel",
+    "label": "Global Sentinel",
+    "frame": "boss",
+    "breakFrame": "boss-break",
+    "pivot": {
+      "x": 0.5,
+      "y": 1
+    }
+  },
+  "assets": {
+    "background": "assets/game-packs/counter-strike-2/background.webp",
+    "targets": "assets/game-packs/counter-strike-2/targets.webp",
+    "targetData": "assets/game-packs/counter-strike-2/targets.json",
+    "props": "assets/game-packs/counter-strike-2/props.webp",
+    "corruptionMask": "assets/game-packs/counter-strike-2/corruption-mask.webp"
+  },
+  "sourceBoard": "assets/game-packs/counter-strike-2/source-board.md",
+  "corruptionMasks": [
+    "signal-drift",
+    "corrupted",
+    "overrun",
+    "zero-day"
+  ]
+}

@@ -75,7 +75,14 @@ flowchart TB
 
 - Pure global Route state construction, sanitization, display, and boundary helpers.
 - Stable string IDs and route history survive End Season; no DOM or storage access.
-- Catalog scheduling joins this module in I-005; renderer never chooses route content.
+- Owns pure pack lookup, seeded two-pack scheduling, least-recent revisit selection,
+  and bounded corruption tier. Renderer never chooses Route content.
+
+### `generated/game-packs.js`
+
+- Frozen runtime catalog generated from 20 stable `assets/game-packs/*/pack.json` sources.
+- Generation is byte-stable; source manifests own identity, roles, pivots, and paths.
+- Never hand-edit the generated module or persist array indexes in saves.
 
 ### `content.js`
 

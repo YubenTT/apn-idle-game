@@ -32,7 +32,8 @@ Living plan — not a commitment calendar.
 ## Near term
 
 - [x] Persistent global Route + dual-key save v2 migration; End Season keeps world progress
-- [ ] Deterministic 20-pack catalog, multi-day pacing, and season-bounded offline progression
+- [x] Deterministic 20-pack manifest catalog + seeded least-recent scheduler
+- [ ] Multi-day pacing and season-bounded offline progression
 - [ ] Production asset pipeline, canonical Host atlas, 20 Clean Era Game Packs,
       and current+next lazy runtime composition
 - [ ] Redesign screens against [SCREEN-SPECS](./SCREEN-SPECS.md) (Run HUD, Gear,

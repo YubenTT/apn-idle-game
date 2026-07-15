@@ -132,6 +132,8 @@ two-pack season.
 4. A newly added pack joins the next Clean Season; it does not reorder the active
    season or mutate an existing save deck.
 5. Never schedule the same pack or the same primary genre consecutively.
+6. If only one unseen pack exists, it debuts Clean beside the least-recent
+   different-genre revisit; the new pack is never held back waiting for another install.
 
 Example after Zone 200:
 
