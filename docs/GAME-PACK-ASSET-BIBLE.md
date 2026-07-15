@@ -5,10 +5,10 @@
 > deliverables. Nothing here is a shipped runtime asset until the combined visual
 > lock is approved.
 
-Production status: packs 01–10 are exported from the approved proof language as
+Production status: packs 01–15 are exported from the approved proof language as
 textless APN Patchline masters with deterministic backgrounds, target atlases,
-props, masks, pivots, and source-board records. Packs 11–20 follow in the two
-remaining five-pack commits.
+props, masks, pivots, and source-board records. Packs 16–20 follow in the final
+five-pack commit.
 
 ## What must be produced
 
