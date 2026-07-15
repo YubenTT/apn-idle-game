@@ -50,6 +50,9 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Changed
 
+- Rebuilt Boosts as a permanent Ranks/Combat/Economy ROI tree; domain previews
+  now own exact current→next effects, Rep costs, affordability, value cues, and
+  one catch-up recommendation or next target.
 - Split Menu into Accessibility, Audio, Account, Purchases, and Reset; replaced
   checkboxes with the canonical 51×31 switch, removed attribute debug copy,
   labeled the local demo store honestly, and put New Game behind an inline gate.

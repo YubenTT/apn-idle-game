@@ -5240,6 +5240,169 @@ button[hidden] {
   margin: 0;
 }
 
+/* I-024 · Boosts exposes permanent ROI and one domain recommendation. */
+#panel-meta .rep-bank {
+  min-height: calc(var(--touch-min) + var(--sp-2));
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--sp-2);
+  margin: 0 0 var(--sp-4);
+  padding: var(--sp-2) var(--sp-3);
+  border: var(--border-1);
+  border-radius: var(--r-card);
+  background: var(--surface-900);
+}
+
+#panel-meta .rep-bank .sp-bank-label,
+#panel-meta .rep-bank .sp-bank-val {
+  color: var(--c-rep);
+}
+
+#panel-meta .rep-bank .sp-bank-hint {
+  justify-self: end;
+  color: var(--text-mid);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+}
+
+.boosts-tree,
+.boost-list {
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.boost-category + .boost-category {
+  margin-top: var(--sp-4);
+}
+
+.boost-category h3 {
+  min-height: var(--sp-8);
+  display: flex;
+  align-items: center;
+  margin: 0;
+  color: var(--text-mid);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.boost-row {
+  min-width: 0;
+  min-height: calc(var(--touch-min) * 2);
+  display: grid;
+  grid-template-columns: var(--sp-8) minmax(0, 1fr) auto;
+  gap: var(--sp-2);
+  align-items: center;
+  width: 100%;
+  padding: var(--sp-3);
+  border: var(--border-1);
+  border-radius: var(--r-card);
+  background: var(--surface-900);
+  color: var(--text-high);
+  text-align: left;
+  box-shadow: none;
+}
+
+.boost-row.can {
+  border-color: var(--compat-line-strong);
+  box-shadow: inset 0 calc(var(--border-accent) * -1) 0 var(--c-positive);
+}
+
+.boost-row.locked {
+  opacity: 1;
+}
+
+.boost-row.recommended {
+  background: color-mix(in srgb, var(--c-rep) 7%, var(--surface-900));
+}
+
+.boost-ico {
+  width: var(--sp-8);
+  height: var(--sp-8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-chip);
+  background: var(--surface-800);
+  color: var(--c-rep);
+}
+
+.boost-ico .ico {
+  width: var(--sp-4);
+  height: var(--sp-4);
+}
+
+.boost-copy,
+.boost-side {
+  min-width: 0;
+  display: grid;
+  gap: var(--sp-1);
+}
+
+.boost-name {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  color: var(--text-high);
+  font-size: var(--fs-label-m);
+  line-height: var(--lh-label-m);
+  font-weight: 800;
+}
+
+.boost-name b {
+  padding: 0 var(--sp-1);
+  border-radius: var(--r-pill);
+  background: color-mix(in srgb, var(--c-rep) 14%, var(--surface-800));
+  color: var(--c-rep);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+}
+
+.boost-desc,
+.boost-value,
+.boost-level,
+.boost-delta {
+  color: var(--text-mid);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+}
+
+.boost-value {
+  color: var(--c-info);
+}
+
+.boost-side {
+  justify-items: end;
+  text-align: right;
+}
+
+.boost-delta {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.rep-cost {
+  min-height: var(--sp-6);
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--sp-2);
+  border-radius: var(--r-pill);
+  background: var(--surface-800);
+  color: var(--text-low);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.rep-cost.afford {
+  background: color-mix(in srgb, var(--c-positive) 12%, var(--surface-800));
+  color: var(--c-positive);
+}
+
 /* I-011 · one-line current-pack feed rail */
 .hud-ticker {
   flex: 0 0 var(--touch-min);

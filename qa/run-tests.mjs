@@ -29,6 +29,8 @@ import {
   claimHubObjective,
   normalizeGear,
   END_SEASON_CONTRACT,
+  metaUpgradePreview,
+  recommendedMetaId,
 } from '../js/game.js';
 import {
   emptyGear,
@@ -133,6 +135,12 @@ for (const section of ['Accessibility', 'Audio', 'Account', 'Purchases', 'Reset'
 }
 ok(!shellMarkup.includes('id="v-attrs"'), 'Menu has no attribute debug string');
 ok((shellMarkup.match(/class="switch-ui"/g) || []).length === 2, 'Menu uses one switch component twice');
+const boostFixture = createState();
+boostFixture.authority.amount = 20;
+const damageBoostPreview = metaUpgradePreview(boostFixture, 'signal_power');
+ok(damageBoostPreview.current === '+0%' && damageBoostPreview.next === '+5%', 'Boost preview exposes exact current to next effect');
+ok(damageBoostPreview.affordable === true && damageBoostPreview.cost === 8, 'Boost preview exposes exact affordability and Rep cost');
+ok(typeof recommendedMetaId(boostFixture) === 'string', 'Boosts expose one domain recommendation');
 
 // —— Persistent global Route + save v2 migration ——
 const freshRoute = createState();

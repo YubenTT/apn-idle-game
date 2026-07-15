@@ -321,8 +321,8 @@ acceptance boxes, fresh tests, browser proof, and one focused commit per issue.
 
 ### I-024 · Boosts ROI tree — 🟡 M
 - **Acceptance:**
-  - [ ] Each row shows current→next delta + affordability + a value cue.
-  - [ ] Category grouping + a "recommended" cue; Rep header feels permanent-growth.
+  - [x] Each row shows current→next delta + affordability + a value cue.
+  - [x] Category grouping + a "recommended" cue; Rep header feels permanent-growth.
 - **Files:** `index.html`, `css/game.css`, `js/ui.js`, `js/content.js`.
 
 ### I-025 · Menu split — 🔴 M
