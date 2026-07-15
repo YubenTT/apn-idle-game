@@ -1,4 +1,4 @@
-/** Brand gear — Weapon · Chest · Legs · Visor. Permanent. Sell junk for Signal; boxes with coins. */
+/** Brand gear — Weapon · Chest · Legs · Visor. Permanent. Sell junk for Signal. */
 
 export const RARITY = {
   white: { id: 'white', label: 'Common', color: '#b8c0cc', weight: 52, affixes: 1, power: 1, order: 0 },

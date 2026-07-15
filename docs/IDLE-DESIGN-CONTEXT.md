@@ -4,7 +4,9 @@
 **Primary source:** [MindStudios — Idle Clicker Games: Best Practices for Idle Game Design and Monetization](https://games.themindstudios.com/post/idle-clicker-game-design-and-monetization/) (Apr 2024; authors Svitlana Varaksina, Ivan Dyshuk / Mind Studios Games)  
 **Brand UI north star:** APN Gear mock (mascot + 4 equip cards + inventory grid) + successful idle references (AdVenture Capitalist, Idle Miner Tycoon, hybrid arcade idle like *Burger, Please!*).
 
-This document is the **canonical product context** for redesigning APN Idle end-to-end. Implementation should map every system to these principles — not invent parallel frameworks.
+This document preserves the **historical industry research context** used during
+the redesign. Shipping monetization truth lives in [MONETIZATION](./MONETIZATION.md);
+R-005 supersedes every Pro, coin, box, warp, and paid-power proposal below.
 
 ---
 
@@ -25,8 +27,8 @@ This document is the **canonical product context** for redesigning APN Idle end-
 | **Clean, simple UI** | Short sessions; focus on gameplay; no overflowing menus | Compact sheets; Gear mock layout; stats on hover/tap not wall-of-text |
 | **Interesting “live” surroundings** | Players stare at the main screen 99% of time | LIVE ticker, combat stage juice, center loot card, Overdrive aura |
 | **Clear progression indicators** | Always a reachable goal | Zone bars, Rank/SP, Signal upgrade CTA, Hub dailies, season checkpoints |
-| **Balanced pacing** | Small frequent rewards early; larger rarer later | Early kills → Signal/SP; bosses → gear/coins; End Season → Live Mult |
-| **Smart resource management** | Strategic spend of currencies | Signal → Weapon; SP → Build; Notes → Ship → Rep → Boosts; Coins → boxes/boosts |
+| **Balanced pacing** | Small frequent rewards early; larger rarer later | Early kills → Signal/SP; bosses → gear; End Season → Live Mult |
+| **Smart resource management** | Strategic spend of currencies | Signal → Weapon; SP → Build; Notes → Ship → Rep → Boosts |
 
 ---
 
@@ -36,7 +38,7 @@ This document is the **canonical product context** for redesigning APN Idle end-
 |----------|----------|----------|
 | **First impression** | Fast entry, early wins, hide advanced chrome until needed | Title → Play; early kills + first gear drop |
 | **Daily tasks & bonuses** | Simple dailies; short sessions | Hub daily/weekly + season milestones |
-| **Limited offline income** | Cap offline so players return (FOMO) | `OFFLINE_CAP` + efficiency; Pro slightly better |
+| **Limited offline income** | Cap offline so players return (FOMO) | `OFFLINE_CAP` + one free efficiency curve |
 | **Progressive difficulty & achievements** | Peek at locked content; scale challenge | Zones → Version Gate; Hub season track |
 | **Social / competition** | Leaderboards, contests | *Future* — not core v1 |
 | **Push notifications** | Tie to rewards/events; don’t spam | *Future* PWA / native |
@@ -44,46 +46,13 @@ This document is the **canonical product context** for redesigning APN Idle end-
 
 ---
 
-## 4. Monetization models → APN catalog
+## 4. Monetization research → launch decision
 
-Industry mix (classic idle): ~**60–70% ads / 30–40% IAP**. APN is **web-first**; structure IAP now, ads later.
-
-| Model | Industry use | APN Idle |
-|-------|--------------|----------|
-| **IAP — speed-ups / boosts** | Timed 2×, warps | 2× Boost (30m), Time Warp +1h |
-| **IAP — convenience** | Auto features, ad-free | Auto-Sprint, APN Pro (×1.25 + Auto) |
-| **IAP — cosmetics** | Skins, backgrounds | *Future* Host skins / stage themes |
-| **IAP — gacha / boxes** | Optional power crates | **Gear Boxes** (Signal Crate → Epic Cache / Loadout) |
-| **Rewarded ads** | Short boost / skip (largest ad $) | *Stub ready* — pair as free 5m 2× vs paid 30m |
-| **Interstitials** | Gradual after onboarding | *Future* — never day-0 |
-| **Banners** | Low ARPU extra | Avoid if they steal live-stage focus |
-| **Battle pass / sub** | Arcade-idle daily perks | Season track already; paid pass *future* |
-
-### Free path (non-negotiable)
-
-- Combat, zones, Signal upgrades, Build SP, skills, gear drops, Hub quests, Ship, End Season Live Mult must remain complete without paying.
-- Monetization = **speed / convenience / optional boxes**, never hard walls.
-
-### Economy mult stack
-
-```text
-economyMult = Live Mult × Pro(1.25) × Boost(2 if active)
-```
-
-Applied to damage, Signal, Notes, Ship→Rep.
-
-### Coin sinks (premium soft currency)
-
-| Sink | Role |
-|------|------|
-| Auto-Sprint | Convenience |
-| 2× Boost | Timed power |
-| Time Warp | Skip-ahead |
-| **Gear Boxes** | Fill 4-slot loadout with luck bias |
-
-### Coin sources (free)
-
-Boss +3 · Ship +1 · End Season +15 · (future: hub coin chips)
+The study described common idle patterns such as speed-ups, ads, passes, and
+boxes. R-005 deliberately does not ship those patterns. The MVP is free, has no
+store or coin currency, and uses `Live Mult` as its only global economy
+multiplier. Post-MVP work may study cosmetics, but paid progression remains a
+non-goal. See [MONETIZATION](./MONETIZATION.md).
 
 ---
 
@@ -98,7 +67,7 @@ APN rules of thumb:
 
 - No ads / soft paywall pressure in first session.
 - Worse gear never auto-equips.
-- Boxes never required to clear zones.
+- Gear drops never require a purchase path.
 - Offline capped so return visits feel rewarding, not infinite AFK.
 
 ---
@@ -109,7 +78,7 @@ APN rules of thumb:
 |------|---------|
 | Behavior | Session length, panel opens (Gear/Hub/Build), Sprint hold rate |
 | Pain | Softlock zones, abandon before first boss, bag full without sell |
-| Monetization | Coin earn→spend funnel, box open rate, Pro convert, ARPU/LTV |
+| Post-MVP product | Cosmetic interest and APN account linkage; no paid-power funnel |
 | Retention | D1/D7, return after offline modal, Hub claim rate |
 
 Ship event hooks early even if no backend yet (`window` debug counters OK).
@@ -165,7 +134,7 @@ Inventory also holds **modules/charms** (bag-only or future module slot): Arrow 
 - **Hold ~0.55s** on bag junk → sell for Signal
 - Hover (desktop) → full affix tooltip
 - Never auto-equip worse score
-- Premium boxes in Menu (coins)
+- No purchase surface in the free MVP Menu
 
 ---
 
@@ -178,7 +147,7 @@ Inventory also holds **modules/charms** (bag-only or future module slot): Arrow 
 - [x] Build attributes + skills (no masks)
 - [x] Hub dailies/weeklies/season
 - [x] Multi-slot permanent gear + sell junk
-- [x] Pro / boosts / warp / coin packs / gear boxes
+- [x] Free MVP cut: no Pro, coin packs, paid boosts, warp, or Gear Boxes
 - [x] Center loot card (no name spam)
 
 ### Brand polish (this pass)
@@ -191,12 +160,9 @@ Inventory also holds **modules/charms** (bag-only or future module slot): Arrow 
 
 ### Later
 
-- [ ] Rewarded-ad stubs wired to short boosts
-- [ ] Login streak / daily free box
-- [ ] Host cosmetics IAP
-- [ ] Season battle pass
+- [ ] Cosmetic-only product study after MVP retention evidence
 - [ ] Analytics events
-- [ ] Real IAP receipts
+- [ ] Real entitlement/restore design only if a later cosmetic product is approved
 - [ ] Social / leaderboards
 
 ---
@@ -206,7 +172,7 @@ Inventory also holds **modules/charms** (bag-only or future module slot): Arrow 
 - Prefer player verbs: Upgrade Weapon, Ship Notes, Equip, Sell.
 - HUD: Signal · Notes · Rep · DPS (not internal `bytes` jargon).
 - Comedy optional; never blocks systems.
-- Premium language: optional, clear value, no shame.
+- Purchase language is absent from the free MVP.
 
 ---
 
@@ -214,8 +180,8 @@ Inventory also holds **modules/charms** (bag-only or future module slot): Arrow 
 
 | Concern | Code |
 |---------|------|
-| Gear roll / slots / sell / boxes open | `js/loot.js`, `js/game.js` |
-| Premium catalog | `js/content.js` → `PREMIUM` |
+| Gear roll / slots / sell | `js/loot.js`, `js/game.js` |
+| Free MVP economy contract | `js/game.js`, `qa/run-tests.mjs` |
 | Gear + Menu UI | `js/ui.js`, `css/game.css` |
 | Save migrate slots | `js/save.js` → `normalizeGear` |
 | Monetization product truth | `docs/MONETIZATION.md` |

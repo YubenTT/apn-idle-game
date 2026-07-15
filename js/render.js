@@ -1,7 +1,7 @@
 /** APN Idle canvas — biomes, death juice, confetti, Host + enemies */
 
-import { C, clamp, easeOutCubic, easeOutQuad } from './formulas.js';
-import { getCurrentPackAssets } from './assets.js';
+import { C, clamp, easeOutCubic, easeOutQuad } from './formulas.js?v=free-mvp-r005';
+import { getCurrentPackAssets } from './assets.js?v=free-mvp-r005';
 
 const V = 'v8';
 let hostAtlas = null;
