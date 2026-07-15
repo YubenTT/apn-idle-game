@@ -21,7 +21,7 @@ Living plan — not a commitment calendar.
 - [x] Design-system + docs backbone ([00_START_HERE](./00_START_HERE.md),
       [brand/](../brand/), [SCREEN-SPECS](./SCREEN-SPECS.md), ADRs) — system-first
       redesign foundation; runtime unchanged
-- [x] Redesign control plane — 32 focused issues grouped into 6 autonomous
+- [x] Redesign control plane — 33 focused issues grouped into 6 autonomous
       delivery sessions with one final integrated evidence gate
 - [x] Runtime token foundation — `brand/tokens.css` imported by `css/game.css`,
       532 color literals migrated with exact pixel preservation, and static token
@@ -33,14 +33,15 @@ Living plan — not a commitment calendar.
 
 - [x] Persistent global Route + dual-key save v2 migration; End Season keeps world progress
 - [x] Deterministic 20-pack manifest catalog + seeded least-recent scheduler
-- [ ] Multi-day pacing and season-bounded offline progression
-- [ ] Production asset pipeline, canonical Host atlas, 20 Clean Era Game Packs,
+- [x] Multi-day pacing and season-bounded offline progression
+- [x] Production asset pipeline, canonical Host atlas, 20 Clean Era Game Packs,
       and current+next lazy runtime composition
-- [ ] Redesign screens against [SCREEN-SPECS](./SCREEN-SPECS.md) (Run HUD, Gear,
+- [x] Redesign screens against [SCREEN-SPECS](./SCREEN-SPECS.md) (Run HUD, Gear,
       Build, Ship, Hub, Boosts, Menu) — one screen at a time, each through
       [QA-CHECKLIST](./QA-CHECKLIST.md)
 - [ ] Schema rename bytes→signal (with save migrate)
-- [ ] Mobile layout polish + PWA manifest
+- [x] Mobile layout polish, safe-area coverage, and long-press gesture hardening
+- [ ] PWA manifest
 - [ ] Daily login / offline claim UI polish
 - [ ] More enemy variants + elite modifiers
 - [ ] Analytics hooks (opt-in) for embed

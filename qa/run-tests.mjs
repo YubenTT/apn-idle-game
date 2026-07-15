@@ -67,6 +67,7 @@ import {
 } from '../js/save.js';
 import { checkCssTokenContract } from './check-css-tokens.mjs';
 import { checkEconomyColorContract } from './check-economy-colors.mjs';
+import { checkMobileGestureContract } from './check-mobile-gestures.mjs';
 import { checkRouteContract } from './check-route.mjs';
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -107,6 +108,11 @@ process.stdout.write(
   })
 );
 process.stdout.write(
+  execFileSync(process.execPath, [fileURLToPath(new URL('./check-doc-contracts.mjs', import.meta.url))], {
+    encoding: 'utf8',
+  })
+);
+process.stdout.write(
   execFileSync(process.execPath, [fileURLToPath(new URL('./check-visual-baselines.mjs', import.meta.url))], {
     encoding: 'utf8',
   })
@@ -125,6 +131,9 @@ for (const check of checkCssTokenContract()) {
   ok(check.pass, `${check.message} (${check.detail})`);
 }
 for (const check of checkEconomyColorContract()) {
+  ok(check.pass, `${check.message} (${check.detail})`);
+}
+for (const check of checkMobileGestureContract()) {
   ok(check.pass, `${check.message} (${check.detail})`);
 }
 for (const message of checkRouteContract()) ok(true, `route ${message}`);

@@ -23,7 +23,20 @@ body {
   color: var(--compat-text-body);
   font-family: var(--compat-font-ui);
   overflow: hidden;
+}
+
+html,
+body,
+body * {
+  -webkit-user-select: none;
   user-select: none;
+  -webkit-touch-callout: none;
+}
+
+img,
+svg,
+canvas {
+  -webkit-user-drag: none;
 }
 
 #app {

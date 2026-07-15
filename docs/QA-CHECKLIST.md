@@ -12,7 +12,7 @@
 | **Art grammar QA** | Every item/enemy/icon uses the same outline + shadow + material grammar ([ART-DIRECTION](../brand/ART-DIRECTION.md)). No collage. |
 | **Token QA** | No raw hex / off-scale size in the changed screen — tokens + components only. |
 | **Layout QA** | No safe-area overflow in portrait **or** landscape; `env(safe-area-inset-*)` respected. |
-| **Touch QA** | Every tappable surface ≥ 44×44 pt. |
+| **Touch QA** | Every tappable surface ≥ 44×44 pt; long-press never selects text/media or opens a native callout; scrollable sheets still scroll. |
 | **Contrast QA** | Body text ≥ 4.5:1; big values/large text ≥ 3:1. No sub-floor hairline bars. |
 | **Decision QA** | The screen's single primary action is findable in < 2 s; no competing crimson. |
 | **Copy QA** | No debug strings, no "hover", no "Upgrade Signal"; object·effect·cost on rows ([NAMING](../brand/NAMING.md)). |

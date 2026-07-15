@@ -36,7 +36,7 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
   world progress, bounded Corruption revisits, and one deterministic expansion path.
 - Added ADR-0005 for GLB-locked hybrid Host rendering: image generation may guide
   pose/cleanup, while shipped geometry and pivots remain canonical GLB derivatives.
-- Added a documentation contract test and a 32-issue, six-session autonomous
+- Added a documentation contract test and a 33-issue, six-session autonomous
   implementation graph with a single final localhost review gate.
 
 - **Design-system + docs backbone** (system-first redesign foundation; no runtime
@@ -48,7 +48,7 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
     · `SCREEN-SPECS.md` (mobile-first per-screen redesign) · `ART-PIPELINE.md` ·
     `PERF-BUDGET.md` · `QA-CHECKLIST.md` · `GLOSSARY.md` · `DEFINITION-OF-DONE.md` ·
     `DOC-UPDATE-POLICY.md`
-  - `docs/REDESIGN-PLAN.md` — sequenced issue backlog (32 issues) grouped into 6
+  - `docs/REDESIGN-PLAN.md` — sequenced issue backlog (33 issues) grouped into 6
     autonomous delivery sessions, with per-issue acceptance criteria,
     dependencies, one final integrated user gate, and a release gate
   - `docs/decisions/` ADRs — **ADR-0001** keep vanilla ES + Canvas 2D (reject
@@ -62,6 +62,10 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Changed
 
+- Hardened the complete mobile game surface against iOS long-press text/object
+  selection, native touch callouts, and media dragging without disabling sheet
+  scrolling, native controls, or Sprint hold; added a static regression contract
+  and a cache-busted stylesheet handoff.
 - Completed the player-copy contract across all screens: active skills now spend
   Focus, legacy Mana saves migrate safely, target names match the glossary, and
   automated QA rejects fantasy, desktop-only, debug, and currency-object copy.

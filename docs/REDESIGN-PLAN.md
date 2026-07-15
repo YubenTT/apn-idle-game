@@ -21,7 +21,7 @@ every box is ticked and `node qa/run-tests.mjs` is green.
 
 ## Autonomous delivery sessions
 
-The 32 focused issues still land as one issue = one PR, but execution is grouped
+The 33 focused issues still land as one issue = one PR, but execution is grouped
 into six long-running delivery sessions in one autonomous chain. Sessions are
 work packages, not separate chats or one-agent-per-issue handoffs.
 
@@ -32,7 +32,7 @@ work packages, not separate chats or one-agent-per-issue handoffs.
 | 3 | I-041, I-030, I-031, I-032A–D | Asset pipeline, canonical Host, production pack art | None |
 | 4 | I-007, I-021, I-010–I-014 | Runtime packs, Gear, Run hero experience | None |
 | 5 | I-020, I-022, I-023, I-025, I-024 | Decision sheets | None |
-| 6 | I-033, I-034, I-040, I-042, I-044, I-043 | Remaining art, feel, copy, nav, integrated QA | **Final integrated evidence review** |
+| 6 | I-033, I-034, I-040, I-042, I-044, I-043, I-045 | Remaining art, feel, copy, nav, integrated QA, physical-input hardening | **Final integrated evidence review** |
 
 The approved art boards and Run/Gear direction close preproduction. All visual and
 technical gates during implementation are self-reviewed against the source docs;
@@ -47,14 +47,14 @@ Wave 0B Route → production    I-003 → I-006 → I-041 → I-030 → I-031 �
 Wave 1  Collection vertical   I-021
 Wave 2  Run screen (hero)      I-010 → I-014
 Wave 3  Sheets (decisions)     I-020, I-022–I-025
-Wave 4  Remaining art/feel/QA I-033, I-034, I-040, I-042 → I-044 → I-043
+Wave 4  Remaining art/feel/QA I-033, I-034, I-040, I-042 → I-044 → I-043 → I-045
 ```
 
 Locked execution order:
 `I-000 → I-001 → I-002 → I-003 → I-004 → I-005 → I-006 → I-041 → I-030 →
 I-031 → I-032A → I-032B → I-032C → I-032D → I-007 → I-021 → I-010 → I-011 →
 I-012 → I-013 → I-014 → I-020 → I-022 → I-023 → I-025 → I-024 → I-033 →
-I-034 → I-040 → I-042 → I-044 → I-043`.
+I-034 → I-040 → I-042 → I-044 → I-043 → I-045`.
 
 Rule: **do not start a wave until the prior wave's 🔴 Must issues are merged.** The
 approved asset system now precedes UI implementation so the Run and Gear slices
@@ -96,12 +96,13 @@ are built once against production contracts. The chain stays linear.
 | I-042 | Copy | Copy + naming pass (all screens) | 🔴 | S | Wave 1–2 | [NAMING](../brand/NAMING.md), [GLOSSARY](./GLOSSARY.md) |
 | I-043 | QA | Device matrix + visual regression | 🔴 | M | I-042, I-044 | [QA-CHECKLIST](./QA-CHECKLIST.md) |
 | I-044 | Nav | Keep-5 navigation refinement + implementation | 🟡 | S | I-010 | [SCREEN-SPECS §Navigation](./SCREEN-SPECS.md) |
+| I-045 | QA | Mobile long-press gesture hardening | 🔴 | S | I-043 | [QA-CHECKLIST](./QA-CHECKLIST.md) |
 
 ## Effort roll-up
 
 | Priority | Issues | Rough range |
 |----------|-------:|------------:|
-| 🔴 Must | 22 | measured issue-by-issue |
+| 🔴 Must | 23 | measured issue-by-issue |
 | 🟡 Fix | 10 | measured issue-by-issue |
 | ⚪ Optional | (seasonal swaps, cosmetics, PWA — see ROADMAP) | ~60–90 h |
 
@@ -128,7 +129,7 @@ acceptance boxes, fresh tests, browser proof, and one focused commit per issue.
   - [x] `worse weapon stays bag`, `best weapon kept`, and `weak in bag` remain
         unchanged and pass reproducibly.
   - [x] Ten consecutive suite runs produce one output hash and end `ALL PASS`.
-  - [x] Backlog truth is explicit: 32 issues, 22 Must + 10 Fix, 6 delivery
+  - [x] Backlog truth is explicit: 33 issues, 23 Must + 10 Fix, 6 delivery
         sessions, and one final integrated user gate.
 - **Files:** `qa/run-tests.mjs`, `docs/REDESIGN-PLAN.md`, `docs/ROADMAP.md`,
   `CHANGELOG.md`.
@@ -186,7 +187,7 @@ acceptance boxes, fresh tests, browser proof, and one focused commit per issue.
 - **Acceptance:**
   - [x] ADR-0004 is Accepted; VISION and ART-DIRECTION agree with it.
   - [x] ADR-0005 preserves GLB geometry while defining the approved hybrid reference boundary.
-  - [x] Backlog contains all 32 focused issues in dependency order with only one final user gate.
+  - [x] Backlog contains all 33 focused issues in dependency order with only one final user gate.
   - [x] Approved concept proofs are registered as review evidence, not runtime assets.
   - [x] `node qa/check-doc-contracts.mjs` and `node qa/run-tests.mjs` pass.
 - **Files:** owning design/art docs, ADR-0004/0005, backlog, proof registry, QA contract.
@@ -403,6 +404,24 @@ acceptance boxes, fresh tests, browser proof, and one focused commit per issue.
   primary-crimson element per screen. Files: `docs/decisions/ADR-0007-*.md`,
   `index.html`, `css/game.css`, `js/ui.js`.
 
+### I-045 · Mobile long-press gesture hardening — 🔴 S
+- **Goal:** a hold or imprecise drag remains a game gesture and never becomes
+  Safari text/object selection, a native callout, or media dragging.
+- **Acceptance:**
+  - [x] Document descendants disable standard and WebKit selection plus iOS
+        touch callouts; Canvas/media disable WebKit native dragging.
+  - [x] No global `touch-action: none`; Gear sheet scrolling and native select
+        controls remain functional.
+  - [x] Canvas/Sprint retain intentional pointer ownership; Sprint releases to
+        `aria-pressed="false"` with no held state.
+  - [x] `qa/check-mobile-gestures.mjs` fails before and passes after the fix;
+        `node qa/run-tests.mjs` ends `ALL PASS`.
+  - [x] Physical iOS Safari recheck shows no selection handles or callout after
+        long-pressing the Run stage, HUD, CTA, navigation, and an open sheet.
+- **Files:** `css/game.css`, `index.html`, `qa/check-mobile-gestures.mjs`,
+  `qa/run-tests.mjs`.
+- **Out of scope:** layout, copy, art, balance, save, or navigation changes.
+
 ---
 
 ## Definition of "epic done"
@@ -414,7 +433,7 @@ release.
 
 ## Release gate (redesign V1)
 
-Ship redesign V1 when: all 32 issue acceptance lists are complete · all 22 Must +
+Ship redesign V1 when: all 33 issue acceptance lists are complete · all 23 Must +
 10 Fix branches are integrated · Sessions 1–6 are complete · QA matrix (I-043) is green ·
 no Blocker/Critical is open · every shipping screen passes Silhouette / Contrast /
 Touch / Decision gates.

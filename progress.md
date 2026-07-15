@@ -34,6 +34,20 @@ Original prompt: Complete the APN Idle redesign autonomously, including QA, revi
 - Browser QA uses Chrome Extension or isolated direct Chrome with `mute=1`; no
   standalone Playwright process is used.
 
+## I-045 closure evidence
+
+- I-045 mobile long-press hardening is active after physical iOS Safari exposed
+  selectable HUD/stage regions. Root cause: the document had only the standard
+  `user-select` declaration; explicit WebKit callout and media-drag guards were
+  absent. Baseline remains `ALL PASS` + `LONG RUN PASS` on 2026-07-15.
+- Execution plan: `docs/superpowers/plans/2026-07-15-mobile-long-press-release-hardening.md`.
+- I-045 code and automated/browser QA are green: the pre-fix gesture contract
+  failed on all three missing WebKit guards, the fixed suite ends `ALL PASS`, and
+  the 393×852 muted Browser chain has 0px overflow, clean console, preserved
+  Gear scroll/native sort, and a clean Sprint release. The owner confirmed the
+  physical iOS Safari long-press recheck on 2026-07-15; I-045 is release-ready.
+
 ## Open chain
 
-- None. The redesign V1 release gate is complete; final muted localhost review remains.
+- None. I-045 is green across regression, browser, long-run, and physical iOS
+  evidence. The feature branch remains local until the owner requests integration.
