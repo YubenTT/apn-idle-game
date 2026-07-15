@@ -68,6 +68,16 @@ for (const manifestFile of manifests.files) {
 }
 assert([0, 5, 10, 15, 20].includes(productionPacks.length), `production lands in five-pack groups (${productionPacks.length})`);
 
+const itemAtlasFile = path.join(root, 'assets/items/item-atlas.json');
+assert(fs.existsSync(itemAtlasFile), 'item atlas metadata exists');
+const itemAtlas = readJson(itemAtlasFile);
+const itemEntries = Object.values(itemAtlas.items || {});
+assert(itemEntries.length === 12, 'item atlas contains twelve production items');
+for (const material of ['matte-polymer', 'laminated-paper', 'anodized-metal']) {
+  assert(itemEntries.filter((item) => item.material === material).length === 4, `${material} item family contains four pieces`);
+}
+assert(fs.statSync(path.join(root, itemAtlas.image)).size <= 128 * 1024, 'item runtime atlas stays under 128 KB');
+
 const first = generateManifest();
 const firstBytes = fs.readFileSync(path.join(root, 'assets/manifest.json'));
 const firstHash = crypto.createHash('sha256').update(firstBytes).digest('hex');

@@ -9,6 +9,9 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Added
 
+- Added a 12-piece APN techwear item atlas covering matte polymer, laminated
+  paper, and anodized metal families, with deterministic slot/name mapping,
+  transparent runtime sprites, and asset-budget QA.
 - Added the canonical Host WebGL2 render-lock and ten-pose runtime atlas, derived
   directly from the existing GLB with fixed camera, flat three-band shading, and
   one-pixel pivot/ratio/visor QA.

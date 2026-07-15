@@ -5403,6 +5403,44 @@ button[hidden] {
   color: var(--c-positive);
 }
 
+/* I-033 · authored 12-piece APN techwear atlas. */
+.item-art-frame {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.item-sprite {
+  display: block;
+  width: 140%;
+  aspect-ratio: var(--item-atlas-cell-ratio);
+  background-image: url("../assets/items/item-atlas.webp");
+  background-repeat: no-repeat;
+  background-size: 400% 300%;
+}
+
+.item-mod-stick { background-position: 0 0; }
+.item-scanner-lash { background-position: 33.333% 0; }
+.item-patch-mail { background-position: 66.667% 0; }
+.item-press-plate { background-position: 100% 0; }
+.item-link-gloves { background-position: 0 50%; }
+.item-route-leggings { background-position: 33.333% 50%; }
+.item-archive-boots { background-position: 66.667% 50%; }
+.item-cache-belt { background-position: 100% 50%; }
+.item-source-seal { background-position: 0 100%; }
+.item-visor-coil { background-position: 33.333% 100%; }
+.item-overdrive-core { background-position: 66.667% 100%; }
+.item-publisher-satchel { background-position: 100% 100%; }
+
+.sheet-root[data-panel="gear"] .gcard-art,
+.sheet-root[data-panel="gear"] .icard-art,
+.sheet-root[data-panel="gear"] .gd-ico,
+.loot-ico {
+  overflow: hidden;
+}
+
 /* I-011 · one-line current-pack feed rail */
 .hud-ticker {
   flex: 0 0 var(--touch-min);

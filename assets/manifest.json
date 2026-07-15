@@ -1133,6 +1133,20 @@
       "firstPlayable": true
     },
     {
+      "id": "items/item-atlas.json",
+      "path": "assets/items/item-atlas.json",
+      "bytes": 1545,
+      "sha256": "f4edda493cb557638a07c73449a29a78ed7d49be8627e496add099099b1515c8",
+      "firstPlayable": true
+    },
+    {
+      "id": "items/item-atlas.webp",
+      "path": "assets/items/item-atlas.webp",
+      "bytes": 91618,
+      "sha256": "c7c39f5a956407ce2134a85c73e734d0d92ee4959ced0af690c316a211bbd200",
+      "firstPlayable": true
+    },
+    {
       "id": "mascot/apn-mascot-base.webp",
       "path": "assets/mascot/apn-mascot-base.webp",
       "bytes": 20972,

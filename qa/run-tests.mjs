@@ -49,6 +49,7 @@ import {
 } from '../js/loot.js';
 import { SKILLS, PREMIUM, nextSkillUnlock } from '../js/content.js';
 import { hubOnKill, emptyHub, DAILY_DEFS, hubObjectiveState } from '../js/hub.js';
+import { itemArtKey } from '../js/icons.js';
 import {
   createRouteState,
   routeZoneDisplay,
@@ -141,6 +142,10 @@ const damageBoostPreview = metaUpgradePreview(boostFixture, 'signal_power');
 ok(damageBoostPreview.current === '+0%' && damageBoostPreview.next === '+5%', 'Boost preview exposes exact current to next effect');
 ok(damageBoostPreview.affordable === true && damageBoostPreview.cost === 8, 'Boost preview exposes exact affordability and Rep cost');
 ok(typeof recommendedMetaId(boostFixture) === 'string', 'Boosts expose one domain recommendation');
+ok(itemArtKey({ slot: 'weapon', name: 'Mod Stick', rarity: 'green' }) === 'mod-stick', 'Gear maps Mod Stick to authored art');
+ok(itemArtKey({ slot: 'chest', name: 'Patch Mail', rarity: 'green' }) === 'patch-mail', 'Gear maps Patch Mail to authored art');
+ok(itemArtKey({ slot: 'legs', name: 'Sprint Leggings', rarity: 'green' }) === 'route-leggings', 'Gear maps Sprint Leggings to authored art');
+ok(itemArtKey({ slot: 'visor', name: 'Signal Visor', rarity: 'green' }) === 'visor-coil', 'Gear maps Signal Visor to authored art');
 
 // —— Persistent global Route + save v2 migration ——
 const freshRoute = createState();

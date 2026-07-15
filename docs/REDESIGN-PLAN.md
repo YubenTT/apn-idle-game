@@ -364,8 +364,8 @@ acceptance boxes, fresh tests, browser proof, and one focused commit per issue.
 
 ### I-033 · Item art set — 🟡 L
 - **Acceptance:**
-  - [ ] 12 items in the 3 material families (matte polymer / laminated paper / anodized metal).
-  - [ ] No fantasy materials; art matches slot names already in Gear.
+  - [x] 12 items in the 3 material families (matte polymer / laminated paper / anodized metal).
+  - [x] No fantasy materials; art matches slot names already in Gear.
 - **Files:** `assets/items/*`, `js/loot.js`.
 
 ### I-034 · Backgrounds — 🟡 L
