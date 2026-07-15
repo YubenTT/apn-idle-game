@@ -285,6 +285,22 @@
       "firstPlayable": false
     },
     {
+      "id": "game-packs/elden-ring/background.webp",
+      "path": "assets/game-packs/elden-ring/background.webp",
+      "bytes": 3914,
+      "sha256": "356a2d93407f8cf942b59c7dd03812e374bcb2875f940a1b2b9871e80b133c72",
+      "kind": "background",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/elden-ring/corruption-mask.webp",
+      "path": "assets/game-packs/elden-ring/corruption-mask.webp",
+      "bytes": 2332,
+      "sha256": "9a04c5bb00dc2a8b634cb2b06de7d08486a49957f9689c6b49fdbf3634e6b0b4",
+      "kind": "propsAndMasks",
+      "firstPlayable": false
+    },
+    {
       "id": "game-packs/elden-ring/pack.json",
       "path": "assets/game-packs/elden-ring/pack.json",
       "bytes": 1750,
@@ -292,11 +308,73 @@
       "firstPlayable": null
     },
     {
+      "id": "game-packs/elden-ring/props.webp",
+      "path": "assets/game-packs/elden-ring/props.webp",
+      "bytes": 4608,
+      "sha256": "668a6430ac7e231fda96b9d46da2e0ea1d50e3455753f6abf929dfecb022cce2",
+      "kind": "propsAndMasks",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/elden-ring/targets.json",
+      "path": "assets/game-packs/elden-ring/targets.json",
+      "bytes": 3195,
+      "sha256": "3f71f363eade617fef8af8037fed09dc092cba00d22b920f9fe41acaf64df728",
+      "firstPlayable": null
+    },
+    {
+      "id": "game-packs/elden-ring/targets.webp",
+      "path": "assets/game-packs/elden-ring/targets.webp",
+      "bytes": 18108,
+      "sha256": "55085a9edb3c4c2c5a72075df751c30e016e045f37acf18a09e5a73e47cf5f00",
+      "kind": "targets",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/escape-from-tarkov/background.webp",
+      "path": "assets/game-packs/escape-from-tarkov/background.webp",
+      "bytes": 4030,
+      "sha256": "ab45f93c9dfddc7316cc0d1c6c19a2eb9491ceecb1366ce9f05ddfc2d0441695",
+      "kind": "background",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/escape-from-tarkov/corruption-mask.webp",
+      "path": "assets/game-packs/escape-from-tarkov/corruption-mask.webp",
+      "bytes": 2364,
+      "sha256": "50fad6c1f8a34c527e13929e8dcd3ad216fb543a9a12817501af3671697db4eb",
+      "kind": "propsAndMasks",
+      "firstPlayable": false
+    },
+    {
       "id": "game-packs/escape-from-tarkov/pack.json",
       "path": "assets/game-packs/escape-from-tarkov/pack.json",
       "bytes": 1780,
       "sha256": "e20942fab179cdb3e25f7117daa4b23b3b12df19a7c167605b0f249def4a8d5d",
       "firstPlayable": null
+    },
+    {
+      "id": "game-packs/escape-from-tarkov/props.webp",
+      "path": "assets/game-packs/escape-from-tarkov/props.webp",
+      "bytes": 4376,
+      "sha256": "791db844c7438fb4f5b4a9f9484ae3ae834fc0ed15d55e10421962c88cfb18d1",
+      "kind": "propsAndMasks",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/escape-from-tarkov/targets.json",
+      "path": "assets/game-packs/escape-from-tarkov/targets.json",
+      "bytes": 3203,
+      "sha256": "4e088a4d6940abb3d4f32cb440533c3ba9dd4d26e9d88d25aaafdcc0e22f48f4",
+      "firstPlayable": null
+    },
+    {
+      "id": "game-packs/escape-from-tarkov/targets.webp",
+      "path": "assets/game-packs/escape-from-tarkov/targets.webp",
+      "bytes": 19206,
+      "sha256": "7b775e7c670e1377cd7893c475bad0baffa647c63e6ecb536ad7bcf3501eb618",
+      "kind": "targets",
+      "firstPlayable": false
     },
     {
       "id": "game-packs/fc-26/background.webp",
@@ -529,11 +607,50 @@
       "firstPlayable": false
     },
     {
+      "id": "game-packs/marvel-rivals/background.webp",
+      "path": "assets/game-packs/marvel-rivals/background.webp",
+      "bytes": 7968,
+      "sha256": "211504aef5681819461c9085dd10fc678f2774386a631c7f943689b1f102618c",
+      "kind": "background",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/marvel-rivals/corruption-mask.webp",
+      "path": "assets/game-packs/marvel-rivals/corruption-mask.webp",
+      "bytes": 2628,
+      "sha256": "44f900c9f36d6df5952e37d0c08fa140ca90c0e2bdc1214dbdeaa87a47ee1269",
+      "kind": "propsAndMasks",
+      "firstPlayable": false
+    },
+    {
       "id": "game-packs/marvel-rivals/pack.json",
       "path": "assets/game-packs/marvel-rivals/pack.json",
       "bytes": 1718,
       "sha256": "2b33318c7b7f67b1ee029bd29b29d152874bdce43ddf8574a2a659cb6c8adae7",
       "firstPlayable": null
+    },
+    {
+      "id": "game-packs/marvel-rivals/props.webp",
+      "path": "assets/game-packs/marvel-rivals/props.webp",
+      "bytes": 5040,
+      "sha256": "11f0c7bbadc87001743acb4689101484521147a017f464d86948e4356d43e2ed",
+      "kind": "propsAndMasks",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/marvel-rivals/targets.json",
+      "path": "assets/game-packs/marvel-rivals/targets.json",
+      "bytes": 3198,
+      "sha256": "e779d19a6dac93afc666114291bf14a9b82af99358a3f3ca3fa5300ed4196531",
+      "firstPlayable": null
+    },
+    {
+      "id": "game-packs/marvel-rivals/targets.webp",
+      "path": "assets/game-packs/marvel-rivals/targets.webp",
+      "bytes": 24196,
+      "sha256": "8bb152fd1e6a68faaedfa438c01899de53bb190df5d2ae2669f5430944febb51",
+      "kind": "targets",
+      "firstPlayable": false
     },
     {
       "id": "game-packs/minecraft/background.webp",
@@ -720,6 +837,22 @@
       "firstPlayable": false
     },
     {
+      "id": "game-packs/path-of-exile-2/background.webp",
+      "path": "assets/game-packs/path-of-exile-2/background.webp",
+      "bytes": 5598,
+      "sha256": "78cc4388693054e55a1ef3d929aba8f23aa2261a3b67ff924a994996a4b09f24",
+      "kind": "background",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/path-of-exile-2/corruption-mask.webp",
+      "path": "assets/game-packs/path-of-exile-2/corruption-mask.webp",
+      "bytes": 3198,
+      "sha256": "9273ad5177eb17bab21d599626c7522b2bd86e8ec9a54852a1b75b3d4012dc8c",
+      "kind": "propsAndMasks",
+      "firstPlayable": false
+    },
+    {
       "id": "game-packs/path-of-exile-2/pack.json",
       "path": "assets/game-packs/path-of-exile-2/pack.json",
       "bytes": 1758,
@@ -727,11 +860,73 @@
       "firstPlayable": null
     },
     {
+      "id": "game-packs/path-of-exile-2/props.webp",
+      "path": "assets/game-packs/path-of-exile-2/props.webp",
+      "bytes": 4990,
+      "sha256": "e70dbc0ae10f1cff04b12140c9f3ae39c45ae4f26ff671532523461bc4c8aa94",
+      "kind": "propsAndMasks",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/path-of-exile-2/targets.json",
+      "path": "assets/game-packs/path-of-exile-2/targets.json",
+      "bytes": 3200,
+      "sha256": "4698c71a3d22f1a9f8f4fb3e1313a21884a67924296a5bd0817318fbdd1bea28",
+      "firstPlayable": null
+    },
+    {
+      "id": "game-packs/path-of-exile-2/targets.webp",
+      "path": "assets/game-packs/path-of-exile-2/targets.webp",
+      "bytes": 29564,
+      "sha256": "c31214c156dcbf2d1ad3864fc9828d286185bb5dc9cda8cbabbda946f74fdae7",
+      "kind": "targets",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/rocket-league/background.webp",
+      "path": "assets/game-packs/rocket-league/background.webp",
+      "bytes": 7480,
+      "sha256": "ab377587633ef7967bed9f7feaead0ce7ece23a071e01d088efc7ce47bb737f1",
+      "kind": "background",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/rocket-league/corruption-mask.webp",
+      "path": "assets/game-packs/rocket-league/corruption-mask.webp",
+      "bytes": 3340,
+      "sha256": "6eb1022a6d2472d5d05c6b07e9d28578147a9ae9066483c1edb53910fc02e02e",
+      "kind": "propsAndMasks",
+      "firstPlayable": false
+    },
+    {
       "id": "game-packs/rocket-league/pack.json",
       "path": "assets/game-packs/rocket-league/pack.json",
       "bytes": 1734,
       "sha256": "c998d342e4d6c5d7b6165203b79a4053efa6036ad88c69a4861fec3fc327ef59",
       "firstPlayable": null
+    },
+    {
+      "id": "game-packs/rocket-league/props.webp",
+      "path": "assets/game-packs/rocket-league/props.webp",
+      "bytes": 5164,
+      "sha256": "3d31affdfbb64323a157330b0763f8dd77ed24e49174ba587570f0e9c7a9d18f",
+      "kind": "propsAndMasks",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/rocket-league/targets.json",
+      "path": "assets/game-packs/rocket-league/targets.json",
+      "bytes": 3198,
+      "sha256": "711ccb26269fb712cf2701cdea3b11b29b029db3ed659849dc371d5e5f73796e",
+      "firstPlayable": null
+    },
+    {
+      "id": "game-packs/rocket-league/targets.webp",
+      "path": "assets/game-packs/rocket-league/targets.webp",
+      "bytes": 17214,
+      "sha256": "98600001bf14cc091f0098d098b1998410b79832dcd3c98b58fbe619c2e7b0be",
+      "kind": "targets",
+      "firstPlayable": false
     },
     {
       "id": "game-packs/valorant/background.webp",

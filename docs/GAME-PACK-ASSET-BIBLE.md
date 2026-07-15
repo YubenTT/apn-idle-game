@@ -5,10 +5,11 @@
 > deliverables. Nothing here is a shipped runtime asset until the combined visual
 > lock is approved.
 
-Production status: packs 01–15 are exported from the approved proof language as
+Production status: all packs 01–20 are exported from the approved proof language as
 textless APN Patchline masters with deterministic backgrounds, target atlases,
-props, masks, pivots, and source-board records. Packs 16–20 follow in the final
-five-pack commit.
+props, masks, pivots, and source-board records. Marvel Rivals closes its missing
+focused proof with recorded official transparent hero sources and the same APN
+outline, silhouette, pivot, and break-state normalization as every other pack.
 
 ## What must be produced
 
