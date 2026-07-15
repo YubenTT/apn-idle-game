@@ -50,6 +50,9 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Changed
 
+- Turned Hub into a Daily/Weekly/Season live-ops board with explicit locked,
+  claimable, and claimed states, readable currency reward pills, 8px progress
+  tracks, and milestone cards whose availability is visible without interaction.
 - Reworked Ship into a transparent Notes-to-Rep preview with conversion rate,
   multiplier, gain, end-season bonus, a domain-owned reset/keep contract, and a
   separate low-weight End Season confirmation step.

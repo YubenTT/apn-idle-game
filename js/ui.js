@@ -82,10 +82,10 @@ import {
   hubProgress,
   hubDone,
   hubClaimed,
+  hubObjectiveState,
   seasonLevel,
   SEASON_MILESTONES,
   formatReward,
-  formatRewardText,
 } from './hub.js';
 import { skillIco, attrIco, metaIco, hubIco, gearIcon } from './icons.js';
 import { save, clear } from './save.js';
@@ -701,8 +701,9 @@ function renderMeta(s) {
 }
 
 function rewardChips(reward) {
+  const labels = { sig: 'Signal', sp: 'SP', rep: 'Rep', coin: 'Coins', notes: 'Notes' };
   return formatReward(reward)
-    .map((r) => `<span class="rw-chip k-${r.k}">${r.v} ${r.k === 'coin' ? '¢' : r.k}</span>`)
+    .map((r) => `<span class="rw-chip k-${r.k}">${r.v} ${labels[r.k] || r.k}</span>`)
     .join('');
 }
 
@@ -710,29 +711,27 @@ function questRow(s, def, period) {
   ensureHub(s);
   const hub = s.meta.hub;
   const prog = hubProgress(hub, def, period);
-  const done = hubDone(hub, def, period);
-  const claimed = hubClaimed(hub, def, period);
+  const state = hubObjectiveState(hub, def, period);
   const pct = Math.round((prog / def.target) * 100);
-  let cls = 'quest-row compact';
-  if (claimed) cls += ' claimed';
-  else if (done) cls += ' ready';
+  const claimed = state === 'claimed';
+  const ready = state === 'claimable';
   return `
-  <div class="${cls}">
+  <div class="quest-row liveops-${state}">
+    <div class="quest-ico" aria-hidden="true">${hubIco(period === 'daily' ? 'daily' : 'weekly')}</div>
     <div class="quest-main">
       <div class="quest-top">
         <span class="quest-name">${def.label}</span>
-        <span class="quest-prog">${claimed ? '✓' : `${prog}/${def.target}`}</span>
+        <span class="quest-prog">${prog}/${def.target}</span>
       </div>
-      <div class="sk-bar thin"><i style="width:${pct}%"></i></div>
+      <span class="quest-desc">${def.desc}</span>
+      <div class="quest-progress" aria-label="${pct}% complete"><i style="width:${pct}%"></i></div>
       <div class="quest-rw">${rewardChips(def.reward)}</div>
     </div>
-    ${
-      claimed
-        ? ''
-        : done
-          ? `<button type="button" class="quest-cta" data-claim="${period}:${def.id}">Claim</button>`
-          : ''
-    }
+    ${claimed
+      ? '<span class="quest-status state-claimed">Claimed</span>'
+      : ready
+        ? `<button type="button" class="quest-cta" data-claim="${period}:${def.id}" aria-label="Claim ${def.label} rewards">Claim</button>`
+        : '<span class="quest-status state-locked">In progress</span>'}
   </div>`;
 }
 
@@ -743,6 +742,8 @@ function renderHub(s) {
   const hub = s.meta.hub;
   const season = seasonLevel(hub.seasonXp || 0);
   const pct = Math.round((season.into / season.need) * 100);
+  const dailyReady = DAILY_DEFS.filter((def) => hubObjectiveState(hub, def, 'daily') === 'claimable').length;
+  const weeklyReady = WEEKLY_DEFS.filter((def) => hubObjectiveState(hub, def, 'weekly') === 'claimable').length;
 
   let html = `
   <div class="hub-season">
@@ -756,21 +757,24 @@ function renderHub(s) {
   for (const m of SEASON_MILESTONES) {
     const unlocked = season.level >= m.lv;
     const claimed = !!hub.seasonClaimed?.[m.lv];
-    const tip = formatRewardText(m.reward);
+    const milestoneState = claimed ? 'claimed' : unlocked ? 'claimable' : 'locked';
     html += `
-    <button type="button" class="season-mil ${unlocked ? 'on' : ''} ${claimed ? 'claimed' : ''}"
-      data-season-lv="${m.lv}" ${!unlocked || claimed ? 'disabled' : ''} title="${tip}">
-      <span class="sm-lv">${m.label}</span>
+    <button type="button" class="season-mil liveops-${milestoneState}"
+      data-season-lv="${m.lv}" ${!unlocked || claimed ? 'disabled' : ''}
+      aria-label="Season level ${m.lv} reward, ${milestoneState}">
+      <span class="sm-lv">Level ${m.label}</span>
+      <span class="sm-reward">${rewardChips(m.reward)}</span>
+      <span class="sm-state">${claimed ? 'Claimed' : unlocked ? 'Claim' : 'Locked'}</span>
     </button>`;
   }
   html += `</div></div>
 
-  <div class="section-lab">Daily</div>
+  <div class="hub-section-head"><strong>Daily</strong><span>${dailyReady ? `${dailyReady} ready` : 'Live now'}</span></div>
   <div class="quest-list">
     ${DAILY_DEFS.map((d) => questRow(s, d, 'daily')).join('')}
   </div>
 
-  <div class="section-lab">Weekly</div>
+  <div class="hub-section-head"><strong>Weekly</strong><span>${weeklyReady ? `${weeklyReady} ready` : 'This week'}</span></div>
   <div class="quest-list">
     ${WEEKLY_DEFS.map((d) => questRow(s, d, 'weekly')).join('')}
   </div>`;
