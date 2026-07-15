@@ -9,6 +9,7 @@ import {
   liveGain,
   clamp,
   killsNeeded,
+  isSeasonCheckpoint,
 } from './formulas.js';
 import {
   SEASON,
@@ -43,6 +44,7 @@ import {
   unequipGear,
   sellGear,
   buyGearBox,
+  END_SEASON_CONTRACT,
   rarityColor,
   rarityLabel,
   unlockPro,
@@ -158,6 +160,19 @@ export function bindUI(s) {
     } else if (s.settings.sfx !== false) sfx('error');
   });
   $('btn-leave')?.addEventListener('click', () => {
+    s.ui.endSeasonConfirm = true;
+    const confirmPanel = $('season-confirm');
+    if (confirmPanel) {
+      confirmPanel.hidden = false;
+      requestAnimationFrame(() => confirmPanel.scrollIntoView({ block: 'end' }));
+    }
+  });
+  $('btn-leave-cancel')?.addEventListener('click', () => {
+    s.ui.endSeasonConfirm = false;
+    const confirmPanel = $('season-confirm');
+    if (confirmPanel) confirmPanel.hidden = true;
+  });
+  $('btn-leave-confirm')?.addEventListener('click', () => {
     if (leaveSeason(s)) {
       save(s);
       closeSheet(s);
@@ -401,12 +416,14 @@ function openSheet(s, panel) {
     if (mo) mo.checked = !!s.settings.reducedMotion;
     renderPremium(s);
   }
+  if (panel !== 'ship') s.ui.endSeasonConfirm = false;
   lastPanel = panel;
   s.ui.panelDirty = false;
 }
 
 function closeSheet(s) {
   s.ui.panel = null;
+  s.ui.endSeasonConfirm = false;
   lastPanel = null;
   const root = document.getElementById('sheet-root');
   if (root) {
@@ -425,20 +442,39 @@ function fillShip(s) {
   const notes = Math.floor(s.run.patches);
   const gain = Math.floor(notes * economyMult(s));
   const liveNext = liveGain(s.authority.shippedThisSeason);
-  const seasonReady = s.ui.seasonDone;
+  const seasonReady = s.ui.seasonDone || isSeasonCheckpoint(s.route.zone);
   const nextZ = SEASON.zones * (Math.floor(s.route.zone / SEASON.zones) + 1);
   const eco = economyMult(s);
-  el.className = 'ship-stats compact';
-  el.innerHTML = [
-    row('Notes', formatNum(notes), notes > 0 ? 'hi' : '', 'notes'),
-    row('→ Rep', `+${formatNum(gain)}`, gain > 0 ? 'hi' : ''),
-    row('Mult', `×${eco.toFixed(2)}`, ''),
-    seasonReady
-      ? row('End Season', `+${liveNext.toFixed(3)} Live`, 'hi')
-      : row('Checkpoint', `Z${nextZ}`, ''),
-  ].join('');
+  el.className = 'ship-stats ship-preview';
+  const resetItems = END_SEASON_CONTRACT.resets.map((item) => `<li>${item}</li>`).join('');
+  const keepItems = END_SEASON_CONTRACT.keeps.map((item) => `<li>${item}</li>`).join('');
+  el.innerHTML = `
+    <div class="ship-gain-card">
+      <span>You'll gain</span>
+      <strong>+${formatNum(gain)} Rep</strong>
+      <small>${notes > 0 ? 'Ready to ship now' : 'Collect Notes to ship'}</small>
+    </div>
+    <div class="ship-formula" aria-label="Rep conversion preview">
+      ${row('Notes', formatNum(notes), notes > 0 ? 'hi' : '', 'notes')}
+      ${row('Rate', '1 Note → 1 Rep')}
+      ${row('Mult', `×${eco.toFixed(2)}`)}
+      ${seasonReady ? row('End-Season bonus', `+${liveNext.toFixed(3)} Live`, 'hi') : row('End-Season bonus', `Unlocks at Zone ${nextZ}`)}
+    </div>
+    <div class="season-contract">
+      <section><h3>Resets</h3><ul>${resetItems}</ul></section>
+      <section><h3>Kept</h3><ul>${keepItems}</ul></section>
+    </div>`;
+  const cta = document.getElementById('btn-ship');
+  if (cta) {
+    cta.disabled = notes < 1;
+    cta.classList.toggle('is-locked', notes < 1);
+  }
+  const ctaSub = document.getElementById('ship-cta-sub');
+  if (ctaSub) set(ctaSub, notes > 0 ? `${formatNum(notes)} Notes → +${formatNum(gain)} Rep` : 'Collect Notes first');
   const leave = document.getElementById('btn-leave');
   if (leave) leave.hidden = !seasonReady;
+  const confirmPanel = document.getElementById('season-confirm');
+  if (confirmPanel) confirmPanel.hidden = !s.ui.endSeasonConfirm;
 }
 
 function row(k, v, cls = '', tone = '') {

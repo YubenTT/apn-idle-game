@@ -7,6 +7,8 @@ Original prompt: Complete the APN Idle redesign autonomously, including QA, revi
 - I-010–I-014 Run hero experience is implemented; integrated Run Chrome review is active.
 - I-020 Build is implemented with requirement-derived next-unlock previews and
   428/375 Chrome Extension evidence (44pt touch, zero overflow/truncation).
+- I-022 Ship is implemented with a tested reset/keep contract, live conversion
+  preview, and an explicit two-step End Season gate; 428/375 Chrome evidence is green.
 - Browser QA uses Chrome Extension or isolated direct Chrome with `mute=1`; no
   standalone Playwright process is used.
 

@@ -307,9 +307,9 @@ acceptance boxes, fresh tests, browser proof, and one focused commit per issue.
 
 ### I-022 · Ship prestige transparency — 🔴 M
 - **Acceptance:**
-  - [ ] Summary preview: Notes · rate · Mult · End-Season bonus · **You'll gain +Rep**.
-  - [ ] Explicit **what resets / what is kept** list shown before any destructive step.
-  - [ ] End Season is lower weight than Ship CTA + routes through preview/confirm.
+  - [x] Summary preview: Notes · rate · Mult · End-Season bonus · **You'll gain +Rep**.
+  - [x] Explicit **what resets / what is kept** list shown before any destructive step.
+  - [x] End Season is lower weight than Ship CTA + routes through preview/confirm.
 - **Files:** `index.html`, `css/game.css`, `js/ui.js`, `js/game.js`.
 
 ### I-023 · Hub live-ops board — 🔴 M

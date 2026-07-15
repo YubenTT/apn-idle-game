@@ -4583,6 +4583,164 @@ button[hidden] {
   color: var(--c-positive);
 }
 
+/* I-022 · Ship makes conversion and season consequences explicit. */
+#panel-ship {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+#panel-ship[hidden] {
+  display: none;
+}
+
+.ship-preview {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0;
+}
+
+.ship-gain-card {
+  min-height: calc(var(--touch-min) * 2);
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: var(--sp-1);
+  padding: var(--sp-3);
+  border: var(--border-1);
+  border-radius: var(--r-card);
+  background: var(--surface-900);
+  text-align: center;
+}
+
+.ship-gain-card span,
+.ship-gain-card small {
+  color: var(--text-mid);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+}
+
+.ship-gain-card strong {
+  color: var(--c-rep);
+  font-size: var(--fs-display-m);
+  line-height: var(--lh-display-m);
+  font-variant-numeric: tabular-nums;
+}
+
+.ship-formula {
+  overflow: hidden;
+  border: var(--border-1);
+  border-radius: var(--r-card);
+  background: var(--surface-900);
+}
+
+.ship-formula .ship-row {
+  min-height: var(--touch-min);
+  padding: 0 var(--sp-3);
+}
+
+.season-contract {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-2);
+}
+
+.season-contract section {
+  min-width: 0;
+  padding: var(--sp-3);
+  border: var(--border-1);
+  border-radius: var(--r-card);
+  background: var(--surface-900);
+}
+
+.season-contract h3 {
+  margin: 0 0 var(--sp-2);
+  color: var(--text-high);
+  font-size: var(--fs-label-m);
+  line-height: var(--lh-label-m);
+}
+
+.season-contract section:last-child h3 {
+  color: var(--c-positive);
+}
+
+.season-contract ul {
+  display: grid;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.season-contract li {
+  color: var(--text-mid);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+}
+
+.season-contract li::before {
+  content: "—";
+  margin-right: var(--sp-1);
+  color: var(--text-low);
+}
+
+#panel-ship > .btn-primary,
+#panel-ship > .btn-ghost {
+  width: 100%;
+  min-height: calc(var(--touch-min) + var(--sp-3));
+}
+
+#panel-ship > .btn-primary.is-locked {
+  background: var(--surface-800);
+  color: var(--text-low);
+}
+
+.season-confirm {
+  display: grid;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  border: var(--border-1);
+  border-radius: var(--r-card);
+  background: var(--surface-900);
+}
+
+.season-confirm[hidden] {
+  display: none;
+}
+
+.season-confirm strong {
+  color: var(--text-high);
+  font-size: var(--fs-body-m);
+  line-height: var(--lh-body-m);
+}
+
+.season-confirm p {
+  margin: 0;
+  color: var(--text-mid);
+  font-size: var(--fs-label-m);
+  line-height: var(--lh-label-m);
+}
+
+.season-confirm-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-2);
+}
+
+.season-confirm-actions .btn-ghost,
+.season-confirm-actions .btn-danger {
+  min-height: var(--touch-min);
+}
+
+.btn-danger {
+  border: var(--border-1);
+  border-color: var(--apn-primary);
+  border-radius: var(--r-cta);
+  background: transparent;
+  color: var(--apn-primary);
+  font: inherit;
+  font-weight: 800;
+}
+
 /* I-011 · one-line current-pack feed rail */
 .hud-ticker {
   flex: 0 0 var(--touch-min);

@@ -28,6 +28,7 @@ import {
   skillLv,
   claimHubObjective,
   normalizeGear,
+  END_SEASON_CONTRACT,
 } from '../js/game.js';
 import {
   emptyGear,
@@ -117,6 +118,8 @@ for (const message of checkRouteContract()) ok(true, `route ${message}`);
 ok(nextSkillUnlock('scan', 0)?.id === 'hotfix', 'Damage next unlock starts at Burst');
 ok(nextSkillUnlock('scan', 1)?.id === 'scroll_speed', 'Damage next unlock advances to Speed');
 ok(nextSkillUnlock('scan', 5) === null, 'Damage reports all skills open');
+ok(END_SEASON_CONTRACT.resets.includes('Weapon level'), 'End Season contract names Weapon reset');
+ok(END_SEASON_CONTRACT.keeps.includes('Route Zone'), 'End Season contract keeps Route Zone');
 
 // —— Persistent global Route + save v2 migration ——
 const freshRoute = createState();
