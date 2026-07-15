@@ -149,7 +149,13 @@ export function createState() {
       seasonDone: false,
       panelDirty: true,
     },
-    settings: { reducedMotion: false, sfx: true, lastTs: Date.now() },
+    settings: {
+      reducedMotion: false,
+      sfx: true,
+      gearSort: 'power',
+      gearFilter: 'all',
+      lastTs: Date.now(),
+    },
     stats: { dps: 0, dpsAcc: 0, dpsT: 0, combo: 0, comboT: 0, bestCombo: 0 },
   };
 }

@@ -116,7 +116,8 @@ flowchart TB
 - Schema version `v: 2`; writes `apn_idle_save_v2` only.
 - Loads v2 first, then v1; v1 `run.zone` / `run.killsInZone` migrate to `s.route`.
 - The v1 key remains rollback evidence until explicit New Game clears both keys.
-- Persist Route + run + meta + settings; strip ephemeral animation fields.
+- Persist Route + run + meta + settings (including Gear sort/filter preferences);
+  strip ephemeral animation fields.
 
 ### `sfx.js`
 
@@ -135,7 +136,7 @@ s
 ├── world       enemies, alerts, floaters, particles, confetti, sprinting, scroll
 ├── ui          panel, toast, seasonDone, tips, chipPulse, fx
 ├── stats       dps, combo
-└── settings    reducedMotion, sfx, lastTs
+└── settings    reducedMotion, sfx, gearSort, gearFilter, lastTs
 ```
 
 Naming debt: internal `bytes` / `patches` / `authority` / `scan` map to UI Signal / Notes / Rep / Damage. Renames should be schema-migrated in `save.js` when done.

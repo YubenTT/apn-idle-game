@@ -41,6 +41,8 @@ import {
   sellFromBag,
   sellValue,
   primaryStat,
+  queryGearBag,
+  toggleJunk,
 } from '../js/loot.js';
 import { SKILLS, PREMIUM } from '../js/content.js';
 import { hubOnKill } from '../js/hub.js';
@@ -160,11 +162,16 @@ globalThis.localStorage = {
   setItem: (key, value) => saveMemory.set(key, String(value)),
   removeItem: (key) => saveMemory.delete(key),
 };
+migratedRoute.settings.gearSort = 'rarity';
+migratedRoute.settings.gearFilter = 'junk';
 saveState(migratedRoute);
 ok(saveMemory.has(SAVE_KEY_V2), 'save writes v2 key');
 ok(!saveMemory.has(SAVE_KEY_V1), 'save does not write legacy key');
 const roundTrip = loadState();
 ok(roundTrip?.v === 2 && roundTrip.route?.zone === 1905, 'v2 save round trip');
+const appliedRoundTrip = createState();
+applySave(appliedRoundTrip, roundTrip);
+ok(appliedRoundTrip.settings.gearSort === 'rarity' && appliedRoundTrip.settings.gearFilter === 'junk', 'gear view preferences persist');
 saveMemory.clear();
 saveMemory.set(SAVE_KEY_V1, JSON.stringify({ v: 1, ts: 1, run: { zone: 77 } }));
 ok(loadState()?.v === 1, 'load falls back to legacy key');
@@ -318,6 +325,17 @@ offerItem(sellG, junk2);
 const bagId = sellG.bag[0]?.id;
 const sv = sellFromBag(sellG, bagId);
 ok(sv && sv.signal === sellValue(sv.item), 'sell returns signal');
+
+// collection flows: explicit junk state + deterministic sort/filter
+const viewGear = emptyGear();
+const lowView = rollItem(1, 'weapon');
+const highView = rollItem(30, 'chest');
+viewGear.bag = [lowView, highView];
+ok(toggleJunk(viewGear, lowView.id) === true && lowView.junk === true, 'junk state toggles on');
+ok(queryGearBag(viewGear, { filter: 'junk' }).map((it) => it.id).join(',') === lowView.id, 'junk filter isolates marked items');
+ok(queryGearBag(viewGear, { sort: 'level' })[0]?.id === highView.id, 'level sort is deterministic');
+const normalizedView = ng(viewGear);
+ok(normalizedView.bag.find((it) => it.id === lowView.id)?.junk === true, 'junk state survives normalization');
 
 // —— Prestige keeps gear + boosts + pro, resets signal ——
 const s7 = createState();
