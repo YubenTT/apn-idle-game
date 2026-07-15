@@ -19,7 +19,7 @@
 |-----------|------|-------|
 | **Resource chip** | h 44 · min-w 84 | left icon 16 · label 11 (`--fs-label-s`) · value 18–24 (`--fs-metric-*`), `tabular-nums`. **No gradient fill.** One per currency. |
 | **Feed rail cell** | h 40 | source mark 16 · game name 15 · type pill 20–22. Truncate cleanly; never wrap. |
-| **Stage card** | radius 20 | 1px `--border-700` + very soft inner shadow. **No outer glow.** |
+| **Gameplay surface** | full-bleed | Flat telemetry attached to an edge-to-edge Canvas viewport. No outer margin, border, radius, shadow, or glow. |
 | **Progress track** | h 8 | lives inside ≥24pt touch container. Contrast ≥3:1 vs. its groove. One meaning per bar (Zone ≠ Rank). |
 | **Primary CTA** | h 56 · r 18 | left icon · center title + delta · right cost chip. Crimson fill. Max one per screen. |
 | **Secondary action** | h 48 · r 16 | outline or neutral fill. Never crimson. |

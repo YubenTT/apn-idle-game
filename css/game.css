@@ -42,11 +42,12 @@ canvas {
 #app {
   display: flex;
   flex-direction: column;
+  width: 100%;
   height: 100%;
   height: 100dvh;
   max-width: 480px;
   margin: 0 auto;
-  padding: var(--safe-top) 0 var(--safe-bottom);
+  padding: var(--safe-top) 0 0;
   background: var(--compat-ink);
 }
 
@@ -3831,7 +3832,7 @@ button[hidden] {
 .hud-res {
   min-height: var(--touch-min);
   display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--size-notch-reserve) minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: stretch;
   gap: var(--sp-1);
   margin: 0;
@@ -3840,7 +3841,7 @@ button[hidden] {
 }
 
 .resource-cutout {
-  display: block;
+  display: none;
 }
 
 .hud-res .chip {
@@ -3885,8 +3886,57 @@ button[hidden] {
 
 @media (orientation: landscape) {
   .hud-res {
-    grid-template-columns: minmax(0, 1fr) var(--sp-12) minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+}
+
+/* R-006 · one continuous Run surface */
+.hud-bars {
+  flex: 0 0 auto;
+  padding: var(--sp-2) var(--sp-4);
+  border-top: var(--border-1);
+  background: var(--ink-950);
+}
+
+.bar-row2 {
+  gap: var(--sp-4);
+}
+
+.bar-lab {
+  margin-bottom: var(--sp-1);
+  color: var(--text-mid);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+  font-weight: 700;
+}
+
+.bar-lab span:last-child {
+  color: var(--text-high);
+  font-variant-numeric: tabular-nums;
+}
+
+.bar-bg {
+  height: var(--sp-2);
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--border-700);
+}
+
+.bar-fg.en {
+  background: var(--apn-primary);
+}
+
+.bar-fg.mn {
+  background: var(--c-info);
+}
+
+#bar-energy-wrap.is-sprinting .bar-fg.en {
+  background: var(--c-rep);
+  box-shadow: none;
+}
+
+#bar-energy-wrap.is-sprinting .bar-lab span:last-child {
+  color: var(--c-rep);
 }
 
 /* I-014 · weighted Run action dock */
@@ -3898,7 +3948,7 @@ button[hidden] {
 
 .cta-row {
   display: grid;
-  grid-template-columns: var(--size-host-niche) minmax(0, 1fr);
+  grid-template-columns: minmax(var(--size-host-niche), 3fr) minmax(0, 7fr);
   gap: var(--sp-2);
 }
 
@@ -3906,7 +3956,7 @@ button[hidden] {
   min-width: 0;
   min-height: calc(var(--touch-min) + var(--sp-3));
   display: grid;
-  grid-template-columns: var(--sp-6) minmax(0, 1fr);
+  grid-template-columns: var(--sp-4) minmax(0, 1fr);
   grid-template-rows: auto auto;
   gap: 0 var(--sp-1);
   align-content: center;
@@ -3928,8 +3978,8 @@ button[hidden] {
 }
 
 .btn-sprint-title {
-  font-size: var(--fs-label-m);
-  line-height: var(--lh-label-m);
+  font-size: var(--fs-body-m);
+  line-height: var(--lh-body-m);
 }
 
 .btn-sprint-sub {
@@ -3949,6 +3999,18 @@ button[hidden] {
   background: color-mix(in srgb, var(--c-rep) 12%, var(--surface-800));
   color: var(--text-high);
   box-shadow: inset var(--border-accent) 0 0 var(--c-rep);
+}
+
+.btn-sprint.is-empty:not(.is-held):not(.is-active) {
+  border-color: var(--border-700);
+  background: var(--surface-900);
+  color: var(--text-mid);
+  opacity: 1;
+}
+
+.btn-sprint.is-empty:not(.is-held):not(.is-active) .btn-sprint-ico,
+.btn-sprint.is-empty:not(.is-held):not(.is-active) .btn-sprint-sub {
+  color: var(--text-low);
 }
 
 #btn-scanner.btn-primary {
@@ -3994,16 +4056,16 @@ button[hidden] {
 }
 
 .cost-chip {
-  min-width: calc(var(--sp-12) + var(--sp-2));
+  min-width: 0;
   min-height: calc(var(--sp-6) + var(--sp-1));
   display: inline-flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 0;
+  gap: var(--sp-1);
   padding: 0 var(--sp-2);
-  border-radius: var(--r-pill);
-  background: var(--ink-950);
+  border-radius: var(--r-chip);
+  background: color-mix(in srgb, var(--ink-950) 88%, transparent);
   color: var(--c-signal);
   white-space: nowrap;
 }
@@ -4035,8 +4097,13 @@ button[hidden] {
   }
 
   .cost-chip {
-    min-width: var(--sp-12);
+    min-width: 0;
     padding: 0 var(--sp-1);
+  }
+
+  .cta-weapon-icon {
+    width: calc(var(--sp-6) - var(--sp-1));
+    height: calc(var(--sp-6) - var(--sp-1));
   }
 }
 
@@ -4075,7 +4142,7 @@ button[hidden] {
 .btn-chip.locked {
   color: var(--text-low);
   background: var(--ink-950);
-  opacity: 0.66;
+  opacity: 1;
 }
 
 .btn-chip.on,
@@ -5319,16 +5386,16 @@ button[hidden] {
 .hud-stage {
   flex: 1 1 auto;
   min-height: calc(var(--size-inventory-slot) * 3);
-  margin: var(--sp-2) var(--sp-4) 0;
-  border: var(--border-1);
-  border-radius: var(--r-stage);
+  margin: 0;
+  border: 0;
+  border-radius: 0;
   background: var(--surface-900);
-  box-shadow: var(--elev-card);
+  box-shadow: none;
   overflow: hidden;
 }
 
 .hud-stage #game {
-  border-radius: inherit;
+  border-radius: 0;
 }
 
 .hud-stage #toast {
@@ -5338,7 +5405,74 @@ button[hidden] {
 @media (orientation: landscape) {
   .hud-stage {
     min-height: calc(var(--size-inventory-slot) * 2);
-    margin-top: var(--sp-1);
+    margin: 0;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 480px) {
+  #app {
+    max-width: none;
+  }
+
+  .hud-top,
+  .hud-res,
+  .hud-res .chip,
+  .hud-ticker {
+    min-height: var(--sp-8);
+  }
+
+  .hud-ticker {
+    flex-basis: var(--sp-8);
+  }
+
+  .hud-res .chip {
+    grid-template-rows: 1fr;
+    grid-template-columns: auto auto;
+    align-content: center;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-2);
+  }
+
+  .hud-res .chip small,
+  .hud-res .chip strong {
+    order: initial;
+  }
+
+  .hud-stage {
+    min-height: calc(var(--size-inventory-slot) + var(--sp-12));
+  }
+
+  .hud-bars {
+    padding: var(--sp-1) var(--sp-4);
+  }
+
+  .hud-cta {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 3fr);
+    gap: var(--sp-2);
+    padding: var(--sp-1) var(--sp-4);
+  }
+
+  .btn-sprint,
+  #btn-scanner.btn-primary,
+  .btn-chip {
+    min-height: var(--touch-min);
+  }
+
+  .btn-skills {
+    margin-top: 0;
+  }
+
+  .hud-nav {
+    padding-top: var(--sp-1);
+    padding-bottom: calc(var(--sp-1) + var(--safe-bottom));
+  }
+
+  .nav-btn {
+    min-height: var(--touch-min);
+    padding-top: 0;
+    padding-bottom: 0;
   }
 }
 
