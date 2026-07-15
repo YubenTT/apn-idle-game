@@ -28,9 +28,12 @@ Original prompt: Complete the APN Idle redesign autonomously, including QA, revi
   plus object/effect/cost language are aligned.
 - I-044 navigation is locked by ADR-0007: five stable destinations, Gear FAB,
   minimal info-color active fill, 44pt targets, and explicit expansion state.
+- I-043 integrated QA is complete: 35 Chrome baselines across five viewport
+  classes, 0px overflow, ≥44px touch, muted copy-safe screens, clean console,
+  89.8fps cadence, 6.6MB heap, and 2.7ms sheet-open evidence.
 - Browser QA uses Chrome Extension or isolated direct Chrome with `mute=1`; no
   standalone Playwright process is used.
 
 ## Open chain
 
-- I-043 device-matrix QA.
+- None. The redesign V1 release gate is complete; final muted localhost review remains.

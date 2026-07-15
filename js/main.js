@@ -11,6 +11,7 @@ const canvas = document.getElementById('game');
 const s = createState();
 const assetStore = createAssetStore();
 const qaParams = new URLSearchParams(location.search);
+const qaMetricsEnabled = qaParams.has('qa_metrics');
 if (qaParams.has('chrome-smoke')) {
   // Read-only route/render evidence for the direct Chrome CDP gate.
   window.__APN_QA__ = { state: s, assets: assetStore };
@@ -234,6 +235,8 @@ let last = performance.now();
 let acc = 0;
 let hudT = 0;
 let saveT = 0;
+let qaFrameCount = 0;
+let qaFrameWindowStart = performance.now();
 
 function frame(now) {
   let dt = Math.min(0.05, (now - last) / 1000);
@@ -252,6 +255,21 @@ function frame(now) {
 
   syncRouteAssets();
   draw(view.ctx, view.w, view.h, s, assetStore);
+
+  if (qaMetricsEnabled) {
+    qaFrameCount += 1;
+    if (!document.documentElement.dataset.qaReadyMs) {
+      document.documentElement.dataset.qaReadyMs = String(Math.round(now));
+    }
+    const qaElapsed = now - qaFrameWindowStart;
+    if (qaElapsed >= 1000) {
+      document.documentElement.dataset.qaFps = (qaFrameCount * 1000 / qaElapsed).toFixed(1);
+      const heap = performance.memory?.usedJSHeapSize;
+      if (Number.isFinite(heap)) document.documentElement.dataset.qaHeapMb = (heap / 1048576).toFixed(1);
+      qaFrameCount = 0;
+      qaFrameWindowStart = now;
+    }
+  }
 
   hudT += dt;
   if (hudT > 0.08) {
