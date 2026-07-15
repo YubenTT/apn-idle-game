@@ -635,7 +635,7 @@ function onKill(s, e) {
       tip(s, 'gear');
     }
     s.ui.panelDirty = true;
-    if (s.settings.sfx !== false) sfx('upgrade');
+    if (s.settings.sfx !== false) sfx('loot');
   }
 
   particles(s, e.displayX, 210, e.color, e.type === 'boss' ? 26 : 14);

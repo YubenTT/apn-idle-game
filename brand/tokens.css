@@ -234,7 +234,7 @@
   --border-1:   1px solid var(--border-700);
 
   /* --- Motion ------------------------------------------------------------ */
-  --dur-fast: 120ms; --dur-base: 200ms; --dur-slow: 320ms;
+  --dur-instant: 0ms; --dur-fast: 120ms; --dur-base: 200ms; --dur-slow: 320ms;
   --ease-out: cubic-bezier(.22,.61,.36,1);
   --ease-in-out: cubic-bezier(.45,0,.15,1);
 

@@ -89,7 +89,7 @@ import {
 } from './hub.js';
 import { skillIco, attrIco, metaIco, hubIco, gearIcon } from './icons.js';
 import { save, clear } from './save.js';
-import { sfx, unlockAudio, setMuted } from './sfx.js';
+import { sfx, unlockAudio, setMuted, setReducedMotion } from './sfx.js';
 
 const PANEL_TITLES = {
   skills: 'Build',
@@ -102,9 +102,16 @@ const PANEL_TITLES = {
 
 let lastPanel = null;
 
+function applyMotionPreference(value) {
+  setReducedMotion(value);
+  const osReduced = typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  document.documentElement.classList.toggle('reduce-motion', !!value || osReduced);
+}
+
 export function bindUI(s) {
   const $ = (id) => document.getElementById(id);
   setMuted(s.settings.sfx === false);
+  applyMotionPreference(s.settings.reducedMotion);
   const soundToggle = $('chk-sfx');
   if (soundToggle) soundToggle.checked = s.settings.sfx !== false;
 
@@ -125,7 +132,6 @@ export function bindUI(s) {
         return;
       }
       openSheet(s, p);
-      if (s.settings.sfx !== false) sfx('click');
     });
   });
 
@@ -208,6 +214,7 @@ export function bindUI(s) {
   });
   $('chk-motion')?.addEventListener('change', (e) => {
     s.settings.reducedMotion = e.target.checked;
+    applyMotionPreference(e.target.checked);
     save(s);
   });
   $('chk-sfx')?.addEventListener('change', (e) => {
@@ -418,6 +425,7 @@ function openSheet(s, panel) {
     renderPremium(s);
   }
   if (panel !== 'ship') s.ui.endSeasonConfirm = false;
+  if (lastPanel !== panel && s.settings.sfx !== false) sfx('sheet');
   lastPanel = panel;
   s.ui.panelDirty = false;
 }

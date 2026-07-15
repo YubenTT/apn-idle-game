@@ -50,6 +50,7 @@ import {
 import { SKILLS, PREMIUM, nextSkillUnlock } from '../js/content.js';
 import { hubOnKill, emptyHub, DAILY_DEFS, hubObjectiveState } from '../js/hub.js';
 import { itemArtKey } from '../js/icons.js';
+import { feedbackAllowed, hapticPattern } from '../js/sfx.js';
 import {
   createRouteState,
   routeZoneDisplay,
@@ -146,6 +147,13 @@ ok(itemArtKey({ slot: 'weapon', name: 'Mod Stick', rarity: 'green' }) === 'mod-s
 ok(itemArtKey({ slot: 'chest', name: 'Patch Mail', rarity: 'green' }) === 'patch-mail', 'Gear maps Patch Mail to authored art');
 ok(itemArtKey({ slot: 'legs', name: 'Sprint Leggings', rarity: 'green' }) === 'route-leggings', 'Gear maps Sprint Leggings to authored art');
 ok(itemArtKey({ slot: 'visor', name: 'Signal Visor', rarity: 'green' }) === 'visor-coil', 'Gear maps Signal Visor to authored art');
+ok(feedbackAllowed({ muted: false, inAppReduced: false, osReduced: false }), 'feedback enabled when all gates allow it');
+ok(!feedbackAllowed({ muted: true, inAppReduced: false, osReduced: false }), 'mute gates feedback');
+ok(!feedbackAllowed({ muted: false, inAppReduced: true, osReduced: false }), 'in-app reduced motion gates feedback');
+ok(!feedbackAllowed({ muted: false, inAppReduced: false, osReduced: true }), 'OS reduced motion gates feedback');
+for (const cue of ['hit', 'crit', 'loot', 'rank', 'sheet', 'afford']) {
+  ok(Array.isArray(hapticPattern(cue)), `${cue} owns a deterministic haptic cue`);
+}
 
 // —— Persistent global Route + save v2 migration ——
 const freshRoute = createState();

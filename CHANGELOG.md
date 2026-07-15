@@ -9,6 +9,9 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Added
 
+- Added coordinated hit, crit, loot, rank-up, sheet-open, and afford feedback
+  cues with throttled mobile haptics; mute, OS reduced-motion, and the in-app
+  reduced-motion setting gate the complete feedback layer.
 - Added a 12-piece APN techwear item atlas covering matte polymer, laminated
   paper, and anodized metal families, with deterministic slot/name mapping,
   transparent runtime sprites, and asset-budget QA.
