@@ -327,11 +327,11 @@ acceptance boxes, fresh tests, browser proof, and one focused commit per issue.
 
 ### I-025 · Menu split — 🔴 M
 - **Acceptance:**
-  - [ ] Sections separated: Accessibility · Audio · Account · Purchases · Reset.
-  - [ ] Debug string `Damage n·Crit n·Utility n` removed from player UI.
-  - [ ] Toggles use the component-library switch (not mismatched checkbox).
-  - [ ] Premium card: clear benefit + restore-purchases / manage-sub / legal.
-  - [ ] `New Game` low-weight, bottom, behind confirm.
+  - [x] Sections separated: Accessibility · Audio · Account · Purchases · Reset.
+  - [x] Debug string `Damage n·Crit n·Utility n` removed from player UI.
+  - [x] Toggles use the component-library switch (not mismatched checkbox).
+  - [x] Premium card: clear benefit + restore-purchases / manage-sub / legal.
+  - [x] `New Game` low-weight, bottom, behind confirm.
 - **Files:** `index.html`, `css/game.css`, `js/ui.js`.
 
 ## Wave 3 — Art system

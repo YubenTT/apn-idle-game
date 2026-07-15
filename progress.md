@@ -11,6 +11,8 @@ Original prompt: Complete the APN Idle redesign autonomously, including QA, revi
   preview, and an explicit two-step End Season gate; 428/375 Chrome evidence is green.
 - I-023 Hub is implemented as a Daily/Weekly/Season live-ops board; state helper,
   readable rewards, 8px tracks, 44pt touch, and 428/375 Chrome gates are green.
+- I-025 Menu is split into five truthful sections with canonical switches, no
+  player debug copy, explicit demo-store semantics, and a tested safe reset gate.
 - Browser QA uses Chrome Extension or isolated direct Chrome with `mute=1`; no
   standalone Playwright process is used.
 

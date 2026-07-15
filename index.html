@@ -199,14 +199,49 @@
             <div id="meta-body"></div>
           </section>
           <section id="panel-settings" hidden>
-            <div class="menu-block">
-              <label class="chk"><input type="checkbox" id="chk-motion" /> Reduced motion</label>
-              <label class="chk"><input type="checkbox" id="chk-sfx" checked /> Sound effects</label>
-            </div>
-            <p class="fine" id="v-attrs">Damage 0 · Crit 0 · Utility 0</p>
-            <div class="section-lab">Premium</div>
-            <div id="premium-body"></div>
-            <button type="button" id="btn-wipe" class="btn-ghost">New Game</button>
+            <section class="menu-section">
+              <h3 class="menu-section-title">Accessibility</h3>
+              <label class="menu-setting" for="chk-motion">
+                <span class="menu-setting-copy"><strong>Reduced motion</strong><small>Limits stage and interface movement</small></span>
+                <input type="checkbox" id="chk-motion" />
+                <span class="switch-ui" aria-hidden="true"></span>
+              </label>
+            </section>
+            <section class="menu-section">
+              <h3 class="menu-section-title">Audio</h3>
+              <label class="menu-setting" for="chk-sfx">
+                <span class="menu-setting-copy"><strong>Sound effects</strong><small>Combat, rewards, and interface cues</small></span>
+                <input type="checkbox" id="chk-sfx" checked />
+                <span class="switch-ui" aria-hidden="true"></span>
+              </label>
+            </section>
+            <section class="menu-section">
+              <h3 class="menu-section-title">Account</h3>
+              <div class="menu-info-row"><span><strong>Local save</strong><small>Stored only in this browser</small></span><b>Active</b></div>
+              <div class="menu-info-row"><span><strong>APN account</strong><small>Cross-device sync is not available</small></span><b>Local</b></div>
+            </section>
+            <section class="menu-section menu-purchases">
+              <h3 class="menu-section-title">Purchases</h3>
+              <p class="menu-demo-note">Demo store · no payment or receipt is created.</p>
+              <div id="premium-body"></div>
+              <div class="purchase-support">
+                <button type="button" class="menu-link" disabled><span>Restore purchases</span><small>Store build only</small></button>
+                <div class="menu-info-row"><span><strong>Manage subscription</strong><small>Not applicable · APN Pro is one-time</small></span><b>None</b></div>
+                <a class="menu-link" href="./LICENSE" target="_blank" rel="noopener"><span>Legal</span><small>Open-source license</small></a>
+              </div>
+            </section>
+            <section class="menu-section menu-reset">
+              <h3 class="menu-section-title">Reset</h3>
+              <p>Deletes this browser's local progress. This cannot be undone.</p>
+              <button type="button" id="btn-wipe" class="btn-ghost">New Game…</button>
+              <div id="reset-confirm" class="reset-confirm" hidden role="alertdialog" aria-labelledby="reset-confirm-title">
+                <strong id="reset-confirm-title">Delete local progress?</strong>
+                <div class="reset-confirm-actions">
+                  <button type="button" id="btn-wipe-cancel" class="btn-ghost">Keep Save</button>
+                  <button type="button" id="btn-wipe-confirm" class="btn-danger">Delete Save</button>
+                </div>
+              </div>
+            </section>
           </section>
         </div>
       </div>

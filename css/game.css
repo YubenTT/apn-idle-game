@@ -5000,6 +5000,246 @@ button[hidden] {
   color: var(--c-positive);
 }
 
+/* I-025 · Menu separates settings, ownership, purchases, and reset. */
+#panel-settings {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+#panel-settings[hidden] {
+  display: none;
+}
+
+.menu-section {
+  overflow: hidden;
+  border: var(--border-1);
+  border-radius: var(--r-card);
+  background: var(--surface-900);
+}
+
+.menu-section-title {
+  margin: 0;
+  padding: var(--sp-3);
+  border-bottom: var(--border-1);
+  color: var(--text-high);
+  font-size: var(--fs-body-m);
+  line-height: var(--lh-body-m);
+}
+
+.menu-setting,
+.menu-info-row,
+.menu-link {
+  min-height: calc(var(--touch-min) + var(--sp-3));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  border: 0;
+  background: transparent;
+  color: var(--text-high);
+  text-align: left;
+  text-decoration: none;
+}
+
+.menu-setting-copy,
+.menu-info-row > span,
+.menu-link > span {
+  min-width: 0;
+  display: grid;
+  gap: var(--sp-1);
+}
+
+.menu-setting strong,
+.menu-info-row strong,
+.menu-link > span {
+  color: var(--text-high);
+  font-size: var(--fs-label-m);
+  line-height: var(--lh-label-m);
+}
+
+.menu-setting small,
+.menu-info-row small,
+.menu-link small {
+  color: var(--text-mid);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+}
+
+.menu-info-row b {
+  color: var(--text-mid);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+}
+
+.menu-setting input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+}
+
+.switch-ui {
+  width: 51px;
+  height: 31px;
+  flex: 0 0 51px;
+  display: block;
+  padding: 2px;
+  border: var(--border-1);
+  border-radius: var(--r-pill);
+  background: var(--surface-800);
+}
+
+.switch-ui::after {
+  content: "";
+  display: block;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background: var(--text-mid);
+  transition: transform var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
+}
+
+.menu-setting input:checked + .switch-ui {
+  border-color: var(--c-positive);
+  background: color-mix(in srgb, var(--c-positive) 18%, var(--surface-800));
+}
+
+.menu-setting input:checked + .switch-ui::after {
+  background: var(--c-positive);
+  transform: translateX(20px);
+}
+
+.menu-setting input:focus-visible + .switch-ui {
+  outline: var(--border-accent) solid var(--c-info);
+  outline-offset: var(--sp-1);
+}
+
+.menu-demo-note {
+  margin: 0;
+  padding: var(--sp-2) var(--sp-3);
+  border-bottom: var(--border-1);
+  color: var(--text-mid);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+}
+
+.menu-purchases #premium-body {
+  padding: var(--sp-3);
+}
+
+.menu-purchases .premium-card.compact,
+.menu-purchases .sp-bank.compact {
+  border: var(--border-1);
+  border-radius: var(--r-card);
+  background: var(--surface-800);
+}
+
+.menu-purchases .prem-row {
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-2);
+}
+
+.menu-purchases .prem-chip {
+  min-height: calc(var(--touch-min) + var(--sp-4));
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--sp-1) var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border: var(--border-1);
+  border-radius: var(--r-chip);
+  background: var(--surface-800);
+}
+
+.menu-purchases .prem-chip small {
+  grid-column: 1;
+  color: var(--text-mid);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+}
+
+.menu-purchases .prem-chip span {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  color: var(--c-rep);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+}
+
+.menu-purchases .box-card,
+.menu-purchases .pack-chip {
+  min-height: var(--touch-min);
+}
+
+.purchase-support {
+  border-top: var(--border-1);
+}
+
+.purchase-support > * + * {
+  border-top: var(--border-1);
+}
+
+.menu-link {
+  width: 100%;
+  font: inherit;
+}
+
+.menu-link[disabled] {
+  color: var(--text-low);
+}
+
+.menu-reset {
+  padding-bottom: var(--sp-3);
+}
+
+.menu-reset > p {
+  margin: 0;
+  padding: var(--sp-3);
+  color: var(--text-mid);
+  font-size: var(--fs-label-m);
+  line-height: var(--lh-label-m);
+}
+
+.menu-reset > .btn-ghost {
+  width: calc(100% - var(--sp-6));
+  min-height: var(--touch-min);
+  margin: 0 var(--sp-3);
+}
+
+.reset-confirm {
+  display: grid;
+  gap: var(--sp-3);
+  margin: var(--sp-3);
+  padding: var(--sp-3);
+  border: var(--border-1);
+  border-radius: var(--r-chip);
+  background: var(--ink-950);
+}
+
+.reset-confirm[hidden] {
+  display: none;
+}
+
+.reset-confirm > strong {
+  color: var(--text-high);
+  font-size: var(--fs-label-m);
+  line-height: var(--lh-label-m);
+}
+
+.reset-confirm-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-2);
+}
+
+.reset-confirm-actions .btn-ghost,
+.reset-confirm-actions .btn-danger {
+  min-height: var(--touch-min);
+  margin: 0;
+}
+
 /* I-011 · one-line current-pack feed rail */
 .hud-ticker {
   flex: 0 0 var(--touch-min);

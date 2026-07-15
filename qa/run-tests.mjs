@@ -65,6 +65,7 @@ import { checkCssTokenContract } from './check-css-tokens.mjs';
 import { checkEconomyColorContract } from './check-economy-colors.mjs';
 import { checkRouteContract } from './check-route.mjs';
 import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 function installSeededRandom(seed) {
@@ -126,6 +127,12 @@ hubStateFixture.daily.kills = DAILY_DEFS[0].target;
 ok(hubObjectiveState(hubStateFixture, DAILY_DEFS[0], 'daily') === 'claimable', 'Hub objective becomes claimable');
 hubStateFixture.daily.claimed[DAILY_DEFS[0].id] = true;
 ok(hubObjectiveState(hubStateFixture, DAILY_DEFS[0], 'daily') === 'claimed', 'Hub objective becomes claimed');
+const shellMarkup = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+for (const section of ['Accessibility', 'Audio', 'Account', 'Purchases', 'Reset']) {
+  ok(shellMarkup.includes(`menu-section-title">${section}`), `Menu has ${section} section`);
+}
+ok(!shellMarkup.includes('id="v-attrs"'), 'Menu has no attribute debug string');
+ok((shellMarkup.match(/class="switch-ui"/g) || []).length === 2, 'Menu uses one switch component twice');
 
 // —— Persistent global Route + save v2 migration ——
 const freshRoute = createState();

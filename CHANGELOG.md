@@ -50,6 +50,9 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Changed
 
+- Split Menu into Accessibility, Audio, Account, Purchases, and Reset; replaced
+  checkboxes with the canonical 51×31 switch, removed attribute debug copy,
+  labeled the local demo store honestly, and put New Game behind an inline gate.
 - Turned Hub into a Daily/Weekly/Season live-ops board with explicit locked,
   claimable, and claimed states, readable currency reward pills, 8px progress
   tracks, and milestone cards whose availability is visible without interaction.
