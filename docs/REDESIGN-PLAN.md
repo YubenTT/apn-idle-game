@@ -288,12 +288,12 @@ acceptance boxes, fresh tests, browser proof, and one focused commit per issue.
 ### I-021 · Gear + inventory redesign — 🔴 XL (do first — biggest ROI)
 - **Goal:** turn the weakest surface into the collection hook (desire, not placeholder).
 - **Acceptance:**
-  - [ ] Left niche shows the **canonical mascot** (per MASCOT-CANON) on a subtle spotlight.
-  - [ ] Equipped cards per slot with real item art (no placeholder pictograms).
-  - [ ] 5-column portrait inventory grid, 72×72 slots, rarity accent on corners/edges.
-  - [ ] States: empty · filled · selected · compare-highlight · junk.
-  - [ ] Flows work: equip · compare-delta · sort · filter · scrap, all persist on reload.
-  - [ ] Zero "hover" copy; zero placeholder slots.
+  - [x] Left niche shows the **canonical mascot** (per MASCOT-CANON) on a subtle spotlight.
+  - [x] Equipped cards per slot with real item art (no placeholder pictograms).
+  - [x] 5-column portrait inventory grid, 72×72 slots, rarity accent on corners/edges.
+  - [x] States: empty · filled · selected · compare-highlight · junk.
+  - [x] Flows work: equip · compare-delta · sort · filter · scrap, all persist on reload.
+  - [x] Zero "hover" copy; zero placeholder slots.
 - **Files:** `index.html`, `css/game.css`, `js/ui.js`, `js/loot.js`, `assets/items/*`.
 - **Source:** [SCREEN-SPECS §GEAR](./SCREEN-SPECS.md); item art tracked in I-033.
 

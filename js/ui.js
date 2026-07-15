@@ -60,13 +60,14 @@ import {
   sellValue,
   isUpgrade,
   BAG_CAP,
-  itemScore,
   SLOTS,
   slotLabel,
   slotShort,
   equippedCount,
   gearBonuses,
   primaryStat,
+  queryGearBag,
+  toggleJunk,
 } from './loot.js';
 import {
   DAILY_DEFS,
@@ -226,50 +227,23 @@ export function bindUI(s) {
     renderMeta(s);
   });
 
-  // Hold-to-sell on inventory cards (mock: "Hold to sell junk")
-  let holdTimer = null;
-  let holdId = null;
-  let justSold = false;
-  const clearHold = () => {
-    if (holdTimer) clearTimeout(holdTimer);
-    holdTimer = null;
-    holdId = null;
-    document.querySelectorAll('.icard.holding').forEach((el) => el.classList.remove('holding'));
-  };
-  const startHold = (id, el) => {
-    clearHold();
-    holdId = id;
-    el?.classList.add('holding');
-    holdTimer = setTimeout(() => {
-      if (holdId !== id) return;
-      const res = sellGear(s, id);
-      clearHold();
-      justSold = true;
-      if (res) {
-        save(s);
-        s.ui.gearFocus = null;
-        s.ui.gearEqFocus = null;
-        renderGear(s);
-      } else if (s.settings.sfx !== false) sfx('error');
-    }, 550);
-  };
-
-  $('panel-gear')?.addEventListener('pointerdown', (e) => {
-    const inv = e.target.closest('[data-inv]');
-    if (!inv || e.button === 2) return;
-    startHold(inv.dataset.inv, inv);
-  });
-  $('panel-gear')?.addEventListener('pointerup', clearHold);
-  $('panel-gear')?.addEventListener('pointercancel', clearHold);
-  $('panel-gear')?.addEventListener('pointerleave', (e) => {
-    if (e.target === $('panel-gear')) clearHold();
+  $('panel-gear')?.addEventListener('change', (e) => {
+    if (e.target.matches('[data-gear-sort]')) s.settings.gearSort = e.target.value;
+    else if (e.target.matches('[data-gear-filter]')) s.settings.gearFilter = e.target.value;
+    else return;
+    save(s);
+    renderGear(s);
   });
 
   $('panel-gear')?.addEventListener('click', (e) => {
-    if (justSold) {
-      justSold = false;
+    const junkBtn = e.target.closest('[data-junk]');
+    if (junkBtn) {
       e.preventDefault();
       e.stopPropagation();
+      if (toggleJunk(s.meta.gear, junkBtn.dataset.junk) != null) {
+        save(s);
+        renderGear(s);
+      }
       return;
     }
     const sellBtn = e.target.closest('[data-sell]');
@@ -321,12 +295,6 @@ export function bindUI(s) {
       const id = inv.dataset.inv;
       s.ui.gearEqFocus = null;
       s.ui.gearFocus = s.ui.gearFocus === id ? null : id;
-      renderGear(s);
-      return;
-    }
-    const filter = e.target.closest('[data-rarity-filter]');
-    if (filter) {
-      s.ui.gearRarityFilter = filter.dataset.rarityFilter || 'all';
       renderGear(s);
       return;
     }
@@ -398,6 +366,7 @@ function openSheet(s, panel) {
   if (root) {
     root.hidden = false;
     root.classList.add('is-open');
+    root.dataset.panel = panel;
   }
   document.getElementById('app')?.classList.add('sheet-open');
   document.querySelectorAll('.hud-nav button').forEach((b) => {
@@ -438,6 +407,7 @@ function closeSheet(s) {
   if (root) {
     root.hidden = true;
     root.classList.remove('is-open');
+    delete root.dataset.panel;
   }
   document.getElementById('app')?.classList.remove('sheet-open');
   document.querySelectorAll('.hud-nav button').forEach((b) => b.classList.remove('active'));
@@ -758,65 +728,53 @@ function renderHub(s) {
   root.innerHTML = html;
 }
 
-function itemTooltip(item) {
-  if (!item) return '';
-  const prim = primaryStat(item);
-  const aff = (item.affixes || []).map((a) => formatAffix(a)).join(' · ');
-  return `${item.name} · ${rarityLabel(item.rarity)} · ${slotLabel(item.slot)} · ${prim.text}${aff ? ` · ${aff}` : ''}`;
-}
-
-function tipPopHtml(item, col, extra = '') {
-  if (!item) return '';
-  return `
-    <div class="tip-pop" role="tooltip">
-      <strong style="color:${col}">${item.name}</strong>
-      <span>${rarityLabel(item.rarity)} · ${slotLabel(item.slot)} · i${item.ilvl}</span>
-      ${(item.affixes || []).map((a) => `<span class="tip-aff">${formatAffix(a)}</span>`).join('')}
-      ${extra}
-    </div>`;
-}
-
-/** Brand equip card — large rarity frame + primary stat (mock) */
-function brandEqCard(slot, item, selected) {
+function brandEqCard(slot, item, selected, comparing) {
   const lab = slotLabel(slot).toUpperCase();
   const sel = selected ? ' sel' : '';
+  const compare = comparing ? ' compare' : '';
   if (!item) {
     return `
-    <button type="button" class="gcard empty${sel}" data-eq-slot="${slot}">
+    <button type="button" class="gcard empty${sel}${compare}" data-eq-slot="${slot}" aria-label="${lab}: empty">
       <span class="gcard-slot">${lab}</span>
       <span class="gcard-art muted">${gearIcon({ slot, name: 'empty', rarity: 'white' })}</span>
       <span class="gcard-name">Empty</span>
-      <span class="gcard-stat">—</span>
     </button>`;
   }
-  const col = rarityColor(item.rarity);
-  const prim = primaryStat(item);
   return `
-  <button type="button" class="gcard filled r-${item.rarity}${sel}" data-eq-slot="${slot}" style="--rc:${col}">
+  <button type="button" class="gcard filled r-${item.rarity}${sel}${compare}" data-eq-slot="${slot}"
+    aria-label="${lab}: ${item.name}, level ${item.ilvl}">
     <span class="gcard-slot">${lab}</span>
-    <span class="gcard-art" style="color:${col}">${gearIcon(item)}</span>
-    <span class="gcard-name" style="color:${col}">${item.name}</span>
-    <span class="gcard-stat">${prim.text}</span>
+    <span class="gcard-art">${gearIcon(item)}</span>
     <span class="gcard-ilvl">${item.ilvl}</span>
-    ${tipPopHtml(item, col)}
   </button>`;
 }
 
 function invCard(it, g, focusId) {
-  const col = rarityColor(it.rarity);
   const up = isUpgrade(g, it);
   const sel = focusId === it.id ? ' sel' : '';
-  const prim = primaryStat(it);
   return `
-  <button type="button" class="icard r-${it.rarity}${sel}${up ? ' up' : ''}"
-    data-inv="${it.id}" style="--rc:${col}">
-    <span class="icard-art" style="color:${col}">${gearIcon(it)}</span>
-    <span class="icard-name" style="color:${col}">${it.name}</span>
-    <span class="icard-stat">${prim.text}</span>
+  <button type="button" class="icard r-${it.rarity}${sel}${up ? ' up' : ''}${it.junk ? ' junk' : ''}"
+    data-inv="${it.id}" aria-label="${it.name}, ${rarityLabel(it.rarity)}, level ${it.ilvl}${up ? ', upgrade' : ''}${it.junk ? ', marked junk' : ''}">
+    <span class="icard-art">${gearIcon(it)}</span>
     <span class="icard-ilvl">${it.ilvl}</span>
-    ${up ? '<span class="inv-up">↑</span>' : ''}
-    ${tipPopHtml(it, col, `<span class="tip-sell">Hold to sell · ${sellValue(it)} sig</span>`)}
+    ${up ? '<span class="inv-up" aria-hidden="true">↑</span>' : ''}
+    ${it.junk ? '<span class="inv-junk" aria-hidden="true">×</span>' : ''}
   </button>`;
+}
+
+function selectedCompare(item, equipped) {
+  const next = primaryStat(item);
+  if (!equipped) return { line: next.text, delta: 'Empty slot · immediate gain', tone: 'empty' };
+  const currentAffix = (equipped.affixes || []).find((affix) => affix.key === next.key);
+  const current = currentAffix ? Number(currentAffix.value) || 0 : 0;
+  const unit = currentAffix?.unit === '%' || (item.affixes || []).find((affix) => affix.key === next.key)?.unit === '%' ? '%' : '';
+  const delta = Math.round((next.value - current) * 10) / 10;
+  const sign = delta > 0 ? '+' : '';
+  return {
+    line: `${next.brand} ${current}${unit} → ${next.value}${unit}`,
+    delta: delta === 0 ? 'No primary-stat change' : `${sign}${delta}${unit} equipped delta`,
+    tone: delta > 0 ? 'better' : delta < 0 ? 'worse' : 'same',
+  };
 }
 
 function renderGear(s) {
@@ -824,9 +782,9 @@ function renderGear(s) {
   if (!root) return;
   const g = normalizeGear(s.meta.gear);
   s.meta.gear = g;
-  let bag = g.bag || [];
-  const filter = s.ui.gearRarityFilter || 'all';
-  if (filter !== 'all') bag = bag.filter((it) => it.rarity === filter);
+  const filter = s.settings.gearFilter || 'all';
+  const sort = s.settings.gearSort || 'power';
+  const bag = queryGearBag(g, { filter, sort });
   const focusId = s.ui.gearFocus || null;
   const eqFocus = s.ui.gearEqFocus || null;
   const focus = (g.bag || []).find((x) => x.id === focusId) || null;
@@ -837,89 +795,80 @@ function renderGear(s) {
   let html = `
   <div class="brand-loadout">
     <div class="brand-host">
-      <img class="brand-mascot" src="./assets/mascot/apn-mascot-idle.webp" alt="" width="88" height="88" />
-      <span class="brand-eq-n">${nEq}/4</span>
+      <span class="brand-host-label">HOST</span>
+      <img class="brand-mascot" src="./assets/mascot/apn-mascot-idle.webp" alt="APN Host" width="104" height="104" />
+      <span class="brand-eq-n">${nEq}/4 READY</span>
     </div>
     <div class="brand-slots">
-      ${SLOTS.map((sl) => brandEqCard(sl, g[sl], eqFocus === sl)).join('')}
+      ${SLOTS.map((sl) => brandEqCard(sl, g[sl], eqFocus === sl, focus?.slot === sl)).join('')}
     </div>
   </div>
 
   <div class="inv-head">
     <div class="section-lab">Inventory <span class="section-count">${fullBag.length}/${BAG_CAP}</span></div>
-    <div class="rarity-filters">
-      ${['all', 'green', 'blue', 'yellow', 'unique']
-        .map((r) => {
-          const lab = r === 'all' ? 'All' : r === 'unique' ? 'Unique' : rarityLabel(r);
-          return `<button type="button" class="rf ${filter === r ? 'on' : ''}" data-rarity-filter="${r}">${lab}</button>`;
-        })
-        .join('')}
+    <div class="gear-tools">
+      <label class="gear-tool"><span>Sort</span><select data-gear-sort aria-label="Sort inventory">
+        ${[['power', 'Power'], ['level', 'Level'], ['rarity', 'Rarity']].map(([value, label]) => `<option value="${value}" ${sort === value ? 'selected' : ''}>${label}</option>`).join('')}
+      </select></label>
+      <label class="gear-tool"><span>Filter</span><select data-gear-filter aria-label="Filter inventory">
+        ${[['all', 'All'], ['upgrades', 'Upgrades'], ['junk', 'Junk'], ...SLOTS.map((slot) => [slot, slotLabel(slot)])].map(([value, label]) => `<option value="${value}" ${filter === value ? 'selected' : ''}>${label}</option>`).join('')}
+      </select></label>
     </div>
   </div>
   <div class="inv-cards">`;
 
   if (!fullBag.length) {
-    html += `<div class="inv-empty-state">Bosses & boxes drop gear · fill all 4 slots</div>`;
+    html += `<div class="inv-empty-state">Defeat Version Gates to collect gear.</div>`;
   } else if (!bag.length) {
-    html += `<div class="inv-empty-state">No items match filter</div>`;
+    html += `<div class="inv-empty-state">No items match this view.</div>`;
   } else {
     for (const it of bag) {
       html += invCard(it, g, focusId);
     }
   }
-  // pad empty cells for grid feel
-  const pad = Math.max(0, 4 - (bag.length % 4 || 4)) % 4;
-  if (bag.length && bag.length < BAG_CAP) {
-    for (let i = 0; i < Math.min(pad, 4); i++) {
-      html += `<div class="icard empty" aria-hidden="true"></div>`;
+  if (filter === 'all' && fullBag.length < BAG_CAP) {
+    for (let i = fullBag.length; i < BAG_CAP; i++) {
+      html += `<div class="icard empty" aria-label="Empty inventory slot" role="img"></div>`;
     }
   }
   html += `</div>`;
 
   if (focus) {
-    const col = rarityColor(focus.rarity);
     const up = isUpgrade(g, focus);
     const cur = g[focus.slot];
-    const prim = primaryStat(focus);
-    const cmp = cur
-      ? itemScore(focus) > itemScore(cur)
-        ? 'Better than equipped'
-        : itemScore(focus) < itemScore(cur)
-          ? 'Weaker than equipped'
-          : 'Similar score'
-      : 'Empty slot — safe to equip';
+    const cmp = selectedCompare(focus, cur);
     html += `
-    <div class="gear-detail" style="--rc:${col}">
-      <div class="gd-ico" style="color:${col}">${gearIcon(focus)}</div>
+    <div class="gear-detail r-${focus.rarity}">
+      <div class="gd-ico">${gearIcon(focus)}</div>
       <div class="gd-main">
-        <div class="gd-name" style="color:${col}">${focus.name}</div>
-        <div class="gd-meta">${rarityLabel(focus.rarity)} · ${slotLabel(focus.slot)} · i${focus.ilvl} · ${prim.text}</div>
+        <div class="gd-name">${focus.name}</div>
+        <div class="gd-meta">${slotLabel(focus.slot).toUpperCase()} · ${rarityLabel(focus.rarity).toUpperCase()} · LV ${focus.ilvl}</div>
         <div class="gd-affs">${(focus.affixes || []).map((a) => formatAffix(a)).join(' · ')}</div>
-        <div class="gd-cmp ${up ? 'better' : cur ? 'worse' : 'empty'}">${cmp}</div>
+        <div class="gd-compare">${cmp.line}</div>
+        <div class="gd-cmp ${cmp.tone}">${cmp.delta}</div>
       </div>
       <div class="gd-actions">
         <button type="button" class="gd-equip" data-equip="${focus.id}">${up || !cur ? 'Equip' : 'Swap'}</button>
-        <button type="button" class="gd-sell" data-sell="${focus.id}">Sell · ${sellValue(focus)} sig</button>
+        <button type="button" class="gd-junk" data-junk="${focus.id}">${focus.junk ? 'Keep' : 'Mark junk'}</button>
+        <button type="button" class="gd-sell" data-sell="${focus.id}">Scrap · +${sellValue(focus)} Signal</button>
       </div>
     </div>`;
   } else if (eqItem) {
-    const col = rarityColor(eqItem.rarity);
     const prim = primaryStat(eqItem);
     html += `
-    <div class="gear-detail equipped" style="--rc:${col}">
-      <div class="gd-ico" style="color:${col}">${gearIcon(eqItem)}</div>
+    <div class="gear-detail equipped r-${eqItem.rarity}">
+      <div class="gd-ico">${gearIcon(eqItem)}</div>
       <div class="gd-main">
-        <div class="gd-name" style="color:${col}">${eqItem.name}</div>
+        <div class="gd-name">${eqItem.name}</div>
         <div class="gd-meta">Equipped · ${slotLabel(eqFocus)} · ${rarityLabel(eqItem.rarity)} · ${prim.text}</div>
         <div class="gd-affs">${(eqItem.affixes || []).map((a) => formatAffix(a)).join(' · ')}</div>
       </div>
       <div class="gd-actions">
         <button type="button" class="gd-unequip" data-unequip="${eqFocus}">Unequip</button>
-        <button type="button" class="gd-sell" disabled title="Unequip first">Sell bag only</button>
       </div>
     </div>`;
   } else {
-    html += `<p class="fine bag-empty">Tap slot for stats · Hold to sell junk · Boxes in Menu</p>`;
+    html += `<p class="fine bag-empty">Select an item to compare, equip, mark, or scrap.</p>`;
   }
 
   root.innerHTML = html;

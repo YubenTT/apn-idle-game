@@ -50,6 +50,9 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Changed
 
+- Rebuilt Gear as a full-height collection surface with the canonical Host,
+  four equipped item cards, a five-column 24-slot inventory, explicit compare
+  deltas, persisted sort/filter and junk states, and safe equip/scrap actions.
 - Replaced happy-path procedural biome rotation with scheduled Game Pack
   backgrounds and target atlases; the loader decodes only current and next packs
   and releases cold image references across Route transitions.

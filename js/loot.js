@@ -13,6 +13,8 @@ export const RARITY = {
  * Weapon · Chest · Legs · Visor
  */
 export const SLOTS = ['weapon', 'chest', 'legs', 'visor'];
+export const GEAR_SORTS = ['power', 'level', 'rarity'];
+export const GEAR_FILTERS = ['all', 'upgrades', 'junk', ...SLOTS];
 
 /**
  * Slot fantasy → real combat systems (no tank "Defense"):
@@ -428,6 +430,7 @@ export function primaryStat(item) {
 export function sanitizeItem(item) {
   if (!item || typeof item !== 'object') return item;
   item = migrateItem(item);
+  item.junk = item.junk === true;
   if (!Array.isArray(item.affixes)) return item;
   const cleaned = [];
   for (const a of item.affixes) {
@@ -633,6 +636,33 @@ export function isUpgrade(gear, item) {
   const cur = gear[item.slot];
   if (!cur) return true;
   return scoreItem(item) > scoreItem(cur);
+}
+
+export function toggleJunk(gear, itemId) {
+  const item = gear?.bag?.find((entry) => entry.id === itemId);
+  if (!item) return null;
+  item.junk = item.junk !== true;
+  return item.junk;
+}
+
+/** Stable collection query. View preferences never alter bag ownership/order. */
+export function queryGearBag(gear, options = {}) {
+  const filter = GEAR_FILTERS.includes(options.filter) ? options.filter : 'all';
+  const sort = GEAR_SORTS.includes(options.sort) ? options.sort : 'power';
+  let items = [...(gear?.bag || [])];
+  if (filter === 'junk') items = items.filter((item) => item.junk === true);
+  else if (filter === 'upgrades') items = items.filter((item) => isUpgrade(gear, item));
+  else if (SLOTS.includes(filter)) items = items.filter((item) => canonicalSlot(item.slot) === filter);
+
+  const indexed = items.map((item, index) => ({ item, index }));
+  indexed.sort((a, b) => {
+    let delta = 0;
+    if (sort === 'level') delta = (b.item.ilvl || 0) - (a.item.ilvl || 0);
+    else if (sort === 'rarity') delta = (RARITY[b.item.rarity]?.order || 0) - (RARITY[a.item.rarity]?.order || 0);
+    else delta = scoreItem(b.item) - scoreItem(a.item);
+    return delta || a.index - b.index;
+  });
+  return indexed.map(({ item }) => item);
 }
 
 export function equippedCount(gear) {

@@ -1,4 +1,4 @@
-import { normalizeGear, emptyGear } from './loot.js';
+import { normalizeGear, emptyGear, GEAR_SORTS, GEAR_FILTERS } from './loot.js';
 import { normalizeRoute } from './route.js';
 
 export const SAVE_KEY_V1 = 'apn_idle_save_v1';
@@ -31,6 +31,8 @@ export function save(s) {
     settings: {
       reducedMotion: s.settings.reducedMotion,
       sfx: s.settings.sfx !== false,
+      gearSort: GEAR_SORTS.includes(s.settings.gearSort) ? s.settings.gearSort : 'power',
+      gearFilter: GEAR_FILTERS.includes(s.settings.gearFilter) ? s.settings.gearFilter : 'all',
     },
   };
   try {
@@ -107,6 +109,8 @@ export function apply(s, d) {
   if (d.settings) {
     s.settings.reducedMotion = !!d.settings.reducedMotion;
     s.settings.sfx = d.settings.sfx !== false;
+    s.settings.gearSort = GEAR_SORTS.includes(d.settings.gearSort) ? d.settings.gearSort : 'power';
+    s.settings.gearFilter = GEAR_FILTERS.includes(d.settings.gearFilter) ? d.settings.gearFilter : 'all';
   }
   return Math.max(0, (Date.now() - (d.ts || Date.now())) / 1000);
 }
