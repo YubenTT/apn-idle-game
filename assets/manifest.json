@@ -243,113 +243,113 @@
     {
       "id": "icons/apex.svg",
       "path": "assets/icons/apex.svg",
-      "bytes": 189,
-      "sha256": "88898c0b9a47d15e36fa4032c3078ff720bbe57cdb5f483cf053c9406599a7dc",
+      "bytes": 223,
+      "sha256": "3947719de0bd4fb31d595fc6226d66a2707f43abf9e17ed3b0e288ef27424156",
       "firstPlayable": true
     },
     {
       "id": "icons/apn.svg",
       "path": "assets/icons/apn.svg",
-      "bytes": 320,
-      "sha256": "0f11e9043f37d5bff06e0b12007be4a910d2c1f99727f94a0721833c4aa40520",
+      "bytes": 354,
+      "sha256": "0f80c28580aeeef0089ae7d129983d621cf2a242592811b0e31aac7d594f8b10",
       "firstPlayable": true
     },
     {
       "id": "icons/cs2.svg",
       "path": "assets/icons/cs2.svg",
-      "bytes": 179,
-      "sha256": "2301852953f639d650cf05a4e05fb5e50a12a8a9e5b3e6c5104d06f71b0254cb",
+      "bytes": 210,
+      "sha256": "dfbcad07bc55ca3bc87ad2da255c57d00d9b9452371de9eab8a38e329bd4422b",
       "firstPlayable": true
     },
     {
       "id": "icons/diablo.svg",
       "path": "assets/icons/diablo.svg",
-      "bytes": 260,
-      "sha256": "c401770eab666b1f44b4b6c3e5ddb4cb40ff2b91904e89b01536dca3153ec643",
+      "bytes": 276,
+      "sha256": "8dccd106c4e94e4faf716cf5b79d947cce168eddf4c44c5fccb7e28452195c86",
       "firstPlayable": true
     },
     {
       "id": "icons/ffxiv.svg",
       "path": "assets/icons/ffxiv.svg",
-      "bytes": 271,
-      "sha256": "fca84b394a4377c0b8e2c3a0f748636a5d140bf4c6bf70bcaa214cb3fdc2f5b3",
+      "bytes": 305,
+      "sha256": "6f9a402b6f8dea79379453467d3f75fe51a423efaff101d1dc5cb5b7cd8ee33e",
       "firstPlayable": true
     },
     {
       "id": "icons/fortnite.svg",
       "path": "assets/icons/fortnite.svg",
-      "bytes": 182,
-      "sha256": "61d6b0f963244b86c95c67e0ab318a9691a5f9ac829aa75c504e0d193f15a322",
+      "bytes": 216,
+      "sha256": "c1d3468901515dce09f65e5ef1aa40633ece7f5d7d798c8dd3b4f81ee497c76e",
       "firstPlayable": true
     },
     {
       "id": "icons/genshin.svg",
       "path": "assets/icons/genshin.svg",
-      "bytes": 218,
-      "sha256": "58c69807d16d8fb695e4516d0000aeafcac3a5b5c49df7d150d609aadcb444ff",
+      "bytes": 252,
+      "sha256": "e7c3995c29bfd0e69b20eb8516a9a81e73916d9622d29bc8cd989e7fb594ec9f",
       "firstPlayable": true
     },
     {
       "id": "icons/league.svg",
       "path": "assets/icons/league.svg",
-      "bytes": 205,
-      "sha256": "4b1c7c888889e226b4e5186545d572431d147bedd46530e666483e061a22142d",
+      "bytes": 236,
+      "sha256": "9958a36372c8fac12ed9f691851663da017b46ad4b46e0d3691a7a62b95d6a15",
       "firstPlayable": true
     },
     {
       "id": "icons/overwatch.svg",
       "path": "assets/icons/overwatch.svg",
-      "bytes": 240,
-      "sha256": "780e8540ace2eba3a363e0440b619f71a6fda6bc76e2adcee7b78f3ac23eda82",
+      "bytes": 229,
+      "sha256": "cdcc7136f259ab87a7dc38194244ac398ef31a9f307a44f09953ef1f9b30f140",
       "firstPlayable": true
     },
     {
       "id": "icons/poe.svg",
       "path": "assets/icons/poe.svg",
-      "bytes": 222,
-      "sha256": "69d3a1ec31be0330cbd6fe0422aa590dc3300b4a2eb573e333ce20a626f76dfb",
+      "bytes": 253,
+      "sha256": "edb794710f66c3ca832b849584d5cd7cf9e6a8c2c82c268d27f3e87d0f66bcc2",
       "firstPlayable": true
     },
     {
       "id": "icons/r6.svg",
       "path": "assets/icons/r6.svg",
-      "bytes": 279,
-      "sha256": "a919d6ba6796596723b84460f8664464f318a84674d5783ddb3f0c4fc94e5ebd",
+      "bytes": 313,
+      "sha256": "30cae62a54a42a888f598e6cd71066ed8309f85c1cf25464e83c0ecd31a8b9c3",
       "firstPlayable": true
     },
     {
       "id": "icons/starrail.svg",
       "path": "assets/icons/starrail.svg",
-      "bytes": 209,
-      "sha256": "183478ee5fcacb7fc42496776a1a531caebf219ae28cdde656453ac96e7216d9",
+      "bytes": 243,
+      "sha256": "f87a561830e60b45068f355c4df1eadec1f19be3a28e427abaeca76be07b1236",
       "firstPlayable": true
     },
     {
       "id": "icons/steam.svg",
       "path": "assets/icons/steam.svg",
-      "bytes": 347,
-      "sha256": "cdfd38f080d0cd7d136e195b98ce82a9847ec0f3d1759037066e672722d383ed",
+      "bytes": 255,
+      "sha256": "8a10b9f2d3f9e54f41e3d4a2cf1384f360c6e34e530a923302e1ea0f0466a314",
       "firstPlayable": true
     },
     {
       "id": "icons/tft.svg",
       "path": "assets/icons/tft.svg",
-      "bytes": 178,
-      "sha256": "832fc1f90dd265c8586255a88cb8e01c8b617ed04f7dd316345529b6b9c24b8b",
+      "bytes": 209,
+      "sha256": "aabf560e2f5602e2f7cefee8340cfc474a3ef5194a64930301c493ab9501419e",
       "firstPlayable": true
     },
     {
       "id": "icons/valorant.svg",
       "path": "assets/icons/valorant.svg",
-      "bytes": 183,
-      "sha256": "e0600947abb74535031ebbbe520299ddd4d7f4552a5cb89bfaa97c3b102fe43a",
+      "bytes": 217,
+      "sha256": "f09fe6151fafed0adcee56e1e011af9084291aa5d6453ce4620c4f8d2b0d95df",
       "firstPlayable": true
     },
     {
       "id": "icons/wow.svg",
       "path": "assets/icons/wow.svg",
-      "bytes": 285,
-      "sha256": "eda3dfde394f4c157ab9ab34e20d19a962d24f0768e9136861b1a165b62fbe95",
+      "bytes": 264,
+      "sha256": "f83bb9ac41117eff6ddd129396291b1abbb51c0e57d5ec6baa4bfdc137d1ad81",
       "firstPlayable": true
     },
     {

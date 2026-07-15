@@ -32,6 +32,9 @@ packs, one of them is wrong.
   detail. Build-panel icons live in `js/icons.js` (SVG) — new icons match this set.
 - Feed / ticker game marks (`assets/icons/*.svg`) are simplified atmosphere marks,
   **not** official partner logos.
+- Both inline and feed marks are monochrome `currentColor` outlines: 2px stroke,
+  rounded caps/joins, no internal gradient, and at most four shapes. Rarity and
+  state color belong to the containing component, never the icon file.
 
 ### Equipment slot icons (UI marks, distinct from item art)
 
