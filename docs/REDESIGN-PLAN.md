@@ -390,7 +390,7 @@ acceptance boxes, fresh tests, browser proof, and one focused commit per issue.
 - **Files:** `scripts/assets/*`, `qa/check-assets.mjs`, `assets/manifest.json`.
 
 ### I-042 · Copy + naming pass — 🔴 S
-- **Acceptance:** every screen object·effect·cost; no debug/hover/"Upgrade Signal";
+- **Acceptance:** [x] every screen object·effect·cost; no debug/hover/"Upgrade Signal";
   terms match [GLOSSARY](./GLOSSARY.md); "Mana Flow"/`mana` renamed. Files: `js/content.js`, `js/ui.js`.
 
 ### I-043 · Device matrix + visual regression — 🔴 M

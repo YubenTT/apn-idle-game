@@ -52,7 +52,7 @@ export const LEVEL_LINES = [
 ];
 
 export const SHIP_LINES = [
-  'Notes shipped. Reputation permanent.',
+  'Notes shipped. Rep permanent.',
   'Banked. Boosts desk is smiling.',
   'Rep secured. No refunds, no take-backs.',
   'Shipped to the feed. Ego +1.',

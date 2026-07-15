@@ -31,7 +31,7 @@ function sim(s, seconds, { sprint = false, keepResources = true } = {}) {
   for (let i = 0; i < n; i++) {
     if (keepResources) {
       s.run.hero.energy = Math.max(s.run.hero.energy, 40);
-      s.run.hero.mana = Math.max(s.run.hero.mana, 20);
+      s.run.hero.focus = Math.max(s.run.hero.focus, 20);
     }
     // Auto-buy signal when affordable
     if (s.run.bytes >= 14) {

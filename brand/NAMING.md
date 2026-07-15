@@ -24,8 +24,8 @@ Signal" is not.
 - **Object · effect · cost**, in that order, on every actionable row.
   Example: `Upgrade Weapon` · `+8 scan power · Lv 37 → 38` · `4.0K Signal`.
 - **APN-flavored, not fantasy.** scan / filter / notes / rep / ship / live —
-  never mana / burst-of-magic / random-loot-drop language. (Current build still
-  has a "Mana Flow" utility skill — flagged for rename in [GLOSSARY](../docs/GLOSSARY.md).)
+  never fantasy-resource or random-loot-drop language. Active skills spend the
+  canonical **Focus** meter defined in [GLOSSARY](../docs/GLOSSARY.md).
 - **Comedy is flavor, never a blocker.** Kill/boss/ship quips are fine; they never
   carry information the player needs to act.
 

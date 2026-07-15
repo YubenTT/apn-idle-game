@@ -18,8 +18,8 @@ export const C = {
 
   ENERGY_MAX: 100,
   ENERGY_REGEN: 9,
-  MANA_MAX: 60,
-  MANA_REGEN: 1.3,
+  FOCUS_MAX: 60,
+  FOCUS_REGEN: 1.3,
   CRIT_MULT: 2.0,
   XP_BASE: 16,
   XP_GROWTH: 1.26,

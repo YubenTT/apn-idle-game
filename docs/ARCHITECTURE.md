@@ -132,7 +132,7 @@ s
 ├── route       zone, killsInZone, currentPackId, history, deck, seed, catalogVersion
 ├── run
 │   ├── bytes (Signal), patches (Notes)
-│   └── hero { level, xp, sp, scan, verify, amplify, scanner, skills, mask, energy, mana, … }
+│   └── hero { level, xp, sp, scan, verify, amplify, scanner, skills, energy, focus, … }
 ├── world       enemies, alerts, floaters, particles, confetti, sprinting, scroll
 ├── ui          panel, toast, seasonDone, tips, chipPulse, fx
 ├── stats       dps, combo

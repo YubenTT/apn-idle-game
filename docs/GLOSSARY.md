@@ -21,6 +21,7 @@
 | **End Season** | Optional prestige at a checkpoint → +Live Mult | `--apn-primary` | action |
 | **Gear** | Equippable items with rarity; loadout + inventory | rarity tokens | **Yes** (collection) |
 | **Host** | The APN mascot the player embodies | — | — |
+| **Focus** | Regenerating Run meter spent by active skills | `--c-signal` context | No (reset) |
 
 ## Enemy / target names (canonical)
 
@@ -49,7 +50,7 @@ is how you read the code.
 | `scan` / `verify` / `amplify` | Damage / Crit / Utility attrs | Build attributes |
 | `scanner` | Weapon level | "Upgrade Weapon" object |
 | `mask` | (legacy skill grouping) | see `content.SKILLS` |
-| `hero.energy` / `hero.mana` | Energy / (Mana → rename) | see flag below |
+| `hero.energy` / legacy `hero.mana` | Energy / **Focus** | legacy `mana` migrates on load |
 | `meta.live` | **Live Mult** | prestige |
 | `seasonDone` | season checkpoint reached | unlocks End Season |
 | `route.zone` / `route.killsInZone` | **Route Zone** progress | v2 owner; never reset by End Season |
@@ -59,9 +60,7 @@ is how you read the code.
 
 | Current | Should be | Where | Blocker |
 |---------|-----------|-------|---------|
-| "Mana Flow" skill / `mana` | Signal Flow / editorial term | `content.SKILLS`, `game.js` | off-brand fantasy word (NAMING) |
 | `bytes` / `patches` / `authority` | `signal` / `notes` / `rep` | save schema | needs migration in `save.js` |
-| Notes crimson, SP crimson | rose / violet tokens | `css/game.css` | visual-regression pass |
 
 ## Abbreviations
 
