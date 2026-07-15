@@ -74,7 +74,23 @@ function skyline(pack, art) {
     arena: `<path d="M30 650Q384 330 738 650" fill="#172d45" stroke="${INK}" stroke-width="8"/><path d="M80 640Q384 405 688 640" fill="none" stroke="${secondary}" stroke-width="10"/><circle cx="384" cy="560" r="45" fill="none" stroke="${accent}" stroke-width="7"/>`,
     castle: `<path d="M50 650V350h90v-80h90v380h100V220h110v430h90V300h100v350h88" fill="#263044" stroke="${INK}" stroke-width="8"/><path d="M300 650l85-250 80 250" fill="#1b2535" stroke="${INK}" stroke-width="7"/>`,
   }[art.space] || '';
-  return svg(768, 1024, `<rect width="768" height="1024" fill="${base}"/><rect width="768" height="740" fill="#091827"/>${stars}${distant}${lights}${motif}<path d="M0 705H768V1024H0Z" fill="#0b1825"/><path d="M0 730H768" stroke="${secondary}" stroke-width="4" opacity=".5"/><path d="M0 855H768M80 730V1024M250 730V1024M518 730V1024M688 730V1024" stroke="#1d3548" stroke-width="3"/><ellipse cx="590" cy="775" rx="110" ry="28" fill="${SHADOW}" opacity=".6"/><path d="M0 712H768" stroke="${accent}" stroke-width="3" opacity=".35"/>`);
+  const editorial = `<g id="apn-editorial-motifs">
+    <g id="billboard" fill="#102033" stroke="${INK}" stroke-width="5">
+      <path d="M42 300h132v86H42zM594 344h124v78H594z"/>
+      <path d="M59 320h66M59 340h92M611 365h78M611 385h52" fill="none" stroke="${secondary}" stroke-width="5" opacity=".7"/>
+      <path d="M145 316h13v13h-13zM688 397h13v13h-13z" fill="${accent}" stroke="none"/>
+    </g>
+    <g id="signal-rail" fill="none" stroke-linecap="round">
+      <path d="M0 528H768" stroke="${INK}" stroke-width="12"/>
+      <path d="M0 528H768" stroke="${secondary}" stroke-width="4" opacity=".65"/>
+      <path d="M92 512v32M270 512v32M498 512v32M680 512v32" stroke="${accent}" stroke-width="4"/>
+    </g>
+    <path id="patchline" d="M0 606h178l28-24h176l30 24h356" fill="none" stroke="${accent}" stroke-width="5" opacity=".72"/>
+    <g id="archive-lights" fill="${secondary}">
+      <circle cx="84" cy="606" r="5"/><circle cx="218" cy="582" r="5"/><circle cx="396" cy="594" r="5"/><circle cx="554" cy="606" r="5"/><circle cx="704" cy="606" r="5"/>
+    </g>
+  </g>`;
+  return svg(768, 1024, `<rect width="768" height="1024" fill="${base}"/><rect width="768" height="740" fill="#091827"/>${stars}${distant}${lights}${motif}${editorial}<path d="M0 705H768V1024H0Z" fill="#0b1825"/><path d="M0 730H768" stroke="${secondary}" stroke-width="4" opacity=".5"/><path d="M0 855H768M80 730V1024M250 730V1024M518 730V1024M688 730V1024" stroke="#1d3548" stroke-width="3"/><ellipse cx="590" cy="775" rx="110" ry="28" fill="${SHADOW}" opacity=".6"/><path d="M0 712H768" stroke="${accent}" stroke-width="3" opacity=".35"/>`);
 }
 
 function humanoid(form, x, accent, secondary, boss = false, broken = false) {
@@ -173,7 +189,7 @@ function atlasJson(pack) {
 }
 
 function sourceBoard(pack, art) {
-  return `# ${pack.title} production source board\n\n- Clean Era order: ${pack.order}\n- Genre: ${pack.genre}\n- Environment grammar: ${art.space}\n- Palette roles: ${art.palette.join(', ')}\n- Direction: target enters right-to-left; foot-center pivot is locked.\n- Contract: textless APN Patchline vector master; five targets, one final encounter, one break state.\n- Research owner: \`docs/GAME-PACK-ASSET-BIBLE.md\` (${pack.title} official-source section).\n- Approved direction evidence: \`docs/art/proofs/2026-07-15/\`.\n- Production: deterministic \`scripts/assets/produce-game-packs.mjs\`; no screenshot pixels or official logos ship.\n`;
+  return `# ${pack.title} production source board\n\n- Clean Era order: ${pack.order}\n- Genre: ${pack.genre}\n- Environment grammar: ${art.space}\n- Palette roles: ${art.palette.join(', ')}\n- Direction: target enters right-to-left; foot-center pivot is locked.\n- Background contract: APN cityline with billboard, signal rail, patchline, and archive-light motifs.\n- Contract: textless APN Patchline vector master; five targets, one final encounter, one break state.\n- Research owner: \`docs/GAME-PACK-ASSET-BIBLE.md\` (${pack.title} official-source section).\n- Approved direction evidence: \`docs/art/proofs/2026-07-15/\`.\n- Production: deterministic \`scripts/assets/produce-game-packs.mjs\`; no screenshot pixels or official logos ship.\n`;
 }
 
 async function render(svgFile, pngFile, width, height) {

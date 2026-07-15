@@ -96,8 +96,8 @@
     {
       "id": "game-packs/apex-legends/background.webp",
       "path": "assets/game-packs/apex-legends/background.webp",
-      "bytes": 3948,
-      "sha256": "fcc250e2bdcd8224b52ed697431d46017bb16bb07772647bb967ad8fe55c7b1f",
+      "bytes": 6416,
+      "sha256": "9ce6bcb896d3e48a340658c11a9302636be2b48f8b7ae320336b6eebe4d29874",
       "kind": "background",
       "firstPlayable": false
     },
@@ -134,8 +134,8 @@
     {
       "id": "game-packs/apex-legends/targets.webp",
       "path": "assets/game-packs/apex-legends/targets.webp",
-      "bytes": 25772,
-      "sha256": "2a5f64866f87d6bdabf8b28e77e548655ed4edc4430e28231a4513c9861f8019",
+      "bytes": 11924,
+      "sha256": "d6db9b1b4676dfa98a0775d9dafa711a41cb968e942d9610066018573f7411f1",
       "kind": "targets",
       "firstPlayable": false
     },
@@ -149,8 +149,8 @@
     {
       "id": "game-packs/counter-strike-2/background.webp",
       "path": "assets/game-packs/counter-strike-2/background.webp",
-      "bytes": 4712,
-      "sha256": "7d5e47b6d0604dbd357c1e5337b70fe5b7dbb0c8db37d431ec09d526d44d3f48",
+      "bytes": 7230,
+      "sha256": "d62dd9fd733b37b3c0ac762ec93e910d64843e3e98fd205fa76e8c59fdc400a7",
       "kind": "background",
       "firstPlayable": false
     },
@@ -187,16 +187,16 @@
     {
       "id": "game-packs/counter-strike-2/targets.webp",
       "path": "assets/game-packs/counter-strike-2/targets.webp",
-      "bytes": 17772,
-      "sha256": "6aeea4fe1b1696ef94b8a964d9eea1e014d3eb3138267a98bf73f53d97b8dd19",
+      "bytes": 11160,
+      "sha256": "e46db3a8b61c78450a6e1eb56a79b330fb9153c9b2f9e6ebb6b7b12b78316a3f",
       "kind": "targets",
       "firstPlayable": false
     },
     {
       "id": "game-packs/dead-by-daylight/background.webp",
       "path": "assets/game-packs/dead-by-daylight/background.webp",
-      "bytes": 3914,
-      "sha256": "6aefc29289d9d8f35e65691a6ca5cbf5a40d5409e27ecc527923ea4fc565048c",
+      "bytes": 5686,
+      "sha256": "09ca435f14c214644deadd2cf13eb2addccbde013c6aee5e1469fc1c70b825d0",
       "kind": "background",
       "firstPlayable": false
     },
@@ -233,16 +233,16 @@
     {
       "id": "game-packs/dead-by-daylight/targets.webp",
       "path": "assets/game-packs/dead-by-daylight/targets.webp",
-      "bytes": 29826,
-      "sha256": "a52a874b2cf612e5918ae1c63a0f6c86e1b48b58e2277a252ecf60f615fe7ced",
+      "bytes": 10148,
+      "sha256": "8a3c1f99502103d331949964156e0cc6b731f0ede6158d97a13b08ce66977bbe",
       "kind": "targets",
       "firstPlayable": false
     },
     {
       "id": "game-packs/dota-2/background.webp",
       "path": "assets/game-packs/dota-2/background.webp",
-      "bytes": 5146,
-      "sha256": "9dcef0216648bd136d3cc81010cd1d82741e84b30f17311b60c3a8577d0fd850",
+      "bytes": 7530,
+      "sha256": "2781d96c636348c376a5d3a74733bfee3a0a0f3a7388c99ea40d39822fe3a6ce",
       "kind": "background",
       "firstPlayable": false
     },
@@ -279,16 +279,16 @@
     {
       "id": "game-packs/dota-2/targets.webp",
       "path": "assets/game-packs/dota-2/targets.webp",
-      "bytes": 26258,
-      "sha256": "815999790ac375333f9cc09b4d092a2e70d94878f8cc99629d373aea01b933d1",
+      "bytes": 9826,
+      "sha256": "ffbbcb7156f6a120a5d6688ea45d35e5de72b01dc8bdddb89f52e664b36e4192",
       "kind": "targets",
       "firstPlayable": false
     },
     {
       "id": "game-packs/elden-ring/background.webp",
       "path": "assets/game-packs/elden-ring/background.webp",
-      "bytes": 3914,
-      "sha256": "356a2d93407f8cf942b59c7dd03812e374bcb2875f940a1b2b9871e80b133c72",
+      "bytes": 6572,
+      "sha256": "21189cff29c1a732a962f3e39f513829eb2a74b6ef81b9a41cc0b805171819ed",
       "kind": "background",
       "firstPlayable": false
     },
@@ -325,16 +325,16 @@
     {
       "id": "game-packs/elden-ring/targets.webp",
       "path": "assets/game-packs/elden-ring/targets.webp",
-      "bytes": 18108,
-      "sha256": "55085a9edb3c4c2c5a72075df751c30e016e045f37acf18a09e5a73e47cf5f00",
+      "bytes": 11170,
+      "sha256": "dca75d2c3470226d8498f9a43e5baebcf7d518a7cbb0ac7bddcac7285a6c694b",
       "kind": "targets",
       "firstPlayable": false
     },
     {
       "id": "game-packs/escape-from-tarkov/background.webp",
       "path": "assets/game-packs/escape-from-tarkov/background.webp",
-      "bytes": 4030,
-      "sha256": "ab45f93c9dfddc7316cc0d1c6c19a2eb9491ceecb1366ce9f05ddfc2d0441695",
+      "bytes": 5544,
+      "sha256": "dab7fb4cf2506ded96e8e62881496ca6668143681c8991b18a4af068ac60fa10",
       "kind": "background",
       "firstPlayable": false
     },
@@ -371,16 +371,16 @@
     {
       "id": "game-packs/escape-from-tarkov/targets.webp",
       "path": "assets/game-packs/escape-from-tarkov/targets.webp",
-      "bytes": 19206,
-      "sha256": "7b775e7c670e1377cd7893c475bad0baffa647c63e6ecb536ad7bcf3501eb618",
+      "bytes": 8118,
+      "sha256": "5ab8e06e2a83ce594e74a27c8414af8a4d2980b7ae21d80252d54f5ae34da4d7",
       "kind": "targets",
       "firstPlayable": false
     },
     {
       "id": "game-packs/fc-26/background.webp",
       "path": "assets/game-packs/fc-26/background.webp",
-      "bytes": 6004,
-      "sha256": "c85389018bb17ec54a10785897ec07bc764f68a35512b74911c5bb61f92535dd",
+      "bytes": 8162,
+      "sha256": "67c30471fc18028b010d87b37bb8435cbeabbe3c591fb762ee2653df79ed7273",
       "kind": "background",
       "firstPlayable": false
     },
@@ -417,16 +417,16 @@
     {
       "id": "game-packs/fc-26/targets.webp",
       "path": "assets/game-packs/fc-26/targets.webp",
-      "bytes": 24000,
-      "sha256": "85e0bbe8abc9b68a93d0795795cabbde5c3d0fc49c641035060d496c8f9d10c0",
+      "bytes": 9998,
+      "sha256": "871710ef48a745a16a3657bb730cbdca9417c3775bd67c9c720f5a8940b11e72",
       "kind": "targets",
       "firstPlayable": false
     },
     {
       "id": "game-packs/fortnite/background.webp",
       "path": "assets/game-packs/fortnite/background.webp",
-      "bytes": 6584,
-      "sha256": "f55f3f60fe61444a5e0c51b27ff7d412828fac253e15e1169f8c8e4bbcd9feeb",
+      "bytes": 9330,
+      "sha256": "22378b1765184fd3bfaa17302f287c5eedd121a5212a1c5ce7319d27eed7b56f",
       "kind": "background",
       "firstPlayable": false
     },
@@ -463,16 +463,16 @@
     {
       "id": "game-packs/fortnite/targets.webp",
       "path": "assets/game-packs/fortnite/targets.webp",
-      "bytes": 23898,
-      "sha256": "8b3012cbd2c7486677adbd31251d248d84927215f2fd9b50caaa026083271fe3",
+      "bytes": 10144,
+      "sha256": "52a870a3e5dfe18a57b06b5f21f56fcce255ffe2c09e96e17140e0901031fff5",
       "kind": "targets",
       "firstPlayable": false
     },
     {
       "id": "game-packs/grand-theft-auto-v/background.webp",
       "path": "assets/game-packs/grand-theft-auto-v/background.webp",
-      "bytes": 5472,
-      "sha256": "67c658979554977c5c0766facf6d62e656479d9dbe9615c4c272562c7d5c6257",
+      "bytes": 8032,
+      "sha256": "e6dc347d594852bb7c7d6b451678085dd47ca905eee0063b360c4e945ed4578f",
       "kind": "background",
       "firstPlayable": false
     },
@@ -509,16 +509,16 @@
     {
       "id": "game-packs/grand-theft-auto-v/targets.webp",
       "path": "assets/game-packs/grand-theft-auto-v/targets.webp",
-      "bytes": 26648,
-      "sha256": "b4a607f6ec2edda4c29810d504e36aa307c3cedd410439724a54f52ecd01bf68",
+      "bytes": 10178,
+      "sha256": "daff7486f2fa52790de72aba2ac7f49fd6e90d173fbfe73b51c33726e685ba23",
       "kind": "targets",
       "firstPlayable": false
     },
     {
       "id": "game-packs/league/background.webp",
       "path": "assets/game-packs/league/background.webp",
-      "bytes": 5266,
-      "sha256": "b4587d2391b2a81a48bb7036d84a00404b60d7433f7e393d4555a61068226501",
+      "bytes": 7224,
+      "sha256": "7fd3ebc0cabb7f18e48d0944dc2dd81f7f38d399340357c7346bb06fd7fbc241",
       "kind": "background",
       "firstPlayable": true
     },
@@ -555,16 +555,16 @@
     {
       "id": "game-packs/league/targets.webp",
       "path": "assets/game-packs/league/targets.webp",
-      "bytes": 27432,
-      "sha256": "6d442975a8d9a469c7a947461f041edb1ecb57fdf7aeb95614dfcaf80867e5d8",
+      "bytes": 11670,
+      "sha256": "065deaa509f262344ff27fb1a5d28032d90d32de47270deace43885245e50a69",
       "kind": "targets",
       "firstPlayable": true
     },
     {
       "id": "game-packs/madden-nfl-26/background.webp",
       "path": "assets/game-packs/madden-nfl-26/background.webp",
-      "bytes": 5862,
-      "sha256": "353fe727115078eeda3579cce2fd7539262b0a0a93e51637b888fe677e8d81c2",
+      "bytes": 7808,
+      "sha256": "c39341a2c6177081eb77226bfde908aea23c98397ec399ed4f9bd9144c55fc33",
       "kind": "background",
       "firstPlayable": false
     },
@@ -601,16 +601,16 @@
     {
       "id": "game-packs/madden-nfl-26/targets.webp",
       "path": "assets/game-packs/madden-nfl-26/targets.webp",
-      "bytes": 20142,
-      "sha256": "57518a2aa69e9f92125669e47412d43235e4c4d2b9ad761508ea8da38c40cfad",
+      "bytes": 9198,
+      "sha256": "01155538bc44b04f3448326df4b2c83c60ab770b914b245a1a4cd5f33127feb2",
       "kind": "targets",
       "firstPlayable": false
     },
     {
       "id": "game-packs/marvel-rivals/background.webp",
       "path": "assets/game-packs/marvel-rivals/background.webp",
-      "bytes": 7968,
-      "sha256": "211504aef5681819461c9085dd10fc678f2774386a631c7f943689b1f102618c",
+      "bytes": 9880,
+      "sha256": "8701d776887afca141e34e06eedfc9cd024e4ff8cebf5cc74877ae185d7ab49e",
       "kind": "background",
       "firstPlayable": false
     },
@@ -647,16 +647,16 @@
     {
       "id": "game-packs/marvel-rivals/targets.webp",
       "path": "assets/game-packs/marvel-rivals/targets.webp",
-      "bytes": 24196,
-      "sha256": "8bb152fd1e6a68faaedfa438c01899de53bb190df5d2ae2669f5430944febb51",
+      "bytes": 10666,
+      "sha256": "87763840c3beeea13e87535320ba2203272fa6c7413b43c7891f427ee7982308",
       "kind": "targets",
       "firstPlayable": false
     },
     {
       "id": "game-packs/minecraft/background.webp",
       "path": "assets/game-packs/minecraft/background.webp",
-      "bytes": 3812,
-      "sha256": "481aa56b18f9700f7bfa8c8a49fb5398228df3d6c499f7f28814440e90192b50",
+      "bytes": 6126,
+      "sha256": "5d39fc9be753e12aafb56154aaf8df6e43252a36bb27c70dd27dc5b760107ca8",
       "kind": "background",
       "firstPlayable": false
     },
@@ -693,16 +693,16 @@
     {
       "id": "game-packs/minecraft/targets.webp",
       "path": "assets/game-packs/minecraft/targets.webp",
-      "bytes": 27304,
-      "sha256": "45f7186fb53104f8f829fd452c24a0825ae3647863369467860afdaaed3bc895",
+      "bytes": 11312,
+      "sha256": "1ea81d4fea6dc3e9afad92eed037efefc283533fd70fa7b33970a945927f68b7",
       "kind": "targets",
       "firstPlayable": false
     },
     {
       "id": "game-packs/nba-2k26/background.webp",
       "path": "assets/game-packs/nba-2k26/background.webp",
-      "bytes": 5282,
-      "sha256": "ff3ce1572251c11031e36390829ccede94e5e362838f70c95450dfc9f2b2e0cc",
+      "bytes": 7776,
+      "sha256": "a0dba2518c1d7d341a96811b23f89dd56da0f4dd7bac42978eb8745d98383354",
       "kind": "background",
       "firstPlayable": false
     },
@@ -739,16 +739,16 @@
     {
       "id": "game-packs/nba-2k26/targets.webp",
       "path": "assets/game-packs/nba-2k26/targets.webp",
-      "bytes": 26064,
-      "sha256": "581dc5f400c78c09c9bd2676b819e32d38b25dd58f6498e5461292ad47981710",
+      "bytes": 10052,
+      "sha256": "4742670c85304956fe51d1f0eba5fdbbc3639f603e7e16fcb2d04cc2380585a7",
       "kind": "targets",
       "firstPlayable": false
     },
     {
       "id": "game-packs/old-school-runescape/background.webp",
       "path": "assets/game-packs/old-school-runescape/background.webp",
-      "bytes": 8014,
-      "sha256": "565eecddb2e9fcc2cb65fb760f43042606d9484642ffffcd990e6a0edb53cbac",
+      "bytes": 10114,
+      "sha256": "81e3967be8ee1d7139e45b50fbfb1819359152ff7b866ee94ffca28938b212a4",
       "kind": "background",
       "firstPlayable": false
     },
@@ -785,16 +785,16 @@
     {
       "id": "game-packs/old-school-runescape/targets.webp",
       "path": "assets/game-packs/old-school-runescape/targets.webp",
-      "bytes": 22190,
-      "sha256": "8fa4b7c9a645cb017723de4252c9548c3a2f8ac917645784f551bfce43426f37",
+      "bytes": 12428,
+      "sha256": "22fc0ed9320d767b081b3833332901f8e0ce80ab4ae7e26497d47a44fa278cb2",
       "kind": "targets",
       "firstPlayable": false
     },
     {
       "id": "game-packs/overwatch/background.webp",
       "path": "assets/game-packs/overwatch/background.webp",
-      "bytes": 4174,
-      "sha256": "2081a2c6eadaa850aeba9c04d5f2d733bbecbc50a213e1d83cfd3fc486ee9e8c",
+      "bytes": 6676,
+      "sha256": "f82e674df8ad8555058b7faaf4d7c69168725328873109b5b8fee5cf7388d1e0",
       "kind": "background",
       "firstPlayable": false
     },
@@ -831,16 +831,16 @@
     {
       "id": "game-packs/overwatch/targets.webp",
       "path": "assets/game-packs/overwatch/targets.webp",
-      "bytes": 19810,
-      "sha256": "2be655aa3e6b779f8019765a45c24f57ca24cbc8e025fe9e2f2ceeb57b2cc3a2",
+      "bytes": 11430,
+      "sha256": "77d3a053c0819d6a4a53b9d63f369a312249acc3f35db2180e580a9e81ca530b",
       "kind": "targets",
       "firstPlayable": false
     },
     {
       "id": "game-packs/path-of-exile-2/background.webp",
       "path": "assets/game-packs/path-of-exile-2/background.webp",
-      "bytes": 5598,
-      "sha256": "78cc4388693054e55a1ef3d929aba8f23aa2261a3b67ff924a994996a4b09f24",
+      "bytes": 7898,
+      "sha256": "fc378f6a7c4800c640c8d3bed4d5beff96fac21dadea2ad1db0af67d1b6c45bf",
       "kind": "background",
       "firstPlayable": false
     },
@@ -877,16 +877,16 @@
     {
       "id": "game-packs/path-of-exile-2/targets.webp",
       "path": "assets/game-packs/path-of-exile-2/targets.webp",
-      "bytes": 29564,
-      "sha256": "c31214c156dcbf2d1ad3864fc9828d286185bb5dc9cda8cbabbda946f74fdae7",
+      "bytes": 12112,
+      "sha256": "1a72de951cc5313dc895c9d136e33afe71ae91032c5e60e5198be7a8d86b3128",
       "kind": "targets",
       "firstPlayable": false
     },
     {
       "id": "game-packs/rocket-league/background.webp",
       "path": "assets/game-packs/rocket-league/background.webp",
-      "bytes": 7480,
-      "sha256": "ab377587633ef7967bed9f7feaead0ce7ece23a071e01d088efc7ce47bb737f1",
+      "bytes": 9428,
+      "sha256": "92860d0589db3adf95fc5974bae4adff0585884795b0b06efb321ace62398a4e",
       "kind": "background",
       "firstPlayable": false
     },
@@ -923,16 +923,16 @@
     {
       "id": "game-packs/rocket-league/targets.webp",
       "path": "assets/game-packs/rocket-league/targets.webp",
-      "bytes": 17214,
-      "sha256": "98600001bf14cc091f0098d098b1998410b79832dcd3c98b58fbe619c2e7b0be",
+      "bytes": 10148,
+      "sha256": "1ae94527c0166ef2685d665839e343f3bcda3177dd662252ed1df3ef80029b56",
       "kind": "targets",
       "firstPlayable": false
     },
     {
       "id": "game-packs/valorant/background.webp",
       "path": "assets/game-packs/valorant/background.webp",
-      "bytes": 4444,
-      "sha256": "b614c889cea19f8c6b04ae8bafce3824d5c0e3a4aab490fddc6773850fce82de",
+      "bytes": 6398,
+      "sha256": "b04f293dcefe7a3b97706b8c40c819ce9e217ef1d02139d2e14b452d4dfd0120",
       "kind": "background",
       "firstPlayable": true
     },
@@ -969,16 +969,16 @@
     {
       "id": "game-packs/valorant/targets.webp",
       "path": "assets/game-packs/valorant/targets.webp",
-      "bytes": 30280,
-      "sha256": "2a2266de9b1bba338695b51190a5782aa763469709d9c5efd8d304ceed4b42f4",
+      "bytes": 11324,
+      "sha256": "c4035da0674a2fd7339b825aa4931341e403bc5e474de7551b50ae993ca057a7",
       "kind": "targets",
       "firstPlayable": true
     },
     {
       "id": "game-packs/world-of-warcraft/background.webp",
       "path": "assets/game-packs/world-of-warcraft/background.webp",
-      "bytes": 5992,
-      "sha256": "464eb9b8c53934ffd5b8580a91543b9bea68a165650f6b4ad5deea8367550b85",
+      "bytes": 8136,
+      "sha256": "f8af523928021695b420a0ad30c72eedc33251c2442bb8eae318ed4e700c6368",
       "kind": "background",
       "firstPlayable": false
     },
@@ -1015,8 +1015,8 @@
     {
       "id": "game-packs/world-of-warcraft/targets.webp",
       "path": "assets/game-packs/world-of-warcraft/targets.webp",
-      "bytes": 21562,
-      "sha256": "d97521b5603d7514cfa8f664fd3b4625f19420a20c92aa770f3996579713d502",
+      "bytes": 10758,
+      "sha256": "d11b29b25bf4b4d70870a8b4b05cb57e120f707b61bc28c5635e4faa9ecf6a15",
       "kind": "targets",
       "firstPlayable": false
     },

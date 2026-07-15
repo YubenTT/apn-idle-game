@@ -53,6 +53,9 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Changed
 
+- Locked every Clean Era background to the shared APN editorial cityline grammar:
+  modular billboards, signal rails, patchline routing, and archive lights now sit
+  inside each pack's own environment silhouette and remain below 150 KB.
 - Rebuilt Boosts as a permanent Ranks/Combat/Economy ROI tree; domain previews
   now own exact current→next effects, Rep costs, affordability, value cues, and
   one catch-up recommendation or next target.
