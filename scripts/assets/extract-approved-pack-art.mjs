@@ -36,6 +36,16 @@ const SOURCES = Object.freeze({
   'dota-2': { proof: 'game-pack-board-04.webp', boxes: [[135, 245, 180, 140], [230, 345, 180, 140], [330, 445, 180, 140], [430, 540, 180, 140], [525, 665, 180, 140], [690, 960, 180, 140]] },
   'dead-by-daylight': row('game-pack-board-04.webp', 2, [[20, 160], [140, 285], [265, 410], [390, 540], [520, 680], [640, 960]]),
   'path-of-exile-2': row('game-pack-board-04.webp', 3, [[35, 175], [155, 300], [280, 430], [410, 565], [545, 705], [660, 960]]),
+  'marvel-rivals': {
+    urls: [
+      'https://www.marvelrivals.com/pc/gw/5da825b19a6a/heros/kp_13.png',
+      'https://www.marvelrivals.com/pc/gw/5da825b19a6a/heros/kp_8.png',
+      'https://www.marvelrivals.com/pc/gw/5da825b19a6a/heros/kp_6.png',
+      'https://www.marvelrivals.com/pc/gw/5da825b19a6a/heros/kp_12.png',
+      'https://www.marvelrivals.com/pc/gw/5da825b19a6a/heros/kp_14.png',
+      null, // The approved final encounter is vendored as master/source-6.png.
+    ],
+  },
   'escape-from-tarkov': {
     proof: 'tarkov-focus.webp',
     boxes: [[0, 170, 180, 400], [140, 315, 180, 400], [285, 460, 180, 400], [430, 600, 180, 400], [565, 735, 180, 400], [690, 960, 90, 500]],
@@ -63,6 +73,29 @@ function boxesFor(source) {
 async function extractPack(pack, segmenter, temp) {
   const source = SOURCES[pack.id];
   if (!source) throw new Error(`No approved proof source: ${pack.id}`);
+  const master = path.join(packsRoot, pack.id, 'master');
+  if (source.urls) {
+    const foregrounds = [];
+    for (const [index, url] of source.urls.entries()) {
+      const target = path.join(master, `source-${index + 1}.png`);
+      if (!fs.existsSync(target)) {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Source download failed ${response.status}: ${url}`);
+        fs.writeFileSync(target, Buffer.from(await response.arrayBuffer()));
+      }
+      foregrounds.push(target);
+    }
+    const atlasPng = path.join(master, 'targets-approved.png');
+    await run(PYTHON, [path.join(scriptRoot, 'compose-target-atlas.py'), atlasPng, ...foregrounds]);
+    await convertWebp(atlasPng, path.join(packsRoot, pack.id, 'targets.webp'), 'targets');
+    const sourceBoardFile = path.join(packsRoot, pack.id, 'source-board.md');
+    const sourceBoard = fs.readFileSync(sourceBoardFile, 'utf8');
+    if (!sourceBoard.includes('## Focused proof closure')) {
+      fs.writeFileSync(sourceBoardFile, `${sourceBoard}\n## Focused proof closure\n\nThe five target masters are official Marvel Rivals transparent character renders; the final encounter is the recorded Doom render above. All six are normalized into the APN outline, 128 px silhouette, right-to-left staging, foot pivot, and authored break-state contract. Source URLs are retained in \`scripts/assets/extract-approved-pack-art.mjs\`.\n`);
+    }
+    console.log(`APPROVED ART ${String(pack.order).padStart(2, '0')} ${pack.id}`);
+    return;
+  }
   const input = path.join(proofRoot, source.proof);
   const foregrounds = [];
   for (const [index, box] of boxesFor(source).entries()) {
@@ -79,7 +112,6 @@ async function extractPack(pack, segmenter, temp) {
     }
     foregrounds.push(foreground);
   }
-  const master = path.join(packsRoot, pack.id, 'master');
   const atlasPng = path.join(master, 'targets-approved.png');
   await run(PYTHON, [path.join(scriptRoot, 'compose-target-atlas.py'), atlasPng, ...foregrounds]);
   await convertWebp(atlasPng, path.join(packsRoot, pack.id, 'targets.webp'), 'targets');

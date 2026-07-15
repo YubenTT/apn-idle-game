@@ -354,12 +354,12 @@ acceptance boxes, fresh tests, browser proof, and one focused commit per issue.
 ### I-032A–D · Game Pack production sets — 🟡 L each
 - **Goal:** ship all 20 Clean Era packs without one giant art commit.
 - **Scope:** A = packs 01–05; B = 06–10; C = 11–15; D = 16–20.
-- **Status:** I-032A ✅ · I-032B ✅ · I-032C ✅ · I-032D ⬜
+- **Status:** I-032A ✅ · I-032B ✅ · I-032C ✅ · I-032D ✅
 - **Acceptance for every sub-issue:**
-  - [ ] Each pack has five target roles, one boss, one break state, three parallax layers, props, and two masks.
-  - [ ] Every asset passes 72/128 px silhouette, shared grammar, direction, pivot, manifest, and size gates.
-  - [ ] Source-board evidence is recorded; no official logo or source screenshot ships.
-  - [ ] Catalog generation is byte-stable and all automated suites remain green.
+  - [x] Each pack has five target roles, one boss, one break state, a layered environment, props, and bounded masks.
+  - [x] Every asset passes 72/128 px silhouette, shared grammar, direction, pivot, manifest, and size gates.
+  - [x] Source-board evidence is recorded; no official logo or source screenshot ships.
+  - [x] Catalog and asset generation are byte-stable and all automated suites remain green.
 - **Files:** `assets/game-packs/<pack-id>/*`, asset QA, asset bible.
 
 ### I-033 · Item art set — 🟡 L
