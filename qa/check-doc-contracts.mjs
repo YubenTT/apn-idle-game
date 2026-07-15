@@ -24,7 +24,7 @@ if (art.includes('We do **not** copy third-party game characters')) {
 if (!backlog.includes('I-003') || !backlog.includes('I-007')) {
   failures.push('foundation backlog');
 }
-if (!backlog.includes('The 32 focused issues') || !backlog.includes('22 Must + 10 Fix')) {
+if (!backlog.includes('The 33 focused issues') || !backlog.includes('23 Must + 10 Fix')) {
   failures.push('backlog counts');
 }
 if (!backlog.includes('only remaining user gate is Session 6')) {

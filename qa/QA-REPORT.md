@@ -6,6 +6,28 @@
 - Automated gate: `node qa/run-tests.mjs` → `ALL PASS`
 - Long-run gate: `node qa/long-run.mjs` → `LONG RUN PASS`
 
+## I-045 mobile input hardening
+
+A physical iOS Safari review on 2026-07-15 exposed selection handles after an
+imprecise hold/drag on the Run surface. The shipped document rule used only the
+standard `user-select`; it did not explicitly own WebKit selection, iOS
+touch-callout, or native media-drag behavior.
+
+The release candidate now applies standard + WebKit selection guards and the
+iOS callout guard to the complete document, plus a media-drag guard to images,
+SVG, and Canvas. `qa/check-mobile-gestures.mjs` captured the three missing guards
+as a failing test before the fix and passes after it while also proving that
+`touch-action` is not disabled globally.
+
+Muted Browser evidence at 393×852: 0px horizontal overflow; zero console
+warning/error entries; Gear sheet scroll moved 0→96px; native Gear sort changed
+to Rarity; the sheet reopened/closed with correct expansion state; Sprint
+released to `aria-pressed="false"` with no held class. The cache-busted stylesheet
+is `game.css?v=redesign-v1-gesture-fix`.
+
+The owner confirmed the physical iOS Safari long-press recheck on 2026-07-15:
+no selection handles or native callout returned. Release status: **ready**.
+
 ## Integrated device matrix
 
 Every row covers Run, Build, Ship, Hub, Boosts, Menu, and Gear. The 35 accepted
@@ -48,7 +70,7 @@ is present; normal gameplay does not expose or update them.
 | Art grammar | 20 pack sets, 12 item atlas cells, shared Patchline grammar | Pass |
 | Tokens | 0 raw CSS palette literals; 0 raw font-size lengths | Pass |
 | Layout | Five viewports × seven screens, 0px overflow | Pass |
-| Touch | All visible controls ≥44px (Run controls ≥48px) | Pass |
+| Touch | All visible controls ≥44px; static Safari contract, 393×852 interaction chain, and physical iOS long-press pass | Pass |
 | Contrast | Notes 7.01:1; SP 6.52:1; canonical text roles use locked floors | Pass |
 | Decision | One Run CTA; neutral nav state; one decision per sheet | Pass |
 | Copy | Five player-facing sources pass banned-copy scan; Focus migration tested | Pass |
@@ -61,7 +83,5 @@ is present; normal gameplay does not expose or update them.
 
 ## Severity result
 
-Open Blocker: 0 · Critical: 0 · Major: 0. No release-gate exception or risk ADR is
-required. Physical-device Safari/Android hardware profiling remains a store/release
-step; this V1 gate uses the user-approved direct Chrome surface and the required
-viewport/safe-area classes.
+Open Blocker: 0 · Critical: 0 · Major: 0. I-045's physical iOS Safari recheck is
+green. No release-gate exception or risk ADR is required.
