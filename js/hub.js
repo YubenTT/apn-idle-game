@@ -130,6 +130,12 @@ export function hubClaimed(hub, def, period) {
   return !!bag.claimed[def.id];
 }
 
+export function hubObjectiveState(hub, def, period) {
+  if (hubClaimed(hub, def, period)) return 'claimed';
+  if (hubDone(hub, def, period)) return 'claimable';
+  return 'locked';
+}
+
 /** Track events from game loop */
 export function hubOnKill(s, e) {
   const h = ensureHub(s);

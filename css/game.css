@@ -4741,6 +4741,265 @@ button[hidden] {
   font-weight: 800;
 }
 
+/* I-023 · Hub reads as a live-ops claim board. */
+#panel-hub .hub-season {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0 0 var(--sp-4);
+  padding: var(--sp-3);
+  border: var(--border-1);
+  border-radius: var(--r-card);
+  background: var(--surface-900);
+}
+
+#panel-hub .hub-season-top {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: var(--sp-2);
+  margin: 0;
+}
+
+#panel-hub .hub-season-lab {
+  color: var(--text-mid);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+}
+
+#panel-hub .hub-season-top strong {
+  color: var(--text-high);
+  font-size: var(--fs-body-m);
+  line-height: var(--lh-body-m);
+}
+
+#panel-hub .hub-season-xp {
+  justify-self: end;
+  color: var(--text-mid);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+}
+
+#panel-hub .season-bar {
+  height: var(--sp-2);
+  margin: 0;
+  border-radius: var(--r-pill);
+  background: var(--surface-800);
+}
+
+#panel-hub .season-bar i {
+  background: var(--c-sp);
+}
+
+#panel-hub .season-milestones {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-2);
+  margin: 0;
+}
+
+#panel-hub .season-mil {
+  min-width: 0;
+  min-height: calc(var(--touch-min) + var(--sp-4));
+  height: auto;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--sp-1) var(--sp-2);
+  align-items: center;
+  padding: var(--sp-2);
+  border: var(--border-1);
+  border-radius: var(--r-chip);
+  background: var(--surface-800);
+  color: var(--text-mid);
+  text-align: left;
+  opacity: 1;
+}
+
+#panel-hub .season-mil.liveops-claimable {
+  border-color: var(--c-positive);
+  color: var(--text-high);
+  box-shadow: inset 0 calc(var(--border-accent) * -1) 0 var(--c-positive);
+}
+
+#panel-hub .season-mil.liveops-claimed {
+  color: var(--text-low);
+  background: var(--ink-950);
+}
+
+#panel-hub .sm-lv {
+  color: inherit;
+  font-size: var(--fs-label-m);
+  line-height: var(--lh-label-m);
+  font-weight: 800;
+}
+
+#panel-hub .sm-reward {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1);
+}
+
+#panel-hub .sm-state {
+  justify-self: end;
+  color: var(--text-low);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+  font-weight: 800;
+}
+
+#panel-hub .liveops-claimable .sm-state {
+  color: var(--c-positive);
+}
+
+.hub-section-head {
+  min-height: var(--touch-min);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  margin-top: var(--sp-2);
+}
+
+.hub-section-head strong {
+  color: var(--text-high);
+  font-size: var(--fs-body-m);
+  line-height: var(--lh-body-m);
+}
+
+.hub-section-head span {
+  color: var(--text-mid);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+}
+
+#panel-hub .quest-list {
+  display: grid;
+  gap: var(--sp-2);
+  margin: 0;
+}
+
+#panel-hub .quest-row {
+  min-height: calc(var(--touch-min) + var(--sp-6));
+  display: grid;
+  grid-template-columns: var(--sp-8) minmax(0, 1fr) auto;
+  gap: var(--sp-2);
+  align-items: center;
+  padding: var(--sp-2) var(--sp-3);
+  border: var(--border-1);
+  border-radius: var(--r-card);
+  background: var(--surface-900);
+}
+
+#panel-hub .quest-row.liveops-claimable {
+  border-color: var(--c-positive);
+  box-shadow: inset 0 calc(var(--border-accent) * -1) 0 var(--c-positive);
+}
+
+#panel-hub .quest-row.liveops-claimed {
+  background: var(--ink-950);
+}
+
+#panel-hub .quest-ico {
+  width: var(--sp-8);
+  height: var(--sp-8);
+  margin: 0;
+  border-radius: var(--r-chip);
+  background: var(--surface-800);
+  color: var(--text-mid);
+}
+
+#panel-hub .quest-ico .ico {
+  width: var(--sp-4);
+  height: var(--sp-4);
+}
+
+#panel-hub .quest-main {
+  min-width: 0;
+}
+
+#panel-hub .quest-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+
+#panel-hub .quest-name {
+  color: var(--text-high);
+  font-size: var(--fs-label-m);
+  line-height: var(--lh-label-m);
+}
+
+#panel-hub .quest-desc,
+#panel-hub .quest-prog {
+  color: var(--text-mid);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+}
+
+#panel-hub .quest-progress {
+  height: var(--sp-2);
+  margin: var(--sp-2) 0;
+  overflow: hidden;
+  border-radius: var(--r-pill);
+  background: var(--surface-800);
+}
+
+#panel-hub .quest-progress i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--c-info);
+}
+
+#panel-hub .liveops-claimable .quest-progress i {
+  background: var(--c-positive);
+}
+
+#panel-hub .quest-rw {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1);
+}
+
+#panel-hub .rw-chip {
+  min-height: var(--sp-6);
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--sp-2);
+  border-radius: var(--r-pill);
+  background: var(--surface-800);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+}
+
+#panel-hub .quest-cta {
+  min-width: calc(var(--touch-min) + var(--sp-4));
+  min-height: var(--touch-min);
+  padding: 0 var(--sp-3);
+  border: 0;
+  border-radius: var(--r-cta);
+  background: var(--c-positive);
+  color: var(--ink-950);
+  font: inherit;
+  font-size: var(--fs-label-m);
+  line-height: var(--lh-label-m);
+  font-weight: 800;
+}
+
+#panel-hub .quest-status {
+  min-width: calc(var(--touch-min) + var(--sp-4));
+  color: var(--text-low);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+  font-weight: 800;
+  text-align: right;
+}
+
+#panel-hub .state-claimed {
+  color: var(--c-positive);
+}
+
 /* I-011 · one-line current-pack feed rail */
 .hud-ticker {
   flex: 0 0 var(--touch-min);

@@ -46,7 +46,7 @@ import {
   toggleJunk,
 } from '../js/loot.js';
 import { SKILLS, PREMIUM, nextSkillUnlock } from '../js/content.js';
-import { hubOnKill } from '../js/hub.js';
+import { hubOnKill, emptyHub, DAILY_DEFS, hubObjectiveState } from '../js/hub.js';
 import {
   createRouteState,
   routeZoneDisplay,
@@ -120,6 +120,12 @@ ok(nextSkillUnlock('scan', 1)?.id === 'scroll_speed', 'Damage next unlock advanc
 ok(nextSkillUnlock('scan', 5) === null, 'Damage reports all skills open');
 ok(END_SEASON_CONTRACT.resets.includes('Weapon level'), 'End Season contract names Weapon reset');
 ok(END_SEASON_CONTRACT.keeps.includes('Route Zone'), 'End Season contract keeps Route Zone');
+const hubStateFixture = emptyHub();
+ok(hubObjectiveState(hubStateFixture, DAILY_DEFS[0], 'daily') === 'locked', 'Hub objective starts locked');
+hubStateFixture.daily.kills = DAILY_DEFS[0].target;
+ok(hubObjectiveState(hubStateFixture, DAILY_DEFS[0], 'daily') === 'claimable', 'Hub objective becomes claimable');
+hubStateFixture.daily.claimed[DAILY_DEFS[0].id] = true;
+ok(hubObjectiveState(hubStateFixture, DAILY_DEFS[0], 'daily') === 'claimed', 'Hub objective becomes claimed');
 
 // —— Persistent global Route + save v2 migration ——
 const freshRoute = createState();

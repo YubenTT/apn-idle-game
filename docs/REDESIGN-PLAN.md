@@ -314,9 +314,9 @@ acceptance boxes, fresh tests, browser proof, and one focused commit per issue.
 
 ### I-023 · Hub live-ops board — 🔴 M
 - **Acceptance:**
-  - [ ] Tasks grouped Daily / Weekly / Season.
-  - [ ] States legible: claimable (prominent positive) vs claimed (muted) vs locked.
-  - [ ] Reward pills readable; season milestones clearly clickable-or-not.
+  - [x] Tasks grouped Daily / Weekly / Season.
+  - [x] States legible: claimable (prominent positive) vs claimed (muted) vs locked.
+  - [x] Reward pills readable; season milestones clearly clickable-or-not.
 - **Files:** `index.html`, `css/game.css`, `js/ui.js`, `js/hub.js`.
 
 ### I-024 · Boosts ROI tree — 🟡 M
