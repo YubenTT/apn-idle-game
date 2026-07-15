@@ -215,11 +215,11 @@ acceptance boxes, fresh tests, browser proof, and one focused commit per issue.
 ### I-006 · Multi-day pacing + bounded offline progression — 🔴 L
 - **Goal:** make the 200-zone Clean Era last days without timers or infinite offline skips.
 - **Acceptance:**
-  - [ ] Seeded active/idle profiles meet the windows in GAME-PACK-ROUTE.
-  - [ ] Eight-hour offline simulation stops at the next End Season boundary and reports overflow.
-  - [ ] Zone 1000 has finite math, no hard wall, deterministic save, and valid pack order.
-  - [ ] UI/render receive formatted outputs and invent no balance values.
-  - [ ] Primary suite ends `ALL PASS`; long-run suite ends `LONG RUN PASS`.
+  - [x] Seeded active/idle profiles meet the windows in GAME-PACK-ROUTE.
+  - [x] Eight-hour offline simulation stops at the next End Season boundary and reports overflow.
+  - [x] Zone 1000 has finite math, no hard wall, deterministic save, and valid pack order.
+  - [x] UI/render receive formatted outputs and invent no balance values.
+  - [x] Primary suite ends `ALL PASS`; long-run suite ends `LONG RUN PASS`.
 - **Files:** formulas/game, long-run QA, pacing profiles, BALANCE, Route doc.
 
 ### I-007 · Lazy Game Pack loader + Canvas composition — 🔴 L
