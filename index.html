@@ -12,28 +12,16 @@
   <body>
     <div id="app">
       <header class="hud-top">
-        <div class="hud-brand">
-          <strong class="hud-title">APN <span>Idle</span></strong>
-          <div class="hud-meta" role="status">
-            <span id="v-combo" class="meta-pill combo" hidden></span>
-            <span class="meta-pill" title="Economy mult (Live × Pro × Boost)"><span class="meta-k">×</span><em id="v-live">1.00</em></span>
-            <span class="meta-pill pro-badge" id="v-pro" hidden title="APN Pro">PRO</span>
-            <span class="meta-pill sp" title="Unspent skill points"><em id="v-sp">0</em><span class="meta-k">sp</span></span>
-
+        <div class="hud-res" role="status" aria-label="Run resources">
+          <div class="chip signal" title="Signal — Upgrade Weapon">
+            <small>Signal</small><strong id="v-bytes">0</strong>
           </div>
-        </div>
-        <div class="hud-res">
-          <div class="chip" title="Signal — Upgrade Weapon">
-            <strong id="v-bytes">0</strong><small>sig</small>
+          <span class="resource-cutout" aria-hidden="true"></span>
+          <div class="chip notes" title="Notes — Ship for Rep">
+            <small>Notes</small><strong id="v-patches">0</strong>
           </div>
-          <div class="chip" title="Notes — Ship for Rep">
-            <strong id="v-patches">0</strong><small>notes</small>
-          </div>
-          <div class="chip" title="Rep — permanent Boosts">
-            <strong id="v-auth">0</strong><small>rep</small>
-          </div>
-          <div class="chip" title="Damage per second">
-            <strong id="v-dps">0</strong><small>dps</small>
+          <div class="chip sp" title="SP — spend in Build">
+            <small>SP</small><strong id="v-sp">0</strong>
           </div>
         </div>
       </header>

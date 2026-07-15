@@ -934,14 +934,11 @@ export function renderHUD(s) {
 
   set($('v-bytes'), formatNum(s.run.bytes));
   set($('v-patches'), formatNum(s.run.patches));
-  set($('v-auth'), formatNum(s.authority.amount));
-  set($('v-dps'), formatNum(Math.max(0, Math.round(s.stats.dps))));
   updateLootDrop(s);
   // resource chip pulse on gain
   const chips = document.querySelectorAll('.hud-res .chip');
   if (chips[0]) chips[0].classList.toggle('pulse', !!(s.ui.chipPulse && s.ui.chipPulse.bytes > 0));
   if (chips[1]) chips[1].classList.toggle('pulse', !!(s.ui.chipPulse && s.ui.chipPulse.patches > 0));
-  if (chips[2]) chips[2].classList.toggle('pulse', !!(s.ui.chipPulse && s.ui.chipPulse.auth > 0));
   // Build nav badge when unspent SP
   document.querySelectorAll('.nav-btn[data-panel="skills"]').forEach((b) => {
     b.classList.toggle('has-badge', s.run.hero.sp > 0);

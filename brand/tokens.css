@@ -220,6 +220,7 @@
   /* --- Component measurements ------------------------------------------- */
   --size-inventory-slot: 72px;
   --size-host-niche: 104px;
+  --size-notch-reserve: 96px;
   --border-accent: 2px;
 
   /* --- Radius ------------------------------------------------------------ */

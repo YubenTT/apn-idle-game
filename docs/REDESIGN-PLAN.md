@@ -239,11 +239,11 @@ acceptance boxes, fresh tests, browser proof, and one focused commit per issue.
 - **Scope:** notch-aware resource strip (44pt); drop "APN Idle" wordmark from run
   HUD; move **Rep** to Ship/Boosts context and **DPS** to a stats peek.
 - **Acceptance:**
-  - [ ] Signal (left), Notes + SP (right), center cutout reserved via safe-area.
-  - [ ] Wordmark absent from run HUD; brand held by component discipline.
-  - [ ] Rep and DPS no longer in the run strip.
-  - [ ] Chips = resource-chip component, `tabular-nums`, no gradient.
-  - [ ] No safe-area overflow on notch device (portrait + landscape).
+  - [x] Signal (left), Notes + SP (right), center cutout reserved via safe-area.
+  - [x] Wordmark absent from run HUD; brand held by component discipline.
+  - [x] Rep and DPS no longer in the run strip.
+  - [x] Chips = resource-chip component, `tabular-nums`, no gradient.
+  - [x] No safe-area overflow on notch device (portrait + landscape).
 - **Files:** `index.html`, `css/game.css`, `js/ui.js`.
 
 ### I-011 · Feed rail — 🔴 M
