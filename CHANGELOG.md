@@ -50,6 +50,8 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Changed
 
+- Unified inline, Gear, and feed marks under one monochrome 2px rounded-stroke
+  grammar; removed per-icon gradients/colors and added a static grammar gate.
 - Reworked combat scaling around season-local Weapon power, bounded Route
   maturity, permanent-power budgeting, and soft boss timer cycles. Eight-hour
   offline rewards now stop Route progress at the next End Season boundary.

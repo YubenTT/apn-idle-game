@@ -1,11 +1,11 @@
 /** Inline SVG icons — skills, boosts, hub, premium */
 
 const SVG = (paths, view = '0 0 24 24') =>
-  `<svg class="ico" viewBox="${view}" aria-hidden="true" focusable="false">${paths}</svg>`;
+  `<svg class="ico" viewBox="${view}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${paths}</svg>`;
 
-const p = (d, fill = 'currentColor') => `<path fill="${fill}" d="${d}"/>`;
-const c = (cx, cy, r, fill = 'currentColor') =>
-  `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${fill}"/>`;
+const p = (d) => `<path vector-effect="non-scaling-stroke" d="${d}"/>`;
+const c = (cx, cy, r) =>
+  `<circle vector-effect="non-scaling-stroke" cx="${cx}" cy="${cy}" r="${r}"/>`;
 
 export const ICO = {
   // attrs

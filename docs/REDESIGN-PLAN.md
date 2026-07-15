@@ -346,8 +346,9 @@ acceptance boxes, fresh tests, browser proof, and one focused commit per issue.
 
 ### I-031 · 2D art grammar + icon unify — 🔴 M
 - **Acceptance:**
-  - [ ] Single outline/material/shadow grammar across icons + UI marks.
-  - [ ] Icon set: constant stroke, rounded terminals, low interior detail.
+  - [x] Inline and feed marks use one monochrome currentColor grammar without gradients.
+  - [x] Icon set has a constant 2px stroke, rounded terminals, and low interior detail.
+  - [x] Static icon QA is part of the primary suite.
 - **Files:** `js/icons.js`, `assets/icons/*`.
 
 ### I-032A–D · Game Pack production sets — 🟡 L each
