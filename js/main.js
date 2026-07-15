@@ -3,12 +3,19 @@
 import { C } from './formulas.js';
 import { createState, step, collectAlert, simulateOffline, setSprint, isSprinting } from './game.js';
 import { sizeCanvas, draw } from './render.js';
+import { createAssetStore, preloadRouteAssets, packWindowForRoute } from './assets.js';
 import { bindUI, renderHUD } from './ui.js';
 import { save, load, apply } from './save.js';
 import { TICKER_ITEMS } from './content.js';
 
 const canvas = document.getElementById('game');
 const s = createState();
+const assetStore = createAssetStore();
+const qaParams = new URLSearchParams(location.search);
+if (qaParams.has('chrome-smoke')) {
+  // Read-only route/render evidence for the direct Chrome CDP gate.
+  window.__APN_QA__ = { state: s, assets: assetStore };
+}
 
 const saved = load();
 if (saved) {
@@ -23,6 +30,16 @@ if (saved) {
 } else {
   s.ui.pendingTip = 'start';
 }
+if (qaParams.has('autostart') && qaParams.has('zone')) {
+  const displayZone = Math.max(1, Math.floor(Number(qaParams.get('zone')) || 1));
+  s.route.zone = displayZone - 1;
+  s.route.killsInZone = 0;
+  s.world.enemies = [];
+  s.world.spawnCd = 0;
+  s.ui.pendingTip = null;
+}
+// Query override is applied after save hydration so QA can never emit audio.
+if (qaParams.has('mute')) s.settings.sfx = false;
 
 let view = sizeCanvas(canvas);
 window.addEventListener('resize', () => {
@@ -30,6 +47,14 @@ window.addEventListener('resize', () => {
 });
 
 bindUI(s);
+let assetWindowKey = '';
+function syncRouteAssets() {
+  const key = packWindowForRoute(s.route).map((pack) => pack.id).join(',');
+  if (key === assetWindowKey) return;
+  assetWindowKey = key;
+  preloadRouteAssets(assetStore, s.route);
+}
+syncRouteAssets();
 
 function pos(ev) {
   const r = canvas.getBoundingClientRect();
@@ -200,7 +225,7 @@ document.getElementById('btn-start')?.addEventListener('click', () => {
 });
 
 // QA: ?autostart=1 skips title for screenshots / smoke
-if (new URLSearchParams(location.search).has('autostart')) {
+if (qaParams.has('autostart')) {
   document.getElementById('title-screen').hidden = true;
 }
 
@@ -238,7 +263,8 @@ function frame(now) {
   }
   if (acc > C.FIXED_DT * 4) acc = 0;
 
-  draw(view.ctx, view.w, view.h, s);
+  syncRouteAssets();
+  draw(view.ctx, view.w, view.h, s, assetStore);
 
   hudT += dt;
   if (hudT > 0.08) {

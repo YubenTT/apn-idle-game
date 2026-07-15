@@ -93,9 +93,17 @@ flowchart TB
 
 ### `render.js`
 
-- Stateless draw from `s` (except image cache).
-- Procedural biomes remain a temporary fallback until I-007's catalog renderer.
+- Stateless draw from `s` plus an explicit decoded asset store.
+- The scheduled Game Pack owns the happy-path environment and target atlas;
+  procedural Patchline scenery is a missing/slow-asset fallback only.
 - Never grant currency.
+
+### `assets.js`
+
+- Owns browser decode promises and explicit current/next Game Pack references.
+- Deduplicates loads, treats props/masks as optional, releases cold decoded images,
+  and never keeps more than two pack records after a transition.
+- Reads pure Route scheduling; it does not calculate combat or choose balance.
 
 ### `ui.js`
 

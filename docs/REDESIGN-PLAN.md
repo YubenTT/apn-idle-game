@@ -225,11 +225,11 @@ acceptance boxes, fresh tests, browser proof, and one focused commit per issue.
 ### I-007 · Lazy Game Pack loader + Canvas composition — 🔴 L
 - **Goal:** render production packs fluently while decoding at most current + next.
 - **Acceptance:**
-  - [ ] Loader preloads current/next, releases cold packs, deduplicates decodes, and has a safe fallback.
-  - [ ] Canvas consumes scheduled pack data; procedural biome selection is removed from the happy path.
-  - [ ] Host stays left, target enters from right, shared ground/pivots remain stable.
-  - [ ] Pack transitions at 1/10/11/20/200/201 pass loader and muted Chrome evidence.
-  - [ ] Asset, loader, primary, and performance gates pass.
+  - [x] Loader preloads current/next, releases cold packs, deduplicates decodes, and has a safe fallback.
+  - [x] Canvas consumes scheduled pack data; procedural biome selection is removed from the happy path.
+  - [x] Host stays left, target enters from right, shared ground/pivots remain stable.
+  - [x] Pack transitions at 1/10/11/20/200/201 pass loader and muted Chrome evidence.
+  - [x] Asset, loader, primary, and performance gates pass.
 - **Files:** `js/assets.js`, main/render/game, loader QA, architecture, performance budget.
 
 ## Wave 1 — Run screen

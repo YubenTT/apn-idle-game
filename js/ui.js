@@ -97,6 +97,8 @@ let lastPanel = null;
 export function bindUI(s) {
   const $ = (id) => document.getElementById(id);
   setMuted(s.settings.sfx === false);
+  const soundToggle = $('chk-sfx');
+  if (soundToggle) soundToggle.checked = s.settings.sfx !== false;
 
   const unlock = () => unlockAudio();
   document.addEventListener('pointerdown', unlock, { once: true });

@@ -1,6 +1,7 @@
 /** APN Idle canvas — biomes, death juice, confetti, Host + enemies */
 
 import { C, clamp, easeOutCubic, easeOutQuad } from './formulas.js';
+import { getCurrentPackAssets } from './assets.js';
 
 const V = 'v8';
 let hostAtlas = null;
@@ -187,12 +188,10 @@ function loadImg(src) {
 }
 
 function ready(img) {
-  return img && img._ready && img.naturalWidth > 0;
+  return img && (img._ready || img.complete) && img.naturalWidth > 0;
 }
 
-function biomeFor(zone) {
-  return BIOMES[Math.floor(zone / 4) % BIOMES.length];
-}
+const FALLBACK_BIOME = BIOMES[0];
 
 export function sizeCanvas(canvas) {
   const parent = canvas.parentElement;
@@ -208,14 +207,15 @@ export function sizeCanvas(canvas) {
   return { w, h, ctx };
 }
 
-export function draw(ctx, w, h, s) {
+export function draw(ctx, w, h, s, assetStore = null) {
   const gy = h * 0.78;
   s.world.groundY = gy;
   const t = s.world.time;
   const scroll = s.world.scrollSmooth;
   const shakeX = s.world.shake ? (Math.random() - 0.5) * s.world.shake : 0;
   const shakeY = s.world.shake ? (Math.random() - 0.5) * s.world.shake : 0;
-  const bio = biomeFor(s.route.zone);
+  const bio = FALLBACK_BIOME;
+  const packAssets = assetStore ? getCurrentPackAssets(assetStore, s.route) : null;
 
   ctx.save();
   ctx.translate(shakeX, shakeY);
@@ -266,6 +266,12 @@ export function draw(ctx, w, h, s) {
   drawFeedCards(ctx, w, gy, scroll * 0.55, bio, t);
   drawServerRacks(ctx, w, gy, scroll * 0.75, bio);
 
+  // Catalog-driven environment owns the scene once decoded. The procedural
+  // fallback above remains only for a missing/slow asset and never chooses a pack.
+  if (packAssets?.ready && ready(packAssets.background)) {
+    drawCover(ctx, packAssets.background, 0, 0, w, h);
+  }
+
   // ground plane + texture
   ctx.fillStyle = bio.ground;
   ctx.fillRect(0, gy, w, h - gy);
@@ -315,7 +321,7 @@ export function draw(ctx, w, h, s) {
 
   // biome name (subtle — header already shows zone #)
   if (s.route.zone > 0 || s.world.time > 1) {
-    drawBiomeTag(ctx, w, bio);
+    drawPackTag(ctx, w, packAssets?.pack?.title || 'Patchline', bio);
   }
 
   // alerts
@@ -323,7 +329,7 @@ export function draw(ctx, w, h, s) {
 
   // enemies (living + dying)
   const show = s.world.enemies.filter((e) => e.hp > 0 || (e.deathT && e.deathT > 0));
-  show.forEach((e, i) => drawEnemy(ctx, e, gy, t, i));
+  show.forEach((e) => drawEnemy(ctx, e, gy, t, packAssets));
 
   // hero
   drawHero(ctx, s.world.heroDisplayX, gy, s, t);
@@ -406,8 +412,16 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-function drawBiomeTag(ctx, w, bio) {
-  const label = bio.name || '';
+function drawCover(ctx, image, x, y, width, height) {
+  const scale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
+  const sourceWidth = width / scale;
+  const sourceHeight = height / scale;
+  const sourceX = (image.naturalWidth - sourceWidth) / 2;
+  const sourceY = Math.max(0, image.naturalHeight - sourceHeight);
+  ctx.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, x, y, width, height);
+}
+
+function drawPackTag(ctx, w, label, bio) {
   if (!label) return;
   ctx.save();
   ctx.font = '700 10px system-ui,sans-serif';
@@ -685,7 +699,7 @@ function drawHero(ctx, x, gy, s, t) {
   }
 }
 
-function drawEnemy(ctx, e, gy, t) {
+function drawEnemy(ctx, e, gy, t, packAssets = null) {
   const x = e.displayX;
   const dying = e.deathT > 0 && e.killed;
   const deathU = dying ? 1 - clamp(e.deathT / (e.deathMax || 0.5), 0, 1) : 0;
@@ -693,8 +707,11 @@ function drawEnemy(ctx, e, gy, t) {
   const hurtOff = !dying && e.hurt > 0 ? Math.sin(t * 40) * 1.5 : 0;
   const isBoss = e.type === 'boss';
   const isPatch = e.type === 'patch';
-  const size = isBoss ? 84 : isPatch ? 68 : 60;
+  const size = isBoss ? 128 : isPatch ? 94 : 88;
   const sprite = sprites.enemies[e.type];
+  const atlas = packAssets?.ready && ready(packAssets.targets) ? packAssets.targets : null;
+  const frameName = isBoss && e.hp / e.hpMax < 0.34 ? 'boss-break' : e.frame;
+  const frame = packAssets?.targetData?.frames?.[frameName];
   const footY = gy - FOOT_PAD;
 
   // death transforms
@@ -739,7 +756,21 @@ function drawEnemy(ctx, e, gy, t) {
   ctx.rotate(rot);
   ctx.scale(sx || 0.01, sy);
 
-  if (ready(sprite)) {
+  if (atlas && frame?.rect) {
+    const rect = frame.rect;
+    ctx.drawImage(atlas, rect.x, rect.y, rect.w, rect.h, -size / 2, -size, size, size);
+    if (flash && !dying) {
+      const flashU = clamp(e.hitFlash / (C.HIT_FLASH || 0.12), 0, 1);
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = 0.45 * flashU * alpha;
+      ctx.fillStyle = e.color;
+      ctx.beginPath();
+      ctx.arc(0, -size * 0.5, size * 0.34, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  } else if (ready(sprite)) {
     ctx.drawImage(sprite, -size / 2, -size, size, size);
     // Soft hit bloom (no hard white rectangle)
     if (flash && !dying) {

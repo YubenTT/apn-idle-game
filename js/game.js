@@ -60,7 +60,8 @@ import {
   SLOTS,
   BAG_CAP,
 } from './loot.js';
-import { createRouteState, nextSeasonBoundary } from './route.js';
+import { createRouteState, nextSeasonBoundary, packForRoute } from './route.js';
+import { GAME_PACKS } from './generated/game-packs.js';
 
 export function createState() {
   return {
@@ -393,6 +394,8 @@ function pickEnemyType(zone, forceBoss) {
 
 export function spawnEnemy(s) {
   const zone = s.route.zone;
+  const pack = packForRoute(s.route, GAME_PACKS);
+  if (pack) s.route.currentPackId = pack.id;
   const boss = isBossZone(zone);
   if (boss && s.world.bossActive) return null;
   if (boss && s.route.killsInZone > 0) return null;
@@ -413,17 +416,21 @@ export function spawnEnemy(s) {
     (1 + Math.max(0, gear.atk_spd || 0) / 100) *
     (1 + Math.max(0, gear.crit_pct || 0) / 100) *
     Math.max(1, s.meta.live || 1);
-  const corruptionTier = Math.max(0, s.route.corruptionByPack?.[s.route.currentPackId] || 0);
+  const corruptionTier = Math.max(0, pack?.tier || s.route.corruptionByPack?.[s.route.currentPackId] || 0);
   const hp = routeEnemyHp(zone, s.run.hero.scanner, permanentPower, corruptionTier, typeHpMult(type));
   const alive = s.world.enemies.filter((e) => e.hp > 0);
   // Spawn ahead of melee stop so approach is clear (enemy not glued to mascot)
   const x = s.world.heroX + 150 + Math.random() * 28;
   const flavor = ENEMY_FLAVOR[type] || ENEMY_FLAVOR.stale;
+  const targetIndex = ({ stale: 0, rumor: 1, lag: 2, spoiler: 3, patch: 3, event: 4 })[type] ?? 0;
+  const target = type === 'boss' ? pack?.boss : pack?.targets?.[targetIndex];
 
   return {
     id: Math.random().toString(36).slice(2, 9),
     type,
-    label: flavor.label,
+    label: target?.label || flavor.label,
+    packId: pack?.id || s.route.currentPackId,
+    frame: type === 'boss' ? pack?.boss?.frame || 'boss' : target?.frame || 'common-a',
     color: flavor.color,
     x,
     displayX: x,
@@ -582,11 +589,20 @@ function onKill(s, e) {
   // zone progress — endless; checkpoints every SEASON.zones for prestige
   const need = killsNeeded(zone);
   if (s.route.killsInZone >= need) {
+    const completedPack = packForRoute(s.route, GAME_PACKS);
     s.route.zone += 1;
     s.route.killsInZone = 0;
     s.world.enemies = [];
     s.world.bossActive = false;
     s.world.spawnCd = 0.35;
+    const nextPack = packForRoute(s.route, GAME_PACKS);
+    if (completedPack && nextPack && completedPack.id !== nextPack.id) {
+      const alreadySeen = s.route.seenPackIds.includes(completedPack.id);
+      if (!alreadySeen) s.route.seenPackIds.push(completedPack.id);
+      else s.route.corruptionByPack[completedPack.id] = Math.min(4, (s.route.corruptionByPack[completedPack.id] || 0) + 1);
+      s.route.lastSeenByPack[completedPack.id] = s.route.zone;
+      s.route.currentPackId = nextPack.id;
+    }
     if (s.settings.sfx !== false) sfx('zone');
     hubOnZone(s);
 

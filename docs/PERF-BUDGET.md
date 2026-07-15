@@ -71,3 +71,6 @@ the bug — a breach with a recorded decision is fine.
 `assets/manifest.json` is deterministic and records byte size plus SHA-256 for
 every shipped raster/vector/GLB/JSON. `qa/check-assets.mjs` regenerates it twice,
 requires byte-identical output, and enforces at most two hot pack records.
+`qa/check-asset-loader.mjs` additionally executes current/next preload, optional
+fallback, transition release, Zone 200/201, and explicit close semantics without
+a browser; muted Chrome then verifies the real decode/composite path.
