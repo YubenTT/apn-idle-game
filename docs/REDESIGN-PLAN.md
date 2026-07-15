@@ -276,11 +276,11 @@ acceptance boxes, fresh tests, browser proof, and one focused commit per issue.
 ### I-014 · Action dock — 🔴 M
 - **Goal:** one clear decision — weighted controls.
 - **Acceptance:**
-  - [ ] One primary CTA (56pt crimson): **Upgrade Weapon** · `+x · Lv n→n+1` · cost chip.
-  - [ ] Sprint is a lighter *mod* control, not CTA weight; Overdrive is a toggle.
-  - [ ] 3–4 skill buttons, equal secondary weight.
-  - [ ] No "Upgrade Signal" (or any currency-named CTA) anywhere ([NAMING](../brand/NAMING.md)).
-  - [ ] Only one primary-crimson element on screen (CTA), not competing with active tab.
+  - [x] One primary CTA (56pt crimson): **Upgrade Weapon** · `+x · Lv n→n+1` · cost chip.
+  - [x] Sprint is a lighter *mod* control, not CTA weight; Overdrive is a toggle.
+  - [x] 3–4 skill buttons, equal secondary weight.
+  - [x] No "Upgrade Signal" (or any currency-named CTA) anywhere ([NAMING](../brand/NAMING.md)).
+  - [x] Only one primary-crimson element on screen (CTA), not competing with active tab.
 - **Files:** `index.html`, `css/game.css`, `js/ui.js`.
 
 ## Wave 2 — Sheets
