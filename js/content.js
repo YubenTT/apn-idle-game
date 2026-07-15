@@ -28,6 +28,9 @@ export const META = {
     base: 5,
     growth: 1.42,
     per: 0.08,
+    category: 'Ranks',
+    unit: 'percent',
+    valueCue: 'Faster local rank cycles',
   },
   xp_global: {
     id: 'xp_global',
@@ -36,6 +39,9 @@ export const META = {
     base: 5,
     growth: 1.42,
     per: 0.06,
+    category: 'Ranks',
+    unit: 'percent',
+    valueCue: 'Improves every rank source',
   },
   signal_power: {
     id: 'signal_power',
@@ -44,6 +50,9 @@ export const META = {
     base: 8,
     growth: 1.48,
     per: 0.05,
+    category: 'Combat',
+    unit: 'percent',
+    valueCue: 'All-run damage value',
   },
   feed_speed: {
     id: 'feed_speed',
@@ -52,6 +61,9 @@ export const META = {
     base: 10,
     growth: 1.5,
     per: 0.03,
+    category: 'Combat',
+    unit: 'percent',
+    valueCue: 'Shorter travel downtime',
   },
   byte_gain: {
     id: 'byte_gain',
@@ -60,6 +72,9 @@ export const META = {
     base: 6,
     growth: 1.38,
     per: 0.05,
+    category: 'Economy',
+    unit: 'percent',
+    valueCue: 'More Weapon upgrades',
   },
   patch_gain: {
     id: 'patch_gain',
@@ -68,6 +83,9 @@ export const META = {
     base: 9,
     growth: 1.45,
     per: 0.07,
+    category: 'Economy',
+    unit: 'percent',
+    valueCue: 'More Notes to ship',
   },
   cold_start: {
     id: 'cold_start',
@@ -76,6 +94,9 @@ export const META = {
     base: 12,
     growth: 1.65,
     per: 3,
+    category: 'Combat',
+    unit: 'flat',
+    valueCue: 'Faster season starts',
   },
 };
 

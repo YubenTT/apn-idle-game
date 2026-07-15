@@ -4,7 +4,6 @@ import {
   formatNum,
   scannerCost,
   scannerDamage,
-  metaCost,
   xpToNext,
   liveGain,
   clamp,
@@ -38,7 +37,8 @@ import {
   leaveSeason,
   castHotfix,
   castSummary,
-  metaLv,
+  metaUpgradePreview,
+  recommendedMetaId,
   isSprinting,
   equipGear,
   unequipGear,
@@ -673,34 +673,38 @@ function renderMeta(s) {
   const root = document.getElementById('meta-body');
   if (!root) return;
   const rep = s.authority.amount;
+  const recommended = recommendedMetaId(s);
+  const categories = ['Ranks', 'Combat', 'Economy'];
   let html = `
   <div class="sp-bank compact rep-bank">
     <span class="sp-bank-label">Rep</span>
     <strong class="sp-bank-val gold">${formatNum(rep)}</strong>
-    <span class="sp-bank-hint">Permanent</span>
+    <span class="sp-bank-hint">Permanent growth · survives End Season</span>
   </div>
-  <div class="skill-grid meta-grid">`;
-  for (const u of Object.values(META)) {
-    const lv = metaLv(s, u.id);
-    const cost = metaCost(u.base, u.growth, lv);
-    const ok = rep >= cost;
-    const barPct = Math.min(100, lv * 8);
-    // desc always visible — no hover tooltip
-    html += `
-    <button type="button" class="skill-card compact meta-row ${ok ? 'can' : 'locked'}" data-meta="${u.id}">
-      <div class="sk-ico gold" aria-hidden="true">${metaIco(u.id)}</div>
-      <div class="sk-main">
-        <div class="sk-top">
-          <span class="sk-name">${u.name}</span>
-        </div>
-        <div class="sk-desc inline">${u.desc}</div>
-        <div class="sk-bar"><i style="width:${barPct}%"></i></div>
-      </div>
-      <div class="sk-side">
-        <span class="sk-lv">Lv ${lv}</span>
-        <span class="sk-cta">${formatNum(cost)}</span>
-      </div>
-    </button>`;
+  <div class="boosts-tree">`;
+  for (const category of categories) {
+    const upgrades = Object.values(META).filter((upgrade) => upgrade.category === category);
+    html += `<section class="boost-category"><h3>${category}</h3><div class="boost-list">`;
+    for (const u of upgrades) {
+      const preview = metaUpgradePreview(s, u.id);
+      const isRecommended = recommended === u.id;
+      html += `
+      <button type="button" class="boost-row ${preview.affordable ? 'can' : 'locked'} ${isRecommended ? 'recommended' : ''}" data-meta="${u.id}"
+        aria-label="Raise ${u.name} from ${preview.current} to ${preview.next} for ${preview.cost} Rep">
+        <span class="boost-ico" aria-hidden="true">${metaIco(u.id)}</span>
+        <span class="boost-copy">
+          <span class="boost-name">${u.name}${isRecommended ? `<b>${preview.affordable ? 'Recommended' : 'Next target'}</b>` : ''}</span>
+          <span class="boost-desc">${u.desc}</span>
+          <span class="boost-value">${preview.valueCue}</span>
+        </span>
+        <span class="boost-side">
+          <span class="boost-level">Lv ${preview.level}</span>
+          <span class="boost-delta">${preview.current} → ${preview.next}</span>
+          <span class="rep-cost ${preview.affordable ? 'afford' : ''}">${formatNum(preview.cost)} Rep</span>
+        </span>
+      </button>`;
+    }
+    html += `</div></section>`;
   }
   html += '</div>';
   root.innerHTML = html;

@@ -175,6 +175,42 @@ export function metaPer(s, id) {
   return d.per * metaLv(s, id);
 }
 
+function formatMetaEffect(def, level) {
+  const value = Math.max(0, level | 0) * def.per;
+  if (def.unit === 'percent') return `+${Math.round(value * 100)}%`;
+  return `+${Math.round(value * 10) / 10}`;
+}
+
+export function metaUpgradePreview(s, id) {
+  const def = META[id];
+  if (!def) return null;
+  const level = metaLv(s, id);
+  const cost = metaCost(def.base, def.growth, level);
+  return {
+    id,
+    level,
+    current: formatMetaEffect(def, level),
+    next: formatMetaEffect(def, level + 1),
+    cost,
+    affordable: s.authority.amount >= cost,
+    category: def.category || 'Growth',
+    valueCue: def.valueCue || def.desc,
+  };
+}
+
+/** Catch-up recommendation: affordable lowest-rank node, then lowest exact cost. */
+export function recommendedMetaId(s) {
+  const order = Object.keys(META);
+  const candidates = order.map((id, index) => ({ ...metaUpgradePreview(s, id), index }));
+  candidates.sort((a, b) =>
+    Number(b.affordable) - Number(a.affordable) ||
+    a.level - b.level ||
+    a.cost - b.cost ||
+    a.index - b.index
+  );
+  return candidates[0]?.id || null;
+}
+
 /** Auto-sprint = Pro or paid unlock (not free mask) */
 export function hasAutoSprint(s) {
   ensurePremium(s);

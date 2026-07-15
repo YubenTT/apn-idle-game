@@ -13,6 +13,8 @@ Original prompt: Complete the APN Idle redesign autonomously, including QA, revi
   readable rewards, 8px tracks, 44pt touch, and 428/375 Chrome gates are green.
 - I-025 Menu is split into five truthful sections with canonical switches, no
   player debug copy, explicit demo-store semantics, and a tested safe reset gate.
+- I-024 Boosts is implemented as a domain-driven permanent ROI tree with exact
+  deltas/costs, one recommendation, 44pt touch, and clean 428/375 Chrome evidence.
 - Browser QA uses Chrome Extension or isolated direct Chrome with `mute=1`; no
   standalone Playwright process is used.
 
