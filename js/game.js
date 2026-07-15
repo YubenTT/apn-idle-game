@@ -127,6 +127,7 @@ export function createState() {
       alerts: [],
       floaters: [],
       particles: [],
+      lootFlights: [],
       confetti: [],
       shocks: [],
       spawnCd: 0.3,
@@ -328,7 +329,7 @@ function tip(s, id) {
 // Domain events carry a semantic visual role; render.js owns the CSS token value.
 const tone = (role) => ({ tone: role });
 
-function floater(s, x, y, text, color, big = false) {
+function floater(s, x, y, text, color, big = false, anchorId = null) {
   s.world.floaters.push({
     x: x + (Math.random() - 0.5) * 18,
     y,
@@ -338,6 +339,19 @@ function floater(s, x, y, text, color, big = false) {
     life: big ? 1.25 : 1.0,
     vy: big ? -78 : -56,
     big,
+    anchorId,
+  });
+}
+
+function lootFlight(s, enemy, target) {
+  if (s.settings.reducedMotion) return;
+  s.world.lootFlights.push({
+    x: enemy.displayX,
+    y: null,
+    enemyId: enemy.id,
+    target,
+    t: 0.72,
+    life: 0.72,
   });
 }
 
@@ -515,6 +529,7 @@ function onKill(s, e) {
     (0.9 + Math.random() * 0.2);
   s.run.bytes += bytes;
   floater(s, e.displayX, 170, `+${bytes | 0} Signal`, '#6cb8ff');
+  lootFlight(s, e, 'signal');
   particles(s, e.displayX, 190, '#6cb8ff', 10 + Math.min(14, s.stats.combo), 'coin');
   s.ui.chipPulse = s.ui.chipPulse || {};
   s.ui.chipPulse.bytes = 0.35;
@@ -532,6 +547,7 @@ function onKill(s, e) {
     const p = C.PATCH_FROM_CHAMP * patchM;
     s.run.patches += p;
     floater(s, e.displayX, 135, `+${p | 0} Notes`, tone('notes'), true);
+    lootFlight(s, e, 'notes');
     particles(s, e.displayX, 150, tone('notes'), 20, 'coin');
     confetti(s, e.displayX, 180, [tone('notes'), '#fff', '#e6b84d'], 24);
     tip(s, 'patch');
@@ -539,6 +555,7 @@ function onKill(s, e) {
   }
   if (e.type === 'boss') {
     s.run.patches += C.PATCH_FROM_BOSS * patchM;
+    lootFlight(s, e, 'notes');
     s.meta.bosses += 1;
     s.world.bossActive = false;
     s.world.bossTimer = 0;
@@ -639,7 +656,8 @@ function dealDamage(s, e, amount, isCrit) {
     155 + Math.random() * 20,
     `${isCrit ? 'CRIT ' : ''}${Math.round(amount)}`,
     isCrit ? '#FF2F4B' : '#F5F6F8',
-    isCrit
+    isCrit,
+    e.id
   );
   particles(s, e.displayX, 200, isCrit ? '#FC1243' : '#F5F6F8', isCrit ? 8 : 4);
   if (s.settings.sfx !== false) sfx(isCrit ? 'crit' : 'hit');
@@ -839,6 +857,10 @@ export function step(s, dt) {
     p.vy += (p.kind === 'coin' ? 220 : 160) * dt;
     if (p.spin) p.rot = (p.rot || 0) + p.spin * dt;
     return p.t > 0;
+  });
+  s.world.lootFlights = (s.world.lootFlights || []).filter((flight) => {
+    flight.t -= dt;
+    return flight.t > 0;
   });
   if (!s.world.confetti) s.world.confetti = [];
   s.world.confetti = s.world.confetti.filter((c) => {

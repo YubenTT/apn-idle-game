@@ -265,11 +265,11 @@ acceptance boxes, fresh tests, browser proof, and one focused commit per issue.
 ### I-013 · Patchline stage framing + juice — 🔴 L
 - **Goal:** the stage reads as gameplay, not a dark placeholder.
 - **Acceptance:**
-  - [ ] Camera framing keeps mascot + target both legible at portrait size.
-  - [ ] Enemy HP is a clear banner over the target; name legible.
-  - [ ] Damage numbers anchor to the target (not floating loose top-of-stage).
-  - [ ] Loot flies to the HUD chip it credits.
-  - [ ] Background reads APN editorial (billboards/signal-rail/skyline), no generic neon glow.
+  - [x] Camera framing keeps mascot + target both legible at portrait size.
+  - [x] Enemy HP is a clear banner over the target; name legible.
+  - [x] Damage numbers anchor to the target (not floating loose top-of-stage).
+  - [x] Loot flies to the HUD chip it credits.
+  - [x] Background reads APN editorial (billboards/signal-rail/skyline), no generic neon glow.
 - **Files:** `js/render.js`, `js/game.js` (anchors/floaters), `assets/stage/*`.
 - **Out of scope:** final hand-painted plates (that's I-034); use current biomes retuned.
 
