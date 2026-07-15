@@ -378,8 +378,13 @@ acceptance boxes, fresh tests, browser proof, and one focused commit per issue.
   reduced-motion (OS + in-app). Files: `js/sfx.js`, `js/render.js`, `js/game.js`.
 
 ### I-041 · Asset pipeline + size gates — 🟡 M
-- **Acceptance:** optional dev scripts ([ART-PIPELINE](./ART-PIPELINE.md)); `verify_sizes.mjs`
-  fails on budget breach; runtime stays zero-npm. Files: `scripts/*`, `.github/workflows/*`.
+- **Acceptance:**
+  - [x] Optional dev scripts preserve trim, source size, and foot pivots.
+  - [x] Missing-pivot, out-of-bounds, oversized, and third-hot-pack cases fail by name.
+  - [x] WebP conversion uses fixed q82/q78 profiles through argument-safe tools.
+  - [x] `assets/manifest.json` generation is SHA-256 byte-stable across two runs.
+  - [x] Runtime stays zero-npm and the primary suite includes the asset gate.
+- **Files:** `scripts/assets/*`, `qa/check-assets.mjs`, `assets/manifest.json`.
 
 ### I-042 · Copy + naming pass — 🔴 S
 - **Acceptance:** every screen object·effect·cost; no debug/hover/"Upgrade Signal";

@@ -1,0 +1,509 @@
+{
+  "version": 1,
+  "generatedBy": "scripts/assets/generate-manifest.mjs",
+  "assets": [
+    {
+      "id": "apn-logo-square.png",
+      "path": "assets/apn-logo-square.png",
+      "bytes": 36117,
+      "sha256": "e95f21139002fd0004c5a745f29bba28955b951888d58b636e471f585bd9541c",
+      "firstPlayable": true
+    },
+    {
+      "id": "apn-logo.svg",
+      "path": "assets/apn-logo.svg",
+      "bytes": 1740,
+      "sha256": "fc9f76bf1aca4456270198c3ded15d080bd98d9b8e77e19a9f80d35250d6b6e3",
+      "firstPlayable": true
+    },
+    {
+      "id": "apn-mascot-glb-analyst.glb",
+      "path": "assets/apn-mascot-glb-analyst.glb",
+      "bytes": 653412,
+      "sha256": "f456d1d247531b2fde4a70090868e286ad73a2ff07203d34e7d4a9f427974e4b",
+      "firstPlayable": true
+    },
+    {
+      "id": "apn-mascot-glb-host.glb",
+      "path": "assets/apn-mascot-glb-host.glb",
+      "bytes": 655912,
+      "sha256": "486f2c7900c2e793ef7aace11b192bb77c70525f1512dbd843ae88a1374e3697",
+      "firstPlayable": true
+    },
+    {
+      "id": "enemies/boss.png",
+      "path": "assets/enemies/boss.png",
+      "bytes": 27917,
+      "sha256": "61880737e489b10aaf306cbbf62cd8c0f91bd5e35490c3d027f7cec83e178f51",
+      "firstPlayable": true
+    },
+    {
+      "id": "enemies/event.png",
+      "path": "assets/enemies/event.png",
+      "bytes": 23953,
+      "sha256": "c51179b90bdbcb4a6254f0dadb8222f884208f6d971942febac0d7ed12616d6d",
+      "firstPlayable": true
+    },
+    {
+      "id": "enemies/lag.png",
+      "path": "assets/enemies/lag.png",
+      "bytes": 19956,
+      "sha256": "47d06fbf0bdf818ade0ac4450b930b21378e100cac3672defcd8961128443d82",
+      "firstPlayable": true
+    },
+    {
+      "id": "enemies/patch.png",
+      "path": "assets/enemies/patch.png",
+      "bytes": 24069,
+      "sha256": "045a07c35e6f2a54feb1a38b72d8249a65289a811e60880e1b87d5a425223ffb",
+      "firstPlayable": true
+    },
+    {
+      "id": "enemies/rumor.png",
+      "path": "assets/enemies/rumor.png",
+      "bytes": 17847,
+      "sha256": "3b29cc7bd2f1bee87e0b36352e592ab453e869158870e517e399c3f6a2d4afa9",
+      "firstPlayable": true
+    },
+    {
+      "id": "enemies/spoiler.png",
+      "path": "assets/enemies/spoiler.png",
+      "bytes": 21508,
+      "sha256": "80a3eb6661966688db335571d03bdd66019e5856f6e624bf76cf2422e245f886",
+      "firstPlayable": true
+    },
+    {
+      "id": "enemies/stale.png",
+      "path": "assets/enemies/stale.png",
+      "bytes": 20220,
+      "sha256": "18e46de7ea850f160a542537e70781f7f2114ad128bb167b80de2aaa020b96bb",
+      "firstPlayable": true
+    },
+    {
+      "id": "enemies/stale2.png",
+      "path": "assets/enemies/stale2.png",
+      "bytes": 16911,
+      "sha256": "234ef28ee52acb54a7aa54436ed7cc9e3dd6aa2b904da27fadd46e94664481d3",
+      "firstPlayable": true
+    },
+    {
+      "id": "enemies-sheet.jpg",
+      "path": "assets/enemies-sheet.jpg",
+      "bytes": 174366,
+      "sha256": "0727a3ecacb11deba311957af895b42d45ce72b36f9fd9cf6d7e1cb53fc48a42",
+      "firstPlayable": true
+    },
+    {
+      "id": "game-packs/apex-legends/pack.json",
+      "path": "assets/game-packs/apex-legends/pack.json",
+      "bytes": 1751,
+      "sha256": "ce3bd0cd30f2085bd11986558ca2244ef1ee1fbc9f4b5202a2f09d92c94b0ad1",
+      "firstPlayable": null
+    },
+    {
+      "id": "game-packs/catalog.json",
+      "path": "assets/game-packs/catalog.json",
+      "bytes": 38048,
+      "sha256": "1da91ca5078170624d462b5e2f81cd648e4f9683290febf46687f7d2bc66f4e3",
+      "firstPlayable": null
+    },
+    {
+      "id": "game-packs/counter-strike-2/pack.json",
+      "path": "assets/game-packs/counter-strike-2/pack.json",
+      "bytes": 1765,
+      "sha256": "6e5abec43762363bca02aa5ddfa65ab67be9270aed20db38994b37693fbb5e02",
+      "firstPlayable": null
+    },
+    {
+      "id": "game-packs/dead-by-daylight/pack.json",
+      "path": "assets/game-packs/dead-by-daylight/pack.json",
+      "bytes": 1759,
+      "sha256": "4562bacfb59fab5f147a08949936b2861f28ccb2a9611d11c68a43e27232db09",
+      "firstPlayable": null
+    },
+    {
+      "id": "game-packs/dota-2/pack.json",
+      "path": "assets/game-packs/dota-2/pack.json",
+      "bytes": 1672,
+      "sha256": "06b9861a95187db0dc1c845175421a938e1aedac53b3410c5796d90ce8e06071",
+      "firstPlayable": null
+    },
+    {
+      "id": "game-packs/elden-ring/pack.json",
+      "path": "assets/game-packs/elden-ring/pack.json",
+      "bytes": 1750,
+      "sha256": "111e06a1d6ae294dfb72631fb7d1a60446c1c798208e24d8e2a98588f0e1a986",
+      "firstPlayable": null
+    },
+    {
+      "id": "game-packs/escape-from-tarkov/pack.json",
+      "path": "assets/game-packs/escape-from-tarkov/pack.json",
+      "bytes": 1780,
+      "sha256": "e20942fab179cdb3e25f7117daa4b23b3b12df19a7c167605b0f249def4a8d5d",
+      "firstPlayable": null
+    },
+    {
+      "id": "game-packs/fc-26/pack.json",
+      "path": "assets/game-packs/fc-26/pack.json",
+      "bytes": 1704,
+      "sha256": "b1fd70b75b0ca602eeb13a6a186273aeabc4263eb95841d134920360d1a73c9b",
+      "firstPlayable": null
+    },
+    {
+      "id": "game-packs/fortnite/pack.json",
+      "path": "assets/game-packs/fortnite/pack.json",
+      "bytes": 1698,
+      "sha256": "a4142c388fc3decfbbb0745486d1b4b85785cbebf0d62342a3f2894c0857a3a3",
+      "firstPlayable": null
+    },
+    {
+      "id": "game-packs/grand-theft-auto-v/pack.json",
+      "path": "assets/game-packs/grand-theft-auto-v/pack.json",
+      "bytes": 1815,
+      "sha256": "8249d82e9d9fe2fbb0003fa5db2cf4918c13c0f44849b23f73fd03b05c9838dc",
+      "firstPlayable": null
+    },
+    {
+      "id": "game-packs/league/pack.json",
+      "path": "assets/game-packs/league/pack.json",
+      "bytes": 1672,
+      "sha256": "39e185708a40f54b3a40a916a9a3b48fb190848ba56816e55dab9a785ddaeed8",
+      "firstPlayable": null
+    },
+    {
+      "id": "game-packs/madden-nfl-26/pack.json",
+      "path": "assets/game-packs/madden-nfl-26/pack.json",
+      "bytes": 1757,
+      "sha256": "49bde61346d843f3b36596c304859c5ca9b21937e287fe37de59c70e73629fe4",
+      "firstPlayable": null
+    },
+    {
+      "id": "game-packs/marvel-rivals/pack.json",
+      "path": "assets/game-packs/marvel-rivals/pack.json",
+      "bytes": 1718,
+      "sha256": "2b33318c7b7f67b1ee029bd29b29d152874bdce43ddf8574a2a659cb6c8adae7",
+      "firstPlayable": null
+    },
+    {
+      "id": "game-packs/minecraft/pack.json",
+      "path": "assets/game-packs/minecraft/pack.json",
+      "bytes": 1701,
+      "sha256": "1ae2874541c6cb4031a1d891ecb4d4e888293c568b030fad2c8c95a0373e1d8b",
+      "firstPlayable": null
+    },
+    {
+      "id": "game-packs/nba-2k26/pack.json",
+      "path": "assets/game-packs/nba-2k26/pack.json",
+      "bytes": 1708,
+      "sha256": "821632524e6a35381ef51a150142b558ca1047c7ae0f7c61d9fd06dc7e02dbe4",
+      "firstPlayable": null
+    },
+    {
+      "id": "game-packs/old-school-runescape/pack.json",
+      "path": "assets/game-packs/old-school-runescape/pack.json",
+      "bytes": 1775,
+      "sha256": "a496fa63e3d0bf821060e9fd136859576db1dc0b7959b90bcbfeed4372944681",
+      "firstPlayable": null
+    },
+    {
+      "id": "game-packs/overwatch/pack.json",
+      "path": "assets/game-packs/overwatch/pack.json",
+      "bytes": 1710,
+      "sha256": "d701c8f1667bc440e3880217737f8f7b8d7b43d956a1a1cb6c260e1dad580a20",
+      "firstPlayable": null
+    },
+    {
+      "id": "game-packs/path-of-exile-2/pack.json",
+      "path": "assets/game-packs/path-of-exile-2/pack.json",
+      "bytes": 1758,
+      "sha256": "7a9a604686f3d894c3c738230f465a18f894dd78d5c75082798f8352cbb04bca",
+      "firstPlayable": null
+    },
+    {
+      "id": "game-packs/rocket-league/pack.json",
+      "path": "assets/game-packs/rocket-league/pack.json",
+      "bytes": 1734,
+      "sha256": "c998d342e4d6c5d7b6165203b79a4053efa6036ad88c69a4861fec3fc327ef59",
+      "firstPlayable": null
+    },
+    {
+      "id": "game-packs/valorant/pack.json",
+      "path": "assets/game-packs/valorant/pack.json",
+      "bytes": 1717,
+      "sha256": "4c3b5669eba2ee98720896e7fb77e1e900cc380de12624a809bf47176754e02a",
+      "firstPlayable": null
+    },
+    {
+      "id": "game-packs/world-of-warcraft/pack.json",
+      "path": "assets/game-packs/world-of-warcraft/pack.json",
+      "bytes": 1761,
+      "sha256": "853bd9e824208642e39e7edc64bc9bbb1ed0499fe58fae583d664e2cf681c4cb",
+      "firstPlayable": null
+    },
+    {
+      "id": "icons/apex.svg",
+      "path": "assets/icons/apex.svg",
+      "bytes": 189,
+      "sha256": "88898c0b9a47d15e36fa4032c3078ff720bbe57cdb5f483cf053c9406599a7dc",
+      "firstPlayable": true
+    },
+    {
+      "id": "icons/apn.svg",
+      "path": "assets/icons/apn.svg",
+      "bytes": 320,
+      "sha256": "0f11e9043f37d5bff06e0b12007be4a910d2c1f99727f94a0721833c4aa40520",
+      "firstPlayable": true
+    },
+    {
+      "id": "icons/cs2.svg",
+      "path": "assets/icons/cs2.svg",
+      "bytes": 179,
+      "sha256": "2301852953f639d650cf05a4e05fb5e50a12a8a9e5b3e6c5104d06f71b0254cb",
+      "firstPlayable": true
+    },
+    {
+      "id": "icons/diablo.svg",
+      "path": "assets/icons/diablo.svg",
+      "bytes": 260,
+      "sha256": "c401770eab666b1f44b4b6c3e5ddb4cb40ff2b91904e89b01536dca3153ec643",
+      "firstPlayable": true
+    },
+    {
+      "id": "icons/ffxiv.svg",
+      "path": "assets/icons/ffxiv.svg",
+      "bytes": 271,
+      "sha256": "fca84b394a4377c0b8e2c3a0f748636a5d140bf4c6bf70bcaa214cb3fdc2f5b3",
+      "firstPlayable": true
+    },
+    {
+      "id": "icons/fortnite.svg",
+      "path": "assets/icons/fortnite.svg",
+      "bytes": 182,
+      "sha256": "61d6b0f963244b86c95c67e0ab318a9691a5f9ac829aa75c504e0d193f15a322",
+      "firstPlayable": true
+    },
+    {
+      "id": "icons/genshin.svg",
+      "path": "assets/icons/genshin.svg",
+      "bytes": 218,
+      "sha256": "58c69807d16d8fb695e4516d0000aeafcac3a5b5c49df7d150d609aadcb444ff",
+      "firstPlayable": true
+    },
+    {
+      "id": "icons/league.svg",
+      "path": "assets/icons/league.svg",
+      "bytes": 205,
+      "sha256": "4b1c7c888889e226b4e5186545d572431d147bedd46530e666483e061a22142d",
+      "firstPlayable": true
+    },
+    {
+      "id": "icons/overwatch.svg",
+      "path": "assets/icons/overwatch.svg",
+      "bytes": 240,
+      "sha256": "780e8540ace2eba3a363e0440b619f71a6fda6bc76e2adcee7b78f3ac23eda82",
+      "firstPlayable": true
+    },
+    {
+      "id": "icons/poe.svg",
+      "path": "assets/icons/poe.svg",
+      "bytes": 222,
+      "sha256": "69d3a1ec31be0330cbd6fe0422aa590dc3300b4a2eb573e333ce20a626f76dfb",
+      "firstPlayable": true
+    },
+    {
+      "id": "icons/r6.svg",
+      "path": "assets/icons/r6.svg",
+      "bytes": 279,
+      "sha256": "a919d6ba6796596723b84460f8664464f318a84674d5783ddb3f0c4fc94e5ebd",
+      "firstPlayable": true
+    },
+    {
+      "id": "icons/starrail.svg",
+      "path": "assets/icons/starrail.svg",
+      "bytes": 209,
+      "sha256": "183478ee5fcacb7fc42496776a1a531caebf219ae28cdde656453ac96e7216d9",
+      "firstPlayable": true
+    },
+    {
+      "id": "icons/steam.svg",
+      "path": "assets/icons/steam.svg",
+      "bytes": 347,
+      "sha256": "cdfd38f080d0cd7d136e195b98ce82a9847ec0f3d1759037066e672722d383ed",
+      "firstPlayable": true
+    },
+    {
+      "id": "icons/tft.svg",
+      "path": "assets/icons/tft.svg",
+      "bytes": 178,
+      "sha256": "832fc1f90dd265c8586255a88cb8e01c8b617ed04f7dd316345529b6b9c24b8b",
+      "firstPlayable": true
+    },
+    {
+      "id": "icons/valorant.svg",
+      "path": "assets/icons/valorant.svg",
+      "bytes": 183,
+      "sha256": "e0600947abb74535031ebbbe520299ddd4d7f4552a5cb89bfaa97c3b102fe43a",
+      "firstPlayable": true
+    },
+    {
+      "id": "icons/wow.svg",
+      "path": "assets/icons/wow.svg",
+      "bytes": 285,
+      "sha256": "eda3dfde394f4c157ab9ab34e20d19a962d24f0768e9136861b1a165b62fbe95",
+      "firstPlayable": true
+    },
+    {
+      "id": "mascot-34.jpg",
+      "path": "assets/mascot-34.jpg",
+      "bytes": 34748,
+      "sha256": "296a9672e19f89d3ceef6935ce8be3aaebe6cd9fc82e2e66fd1614c5ea7af943",
+      "firstPlayable": true
+    },
+    {
+      "id": "mascot-combat.png",
+      "path": "assets/mascot-combat.png",
+      "bytes": 42032,
+      "sha256": "670142a3e5d24527dec7551f5f9d0c3abcdf03693b71a3da4bc19aec7a84c43c",
+      "firstPlayable": true
+    },
+    {
+      "id": "mascot-face-right.png",
+      "path": "assets/mascot-face-right.png",
+      "bytes": 61119,
+      "sha256": "9394161fc0880cd6de58aadb2ff4b06cf233759077a6012cfe97ba9338bf511c",
+      "firstPlayable": true
+    },
+    {
+      "id": "mascot-host.png",
+      "path": "assets/mascot-host.png",
+      "bytes": 64745,
+      "sha256": "1007b931e3a0127238df936d88a902c34a2b4dbf82f15303f55a0892f8fc3642",
+      "firstPlayable": true
+    },
+    {
+      "id": "mascot-host.webp",
+      "path": "assets/mascot-host.webp",
+      "bytes": 16364,
+      "sha256": "5292d21006e858479def0e82fe3ebf2cb7063cf506db21eeb0d7367bd111dea6",
+      "kind": "host",
+      "firstPlayable": true
+    },
+    {
+      "id": "mascot-ref-sheet.jpg",
+      "path": "assets/mascot-ref-sheet.jpg",
+      "bytes": 142910,
+      "sha256": "4fd0c5bd4fae52482906cd9a9fcf5a61541232b71ea64d481241578afd3530e7",
+      "firstPlayable": true
+    },
+    {
+      "id": "mascot-run.png",
+      "path": "assets/mascot-run.png",
+      "bytes": 40763,
+      "sha256": "4f8ec072bf1fe90909ece6200649688cdaa1509ea5c00eda9528b4c2ad884ada",
+      "firstPlayable": true
+    },
+    {
+      "id": "mascot-side.jpg",
+      "path": "assets/mascot-side.jpg",
+      "bytes": 47183,
+      "sha256": "2148b8e2c0ea85fc06ceb7fe0d069ea658a314bb5002486cacc5aeca6d3d978e",
+      "firstPlayable": true
+    },
+    {
+      "id": "mascot-side.png",
+      "path": "assets/mascot-side.png",
+      "bytes": 40763,
+      "sha256": "4f8ec072bf1fe90909ece6200649688cdaa1509ea5c00eda9528b4c2ad884ada",
+      "firstPlayable": true
+    },
+    {
+      "id": "mascot-title.png",
+      "path": "assets/mascot-title.png",
+      "bytes": 21335,
+      "sha256": "654985ce6b87c7b63478494932fa25061c52821fbe282e2ba3693f2d0f104d55",
+      "firstPlayable": true
+    }
+  ],
+  "packs": [
+    {
+      "id": "valorant",
+      "hot": true
+    },
+    {
+      "id": "league",
+      "hot": true
+    },
+    {
+      "id": "fortnite",
+      "hot": false
+    },
+    {
+      "id": "world-of-warcraft",
+      "hot": false
+    },
+    {
+      "id": "fc-26",
+      "hot": false
+    },
+    {
+      "id": "minecraft",
+      "hot": false
+    },
+    {
+      "id": "counter-strike-2",
+      "hot": false
+    },
+    {
+      "id": "old-school-runescape",
+      "hot": false
+    },
+    {
+      "id": "nba-2k26",
+      "hot": false
+    },
+    {
+      "id": "overwatch",
+      "hot": false
+    },
+    {
+      "id": "grand-theft-auto-v",
+      "hot": false
+    },
+    {
+      "id": "madden-nfl-26",
+      "hot": false
+    },
+    {
+      "id": "apex-legends",
+      "hot": false
+    },
+    {
+      "id": "dota-2",
+      "hot": false
+    },
+    {
+      "id": "dead-by-daylight",
+      "hot": false
+    },
+    {
+      "id": "path-of-exile-2",
+      "hot": false
+    },
+    {
+      "id": "marvel-rivals",
+      "hot": false
+    },
+    {
+      "id": "escape-from-tarkov",
+      "hot": false
+    },
+    {
+      "id": "rocket-league",
+      "hot": false
+    },
+    {
+      "id": "elden-ring",
+      "hot": false
+    }
+  ]
+}

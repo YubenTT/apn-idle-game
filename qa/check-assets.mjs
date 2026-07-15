@@ -1,0 +1,61 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import os from 'node:os';
+import { fileURLToPath } from 'node:url';
+import { readJson, validateAtlasData } from '../scripts/assets/lib.mjs';
+import { validateAllManifests } from '../scripts/assets/validate-manifests.mjs';
+import { verifySizes } from '../scripts/assets/verify-sizes.mjs';
+import { generateManifest } from '../scripts/assets/generate-manifest.mjs';
+import { packAtlas } from '../scripts/assets/pack-atlas.mjs';
+import { convertWebp } from '../scripts/assets/convert-webp.mjs';
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const fixtures = path.join(root, 'qa/fixtures/assets');
+const assert = (condition, message) => {
+  if (!condition) throw new Error(`Assets: ${message}`);
+  console.log(`OK ${message}`);
+};
+
+const validErrors = validateAtlasData(readJson(path.join(fixtures, 'valid/atlas.json')), 'valid');
+assert(validErrors.length === 0, 'valid atlas keeps rect and foot pivot');
+
+const missingErrors = validateAtlasData(readJson(path.join(fixtures, 'missing-pivot/atlas.json')), 'missing-pivot');
+assert(missingErrors.some((error) => error.includes('missing-pivot/idle: missing pivot')), 'missing pivot rejected by asset and frame');
+
+const boundsErrors = validateAtlasData(readJson(path.join(fixtures, 'out-of-bounds/atlas.json')), 'out-of-bounds');
+assert(boundsErrors.some((error) => error.includes('out-of-bounds/idle: rect out of bounds')), 'out-of-bounds rect rejected by asset and frame');
+
+const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'apn-assets-'));
+const spec = path.join(fixtures, 'valid/pack-spec.json');
+const atlasPng = path.join(temp, 'atlas.png');
+const atlasJson = path.join(temp, 'atlas.json');
+const atlasWebp = path.join(temp, 'atlas.webp');
+await packAtlas(spec, atlasPng, atlasJson);
+await convertWebp(atlasPng, atlasWebp, 'targets');
+const packedA = [atlasPng, atlasJson, atlasWebp].map((file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex'));
+await packAtlas(spec, atlasPng, atlasJson);
+await convertWebp(atlasPng, atlasWebp, 'targets');
+const packedB = [atlasPng, atlasJson, atlasWebp].map((file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex'));
+assert(JSON.stringify(packedA) === JSON.stringify(packedB), 'atlas and WebP output byte-stable across two runs');
+fs.rmSync(temp, { recursive: true, force: true });
+
+const oversized = verifySizes(path.join(fixtures, 'oversized/manifest.json'));
+assert(oversized.errors.some((error) => error.includes('fixture-targets') && error.includes('exceeds')), 'oversized target rejected by asset name');
+assert(oversized.errors.some((error) => error.includes('hot packs: 3 exceeds 2')), 'third hot pack rejected');
+
+const manifests = validateAllManifests();
+assert(manifests.files.length === 20 && manifests.errors.length === 0, '20 pack manifests valid');
+
+const first = generateManifest();
+const firstBytes = fs.readFileSync(path.join(root, 'assets/manifest.json'));
+const firstHash = crypto.createHash('sha256').update(firstBytes).digest('hex');
+const second = generateManifest();
+const secondBytes = fs.readFileSync(path.join(root, 'assets/manifest.json'));
+const secondHash = crypto.createHash('sha256').update(secondBytes).digest('hex');
+assert(firstHash === secondHash && first.assets.length === second.assets.length, 'asset manifest generation byte-stable');
+
+const sizes = verifySizes();
+assert(sizes.errors.length === 0, `current assets fit budgets (${sizes.firstPlayable} first-playable bytes)`);
+assert(sizes.hot.length <= 2, 'at most current and next packs marked hot');
+console.log('ASSETS PASS');

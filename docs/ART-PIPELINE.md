@@ -33,23 +33,37 @@ GLB / master ──▶ headless render (Blender) ──▶ cleanup / outline com
 atlas JSON must keep per-frame pivot/anchor. Canvas 2D `drawImage` blits from the
 atlas rect and offsets by pivot — same JSON contract whether or not a library reads it.
 
-## Suggested scripts (target — not yet in repo)
+## Shipped development scripts
 
 Mirror the layout the research proposed, scoped to this repo:
 
 ```
-scripts/
-  export_mascot.py        # Blender headless render per MASCOT-CANON render-lock
-  render_headless.sh       # wrapper: blender -b … -P export_mascot.py
-  pack_atlas.mjs           # trim+pack, emit atlas JSON with pivots
-  convert_webp.mjs         # *.png → *.webp at target quality
-  verify_sizes.mjs         # fail build if any atlas exceeds PERF-BUDGET
-  generate_manifest.mjs    # asset manifest for cache-busting
+scripts/assets/
+  validate-manifests.mjs  # stable pack IDs, roles, asset-path contract
+  pack-atlas.mjs          # deterministic shelf pack, pivot/trim metadata kept
+  convert-webp.mjs        # cwebp q82 targets/Host, q78 backgrounds
+  verify-sizes.mjs        # hard per-kind and first-playable budgets
+  generate-manifest.mjs   # stable SHA-256 cache manifest
 ```
 
-These are **dev-time**, run before commit. They never ship to the player and add no
-npm dependency to the runtime. If added, wire them as an **optional** GitHub Action
-(`assets` workflow) that regenerates atlases on art-master changes.
+These are **dev-time**, run before commit. They never ship to the player and add
+no npm dependency to the runtime. The packer invokes the installed `ffmpeg`
+binary with an argument array; conversion invokes `/opt/homebrew/bin/cwebp` with
+an argument array. Neither script constructs a shell command string.
+
+Frame input specs include authored trim rectangles and normalized foot pivots.
+The packer sorts frame names before shelf layout, retains `sourceSize`,
+`trimOffset`, and `pivot`, and emits stable JSON. `qa/check-assets.mjs` rejects a
+missing pivot, an out-of-bounds rect, an oversized asset, or a third hot pack.
+
+Run the contract before every art commit:
+
+```bash
+node scripts/assets/validate-manifests.mjs
+node scripts/assets/generate-manifest.mjs
+node scripts/assets/verify-sizes.mjs
+node qa/check-assets.mjs
+```
 
 ## Format policy
 
@@ -66,12 +80,11 @@ npm dependency to the runtime. If added, wire them as an **optional** GitHub Act
 supported). Keep PNG/PSD/SVG masters for editing only. Current repo already ships a
 `mascot-host.webp` alongside the PNG — that's the pattern.
 
-## Interim reality (today)
+## Production handoff status
 
-The repo ships flat PNGs and two GLBs, no packer. That's fine for v1. The pipeline
-above is the path when art volume grows (item sets, enemy families, mascot
-variants). Until then:
+The legacy flat PNGs and two GLBs remain while the canonical Host and Game Pack
+atlases are produced issue-by-issue. The pipeline and gates are active now:
 
-- New sprites obey the render-lock + art grammar by hand.
-- Keep a `.webp` next to any large `.png` used at runtime.
-- Do not add a runtime dependency to load art — plain `<img>` / `Image()` + canvas.
+- New sprites must enter through pivot-preserving atlas JSON.
+- Runtime rasters are WebP; editable masters stay out of first-playable bytes.
+- Playback remains plain `Image()` + Canvas with no build or runtime dependency.
