@@ -1,6 +1,6 @@
 # ADR-0004 — Catalog-driven Game Pack Route
 
-- Status: Proposed for visual lock
+- Status: Accepted
 - Date: 2026-07-15
 
 ## Context
@@ -44,8 +44,8 @@ Choose **C**.
   and rewards continue numerically without producing unlimited asset variants.
 - Game Pack identity uses recognizable game environments, characters, creatures,
   roles, and cover stars under one APN 2D rendering grammar. This supersedes the
-  third-party-character non-goal in `VISION.md` and the matching prohibition in
-  `brand/ART-DIRECTION.md` once the visual lock is accepted.
+  former third-party-character non-goal in `VISION.md` and the matching former
+  prohibition in `brand/ART-DIRECTION.md`.
 - The vanilla ES module + Canvas 2D runtime remains unchanged. Packs are static
   files loaded on demand; no runtime dependency or build step is introduced.
 

@@ -21,44 +21,44 @@ every box is ticked and `node qa/run-tests.mjs` is green.
 
 ## Autonomous delivery sessions
 
-The 24 focused issues still land as one issue = one PR, but execution is grouped
-into seven long-running delivery sessions in one autonomous chain. Sessions are
+The 32 focused issues still land as one issue = one PR, but execution is grouped
+into six long-running delivery sessions in one autonomous chain. Sessions are
 work packages, not separate chats or one-agent-per-issue handoffs.
 
 | Session | Issues / work | Outcome | User action |
 |--------:|---------------|---------|-------------|
-| 1 | I-000, I-001, I-002 | Deterministic QA + token foundation | None |
-| 2 | UI/UX North Star preproduction | Real-browser Run + Gear comps, component states, motion/perf proof | **One combined visual evidence approval** |
-| 3 | I-021 | Gear vertical slice | None |
-| 4 | I-010–I-014 | Run hero experience | None |
+| 1 | I-000–I-002 | Deterministic QA + token foundation | None |
+| 2 | I-003–I-006 | Route state, catalog, scheduler, pacing | None |
+| 3 | I-041, I-030, I-031, I-032A–D | Asset pipeline, canonical Host, production pack art | None |
+| 4 | I-007, I-021, I-010–I-014 | Runtime packs, Gear, Run hero experience | None |
 | 5 | I-020, I-022, I-023, I-025, I-024 | Decision sheets | None |
-| 6 | I-030–I-034 | Canonical art system | None |
-| 7 | I-040–I-042, I-044, I-043 | Feel, pipeline, copy, locked nav, final QA | Final evidence review only |
+| 6 | I-033, I-034, I-040, I-042, I-044, I-043 | Remaining art, feel, copy, nav, integrated QA | **Final integrated evidence review** |
 
-Session 2 is the only blocking visual gate. The user sees one coherent, interactive
-Run + Gear direction backed by mobile browser evidence and either approves it or
-returns one consolidated correction list. All later visual and technical gates are
-self-reviewed against the source docs; they never pause the autonomous chain.
+The approved art boards and Run/Gear direction close preproduction. All visual and
+technical gates during implementation are self-reviewed against the source docs;
+they never pause the autonomous chain. The only remaining user gate is Session 6's
+complete, muted localhost build with evidence.
 
 ## Phasing (dependency waves — do in order)
 
 ```
-Wave 0  Foundation → code      I-000, I-001, I-002     (unblocks everything)
-Wave 1  Run screen (hero)      I-010 → I-014           (first visible leap)
-Wave 2  Sheets (decisions)     I-021*, I-020, I-022–025 (*Gear first = biggest ROI)
-Wave 3  Art system             I-030 → I-034           (mascot canon first)
-Wave 4  Feel · pipeline · QA   I-040 → I-044           (polish + gates)
+Wave 0A Foundation → tokens    I-000 → I-002
+Wave 0B Route → production    I-003 → I-006 → I-041 → I-030 → I-031 → I-032A–D → I-007
+Wave 1  Collection vertical   I-021
+Wave 2  Run screen (hero)      I-010 → I-014
+Wave 3  Sheets (decisions)     I-020, I-022–I-025
+Wave 4  Remaining art/feel/QA I-033, I-034, I-040, I-042 → I-044 → I-043
 ```
 
 Locked execution order:
-`I-000 → I-001 → I-002 → I-021 → I-010 → I-011 → I-012 → I-013 → I-014 →
-I-020 → I-022 → I-023 → I-025 → I-024 → I-030 → I-031 → I-032 → I-033 →
-I-034 → I-040 → I-041 → I-042 → I-044 → I-043`.
+`I-000 → I-001 → I-002 → I-003 → I-004 → I-005 → I-006 → I-041 → I-030 →
+I-031 → I-032A → I-032B → I-032C → I-032D → I-007 → I-021 → I-010 → I-011 →
+I-012 → I-013 → I-014 → I-020 → I-022 → I-023 → I-025 → I-024 → I-033 →
+I-034 → I-040 → I-042 → I-044 → I-043`.
 
-Rule: **do not start a wave until the prior wave's 🔴 Must issues are merged.**
-The locked order makes one explicit exception: I-021 lands immediately after Wave
-0 because Gear is the highest-ROI visible surface and depends only on I-001. Art
-does not run as a separate parallel track in this delivery; the chain stays linear.
+Rule: **do not start a wave until the prior wave's 🔴 Must issues are merged.** The
+approved asset system now precedes UI implementation so the Run and Gear slices
+are built once against production contracts. The chain stays linear.
 
 ## Master issue table
 
@@ -67,6 +67,11 @@ does not run as a separate parallel track in this delivery; the chain stays line
 | I-000 | Foundation | Deterministic QA baseline + backlog integrity | 🔴 | S | — | [QA-CHECKLIST](./QA-CHECKLIST.md) |
 | I-001 | Foundation | Wire `tokens.css` into `game.css` (staged) | 🔴 | M | I-000 | [DESIGN-TOKENS](../brand/DESIGN-TOKENS.md) |
 | I-002 | Foundation | Apply 2 token changes (Notes→rose, SP→violet) | 🔴 | S | I-001 | [DESIGN-TOKENS §Change](../brand/DESIGN-TOKENS.md) |
+| I-003 | Foundation | Accept Route program + backlog graph | 🔴 | S | I-002 | [ADR-0004](./decisions/ADR-0004-game-pack-route.md) |
+| I-004 | Foundation | Persistent global Route + save v2 migration | 🔴 | L | I-003 | [ARCHITECTURE](./ARCHITECTURE.md) |
+| I-005 | Foundation | Game Pack catalog + deterministic scheduler | 🔴 | L | I-004 | [GAME-PACK-ROUTE](./GAME-PACK-ROUTE.md) |
+| I-006 | Foundation | Multi-day pacing + bounded offline progression | 🔴 | L | I-005 | [BALANCE](./BALANCE.md) |
+| I-007 | Foundation | Lazy Game Pack loader + Canvas composition | 🔴 | L | I-032D | [ARCHITECTURE](./ARCHITECTURE.md), [PERF-BUDGET](./PERF-BUDGET.md) |
 | I-010 | Run | Resource strip around notch (Signal/Notes/SP) | 🔴 | M | I-001 | [SCREEN-SPECS §RUN](./SCREEN-SPECS.md) |
 | I-011 | Run | Feed rail (single line, run-context) | 🔴 | M | I-001 | [SCREEN-SPECS §RUN](./SCREEN-SPECS.md) |
 | I-012 | Run | Stage header (Zone/Rank/Live compact) | 🔴 | M | I-010 | [SCREEN-SPECS §RUN](./SCREEN-SPECS.md) |
@@ -80,11 +85,14 @@ does not run as a separate parallel track in this delivery; the chain stays line
 | I-025 | Sheets | Menu split (settings/store/reset) | 🔴 | M | I-001 | [SCREEN-SPECS §MENU](./SCREEN-SPECS.md), [MONETIZATION](./MONETIZATION.md) |
 | I-030 | Art | Mascot canon pass (single-source) | 🔴 | L | — | [MASCOT-CANON](../brand/MASCOT-CANON.md), [ADR-0003](./decisions/ADR-0003-mascot-single-source.md) |
 | I-031 | Art | 2D art grammar + icon unify | 🔴 | M | — | [ART-DIRECTION](../brand/ART-DIRECTION.md) |
-| I-032 | Art | Enemy / target family kit | 🟡 | L | I-031 | [ART-DIRECTION §Enemies](../brand/ART-DIRECTION.md) |
+| I-032A | Art | Game Packs 01–05 production set | 🟡 | L | I-031 | [GAME-PACK-ASSET-BIBLE](./GAME-PACK-ASSET-BIBLE.md) |
+| I-032B | Art | Game Packs 06–10 production set | 🟡 | L | I-032A | [GAME-PACK-ASSET-BIBLE](./GAME-PACK-ASSET-BIBLE.md) |
+| I-032C | Art | Game Packs 11–15 production set | 🟡 | L | I-032B | [GAME-PACK-ASSET-BIBLE](./GAME-PACK-ASSET-BIBLE.md) |
+| I-032D | Art | Game Packs 16–20 production set | 🟡 | L | I-032C | [GAME-PACK-ASSET-BIBLE](./GAME-PACK-ASSET-BIBLE.md) |
 | I-033 | Art | Item art set (techwear families) | 🟡 | L | I-031, I-021 | [ART-DIRECTION §Items](../brand/ART-DIRECTION.md) |
 | I-034 | Art | Backgrounds (APN editorial cityline) | 🟡 | L | I-031 | [ART-DIRECTION §Backgrounds](../brand/ART-DIRECTION.md) |
 | I-040 | Feel | Motion / haptic / SFX pass | 🟡 | M | Wave 1 | [DESIGN-TOKENS §Motion](../brand/DESIGN-TOKENS.md) |
-| I-041 | Pipeline | Asset pipeline + size gates | 🟡 | M | I-030 | [ART-PIPELINE](./ART-PIPELINE.md), [PERF-BUDGET](./PERF-BUDGET.md) |
+| I-041 | Pipeline | Asset pipeline + size gates | 🟡 | M | I-006 | [ART-PIPELINE](./ART-PIPELINE.md), [PERF-BUDGET](./PERF-BUDGET.md) |
 | I-042 | Copy | Copy + naming pass (all screens) | 🔴 | S | Wave 1–2 | [NAMING](../brand/NAMING.md), [GLOSSARY](./GLOSSARY.md) |
 | I-043 | QA | Device matrix + visual regression | 🔴 | M | I-042, I-044 | [QA-CHECKLIST](./QA-CHECKLIST.md) |
 | I-044 | Nav | Keep-5 navigation refinement + implementation | 🟡 | S | I-010 | [SCREEN-SPECS §Navigation](./SCREEN-SPECS.md) |
@@ -93,12 +101,12 @@ does not run as a separate parallel track in this delivery; the chain stays line
 
 | Priority | Issues | Rough range |
 |----------|-------:|------------:|
-| 🔴 Must | 17 | ~180–330 h |
-| 🟡 Fix | 7 | ~95–175 h |
+| 🔴 Must | 22 | measured issue-by-issue |
+| 🟡 Fix | 10 | measured issue-by-issue |
 | ⚪ Optional | (seasonal swaps, cosmetics, PWA — see ROADMAP) | ~60–90 h |
 
-Hours are single-contributor, vanilla-stack, docs-already-written estimates — much
-lower than the research's 460–520 h because no rewrite and no framework onboarding.
+The previous speculative hour ranges are retired. Completion is evidence-based:
+acceptance boxes, fresh tests, browser proof, and one focused commit per issue.
 
 ---
 
@@ -120,8 +128,8 @@ lower than the research's 460–520 h because no rewrite and no framework onboar
   - [x] `worse weapon stays bag`, `best weapon kept`, and `weak in bag` remain
         unchanged and pass reproducibly.
   - [x] Ten consecutive suite runs produce one output hash and end `ALL PASS`.
-  - [x] Backlog truth is explicit: 24 issues, 17 Must + 7 Fix, 5 waves, 7 delivery
-        sessions, and one blocking visual user gate.
+  - [x] Backlog truth is explicit: 32 issues, 22 Must + 10 Fix, 6 delivery
+        sessions, and one final integrated user gate.
 - **Files:** `qa/run-tests.mjs`, `docs/REDESIGN-PLAN.md`, `docs/ROADMAP.md`,
   `CHANGELOG.md`.
 - **Out of scope:** production/gameplay RNG, gear balance, UI changes, runtime
@@ -162,14 +170,67 @@ lower than the research's 460–520 h because no rewrite and no framework onboar
   - [x] Controlled real-browser diff reviewed against merged I-001 at Run
         428×926, Run/Build 375×812, Run/Build 844×390, Ship 375×812, and Hub
         375×812. Computed colors match the locked tokens, layout is unchanged,
-        and browser console errors are zero. Session 2 remains the sole visual
-        user gate.
+        and browser console errors are zero. The approved board closes this
+        historical preproduction check; Session 6 is the sole remaining user gate.
   - [x] Semantic Canvas proof renders Notes/SP floaters through a cached
         `render.js` token map; domain events carry roles, not palette values.
   - [x] `node qa/run-tests.mjs` green with the economy-color contract.
 - **Files:** `brand/tokens.css`, `css/game.css`, `js/game.js`, `js/render.js`,
   `js/ui.js`, `qa/check-css-tokens.mjs`, `qa/check-economy-colors.mjs`,
   `qa/run-tests.mjs`, plan/status docs.
+
+## Wave 0B — Route and production foundation
+
+### I-003 · Accept Route program + backlog graph — 🔴 S
+- **Goal:** remove contradictory product/art rules and lock one executable graph.
+- **Acceptance:**
+  - [x] ADR-0004 is Accepted; VISION and ART-DIRECTION agree with it.
+  - [x] ADR-0005 preserves GLB geometry while defining the approved hybrid reference boundary.
+  - [x] Backlog contains all 32 focused issues in dependency order with only one final user gate.
+  - [x] Approved concept proofs are registered as review evidence, not runtime assets.
+  - [x] `node qa/check-doc-contracts.mjs` and `node qa/run-tests.mjs` pass.
+- **Files:** owning design/art docs, ADR-0004/0005, backlog, proof registry, QA contract.
+- **Out of scope:** save/runtime/balance changes.
+
+### I-004 · Persistent global Route + save v2 migration — 🔴 L
+- **Goal:** world progress survives End Season and legacy saves load without loss.
+- **Acceptance:**
+  - [ ] `s.route` owns zone, pack history, seed, deck, and catalog version; `s.run.zone` is retired.
+  - [ ] v1 Zone/kills migrate deterministically to v2; malformed fields sanitize safely.
+  - [ ] v2 writes to a new key while the legacy key remains rollback evidence.
+  - [ ] End Season resets run power but never global Route progress.
+  - [ ] Fresh, v1→v2, malformed, and round-trip tests pass.
+- **Files:** `js/route.js`, `js/game.js`, `js/save.js`, `js/formulas.js`, QA, architecture.
+
+### I-005 · Game Pack catalog + deterministic scheduler — 🔴 L
+- **Goal:** make packs stable content records, never renderer-selected array slots.
+- **Acceptance:**
+  - [ ] Twenty manifests generate one byte-stable catalog with unique string IDs.
+  - [ ] A pack defines 10 zones, five target roles, one boss, assets, pivots, genre, and source board.
+  - [ ] First Clean Era order is locked; new packs debut Clean at season boundaries only.
+  - [ ] Revisits use seeded least-recent scheduling without adjacent duplicate pack/genre.
+  - [ ] Catalog generation, scheduler QA, and primary suite pass.
+- **Files:** pack manifests/catalog, `scripts/assets/generate-catalog.mjs`, `js/route.js`, QA.
+
+### I-006 · Multi-day pacing + bounded offline progression — 🔴 L
+- **Goal:** make the 200-zone Clean Era last days without timers or infinite offline skips.
+- **Acceptance:**
+  - [ ] Seeded active/idle profiles meet the windows in GAME-PACK-ROUTE.
+  - [ ] Eight-hour offline simulation stops at the next End Season boundary and reports overflow.
+  - [ ] Zone 1000 has finite math, no hard wall, deterministic save, and valid pack order.
+  - [ ] UI/render receive formatted outputs and invent no balance values.
+  - [ ] Primary suite ends `ALL PASS`; long-run suite ends `LONG RUN PASS`.
+- **Files:** formulas/game, long-run QA, pacing profiles, BALANCE, Route doc.
+
+### I-007 · Lazy Game Pack loader + Canvas composition — 🔴 L
+- **Goal:** render production packs fluently while decoding at most current + next.
+- **Acceptance:**
+  - [ ] Loader preloads current/next, releases cold packs, deduplicates decodes, and has a safe fallback.
+  - [ ] Canvas consumes scheduled pack data; procedural biome selection is removed from the happy path.
+  - [ ] Host stays left, target enters from right, shared ground/pivots remain stable.
+  - [ ] Pack transitions at 1/10/11/20/200/201 pass loader and muted Chrome evidence.
+  - [ ] Asset, loader, primary, and performance gates pass.
+- **Files:** `js/assets.js`, main/render/game, loader QA, architecture, performance budget.
 
 ## Wave 1 — Run screen
 
@@ -279,7 +340,7 @@ lower than the research's 460–520 h because no rewrite and no framework onboar
 - **Acceptance:**
   - [ ] Every mascot appearance passes **Silhouette QA** (same ratio/visor/perspective/outline).
   - [ ] All in-game sprites re-derived under the render-lock; conflicting sprites replaced.
-  - [ ] No AI/freehand re-interpretation; variants change only accent/prop.
+  - [ ] AI studies are GLB-conditioned reference only; shipped geometry is GLB-derived and variants change only accent/prop.
 - **Files:** `assets/mascot/*`, `assets/mascot-*.png/.webp`, `js/render.js`.
 
 ### I-031 · 2D art grammar + icon unify — 🔴 M
@@ -288,11 +349,15 @@ lower than the research's 460–520 h because no rewrite and no framework onboar
   - [ ] Icon set: constant stroke, rounded terminals, low interior detail.
 - **Files:** `js/icons.js`, `assets/icons/*`.
 
-### I-032 · Enemy / target family kit — 🟡 L
-- **Acceptance:**
-  - [ ] All enemies share one grammar; families per [ART-DIRECTION](../brand/ART-DIRECTION.md).
-  - [ ] Names match [GLOSSARY](./GLOSSARY.md) (Feed Noise, Patch Note, Version Gate…).
-- **Files:** `assets/enemies/*`, `js/content.js`, `js/render.js`.
+### I-032A–D · Game Pack production sets — 🟡 L each
+- **Goal:** ship all 20 Clean Era packs without one giant art commit.
+- **Scope:** A = packs 01–05; B = 06–10; C = 11–15; D = 16–20.
+- **Acceptance for every sub-issue:**
+  - [ ] Each pack has five target roles, one boss, one break state, three parallax layers, props, and two masks.
+  - [ ] Every asset passes 72/128 px silhouette, shared grammar, direction, pivot, manifest, and size gates.
+  - [ ] Source-board evidence is recorded; no official logo or source screenshot ships.
+  - [ ] Catalog generation is byte-stable and all automated suites remain green.
+- **Files:** `assets/game-packs/<pack-id>/*`, asset QA, asset bible.
 
 ### I-033 · Item art set — 🟡 L
 - **Acceptance:**
@@ -341,7 +406,7 @@ release.
 
 ## Release gate (redesign V1)
 
-Ship redesign V1 when: all 24 issue acceptance lists are complete · all 17 Must +
-7 Fix PRs are merged · Sessions 1–7 are complete · QA matrix (I-043) is green ·
+Ship redesign V1 when: all 32 issue acceptance lists are complete · all 22 Must +
+10 Fix branches are integrated · Sessions 1–6 are complete · QA matrix (I-043) is green ·
 no Blocker/Critical is open · every shipping screen passes Silhouette / Contrast /
 Touch / Decision gates.

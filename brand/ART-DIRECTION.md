@@ -73,29 +73,33 @@ Reference item set (slot · direction):
 The shipped Gear sheet already names Mod Stick, Patch Mail, Sprint Leggings, etc. —
 keep those names, raise the *art* to this standard.
 
-## Enemy / target families
+## Game Pack target families
 
-APN's **own** taxonomy — readable silhouette + strong role separation + theme
-trust. We do **not** copy third-party game characters. One visual grammar across
-all of them; matches `assets/enemies/*` (see [GLOSSARY](../docs/GLOSSARY.md) for the
-name↔sprite map).
+Each ten-zone Game Pack uses a recognizable game-specific cast as research input,
+then redraws it as **APN-owned runtime art**. The source fantasy must read at a
+glance, but official logos, source screenshots, traced poses, and untouched
+third-party assets never ship. Every pack shares the same outline, two-tone fill,
+ground shadow, scale ladder, direction, and pivot contract; see
+[GAME-PACK-ASSET-BIBLE](../docs/GAME-PACK-ASSET-BIBLE.md).
 
-| Family | Role | Visual DNA |
-|--------|------|-----------|
-| Feed Noise | trash | small glitch blob / rumor particle |
-| Broken Link | trash | chain / link-torn iconography |
-| Patch Note | core → Notes | vertical document, fold marks, stapled armor |
-| Fake Leak | elite | masked row/box, redaction bands |
-| Version Gate | boss (per 10 zones) | heavy door / file-box hybrid |
-| Night Feed | boss theme | darker editorial night variant |
+| Role | Pack requirement | Shared APN treatment |
+|------|------------------|----------------------|
+| Common A/B/C | three immediately distinct small silhouettes | 72 px proof, limited interior detail |
+| Champion / elite | one signature role or creature | one controlled accent and stronger stance |
+| Event target | one boss-foreshadowing encounter | pack-specific prop, same combat footprint |
+| Boss | one unmistakable pack finale | 128 px proof, readable break state |
+
+Legacy Feed Noise, Broken Link, Patch Note, Fake Leak, and Version Gate remain
+fallback silhouettes when an optional pack asset fails to load; they are not the
+long-form content scheduler.
 
 ## Backgrounds — APN, not generic neon
 
-Replace "neon gradient + circle + city silhouette" with an **editorial / live-ops
-cityline**: billboards, signal rails, stage panels, patchline track, archive
-lights. The stage must carry APN identity, not just fill space. Current build uses
-procedural biome strips (`render.js` BIOMES) — the target is hand-authored APN
-plates (see [ROADMAP](../docs/ROADMAP.md) mid-term).
+Replace "neon gradient + circle + city silhouette" with three authored parallax
+layers per Game Pack. Each environment carries its source fantasy through layout
+and props while APN signal rails, stage framing, palette discipline, and shared
+ink treatment make the Route coherent. Current procedural `render.js` biomes are
+temporary fallbacks, not the target system.
 
 ## Seasonal swaps (optional layer)
 

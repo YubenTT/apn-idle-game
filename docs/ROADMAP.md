@@ -21,8 +21,8 @@ Living plan — not a commitment calendar.
 - [x] Design-system + docs backbone ([00_START_HERE](./00_START_HERE.md),
       [brand/](../brand/), [SCREEN-SPECS](./SCREEN-SPECS.md), ADRs) — system-first
       redesign foundation; runtime unchanged
-- [x] Redesign control plane — 24 focused issues grouped into 7 autonomous
-      delivery sessions with one combined visual evidence gate
+- [x] Redesign control plane — 32 focused issues grouped into 6 autonomous
+      delivery sessions with one final integrated evidence gate
 - [x] Runtime token foundation — `brand/tokens.css` imported by `css/game.css`,
       532 color literals migrated with exact pixel preservation, and static token
       contract enforced in headless QA
@@ -31,6 +31,10 @@ Living plan — not a commitment calendar.
 
 ## Near term
 
+- [ ] Persistent global Route + save v2 migration, deterministic 20-pack catalog,
+      multi-day pacing, and season-bounded offline progression
+- [ ] Production asset pipeline, canonical Host atlas, 20 Clean Era Game Packs,
+      and current+next lazy runtime composition
 - [ ] Redesign screens against [SCREEN-SPECS](./SCREEN-SPECS.md) (Run HUD, Gear,
       Build, Ship, Hub, Boosts, Menu) — one screen at a time, each through
       [QA-CHECKLIST](./QA-CHECKLIST.md)
@@ -42,15 +46,15 @@ Living plan — not a commitment calendar.
 
 ## Mid term
 
-- [ ] Season themes (art + enemy pack + ticker set)
-- [ ] Hand-authored biome plates (replace procedural strips)
+- [ ] New clean Game Packs entering at End Season boundaries
+- [ ] Higher Corruption tiers reusing the bounded mask system
 - [ ] Skill tree visual map
 - [ ] Accessibility: full keyboard sheet nav, ARIA live regions
 - [ ] Optional ESBuild/Vite package for site monorepo — keep raw static entry
 
 ## Long term
 
-- [ ] GLB Host in WebGL/three overlay (optional quality tier)
+- [ ] Optional higher-fidelity GLB-derived Host atlas tier if budgets permit
 - [ ] Shared APN account cosmetics (site-linked)
 - [ ] Challenge modes (boss rush, speed zones)
 - [ ] Localization (i18n content packs)
