@@ -66,27 +66,8 @@
         <!-- In-stage bag FAB (Gear) — icon-only, left rail -->
         <button type="button" class="bag-fab" id="btn-bag" data-panel="gear" title="Gear" aria-label="Open Gear">
           <svg class="bag-fab-ico" viewBox="0 0 32 32" aria-hidden="true">
-            <defs>
-              <linearGradient id="bagBody" x1="0%" y1="0%" x2="40%" y2="100%">
-                <stop offset="0%" stop-color="#ff8a5c"/>
-                <stop offset="55%" stop-color="#fc1243"/>
-                <stop offset="100%" stop-color="#b80d32"/>
-              </linearGradient>
-              <linearGradient id="bagTop" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stop-color="#ffd27a"/>
-                <stop offset="100%" stop-color="#e6b84d"/>
-              </linearGradient>
-            </defs>
-            <!-- strap -->
-            <path fill="none" stroke="#e6b84d" stroke-width="2.2" stroke-linecap="round"
-              d="M11 12V9.2a5 5 0 0110 0V12"/>
-            <!-- body -->
-            <path fill="url(#bagBody)" d="M7.5 12.5h17a2.2 2.2 0 012.2 2.2v11.6a2.7 2.7 0 01-2.7 2.7H8a2.7 2.7 0 01-2.7-2.7V14.7a2.2 2.2 0 012.2-2.2z"/>
-            <!-- flap highlight -->
-            <path fill="url(#bagTop)" opacity="0.95" d="M7.5 12.5h17a2.2 2.2 0 012.2 2.2v1.6H5.3v-1.6a2.2 2.2 0 012.2-2.2z"/>
-            <!-- clasp -->
-            <circle cx="16" cy="17.2" r="1.6" fill="#fff6d6"/>
-            <path fill="#1a0c10" opacity="0.25" d="M14.2 20.5h3.6v5.2h-3.6z"/>
+            <path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"
+              d="M10 12V9a6 6 0 0112 0v3M6 12h20v16H6zM6 17h20M14 21h4" />
           </svg>
           <span class="bag-fab-badge" id="bag-badge" hidden>0</span>
         </button>
@@ -113,14 +94,18 @@
             <span class="btn-sprint-ico" aria-hidden="true">⚡</span>
             <span class="btn-sprint-txt">
               <span class="btn-sprint-title">Sprint</span>
-              <span class="btn-sprint-sub">Hold · ×1.85 speed</span>
+              <span class="btn-sprint-sub">Hold · ×1.85</span>
             </span>
           </button>
           <button type="button" id="btn-scanner" class="btn-primary">
-            <span class="btn-primary-title">Upgrade Signal</span>
-            <span class="btn-primary-sub"
-              ><span id="v-cost">14</span> Signal · Lv <span id="v-scanner">0</span></span
-            >
+            <svg class="cta-weapon-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 11h12l-2-2 2-2 6 5-6 5-2-2 2-2H3z" />
+            </svg>
+            <span class="cta-weapon-copy">
+              <span class="btn-primary-title">Upgrade Weapon</span>
+              <span class="btn-primary-sub"><span id="v-scan-delta">+8%</span> Damage · Lv <span id="v-scanner">0</span>→<span id="v-scanner-next">1</span></span>
+            </span>
+            <span class="cost-chip"><strong id="v-cost">14</strong><small>Signal</small></span>
           </button>
         </div>
         <div class="btn-skills" id="skill-shortcuts">

@@ -3,6 +3,7 @@
 import {
   formatNum,
   scannerCost,
+  scannerDamage,
   metaCost,
   xpToNext,
   liveGain,
@@ -971,9 +972,17 @@ export function renderHUD(s) {
   const cost = scannerCost(h.scanner);
   const costEl = $('v-cost');
   const scEl = $('v-scanner');
+  const scNextEl = $('v-scanner-next');
+  const deltaEl = $('v-scan-delta');
   const cta = $('btn-scanner');
   if (costEl) costEl.textContent = formatNum(cost);
   if (scEl) scEl.textContent = String(h.scanner);
+  if (scNextEl) scNextEl.textContent = String(h.scanner + 1);
+  if (deltaEl) {
+    const current = scannerDamage(h.scanner);
+    const next = scannerDamage(h.scanner + 1);
+    deltaEl.textContent = `+${Math.max(1, Math.round((next / current - 1) * 100))}%`;
+  }
   if (cta) cta.classList.toggle('is-locked', s.run.bytes < cost);
   const need = killsNeeded(s.route.zone);
   const needXp = xpToNext(h.level);
@@ -1041,7 +1050,7 @@ export function renderHUD(s) {
     if (sub) {
       if (sprinting) set(sub, auto ? 'AUTO · ×1.85' : `×${(st.timeScale || 1.85).toFixed(2)} LIVE`);
       else if (h.energy < 1) set(sub, 'Need energy');
-      else set(sub, auto ? 'Auto-Sprint on' : 'Hold · ×1.85 speed');
+      else set(sub, auto ? 'Auto on · ×1.85' : 'Hold · ×1.85');
     }
   }
   // Hub badge when claimable
@@ -1080,7 +1089,10 @@ export function renderHUD(s) {
   ]) {
     const el = $(id);
     if (!el) continue;
-    el.hidden = skillLv(s, sk) < 1;
+    const locked = skillLv(s, sk) < 1;
+    el.hidden = false;
+    el.disabled = locked;
+    el.classList.toggle('locked', locked);
     el.classList.toggle('on', !!on);
     el.setAttribute('aria-pressed', on ? 'true' : 'false');
     const def = SKILLS[sk];

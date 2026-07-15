@@ -299,7 +299,7 @@ export const ENEMY_FLAVOR = {
 export const TIPS = {
   start:
     'Clear noise → Signal upgrades + Build SP. Red Notes → Ship for Rep. Bosses drop permanent Gear.',
-  kill: 'Upgrade Signal each season. Put SP into Damage / Crit / Utility, then unlock skills.',
+  kill: 'Upgrade Weapon each season. Put SP into Damage / Crit / Utility, then unlock skills.',
   level: 'Rank up! Open Build — attributes first, then skills in that tree.',
   patch: 'Notes banked. Ship → permanent Rep → Boosts.',
   alert: 'Hover orbs for energy and Signal. Sprint burns energy.',

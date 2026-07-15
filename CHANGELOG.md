@@ -50,6 +50,9 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Changed
 
+- Reweighted the Run dock around one `Upgrade Weapon` CTA with real Damage and
+  level deltas plus a Signal cost chip; Sprint is a neutral mod and four skills
+  retain equal secondary weight with non-crimson toggle states.
 - Framed the Patchline as a real stage card, replaced tiny enemy meters with
   target-owned HP banners, anchored damage to targets, and added reduced-motion-
   aware Signal/Notes flights to their HUD chips.
