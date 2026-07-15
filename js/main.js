@@ -6,7 +6,6 @@ import { sizeCanvas, draw } from './render.js';
 import { createAssetStore, preloadRouteAssets, packWindowForRoute } from './assets.js';
 import { bindUI, renderHUD } from './ui.js';
 import { save, load, apply } from './save.js';
-import { TICKER_ITEMS } from './content.js';
 
 const canvas = document.getElementById('game');
 const s = createState();
@@ -230,18 +229,6 @@ if (qaParams.has('autostart')) {
 }
 
 document.getElementById('chk-motion').checked = s.settings.reducedMotion;
-
-// slow game-icon ticker (duplicated for seamless loop)
-const track = document.getElementById('ticker-track');
-if (track) {
-  const items = [...TICKER_ITEMS, ...TICKER_ITEMS];
-  track.innerHTML = items
-    .map((it) => {
-      const src = `./assets/icons/${it.icon}.svg`;
-      return `<span class="ticker-item"><img class="gicon-img" src="${src}" alt="" width="20" height="20" loading="lazy" /><span class="gname">${it.name}</span><span class="kind ${it.kind}">${it.kind}</span>${it.text}</span>`;
-    })
-    .join('');
-}
 
 let last = performance.now();
 let acc = 0;

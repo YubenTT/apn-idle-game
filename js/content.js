@@ -312,21 +312,18 @@ export const TIPS = {
   premium: 'APN Pro optional. Coins → Boosts & Gear Boxes. Free drops still fill the loadout.',
 };
 
-export const TICKER_ITEMS = [
-  { icon: 'valorant', color: '#ff4655', name: 'Valorant', kind: 'patch', text: 'Agent update notes live' },
-  { icon: 'league', color: '#c8aa6e', name: 'League', kind: 'patch', text: '14.x balance patch' },
-  { icon: 'wow', color: '#00aeff', name: 'WoW', kind: 'patch', text: 'Hotfixes this week' },
-  { icon: 'ffxiv', color: '#1e90ff', name: 'FFXIV', kind: 'news', text: 'Live letter summary' },
-  { icon: 'apex', color: '#da292a', name: 'Apex', kind: 'event', text: 'Ranked split event' },
-  { icon: 'cs2', color: '#de9b35', name: 'CS2', kind: 'patch', text: 'Skin + map notes' },
-  { icon: 'genshin', color: '#4cc2f1', name: 'Genshin', kind: 'guide', text: 'Banner guide refresh' },
-  { icon: 'poe', color: '#af6025', name: 'Path of Exile', kind: 'patch', text: 'League patch preview' },
-  { icon: 'diablo', color: '#c41e3a', name: 'Diablo IV', kind: 'patch', text: 'Seasonal hotfix' },
-  { icon: 'r6', color: '#2a6ebb', name: 'R6 Siege', kind: 'video', text: 'Operator reveal' },
-  { icon: 'overwatch', color: '#f99e1a', name: 'Overwatch 2', kind: 'patch', text: 'Hero balance' },
-  { icon: 'fortnite', color: '#9d4dbb', name: 'Fortnite', kind: 'event', text: 'Season countdown' },
-  { icon: 'starrail', color: '#4a6cf7', name: 'Star Rail', kind: 'guide', text: 'MoC clear guide' },
-  { icon: 'tft', color: '#0ac8b9', name: 'TFT', kind: 'patch', text: 'Set mid-patch' },
-  { icon: 'steam', color: '#1b2838', name: 'Steam', kind: 'news', text: 'Sale + major updates' },
-  { icon: 'apn', color: '#fc1243', name: 'APN', kind: 'news', text: "Every game's notes, one feed" },
-];
+export const FEED_COPY = {
+  'tactical-shooter': 'Round update notes live',
+  moba: 'Balance notes live',
+  'battle-royale': 'Season update live',
+  mmorpg: 'Hotfix notes live',
+  'hero-shooter': 'Hero balance live',
+  'sports-football': 'Roster update live',
+  'sports-basketball': 'Season tuning live',
+  'sports-driving': 'Playlist update live',
+  'sandbox-survival': 'World update live',
+  'open-world-action': 'Online update live',
+  'action-rpg': 'Balance hotfix live',
+  'asymmetric-horror': 'Trial update live',
+  'extraction-shooter': 'Wipe update live',
+};
