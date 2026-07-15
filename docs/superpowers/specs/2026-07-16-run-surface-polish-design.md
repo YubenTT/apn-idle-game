@@ -44,7 +44,7 @@ viewport no longer looks like a rounded card inside that surface.
 - Static contract tests reject the old framed-stage declarations and transient
   low-energy copy.
 - `node qa/run-tests.mjs` ends in `ALL PASS`.
-- Browser QA covers 375×812, 393×852, 428×926, 844×390, and desktop embed.
+- Automated viewport contracts cover 375×812, 393×852, 428×926, and 844×390;
+  muted Chrome validates the live desktop/embed surface and interaction flow.
 - Visual review checks overflow, truncation, safe areas, primary-action hierarchy,
   and the absence of console errors.
-

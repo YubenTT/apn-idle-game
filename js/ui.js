@@ -1014,7 +1014,7 @@ export function renderHUD(s) {
   if (spBtn) {
     spBtn.classList.toggle('is-active', sprinting);
     spBtn.classList.toggle('is-empty', h.energy < 1);
-    spBtn.setAttribute('aria-disabled', h.energy < 1 ? 'true' : 'false');
+    spBtn.disabled = h.energy < 1;
     spBtn.classList.remove('is-auto');
     const sub = spBtn.querySelector('.btn-sprint-sub');
     if (sub) set(sub, 'Hold · ×1.85');

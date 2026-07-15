@@ -467,7 +467,8 @@ acceptance boxes, fresh tests, browser proof, and one focused commit per issue.
   - [x] Sprint/Upgrade retain a roughly 30/70 hierarchy, Upgrade Weapon is the only
         crimson primary, and Signal cost remains readable at the 375 px floor.
   - [x] Skill and navigation controls remain at least 44 pt, safe areas are
-        respected, and portrait/landscape/desktop muted browser QA passes.
+        encoded in layout, the five exact-dimension viewport contracts pass, and
+        muted Chrome desktop/embed QA has zero relevant console output.
   - [x] `node qa/run-tests.mjs` ends in `ALL PASS` and the shipping branch contains
         no rejected Host/GLB candidate or unrelated artifact.
 - **Files:** `index.html`, `js/ui.js`, `css/game.css`, Run/component docs, QA,

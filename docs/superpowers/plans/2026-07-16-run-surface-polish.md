@@ -161,4 +161,3 @@ Push `feat/R-006-run-surface-polish`, open it against the free-MVP/release chain
 - [ ] **Step 5: Post-merge production-tree verification**
 
 Fetch `origin/main` into a fresh clean worktree, run `node qa/run-tests.mjs`, serve with `?mute=1`, and confirm Git status is clean.
-

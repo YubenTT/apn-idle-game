@@ -23,7 +23,7 @@ Portrait is primary. Landscape sheets open **full-screen**, not right-rail.
 | Band | Height | Contents |
 |------|-------:|----------|
 | Safe top | 59 pt | notch / Dynamic Island |
-| Resource strip | 44 pt | Signal (left) · Notes · SP (right), center cutout reserved |
+| Resource strip | 44 pt | Signal · Notes · SP in three balanced safe-area columns |
 | Feed rail | 40 pt | single-line live APN feed |
 | Gameplay surface | ~434 pt | flat stage telemetry + edge-to-edge viewport |
 | Action dock | 56 pt | primary CTA + one mod control |
@@ -57,8 +57,9 @@ fill, not a full crimson slab.
 
 Fixes over the shipped run screen:
 
-1. **Resource strip around the notch** carries **Signal / Notes / SP** only — the
-   three the player acts on. Drop the "APN Idle" wordmark from the running HUD
+1. **Resource strip below the safe top** carries **Signal / Notes / SP** only —
+   the three the player acts on, distributed evenly without a fake fixed cutout.
+   Drop the "APN Idle" wordmark from the running HUD
    (brand trust comes from component discipline; logomark lives on splash/menu per
    APN press-kit restraint). Move **Rep** and **DPS** out of the run HUD into their
    owning sheets (Ship/Boosts show Rep; a stats peek shows DPS).
