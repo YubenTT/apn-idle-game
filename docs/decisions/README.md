@@ -14,6 +14,7 @@
 | [0004](./ADR-0004-game-pack-route.md) | Catalog-driven 10-zone Game Packs + bounded Corruption epochs | Accepted |
 | [0005](./ADR-0005-hybrid-host-render.md) | GLB-locked hybrid Host rendering | Accepted |
 | [0006](./ADR-0006-persistent-route-save-v2.md) | Persist global Route in dual-key save schema v2 | Accepted |
+| [0007](./ADR-0007-keep-five-navigation.md) | Keep five primary destinations plus the Gear FAB | Accepted |
 
 ## When to write one
 
