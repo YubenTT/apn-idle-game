@@ -50,6 +50,8 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Changed
 
+- Produced Clean Era Game Packs 06–10 with the same deterministic target,
+  environment, prop, corruption, source-evidence, and pivot contract.
 - Produced Clean Era Game Packs 01–05 as deterministic APN Patchline runtime
   sets, including approved target atlases, authored environments, props, masks,
   source records, and locked right-to-left foot pivots.
