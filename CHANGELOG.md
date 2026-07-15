@@ -50,6 +50,9 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Changed
 
+- Reworked Ship into a transparent Notes-to-Rep preview with conversion rate,
+  multiplier, gain, end-season bonus, a domain-owned reset/keep contract, and a
+  separate low-weight End Season confirmation step.
 - Rebuilt Build around explicit SP decisions: attribute cards name the next
   unlock, skill cards show role, rank delta, ROI, cost, and affordability, and
   neutral surfaces reserve positive color for actions the player can afford.

@@ -1053,12 +1053,12 @@ export function buyMeta(s, id) {
   return true;
 }
 
-/**
- * End Season (prestige).
- * KEEP: Live Mult, Boosts, Rep, gear (weapon+armor+bag).
- * KEEP: global Route Zone + pack history.
- * RESET: Signal weapon Lv, rank, attrs, skills, Notes.
- */
+export const END_SEASON_CONTRACT = Object.freeze({
+  resets: Object.freeze(['Weapon level', 'Rank and SP', 'Build skills', 'Notes', '85% of Signal']),
+  keeps: Object.freeze(['Route Zone', 'Rep and Boosts', 'Gear', 'Live Mult and Pro']),
+});
+
+/** End Season (prestige). UI reads END_SEASON_CONTRACT before this mutation. */
 export function leaveSeason(s) {
   if (!s.ui.seasonDone && !isSeasonCheckpoint(s.route.zone)) {
     toast(s, `Reach Zone ${nextSeasonBoundary(s.route.zone)} checkpoint to End Season`);
