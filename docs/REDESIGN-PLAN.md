@@ -370,8 +370,8 @@ acceptance boxes, fresh tests, browser proof, and one focused commit per issue.
 
 ### I-034 · Backgrounds — 🟡 L
 - **Acceptance:**
-  - [ ] APN editorial cityline (billboards/signal rails/patchline/archive lights).
-  - [ ] Fits [PERF-BUDGET](./PERF-BUDGET.md) background-atlas budget.
+  - [x] APN editorial cityline (billboards/signal rails/patchline/archive lights).
+  - [x] Fits [PERF-BUDGET](./PERF-BUDGET.md) background-atlas budget.
 - **Files:** `assets/stage/backgrounds/*`, `js/render.js` (BIOMES).
 
 ## Wave 4 — Feel · pipeline · QA

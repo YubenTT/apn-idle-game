@@ -18,9 +18,12 @@ Original prompt: Complete the APN Idle redesign autonomously, including QA, revi
 - I-033 item art is implemented as a 12-piece, three-material APN techwear atlas;
   Gear uses authored sprites with zero filled-slot SVG fallbacks, 44pt touch, and
   zero horizontal overflow in direct Chrome evidence.
+- I-034 backgrounds are locked across all 20 packs with visible APN billboard,
+  signal-rail, patchline, and archive-light motifs; every WebP is below 150 KB
+  and the Run surface remains zero-overflow in direct Chrome.
 - Browser QA uses Chrome Extension or isolated direct Chrome with `mute=1`; no
   standalone Playwright process is used.
 
 ## Open chain
 
-- I-034 backgrounds → I-040 feel → I-042 copy → I-044 nav → I-043 device-matrix QA.
+- I-040 feel → I-042 copy → I-044 nav → I-043 device-matrix QA.

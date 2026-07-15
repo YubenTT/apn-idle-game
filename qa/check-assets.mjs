@@ -64,6 +64,11 @@ for (const manifestFile of manifests.files) {
   assert(frames.every((name) => targetData.frames[name].metrics?.direction === 'right-to-left'), `${packId} target direction locked`);
   const sourceBoard = fs.readFileSync(path.join(directory, 'source-board.md'), 'utf8');
   assert(sourceBoard.includes('textless APN Patchline') && sourceBoard.includes('no screenshot pixels or official logos ship'), `${packId} source evidence recorded`);
+  const backgroundSource = fs.readFileSync(path.join(directory, 'master/background.svg'), 'utf8');
+  for (const motif of ['apn-editorial-motifs', 'billboard', 'signal-rail', 'patchline', 'archive-lights']) {
+    assert(backgroundSource.includes(`id="${motif}"`), `${packId} background locks ${motif}`);
+  }
+  assert(fs.statSync(path.join(directory, 'background.webp')).size <= 150 * 1024, `${packId} background stays under 150 KB`);
   productionPacks.push(packId);
 }
 assert([0, 5, 10, 15, 20].includes(productionPacks.length), `production lands in five-pack groups (${productionPacks.length})`);
