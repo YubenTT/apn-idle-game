@@ -50,6 +50,8 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Changed
 
+- Replaced the running wordmark/analytics header with a notch-aware 44pt strip
+  containing only actionable Signal, Notes, and SP resources.
 - Rebuilt Gear as a full-height collection surface with the canonical Host,
   four equipped item cards, a five-column 24-slot inventory, explicit compare
   deltas, persisted sort/filter and junk states, and safe equip/scrap actions.
