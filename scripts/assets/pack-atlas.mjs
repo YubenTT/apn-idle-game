@@ -27,13 +27,23 @@ export function layoutFrames(spec) {
       sourceSize: { w: frame.sourceW ?? frame.w, h: frame.sourceH ?? frame.h },
       trimOffset: { x: frame.trimX ?? 0, y: frame.trimY ?? 0 },
       pivot: { x: frame.pivot?.x ?? 0.5, y: frame.pivot?.y ?? 1 },
+      ...(frame.metrics ? { metrics: frame.metrics } : {}),
     };
     x += frame.w + padding;
     rowHeight = Math.max(rowHeight, frame.h);
     width = Math.max(width, x);
   }
   const height = y + rowHeight + padding;
-  return { frames, meta: { image: spec.image, size: { w: Math.min(maxWidth, width), h: height }, scale: 1 } };
+  return {
+    frames,
+    meta: {
+      image: spec.image,
+      size: { w: Math.min(maxWidth, width), h: height },
+      scale: 1,
+      ...(spec.source ? { source: spec.source } : {}),
+      ...(spec.renderLock ? { renderLock: spec.renderLock } : {}),
+    },
+  };
 }
 
 export async function packAtlas(specFile, outputPng, outputJson) {

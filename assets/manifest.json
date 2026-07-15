@@ -353,6 +353,36 @@
       "firstPlayable": true
     },
     {
+      "id": "mascot/apn-mascot-base.webp",
+      "path": "assets/mascot/apn-mascot-base.webp",
+      "bytes": 20972,
+      "sha256": "e728fabe87c51358f60d73b7fe9cbb306dde760c7e6e05b808f2a864df2218b0",
+      "kind": "host",
+      "firstPlayable": true
+    },
+    {
+      "id": "mascot/apn-mascot-fx.webp",
+      "path": "assets/mascot/apn-mascot-fx.webp",
+      "bytes": 108,
+      "sha256": "ed6986512463087ee693d94001334d44af62053f1a7345c221c82e04b7df87cd",
+      "firstPlayable": true
+    },
+    {
+      "id": "mascot/apn-mascot-idle.webp",
+      "path": "assets/mascot/apn-mascot-idle.webp",
+      "bytes": 2366,
+      "sha256": "70881ab7b618fbc2d32063c9a751501f87d645d9e20f443a96e51d2d0358b7bd",
+      "kind": "host",
+      "firstPlayable": true
+    },
+    {
+      "id": "mascot/atlas/apn-mascot-base.json",
+      "path": "assets/mascot/atlas/apn-mascot-base.json",
+      "bytes": 4666,
+      "sha256": "0245863112cbf664bb008333ce58fdabf69d7872e46d24289a5a8c04febc2a8e",
+      "firstPlayable": true
+    },
+    {
       "id": "mascot-34.jpg",
       "path": "assets/mascot-34.jpg",
       "bytes": 34748,

@@ -3,8 +3,13 @@
 import { C, clamp, easeOutCubic, easeOutQuad } from './formulas.js';
 
 const V = 'v8';
+let hostAtlas = null;
+fetch(`./assets/mascot/atlas/apn-mascot-base.json?${V}`)
+  .then((response) => response.json())
+  .then((atlas) => { hostAtlas = atlas; })
+  .catch(() => { hostAtlas = null; });
 const sprites = {
-  mascot: loadImg(`./assets/mascot-host.png?${V}`),
+  mascot: loadImg(`./assets/mascot/apn-mascot-base.webp?${V}`),
   enemies: {
     stale: loadImg(`./assets/enemies/stale.png?${V}`),
     rumor: loadImg(`./assets/enemies/rumor.png?${V}`),
@@ -520,6 +525,13 @@ function drawHero(ctx, x, gy, s, t) {
   const eyeX = hx + 12;
   const eyeY = footY - mh * 0.64;
   const overdrive = !!h.deepOn;
+  const hostPose = h.hitRecoil > 0.45
+    ? 'damage'
+    : attack > 0.18
+      ? (attack > 0.78 ? 'crit' : 'scan')
+      : sprinting
+        ? 'sprint'
+        : 'run';
 
   // Soft skill auras UNDER the character (no hard ring lines)
   const cy = footY - mh * 0.42;
@@ -625,9 +637,11 @@ function drawHero(ctx, x, gy, s, t) {
   // Body
   ctx.save();
   ctx.translate(hx, footY);
-  ctx.scale(squashX * -1, squashY);
-  if (img) {
-    ctx.drawImage(img, -mw / 2, -mh, mw, mh);
+  ctx.scale(squashX, squashY);
+  const frame = hostAtlas?.frames?.[hostPose] || hostAtlas?.frames?.idle;
+  if (img && frame) {
+    const rect = frame.rect;
+    ctx.drawImage(img, rect.x, rect.y, rect.w, rect.h, -mw / 2, -mh, mw, mh);
   } else {
     ctx.fillStyle = '#FC1243';
     ctx.beginPath();

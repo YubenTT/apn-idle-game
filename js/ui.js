@@ -835,7 +835,7 @@ function renderGear(s) {
   let html = `
   <div class="brand-loadout">
     <div class="brand-host">
-      <img class="brand-mascot" src="./assets/mascot-host.png" alt="" width="88" height="88" />
+      <img class="brand-mascot" src="./assets/mascot/apn-mascot-idle.webp" alt="" width="88" height="88" />
       <span class="brand-eq-n">${nEq}/4</span>
     </div>
     <div class="brand-slots">

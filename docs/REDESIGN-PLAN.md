@@ -338,9 +338,10 @@ acceptance boxes, fresh tests, browser proof, and one focused commit per issue.
 
 ### I-030 · Mascot canon pass — 🔴 L
 - **Acceptance:**
-  - [ ] Every mascot appearance passes **Silhouette QA** (same ratio/visor/perspective/outline).
-  - [ ] All in-game sprites re-derived under the render-lock; conflicting sprites replaced.
-  - [ ] AI studies are GLB-conditioned reference only; shipped geometry is GLB-derived and variants change only accent/prop.
+  - [x] Every mascot appearance passes **Silhouette QA** (same ratio/visor/perspective/outline).
+  - [x] Run and Gear use the GLB-derived atlas/idle derivative under one render-lock.
+  - [x] Ten poses share a one-pixel foot pivot, 3% ratio bound, and non-empty visor.
+  - [x] AI studies are reference only; shipped pixels come from the canonical GLB renderer.
 - **Files:** `assets/mascot/*`, `assets/mascot-*.png/.webp`, `js/render.js`.
 
 ### I-031 · 2D art grammar + icon unify — 🔴 M

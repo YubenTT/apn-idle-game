@@ -9,6 +9,9 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Added
 
+- Added the canonical Host WebGL2 render-lock and ten-pose runtime atlas, derived
+  directly from the existing GLB with fixed camera, flat three-band shading, and
+  one-pixel pivot/ratio/visor QA.
 - Added a deterministic zero-npm asset pipeline for atlas layout, pivot/trim
   metadata, fixed WebP profiles, SHA-256 manifests, hot-pack ownership, and hard
   first-playable/per-pack size gates.

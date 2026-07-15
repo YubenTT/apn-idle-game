@@ -19,7 +19,7 @@ export function generateManifest() {
     const relative = path.relative(assetsRoot, file).replaceAll(path.sep, '/');
     const packMatch = relative.match(/^game-packs\/([^/]+)\/(background|targets|props|corruption-mask)\.webp$/);
     let kind = null;
-    if (/^mascot\/.+base\.webp$/.test(relative) || relative === 'mascot-host.webp') kind = 'host';
+    if (/^mascot\/apn-mascot-(?:base|idle)\.webp$/.test(relative) || relative === 'mascot-host.webp') kind = 'host';
     if (packMatch?.[2] === 'background') kind = 'background';
     if (packMatch?.[2] === 'targets') kind = 'targets';
     if (packMatch && ['props', 'corruption-mask'].includes(packMatch[2])) kind = 'propsAndMasks';
