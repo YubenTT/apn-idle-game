@@ -1,4 +1,4 @@
-/** APN Idle content — skills, boosts, premium, tips */
+/** APN Idle content — skills, permanent Boosts, tips */
 
 export const SEASON = {
   id: 'season_01',
@@ -46,7 +46,7 @@ export const META = {
   signal_power: {
     id: 'signal_power',
     name: 'Signal Power',
-    desc: '+5% damage · stacks with Live & Pro',
+    desc: '+5% damage · stacks with Live Mult',
     base: 8,
     growth: 1.48,
     per: 0.05,
@@ -222,99 +222,6 @@ export function nextSkillUnlock(attr, currentLevel) {
     .sort((a, b) => Number(a.req?.[attr] || 0) - Number(b.req?.[attr] || 0))[0] || null;
 }
 
-/**
- * Premium / monetization catalog (structure ready for real IAP).
- * Free path is complete; Pro & boosts are optional power/convenience.
- */
-export const PREMIUM = {
-  pro: {
-    id: 'pro',
-    name: 'APN Pro',
-    priceLabel: 'One-time',
-    mult: 1.25,
-    benefits: [
-      '×1.25 damage, Signal & Notes forever',
-      'Auto-Sprint included (no hold)',
-      'Better offline gains',
-      'Pro badge',
-    ],
-  },
-  /** Convenience — was free “Endless Sprint” mask; now Pro / coin unlock */
-  auto_sprint: {
-    id: 'auto_sprint',
-    name: 'Auto-Sprint',
-    coinCost: 80,
-    desc: 'Sprint stays on without holding. Still drains energy.',
-  },
-  boost_2x: {
-    id: 'boost_2x',
-    name: '2× Boost',
-    minutes: 30,
-    mult: 2,
-    coinCost: 40,
-    desc: '2× damage, Signal & Notes for 30 minutes.',
-  },
-  /** Skip-ahead: runs offline sim for N seconds (not free endless power) */
-  time_warp: {
-    id: 'time_warp',
-    name: 'Time Warp +1h',
-    seconds: 3600,
-    coinCost: 30,
-    desc: 'Fast-forward 1 hour of idle progress. Once every few minutes.',
-  },
-  packs: [
-    { id: 'coins_100', coins: 100, priceLabel: 'Starter', tag: null },
-    { id: 'coins_500', coins: 500, priceLabel: 'Bundle', tag: 'Best' },
-  ],
-  /**
-   * Premium gear boxes — coin sink that fills the 6-slot loadout.
-   * Free path still gets boss/elite drops; boxes are optional power.
-   */
-  boxes: [
-    {
-      id: 'box_signal',
-      name: 'Signal Crate',
-      coinCost: 25,
-      luck: 1.25,
-      rolls: 1,
-      preferEmpty: true,
-      desc: '1 random piece. Fills empty slots first.',
-    },
-    {
-      id: 'box_rare',
-      name: 'Rare Bundle',
-      coinCost: 70,
-      luck: 1.9,
-      minRarity: 'green',
-      rolls: 1,
-      preferEmpty: true,
-      desc: '1 piece · Uncommon+ bias. Solid slot filler.',
-    },
-    {
-      id: 'box_epic',
-      name: 'Epic Cache',
-      coinCost: 160,
-      luck: 2.7,
-      minRarity: 'blue',
-      rolls: 1,
-      preferEmpty: false,
-      desc: '1 piece · Rare+ bias · Unique chance.',
-    },
-    {
-      id: 'box_loadout',
-      name: 'Loadout Box',
-      coinCost: 110,
-      luck: 1.55,
-      rolls: 2,
-      preferEmpty: true,
-      desc: '2 pieces · prioritizes empty slots.',
-    },
-  ],
-  coinsPerBoss: 3,
-  coinsPerShip: 1,
-  coinsPerSeason: 15,
-};
-
 export const ENEMY_FLAVOR = {
   stale: { label: 'Broken Link', color: '#697384', kind: 'normal' },
   rumor: { label: 'Fake Leak', color: '#A7AFBC', kind: 'normal' },
@@ -332,13 +239,12 @@ export const TIPS = {
   level: 'Rank up! Open Build — attributes first, then skills in that tree.',
   patch: 'Notes banked. Ship → permanent Rep → Boosts.',
   alert: 'Collect orbs for Energy and Signal. Sprint spends Energy.',
-  boss: 'Version Gate drops gear and coins. Kill before the timer.',
+  boss: 'Version Gate drops gear. Kill before the timer.',
   ship: 'Ship Notes for Rep. Stuck? Improve Boosts, Gear, or Weapon.',
   combo: 'Feed streak! Bonus Signal while it holds.',
   season:
-    'Checkpoint! Ship Notes, End Season: +Live Mult · Gear, Boosts & Pro stay · Weapon Lv resets.',
+    'Checkpoint! Ship Notes, End Season: +Live Mult · Gear and Rep Boosts stay · Weapon Lv resets.',
   gear: 'Loadout: Weapon · Chest · Legs · Visor. Tap an item to compare, equip, mark, or scrap.',
-  premium: 'APN Pro optional. Coins → Boosts & Gear Boxes. Free drops still fill the loadout.',
 };
 
 export const FEED_COPY = {

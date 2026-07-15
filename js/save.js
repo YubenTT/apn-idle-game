@@ -1,5 +1,5 @@
-import { normalizeGear, emptyGear, GEAR_SORTS, GEAR_FILTERS } from './loot.js';
-import { normalizeRoute } from './route.js';
+import { normalizeGear, emptyGear, GEAR_SORTS, GEAR_FILTERS } from './loot.js?v=free-mvp-r005';
+import { normalizeRoute } from './route.js?v=free-mvp-r005';
 
 export const SAVE_KEY_V1 = 'apn_idle_save_v1';
 export const SAVE_KEY_V2 = 'apn_idle_save_v2';
@@ -63,7 +63,7 @@ export function apply(s, d) {
   s.v = 2;
   s.route = normalizeRoute(d.v === 2 ? d.route : null, d.v === 1 ? d.run : null);
   Object.assign(s.meta, d.meta || {});
-  // migrate gear (armor → chest, full 6-slot) + premium
+  // Migrate gear and preserve the retired demo-store bucket as inert data.
   s.meta.gear = normalizeGear(d.meta?.gear || s.meta.gear || emptyGear());
   if (!s.meta.premium) {
     s.meta.premium = {
@@ -76,11 +76,12 @@ export function apply(s, d) {
   }
   if (d.meta?.premium) {
     s.meta.premium = {
+      ...d.meta.premium,
       pro: !!d.meta.premium.pro,
-      coins: d.meta.premium.coins || 0,
-      boostEndsAt: d.meta.premium.boostEndsAt || 0,
-      autoSprint: !!(d.meta.premium.autoSprint || d.meta.premium.pro),
-      warpCdUntil: d.meta.premium.warpCdUntil || 0,
+      coins: Number.isFinite(d.meta.premium.coins) ? d.meta.premium.coins : 0,
+      boostEndsAt: Number.isFinite(d.meta.premium.boostEndsAt) ? d.meta.premium.boostEndsAt : 0,
+      autoSprint: !!d.meta.premium.autoSprint,
+      warpCdUntil: Number.isFinite(d.meta.premium.warpCdUntil) ? d.meta.premium.warpCdUntil : 0,
     };
   }
   if (d.meta?.hub) s.meta.hub = d.meta.hub;

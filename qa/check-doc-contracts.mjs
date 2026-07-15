@@ -7,6 +7,7 @@ const vision = read('docs/VISION.md');
 const art = read('brand/ART-DIRECTION.md');
 const adr = read('docs/decisions/ADR-0004-game-pack-route.md');
 const backlog = read('docs/REDESIGN-PLAN.md');
+const executionPlan = read('docs/superpowers/plans/2026-07-15-apn-idle-complete-redesign.md');
 const failures = [];
 
 if (!route.includes('20 distinct clean Game Packs')) {
@@ -24,11 +25,14 @@ if (art.includes('We do **not** copy third-party game characters')) {
 if (!backlog.includes('I-003') || !backlog.includes('I-007')) {
   failures.push('foundation backlog');
 }
-if (!backlog.includes('The 33 focused issues') || !backlog.includes('23 Must + 10 Fix')) {
+if (!backlog.includes('original 33 focused issues') || !backlog.includes('24 Must + 10 Fix')) {
   failures.push('backlog counts');
 }
-if (!backlog.includes('only remaining user gate is Session 6')) {
+if (!backlog.includes('next single user gate is the Host V2 motion proof')) {
   failures.push('user gate');
+}
+if (executionPlan.includes('Separate Accessibility, Audio, Account, Purchases, Reset') || executionPlan.includes('demo purchase surface')) {
+  failures.push('R-005 execution-plan supersession');
 }
 
 if (failures.length) {

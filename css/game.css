@@ -1975,30 +1975,6 @@ canvas {
   white-space: nowrap;
 }
 
-.premium-ico {
-  display: inline-flex;
-  width: 22px;
-  height: 22px;
-  align-items: center;
-  color: var(--compat-gold);
-  margin-right: 4px;
-}
-
-.premium-ico .ico {
-  width: 16px;
-  height: 16px;
-}
-
-.premium-card-top {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.btn-sprint.is-auto {
-  border-color: var(--compat-rep-a45);
-}
-
 .sk-lv {
   font-size: var(--compat-fs-compact);
   font-weight: 700;
@@ -2435,82 +2411,6 @@ canvas {
 }
 
 /* gear-pill removed — Gear is left Bag FAB only */
-
-.meta-pill.pro-badge {
-  color: var(--compat-gold);
-  font-size: var(--compat-fs-meta);
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  border: 1px solid var(--compat-rep-a45);
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: var(--compat-rep-a10);
-}
-
-.meta-pill.pro-on em {
-  color: var(--compat-gold);
-}
-
-.premium-card {
-  margin: 0 0 10px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid var(--compat-line);
-  background: var(--compat-ink);
-}
-
-.premium-card.owned {
-  border-color: var(--compat-rep-a40);
-}
-
-.premium-card-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 6px;
-}
-
-.premium-card-top strong {
-  font-size: var(--fs-label-m);
-  font-weight: 800;
-  color: var(--compat-text-high);
-}
-
-.premium-tag {
-  font-size: var(--compat-fs-meta);
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  color: var(--compat-gold);
-  background: var(--compat-rep-a12);
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
-.premium-list {
-  margin: 0 0 10px;
-  padding: 0 0 0 16px;
-  font-size: var(--fs-label-s);
-  color: var(--compat-text-muted-high);
-  line-height: 1.45;
-}
-
-.premium-list li {
-  margin: 2px 0;
-}
-
-.premium-packs {
-  display: grid;
-  gap: 5px;
-  margin-bottom: 8px;
-}
-
-.premium-card .btn-primary[disabled] {
-  opacity: 0.75;
-  cursor: default;
-  background: var(--compat-line-slate);
-  box-shadow: none;
-}
 
 /* Sheet CTAs tighter */
 .sheet-body .btn-primary {
@@ -3412,164 +3312,6 @@ button[hidden] {
   font-size: var(--compat-fs-caption);
 }
 
-/* Premium gear boxes */
-.box-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
-  margin-bottom: 8px;
-}
-
-.box-card {
-  display: grid;
-  grid-template-columns: 22px 1fr auto;
-  grid-template-rows: auto auto;
-  gap: 1px 6px;
-  align-items: center;
-  padding: 8px;
-  border-radius: 9px;
-  border: 1px solid var(--compat-line);
-  background: var(--compat-ink);
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-  opacity: 0.72;
-}
-
-.box-card.can {
-  opacity: 1;
-  border-color: color-mix(in srgb, var(--compat-gold) 35%, var(--compat-line));
-}
-
-.box-card:active {
-  transform: scale(0.98);
-}
-
-.box-ico {
-  grid-row: 1 / span 2;
-  color: var(--compat-gold);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.box-ico .ico {
-  width: 16px;
-  height: 16px;
-}
-
-.box-name {
-  font-size: var(--fs-label-s);
-  font-weight: 800;
-  line-height: 1.15;
-  grid-column: 2;
-}
-
-.box-meta {
-  font-size: var(--compat-fs-meta);
-  color: var(--compat-text-muted);
-  grid-column: 2;
-  line-height: 1.2;
-}
-
-.box-cost {
-  grid-column: 3;
-  grid-row: 1 / span 2;
-  font-size: var(--fs-label-s);
-  font-weight: 800;
-  color: var(--compat-gold);
-}
-
-/* Premium compact */
-.premium-card.compact {
-  padding: 8px 10px;
-  margin-bottom: 8px;
-}
-
-.premium-card.compact .btn-primary {
-  margin-top: 6px;
-}
-
-.prem-one {
-  margin: 4px 0 0;
-  font-size: var(--fs-label-s);
-  color: var(--compat-text-muted-high);
-  line-height: 1.35;
-}
-
-.prem-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 5px;
-  margin-bottom: 8px;
-}
-
-.prem-chip {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  padding: 8px;
-  border-radius: 8px;
-  border: 1px solid var(--compat-line);
-  background: var(--compat-ink);
-  color: var(--compat-text-title);
-  font: inherit;
-  cursor: pointer;
-  text-align: left;
-}
-
-.prem-chip strong {
-  font-size: var(--fs-label-s);
-  font-weight: 800;
-}
-
-.prem-chip span {
-  font-size: var(--compat-fs-caption);
-  font-weight: 700;
-  color: var(--compat-gold-mid);
-}
-
-.prem-chip.on {
-  border-color: var(--compat-rep-a45);
-}
-
-.prem-chip:active:not(:disabled) {
-  transform: scale(0.98);
-}
-
-.premium-packs.compact {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 5px;
-}
-
-.pack-chip {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  padding: 8px 6px;
-  border-radius: 8px;
-  border: 1px solid var(--compat-line);
-  background: var(--compat-ink);
-  color: var(--compat-text-title);
-  font: inherit;
-  cursor: pointer;
-}
-
-.pack-chip strong {
-  font-size: var(--fs-label-m);
-  font-weight: 800;
-  color: var(--compat-gold);
-}
-
-.pack-chip span {
-  font-size: var(--compat-fs-caption);
-  color: var(--compat-text-subtle);
-}
-
 .menu-brand {
   font-size: var(--fs-label-s);
   color: var(--compat-text-faint);
@@ -3583,9 +3325,6 @@ button[hidden] {
 @media (max-width: 360px) {
   .inv-grid {
     grid-template-columns: repeat(5, 1fr);
-  }
-  .prem-row {
-    grid-template-columns: 1fr;
   }
 }
 
@@ -5137,78 +4876,9 @@ button[hidden] {
   outline-offset: var(--sp-1);
 }
 
-.menu-demo-note {
-  margin: 0;
-  padding: var(--sp-2) var(--sp-3);
-  border-bottom: var(--border-1);
-  color: var(--text-mid);
-  font-size: var(--fs-label-s);
-  line-height: var(--lh-label-s);
-}
-
-.menu-purchases #premium-body {
-  padding: var(--sp-3);
-}
-
-.menu-purchases .premium-card.compact,
-.menu-purchases .sp-bank.compact {
-  border: var(--border-1);
-  border-radius: var(--r-card);
-  background: var(--surface-800);
-}
-
-.menu-purchases .prem-row {
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--sp-2);
-}
-
-.menu-purchases .prem-chip {
-  min-height: calc(var(--touch-min) + var(--sp-4));
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--sp-1) var(--sp-2);
-  padding: var(--sp-2) var(--sp-3);
-  border: var(--border-1);
-  border-radius: var(--r-chip);
-  background: var(--surface-800);
-}
-
-.menu-purchases .prem-chip small {
-  grid-column: 1;
-  color: var(--text-mid);
-  font-size: var(--fs-label-s);
-  line-height: var(--lh-label-s);
-}
-
-.menu-purchases .prem-chip span {
-  grid-column: 2;
-  grid-row: 1 / span 2;
-  align-self: center;
-  color: var(--c-rep);
-  font-size: var(--fs-label-s);
-  line-height: var(--lh-label-s);
-}
-
-.menu-purchases .box-card,
-.menu-purchases .pack-chip {
-  min-height: var(--touch-min);
-}
-
-.purchase-support {
-  border-top: var(--border-1);
-}
-
-.purchase-support > * + * {
-  border-top: var(--border-1);
-}
-
 .menu-link {
   width: 100%;
   font: inherit;
-}
-
-.menu-link[disabled] {
-  color: var(--text-low);
 }
 
 .menu-reset {
@@ -5644,7 +5314,6 @@ button[hidden] {
 }
 
 .stage-combo { color: var(--c-notes); }
-.stage-pro { color: var(--c-rep); }
 
 /* I-013 · framed Patchline gameplay stage */
 .hud-stage {

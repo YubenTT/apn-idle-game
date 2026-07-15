@@ -13,8 +13,8 @@ function weekKey(d = new Date()) {
   return `${t.getUTCFullYear()}-W${String(w).padStart(2, '0')}`;
 }
 
-/** Objective definitions — rewards use game currencies only:
- *  signal (season soft), sp, rep (permanent), coins (premium) */
+/** Objective definitions — rewards use launch currencies only:
+ *  signal (season soft), sp, rep (permanent) */
 export const DAILY_DEFS = [
   {
     id: 'd_kills',
@@ -30,7 +30,7 @@ export const DAILY_DEFS = [
     desc: 'Advance zone progress',
     target: 4,
     metric: 'zones',
-    reward: { coins: 8, signal: 60 },
+    reward: { signal: 60 },
   },
   {
     id: 'd_ship',
@@ -38,7 +38,7 @@ export const DAILY_DEFS = [
     desc: 'Ship Notes once',
     target: 1,
     metric: 'ships',
-    reward: { rep: 3, coins: 5 },
+    reward: { rep: 3 },
   },
   {
     id: 'd_orbs',
@@ -57,7 +57,7 @@ export const WEEKLY_DEFS = [
     desc: 'Clear bosses',
     target: 5,
     metric: 'bosses',
-    reward: { coins: 25, rep: 12 },
+    reward: { rep: 12 },
   },
   {
     id: 'w_notes',
@@ -65,7 +65,7 @@ export const WEEKLY_DEFS = [
     desc: 'Notes earned this week',
     target: 40,
     metric: 'notes',
-    reward: { coins: 20, sp: 4 },
+    reward: { sp: 4 },
   },
   {
     id: 'w_gear',
@@ -73,7 +73,7 @@ export const WEEKLY_DEFS = [
     desc: 'Gear drops this week',
     target: 3,
     metric: 'gear',
-    reward: { coins: 15, signal: 120 },
+    reward: { signal: 120 },
   },
 ];
 
@@ -187,12 +187,12 @@ export function seasonLevel(xp) {
 }
 
 export const SEASON_MILESTONES = [
-  { lv: 5, reward: { coins: 10, signal: 80 }, label: '5' },
-  { lv: 10, reward: { coins: 20, sp: 3 }, label: '10' },
-  { lv: 15, reward: { coins: 25, rep: 8 }, label: '15' },
-  { lv: 20, reward: { coins: 40, sp: 5 }, label: '20' },
-  { lv: 30, reward: { coins: 60, rep: 15 }, label: '30' },
-  { lv: 40, reward: { coins: 80, sp: 8 }, label: '40' },
+  { lv: 5, reward: { signal: 80 }, label: '5' },
+  { lv: 10, reward: { sp: 3 }, label: '10' },
+  { lv: 15, reward: { rep: 8 }, label: '15' },
+  { lv: 20, reward: { sp: 5 }, label: '20' },
+  { lv: 30, reward: { rep: 15 }, label: '30' },
+  { lv: 40, reward: { sp: 8 }, label: '40' },
 ];
 
 /** Human reward chips — never show legacy "bytes" */
@@ -203,14 +203,13 @@ export function formatReward(reward) {
   if (reward.signal || reward.bytes) out.push({ k: 'sig', v: `+${n(reward.signal || reward.bytes)}` });
   if (reward.sp) out.push({ k: 'sp', v: `+${reward.sp}` });
   if (reward.rep || reward.authority) out.push({ k: 'rep', v: `+${n(reward.rep || reward.authority)}` });
-  if (reward.coins) out.push({ k: 'coin', v: `+${reward.coins}` });
   if (reward.patches) out.push({ k: 'notes', v: `+${n(reward.patches)}` });
   return out;
 }
 
 export function formatRewardText(reward) {
   return formatReward(reward)
-    .map((r) => `${r.v} ${r.k === 'coin' ? 'coins' : r.k}`)
+    .map((r) => `${r.v} ${r.k}`)
     .join(' · ');
 }
 
@@ -222,9 +221,5 @@ export function applyReward(s, reward) {
   if (sig) s.run.bytes += sig;
   const rep = (reward.rep || 0) + (reward.authority || 0);
   if (rep) s.authority.amount += rep;
-  if (reward.coins) {
-    if (!s.meta.premium) s.meta.premium = { pro: false, coins: 0, boostEndsAt: 0 };
-    s.meta.premium.coins += reward.coins;
-  }
   if (reward.patches) s.run.patches += reward.patches;
 }
