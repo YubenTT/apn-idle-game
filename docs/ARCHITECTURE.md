@@ -182,3 +182,7 @@ CI runs the same command (see `.github/workflows/ci.yml`).
 - Server authoritative combat
 - Paid IAP (site may add later as separate product surface)
 - Heavy frameworks (React/Vue) for the playable core
+
+Save schema v2 still round-trips the retired `meta.premium` demo-store object for
+backward compatibility. The free MVP treats every value in that object as inert;
+only `meta.live` contributes to the global economy multiplier.

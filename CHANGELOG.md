@@ -62,6 +62,11 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Changed
 
+- Cut the launch economy back to the free MVP contract: removed the demo
+  Purchases surface, APN Pro and paid multipliers, Auto-Sprint purchase, coin
+  grants/packs, timed 2× Boost, Time Warp, and paid Gear Boxes. Live Mult is now
+  the only global economy multiplier; old premium save fields round-trip but are
+  inert.
 - Hardened the complete mobile game surface against iOS long-press text/object
   selection, native touch callouts, and media dragging without disabling sheet
   scrolling, native controls, or Sprint hold; added a static regression contract
@@ -75,9 +80,9 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 - Rebuilt Boosts as a permanent Ranks/Combat/Economy ROI tree; domain previews
   now own exact current→next effects, Rep costs, affordability, value cues, and
   one catch-up recommendation or next target.
-- Split Menu into Accessibility, Audio, Account, Purchases, and Reset; replaced
-  checkboxes with the canonical 51×31 switch, removed attribute debug copy,
-  labeled the local demo store honestly, and put New Game behind an inline gate.
+- Split Menu into Accessibility, Audio, Account, and Reset; replaced checkboxes
+  with the canonical 51×31 switch, removed attribute debug copy and the retired
+  demo store, and put New Game behind an inline gate.
 - Turned Hub into a Daily/Weekly/Season live-ops board with explicit locked,
   claimable, and claimed states, readable currency reward pills, 8px progress
   tracks, and milestone cards whose availability is visible without interaction.
@@ -132,6 +137,9 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Tests
 
+- Added negative free-MVP contracts proving that no purchase catalog/action or
+  coin reward ships, legacy paid flags cannot alter damage/economy/Sprint, and
+  retired premium save data remains inert across prestige and save round trips.
 - Added CSS token-contract checks for first-rule import order, raw color literals,
   unresolved custom properties, and active canonical Notes/SP tokens.
 - Added economy-role checks for legacy alias retirement, exact DOM selectors,
@@ -153,8 +161,7 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 - Save schema rename (bytes → signal) with migration
 - PWA manifest
-- Wire real IAP receipts for APN Pro / coin packs / boxes
-- Rewarded-ad stubs (MindStudios monetization playbook)
+- Revisit cosmetics-only APN benefits after MVP retention evidence; no paid power
 
 ## [1.7.2] — 2026-07-13
 

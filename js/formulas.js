@@ -38,7 +38,7 @@ export const C = {
   // Slightly snappier early, still multi-hit mid/late at pace
   ENEMY_HITS_BASE: 10.5,
   ENEMY_HITS_PER_ZONE: 0.75,
-  /** Extra budget for attrs / skills / gear / premium beyond bare weapon */
+  /** Extra budget for attrs / skills / gear beyond bare weapon */
   ENEMY_POWER_BUDGET: 1.45,
   ENEMY_HP_STEP_EVERY: 5,
   ENEMY_HP_STEP_BONUS: 0.035,

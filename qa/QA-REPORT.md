@@ -1,10 +1,32 @@
 # APN Idle redesign V1 — QA report
 
-- Build: `integration/complete-redesign`
+- Build: `feat/R-005-free-mvp-economy` stacked on `release/apn-idle-redesign-v1`
 - Evidence date: 2026-07-15
 - Browser: direct Chrome Extension control, always `mute=1`
 - Automated gate: `node qa/run-tests.mjs` → `ALL PASS`
 - Long-run gate: `node qa/long-run.mjs` → `LONG RUN PASS`
+
+## R-005 free MVP economy cut
+
+The launch build has no Purchases section, demo store, APN Pro badge/catalog,
+coin pack/reward, paid Auto-Sprint, timed 2× Boost, Time Warp, or paid Gear Box.
+`economyMult` now equals Live Mult. Legacy premium fields still round-trip through
+v2 saves but cannot change damage, income, Sprint, offline efficiency, Ship, or
+End Season.
+
+Fresh evidence on 2026-07-15:
+
+- `node qa/run-tests.mjs` → `ALL PASS`, including negative store/power contracts;
+- `node qa/playthrough.mjs` → `PLAYTHROUGH PASS`, Zone 21 and a successful free
+  End Season with Live ×1.0397;
+- `node qa/pacing-profiles.mjs` → first boss 10.9m, first End Season 30.0m,
+  `PACING PASS`;
+- `node qa/long-run.mjs` → `LONG RUN PASS` through the Zone 1000 profile;
+- Chrome Extension at 428×926 with `mute=1`: 0px overflow, SFX unchecked,
+  zero warning/error logs, no purchase nodes/terms, HUD title `Live Mult ×1.00`,
+  and Sprint returns to `aria-pressed=false` with no held/Auto state.
+
+The current Run/Menu captures are stored in `qa/screenshots/r005-free-mvp/`.
 
 ## I-045 mobile input hardening
 
@@ -83,5 +105,6 @@ is present; normal gameplay does not expose or update them.
 
 ## Severity result
 
-Open Blocker: 0 · Critical: 0 · Major: 0. I-045's physical iOS Safari recheck is
-green. No release-gate exception or risk ADR is required.
+Open Blocker: 0 · Critical: 0 · Major: 0. I-045's physical iOS Safari recheck and
+R-005's free-economy/browser contracts are green. Asset replacement remains a
+separate visual-owner gate and is not misreported as release-ready here.

@@ -14,10 +14,9 @@ import {
   buyMeta,
   combatStats,
   setSprint,
-  unlockPro,
   economyMult,
 } from '../js/game.js';
-import { META, SKILLS } from '../js/content.js';
+import { SKILLS } from '../js/content.js';
 
 const log = [];
 const note = (m) => {
@@ -85,7 +84,7 @@ note(
 if (s.run.patches >= 1) {
   const rep0 = s.authority.amount;
   shipPatches(s);
-  note(`shipped: +${s.authority.amount - rep0} Rep · coins=${s.meta.premium.coins}`);
+  note(`shipped: +${s.authority.amount - rep0} Rep`);
 }
 
 // Buy a cheap boost if possible
@@ -94,9 +93,7 @@ if (s.authority.amount >= 5) {
   note(`boost Faster Ranks Lv ${s.authority.upgrades.xp_posts}`);
 }
 
-// Optional Pro demo
-unlockPro(s);
-note(`Pro on · economy ×${economyMult(s).toFixed(2)}`);
+note(`Free MVP economy · Live ×${economyMult(s).toFixed(2)}`);
 
 // Push toward checkpoint 20
 let guard = 0;
@@ -123,21 +120,16 @@ if (s.ui.seasonDone || s.route.zone >= 20) {
   const gearSnap = ['weapon', 'chest', 'legs', 'visor'].map(
     (sl) => s.meta.gear?.[sl]?.id || null
   );
-  const pro = s.meta.premium.pro;
   const boosts = { ...s.authority.upgrades };
   leaveSeason(s);
   const gearAfter = ['weapon', 'chest', 'legs', 'visor'].map(
     (sl) => s.meta.gear?.[sl]?.id || null
   );
   note(
-    `prestige: Z${s.route.zone + 1} sc=${s.run.hero.scanner} live×${s.meta.live.toFixed(2)} gear=${gearAfter.filter(Boolean).length}/4 pro=${s.meta.premium.pro}`
+    `prestige: Z${s.route.zone + 1} sc=${s.run.hero.scanner} live×${s.meta.live.toFixed(2)} gear=${gearAfter.filter(Boolean).length}/4`
   );
   if (gearSnap.some((id, i) => id && gearAfter[i] !== id)) {
     console.error('FAIL: gear lost on prestige');
-    process.exit(1);
-  }
-  if (pro && !s.meta.premium.pro) {
-    console.error('FAIL: pro lost');
     process.exit(1);
   }
   if (boosts.signal_power !== s.authority.upgrades.signal_power) {
@@ -173,8 +165,6 @@ console.log(
       rank: s.run.hero.level,
       scanner: s.run.hero.scanner,
       live: s.meta.live,
-      pro: s.meta.premium.pro,
-      coins: s.meta.premium.coins,
       gear: ['weapon', 'chest', 'legs', 'visor'].filter((sl) => s.meta.gear?.[sl]).length,
       economy: economyMult(s),
     },

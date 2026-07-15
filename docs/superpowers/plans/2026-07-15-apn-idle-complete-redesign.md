@@ -754,10 +754,10 @@ and semantically different; reward pills remain readable at 375 px.
 
 - [ ] **Step 4: Menu**
 
-Separate Accessibility, Audio, Account, Purchases, Reset. Remove attribute debug
-copy. Use one switch component. Add restore/manage/legal rows only when they
-invoke real actions; until backend ownership exists, label the demo purchase
-surface explicitly as demo and never fake account success.
+R-005 supersedes the original demo-store direction for launch. Separate
+Accessibility, Audio, Account, and Reset; keep Legal under Account. Remove
+attribute debug copy and use one switch component. The free MVP exposes no
+purchase, Pro, coin, paid boost, warp, or paid Gear Box surface.
 
 - [ ] **Step 5: Boosts**
 

@@ -11,8 +11,8 @@ Original prompt: Complete the APN Idle redesign autonomously, including QA, revi
   preview, and an explicit two-step End Season gate; 428/375 Chrome evidence is green.
 - I-023 Hub is implemented as a Daily/Weekly/Season live-ops board; state helper,
   readable rewards, 8px tracks, 44pt touch, and 428/375 Chrome gates are green.
-- I-025 Menu is split into five truthful sections with canonical switches, no
-  player debug copy, explicit demo-store semantics, and a tested safe reset gate.
+- I-025 Menu keeps canonical switches, no player debug copy, and a tested safe
+  reset gate; R-005 removes the retired demo-store section for launch.
 - I-024 Boosts is implemented as a domain-driven permanent ROI tree with exact
   deltas/costs, one recommendation, 44pt touch, and clean 428/375 Chrome evidence.
 - I-033 item art is implemented as a 12-piece, three-material APN techwear atlas;
@@ -49,5 +49,10 @@ Original prompt: Complete the APN Idle redesign autonomously, including QA, revi
 
 ## Open chain
 
-- None. I-045 is green across regression, browser, long-run, and physical iOS
-  evidence. The feature branch remains local until the owner requests integration.
+- Draft integration PR #8 publishes the original 34-commit redesign history from
+  `release/apn-idle-redesign-v1` without merging it.
+- R-005 is green across negative economy contracts, playthrough, 30-minute pacing,
+  Zone 1000, and muted Chrome Run/Menu evidence. It is being prepared as a stacked
+  PR against the release branch.
+- Next user gate: approve the Host V2 motion proof. No creature/item/runtime Host
+  asset replacement proceeds before that approval.

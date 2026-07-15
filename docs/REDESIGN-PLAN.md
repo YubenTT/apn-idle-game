@@ -21,8 +21,8 @@ every box is ticked and `node qa/run-tests.mjs` is green.
 
 ## Autonomous delivery sessions
 
-The 33 focused issues still land as one issue = one PR, but execution is grouped
-into six long-running delivery sessions in one autonomous chain. Sessions are
+The original 33 focused issues plus release issue R-005 still land as one issue =
+one PR, but execution is grouped into seven long-running delivery sessions in one autonomous chain. Sessions are
 work packages, not separate chats or one-agent-per-issue handoffs.
 
 | Session | Issues / work | Outcome | User action |
@@ -33,11 +33,11 @@ work packages, not separate chats or one-agent-per-issue handoffs.
 | 4 | I-007, I-021, I-010–I-014 | Runtime packs, Gear, Run hero experience | None |
 | 5 | I-020, I-022, I-023, I-025, I-024 | Decision sheets | None |
 | 6 | I-033, I-034, I-040, I-042, I-044, I-043, I-045 | Remaining art, feel, copy, nav, integrated QA, physical-input hardening | **Final integrated evidence review** |
+| 7 | R-005 | Free MVP economy cut and release re-verification | None |
 
-The approved art boards and Run/Gear direction close preproduction. All visual and
-technical gates during implementation are self-reviewed against the source docs;
-they never pause the autonomous chain. The only remaining user gate is Session 6's
-complete, muted localhost build with evidence.
+The original Session 6 review is complete. R-005 is verified autonomously against
+its negative economy contract and muted browser evidence. The next single user gate is the Host V2 motion proof; no creature, item, or runtime Host replacement
+may proceed before that visual-owner approval.
 
 ## Phasing (dependency waves — do in order)
 
@@ -48,13 +48,14 @@ Wave 1  Collection vertical   I-021
 Wave 2  Run screen (hero)      I-010 → I-014
 Wave 3  Sheets (decisions)     I-020, I-022–I-025
 Wave 4  Remaining art/feel/QA I-033, I-034, I-040, I-042 → I-044 → I-043 → I-045
+Release hardening               R-005
 ```
 
 Locked execution order:
 `I-000 → I-001 → I-002 → I-003 → I-004 → I-005 → I-006 → I-041 → I-030 →
 I-031 → I-032A → I-032B → I-032C → I-032D → I-007 → I-021 → I-010 → I-011 →
 I-012 → I-013 → I-014 → I-020 → I-022 → I-023 → I-025 → I-024 → I-033 →
-I-034 → I-040 → I-042 → I-044 → I-043 → I-045`.
+I-034 → I-040 → I-042 → I-044 → I-043 → I-045 → R-005`.
 
 Rule: **do not start a wave until the prior wave's 🔴 Must issues are merged.** The
 approved asset system now precedes UI implementation so the Run and Gear slices
@@ -97,12 +98,13 @@ are built once against production contracts. The chain stays linear.
 | I-043 | QA | Device matrix + visual regression | 🔴 | M | I-042, I-044 | [QA-CHECKLIST](./QA-CHECKLIST.md) |
 | I-044 | Nav | Keep-5 navigation refinement + implementation | 🟡 | S | I-010 | [SCREEN-SPECS §Navigation](./SCREEN-SPECS.md) |
 | I-045 | QA | Mobile long-press gesture hardening | 🔴 | S | I-043 | [QA-CHECKLIST](./QA-CHECKLIST.md) |
+| R-005 | Release | Free MVP economy cut | 🔴 | S | I-045 | [MONETIZATION](./MONETIZATION.md) |
 
 ## Effort roll-up
 
 | Priority | Issues | Rough range |
 |----------|-------:|------------:|
-| 🔴 Must | 23 | measured issue-by-issue |
+| 🔴 Must | 24 | measured issue-by-issue |
 | 🟡 Fix | 10 | measured issue-by-issue |
 | ⚪ Optional | (seasonal swaps, cosmetics, PWA — see ROADMAP) | ~60–90 h |
 
@@ -328,10 +330,11 @@ acceptance boxes, fresh tests, browser proof, and one focused commit per issue.
 
 ### I-025 · Menu split — 🔴 M
 - **Acceptance:**
-  - [x] Sections separated: Accessibility · Audio · Account · Purchases · Reset.
+  - [x] Sections separated: Accessibility · Audio · Account · Reset; the original
+        demo Purchases section is superseded by R-005 for launch.
   - [x] Debug string `Damage n·Crit n·Utility n` removed from player UI.
   - [x] Toggles use the component-library switch (not mismatched checkbox).
-  - [x] Premium card: clear benefit + restore-purchases / manage-sub / legal.
+  - [x] Legal remains under Account; no demo purchase or restore surface ships.
   - [x] `New Game` low-weight, bottom, behind confirm.
 - **Files:** `index.html`, `css/game.css`, `js/ui.js`.
 
@@ -422,6 +425,32 @@ acceptance boxes, fresh tests, browser proof, and one focused commit per issue.
   `qa/run-tests.mjs`.
 - **Out of scope:** layout, copy, art, balance, save, or navigation changes.
 
+## Release hardening
+
+### R-005 · Free MVP economy cut — 🔴 S
+- **Goal:** return the launch build to the no-pay-to-win product decision before
+  any distribution or asset expansion work.
+- **Scope:** remove the demo APN Pro, coin packs, paid Auto-Sprint, `1.25×` power,
+  timed `2×` Boost, Time Warp, paid Gear Boxes, coin rewards, and every purchase
+  action/surface. Keep old v2 premium save values inert and lossless.
+- **Acceptance:**
+  - [x] Menu/HUD contain no Purchases, demo store, Pro badge, product card, coin,
+        warp, paid boost, or paid Gear Box surface.
+  - [x] `economyMult` equals Live Mult; old Pro/boost/Auto-Sprint flags cannot
+        affect damage, income, Sprint, offline progress, Ship, or End Season.
+  - [x] Boss, Hub, Ship, and End Season grant no dead coin currency; free Gear
+        drops and the existing Signal/SP/Rep rewards remain intact.
+  - [x] Legacy `meta.premium` values round-trip through save/load and remain
+        byte-for-byte inert across prestige.
+  - [x] `node qa/run-tests.mjs`, `node qa/playthrough.mjs`,
+        `node qa/pacing-profiles.mjs`, and `node qa/long-run.mjs` pass fresh.
+  - [x] Muted real-Chrome Run/Menu proof has zero console errors, no purchase
+        copy or controls, correct manual Sprint, and only Live Mult in the HUD.
+- **Files:** `index.html`, `js/content.js`, `js/game.js`, `js/hub.js`, `js/ui.js`,
+  `js/save.js`, QA, monetization/screen/architecture/status docs.
+- **Out of scope:** new currencies, reward replacements, balance buffs, asset
+  replacement, accounts, payment plumbing, or future cosmetic products.
+
 ---
 
 ## Definition of "epic done"
@@ -433,7 +462,6 @@ release.
 
 ## Release gate (redesign V1)
 
-Ship redesign V1 when: all 33 issue acceptance lists are complete · all 23 Must +
-10 Fix branches are integrated · Sessions 1–6 are complete · QA matrix (I-043) is green ·
+Ship redesign V1 when: all 34 issue acceptance lists are complete · all 24 Must + 10 Fix branches are integrated · Sessions 1–7 are complete · QA matrix (I-043) is green ·
 no Blocker/Critical is open · every shipping screen passes Silhouette / Contrast /
 Touch / Decision gates.
