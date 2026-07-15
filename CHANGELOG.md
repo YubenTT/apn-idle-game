@@ -62,6 +62,11 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Changed
 
+- Rebuilt Run as one continuous mobile game surface: the combat Canvas now reaches
+  both app edges; Zone/Rank/Live sit in a flat telemetry band; Energy and Focus
+  expose live values; Sprint copy stays stable; the action dock uses a clear
+  30/70 secondary/primary hierarchy; and the Signal price no longer collapses
+  into a cramped two-line pill.
 - Cut the launch economy back to the free MVP contract: removed the demo
   Purchases surface, APN Pro and paid multipliers, Auto-Sprint purchase, coin
   grants/packs, timed 2× Boost, Time Warp, and paid Gear Boxes. Live Mult is now
@@ -95,9 +100,9 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 - Reweighted the Run dock around one `Upgrade Weapon` CTA with real Damage and
   level deltas plus a Signal cost chip; Sprint is a neutral mod and four skills
   retain equal secondary weight with non-crimson toggle states.
-- Framed the Patchline as a real stage card, replaced tiny enemy meters with
-  target-owned HP banners, anchored damage to targets, and added reduced-motion-
-  aware Signal/Notes flights to their HUD chips.
+- Turned the Patchline into a full-bleed gameplay surface, replaced tiny enemy
+  meters with target-owned HP banners, anchored damage to targets, and added
+  reduced-motion-aware Signal/Notes flights to their HUD chips.
 - Folded Zone, Rank, and Live into one compact in-stage header with independent
   8px progress tracks for Route and Rank growth.
 - Replaced the scrolling website-style ticker with a single-line live feed rail
