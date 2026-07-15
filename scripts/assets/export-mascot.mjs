@@ -9,7 +9,8 @@ import { stableJson } from './lib.mjs';
 
 const run = promisify(execFile);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-const chrome = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+const chrome = process.env.CHROME || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+const ffmpeg = process.env.FFMPEG || 'ffmpeg';
 const masterRoot = path.join(root, 'assets/mascot/master');
 const atlasRoot = path.join(root, 'assets/mascot/atlas');
 const runtimeRoot = path.join(root, 'assets/mascot');
@@ -70,7 +71,7 @@ export async function exportMascot(baseUrl = 'http://localhost:8791') {
   await convertWebp(path.join(masterRoot, 'idle.png'), path.join(runtimeRoot, 'apn-mascot-idle.webp'), 'host');
 
   const fxPng = path.join(masterRoot, 'apn-mascot-fx.png');
-  await run('/opt/homebrew/bin/ffmpeg', [
+  await run(ffmpeg, [
     '-f', 'lavfi', '-i', 'color=c=black@0.0:s=64x64,format=rgba',
     '-frames:v', '1', '-y', fxPng,
   ]);

@@ -11,8 +11,8 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const proofRoot = path.join(root, 'docs/art/proofs/2026-07-15');
 const packsRoot = path.join(root, 'assets/game-packs');
 const scriptRoot = path.join(root, 'scripts/assets');
-const PYTHON = '/Users/talatongu/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3';
-const FFMPEG = '/opt/homebrew/bin/ffmpeg';
+const PYTHON = process.env.PYTHON || 'python3';
+const FFMPEG = process.env.FFMPEG || 'ffmpeg';
 
 const row = (proof, rowIndex, ranges) => ({
   proof,
@@ -79,6 +79,7 @@ async function extractPack(pack, segmenter, temp) {
     for (const [index, url] of source.urls.entries()) {
       const target = path.join(master, `source-${index + 1}.png`);
       if (!fs.existsSync(target)) {
+        if (!url) throw new Error(`Vendored approved source missing: ${target}`);
         const response = await fetch(url);
         if (!response.ok) throw new Error(`Source download failed ${response.status}: ${url}`);
         fs.writeFileSync(target, Buffer.from(await response.arrayBuffer()));
@@ -91,7 +92,7 @@ async function extractPack(pack, segmenter, temp) {
     const sourceBoardFile = path.join(packsRoot, pack.id, 'source-board.md');
     const sourceBoard = fs.readFileSync(sourceBoardFile, 'utf8');
     if (!sourceBoard.includes('## Focused proof closure')) {
-      fs.writeFileSync(sourceBoardFile, `${sourceBoard}\n## Focused proof closure\n\nThe five target masters are official Marvel Rivals transparent character renders; the final encounter is the recorded Doom render above. All six are normalized into the APN outline, 128 px silhouette, right-to-left staging, foot pivot, and authored break-state contract. Source URLs are retained in \`scripts/assets/extract-approved-pack-art.mjs\`.\n`);
+      fs.writeFileSync(sourceBoardFile, `${sourceBoard}\n## Focused proof closure\n\nFive target masters use the recorded official transparent renders; the final encounter uses the vendored approved master at \`master/source-6.png\`. All six are normalized into the APN outline, 128 px silhouette, right-to-left staging, foot pivot, and authored break-state contract. No expiring signed source token is retained.\n`);
     }
     console.log(`APPROVED ART ${String(pack.order).padStart(2, '0')} ${pack.id}`);
     return;
