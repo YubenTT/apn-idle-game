@@ -956,7 +956,7 @@ export function renderHUD(s) {
   set($('v-live'), eco.toFixed(2));
   set($('v-level'), String(h.level));
   set($('v-sp'), String(h.sp));
-  const livePill = document.querySelector('.meta-pill [id="v-live"]')?.parentElement;
+  const livePill = document.querySelector('.stage-stat.live');
   if (livePill) {
     livePill.title = `Economy ×${eco.toFixed(2)} (Live ${s.meta.live.toFixed(2)}${
       s.meta.premium?.pro ? ' · Pro' : ''
