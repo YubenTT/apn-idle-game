@@ -18,8 +18,11 @@ import {
   ATTR_LABEL,
   ATTR_META,
   PREMIUM,
+  FEED_COPY,
   skillSpCost,
 } from './content.js';
+import { packForRoute } from './route.js';
+import { GAME_PACKS } from './generated/game-packs.js';
 import {
   combatStats,
   allocAttr,
@@ -931,6 +934,9 @@ export function renderHUD(s) {
   const $ = (id) => document.getElementById(id);
   const st = combatStats(s);
   const h = s.run.hero;
+  const pack = packForRoute(s.route, GAME_PACKS);
+  set($('feed-game'), pack?.title || 'Patchline');
+  set($('feed-copy'), FEED_COPY[pack?.genre] || 'Update notes live');
 
   set($('v-bytes'), formatNum(s.run.bytes));
   set($('v-patches'), formatNum(s.run.patches));

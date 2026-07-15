@@ -50,6 +50,8 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Changed
 
+- Replaced the scrolling website-style ticker with a single-line live feed rail
+  bound to the currently scheduled Game Pack.
 - Replaced the running wordmark/analytics header with a notch-aware 44pt strip
   containing only actionable Signal, Notes, and SP resources.
 - Rebuilt Gear as a full-height collection surface with the canonical Host,

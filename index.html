@@ -26,9 +26,12 @@
         </div>
       </header>
 
-      <div class="hud-ticker">
-        <div class="live-tag">LIVE</div>
-        <div class="ticker-clip"><div class="ticker-track" id="ticker-track"></div></div>
+      <div class="hud-ticker" role="status" aria-label="Current live patch feed">
+        <img class="feed-source" src="./assets/apn-logo.svg" alt="" width="16" height="16" />
+        <strong class="feed-game" id="feed-game">Valorant</strong>
+        <span class="feed-kind patch">Patch</span>
+        <span class="feed-copy" id="feed-copy">Agent update notes live</span>
+        <span class="feed-live"><i aria-hidden="true"></i>Live</span>
       </div>
 
       <main class="hud-stage">

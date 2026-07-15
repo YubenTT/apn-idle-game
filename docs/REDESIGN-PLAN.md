@@ -249,9 +249,9 @@ acceptance boxes, fresh tests, browser proof, and one focused commit per issue.
 ### I-011 · Feed rail — 🔴 M
 - **Goal:** one-line live APN feed that carries run context, not a news marquee.
 - **Acceptance:**
-  - [ ] Single row: source mark 16 · game name 15 · type pill 20–22.
-  - [ ] Clean truncation; never wraps; type pills use content-type tokens.
-  - [ ] Reads as "what's live now," tied to the run (not a scrolling website header).
+  - [x] Single row: source mark 16 · game name 15 · type pill 20–22.
+  - [x] Clean truncation; never wraps; type pills use content-type tokens.
+  - [x] Reads as "what's live now," tied to the run (not a scrolling website header).
 - **Files:** `index.html`, `css/game.css`, `js/ui.js`, `js/content.js` (TICKER).
 
 ### I-012 · Stage header — 🔴 M
