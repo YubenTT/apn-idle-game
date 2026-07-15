@@ -195,10 +195,16 @@ export function bindUI(s) {
     $('offline-modal').hidden = true;
   });
   $('btn-wipe')?.addEventListener('click', () => {
-    if (confirm('Wipe save and start over?')) {
-      clear();
-      location.reload();
-    }
+    const confirmPanel = $('reset-confirm');
+    if (confirmPanel) confirmPanel.hidden = false;
+  });
+  $('btn-wipe-cancel')?.addEventListener('click', () => {
+    const confirmPanel = $('reset-confirm');
+    if (confirmPanel) confirmPanel.hidden = true;
+  });
+  $('btn-wipe-confirm')?.addEventListener('click', () => {
+    clear();
+    location.reload();
   });
   $('chk-motion')?.addEventListener('change', (e) => {
     s.settings.reducedMotion = e.target.checked;
@@ -405,11 +411,6 @@ function openSheet(s, panel) {
   if (panel === 'gear') renderGear(s);
   if (panel === 'hub') renderHub(s);
   if (panel === 'settings') {
-    const a = document.getElementById('v-attrs');
-    if (a) {
-      const h = s.run.hero;
-      a.textContent = `Damage ${h.scan} · Crit ${h.verify} · Utility ${h.amplify}`;
-    }
     const sx = document.getElementById('chk-sfx');
     if (sx) sx.checked = s.settings.sfx !== false;
     const mo = document.getElementById('chk-motion');
@@ -434,6 +435,8 @@ function closeSheet(s) {
   document.getElementById('app')?.classList.remove('sheet-open');
   document.querySelectorAll('.hud-nav button').forEach((b) => b.classList.remove('active'));
   document.getElementById('btn-bag')?.classList.remove('active');
+  const resetConfirm = document.getElementById('reset-confirm');
+  if (resetConfirm) resetConfirm.hidden = true;
 }
 
 function fillShip(s) {
@@ -615,26 +618,29 @@ function renderPremium(s) {
     <div class="premium-card-top">
       <span class="premium-ico">${hubIco('pro')}</span>
       <strong>APN Pro</strong>
-      <span class="premium-tag">${p.pro ? 'ON' : 'IAP'}</span>
+      <span class="premium-tag">${p.pro ? 'ON' : 'DEMO'}</span>
     </div>
     <p class="fine prem-one">${PREMIUM.pro.benefits.slice(0, 2).join(' · ')}</p>
     <button type="button" class="btn-primary" data-premium="pro" ${p.pro ? 'disabled' : ''}>
-      <span class="btn-primary-title">${p.pro ? 'Pro Active' : 'Unlock Pro'}</span>
-      <span class="btn-primary-sub">${p.pro ? `×${PREMIUM.pro.mult}` : 'Demo'}</span>
+      <span class="btn-primary-title">${p.pro ? 'Pro Active' : 'Try APN Pro'}</span>
+      <span class="btn-primary-sub">${p.pro ? `×${PREMIUM.pro.mult}` : 'Demo unlock · no payment'}</span>
     </button>
   </div>
   <div class="prem-row">
-    <button type="button" class="prem-chip ${auto ? 'on' : ''}" data-premium="auto" ${auto ? 'disabled' : ''} title="${PREMIUM.auto_sprint.desc}">
+    <button type="button" class="prem-chip ${auto ? 'on' : ''}" data-premium="auto" ${auto ? 'disabled' : ''}>
       <strong>Auto-Sprint</strong>
-      <span>${auto ? 'ON' : `${PREMIUM.auto_sprint.coinCost}¢`}</span>
+      <small>${PREMIUM.auto_sprint.desc}</small>
+      <span>${auto ? 'On' : `${PREMIUM.auto_sprint.coinCost} Coins`}</span>
     </button>
-    <button type="button" class="prem-chip" data-premium="boost" title="${PREMIUM.boost_2x.desc}">
+    <button type="button" class="prem-chip" data-premium="boost">
       <strong>2× Boost</strong>
-      <span>${boostOn ? `+${PREMIUM.boost_2x.minutes}m` : `${PREMIUM.boost_2x.coinCost}¢`}</span>
+      <small>${PREMIUM.boost_2x.desc}</small>
+      <span>${boostOn ? `+${PREMIUM.boost_2x.minutes}m` : `${PREMIUM.boost_2x.coinCost} Coins`}</span>
     </button>
-    <button type="button" class="prem-chip" data-premium="warp" title="${PREMIUM.time_warp.desc}">
+    <button type="button" class="prem-chip" data-premium="warp">
       <strong>Warp +1h</strong>
-      <span>${PREMIUM.time_warp.coinCost}¢</span>
+      <small>${PREMIUM.time_warp.desc}</small>
+      <span>${PREMIUM.time_warp.coinCost} Coins</span>
     </button>
   </div>
   <div class="section-lab">Gear Boxes <span class="section-count">coins</span></div>
@@ -642,11 +648,11 @@ function renderPremium(s) {
   for (const box of PREMIUM.boxes || []) {
     const can = p.coins >= box.coinCost;
     html += `
-    <button type="button" class="box-card ${can ? 'can' : ''}" data-premium="${box.id}" title="${box.desc.replace(/"/g, '&quot;')}">
+    <button type="button" class="box-card ${can ? 'can' : ''}" data-premium="${box.id}">
       <span class="box-ico">${hubIco('gift')}</span>
       <strong class="box-name">${box.name}</strong>
       <span class="box-meta">${box.rolls}× gear${box.minRarity ? ` · ${box.minRarity}+` : ''}</span>
-      <span class="box-cost">${box.coinCost}¢</span>
+      <span class="box-cost">${box.coinCost} Coins</span>
     </button>`;
   }
   html += `</div>
@@ -655,8 +661,8 @@ function renderPremium(s) {
   for (const pack of PREMIUM.packs) {
     html += `
     <button type="button" class="pack-chip" data-premium="${pack.id}">
-      <strong>+${pack.coins}</strong>
-      <span>${pack.priceLabel}</span>
+      <strong>+${pack.coins} Coins</strong>
+      <span>Demo grant · ${pack.priceLabel}</span>
     </button>`;
   }
   html += `</div>`;
