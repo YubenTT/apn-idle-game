@@ -1,11 +1,11 @@
 /** APN Idle bootstrap */
 
-import { C } from './formulas.js';
-import { createState, step, collectAlert, simulateOffline, setSprint, isSprinting } from './game.js';
-import { sizeCanvas, draw } from './render.js';
-import { createAssetStore, preloadRouteAssets, packWindowForRoute } from './assets.js';
-import { bindUI, renderHUD } from './ui.js';
-import { save, load, apply } from './save.js';
+import { C } from './formulas.js?v=free-mvp-r005';
+import { createState, step, collectAlert, simulateOffline, setSprint, isSprinting } from './game.js?v=free-mvp-r005';
+import { sizeCanvas, draw } from './render.js?v=free-mvp-r005';
+import { createAssetStore, preloadRouteAssets, packWindowForRoute } from './assets.js?v=free-mvp-r005';
+import { bindUI, renderHUD } from './ui.js?v=free-mvp-r005';
+import { save, load, apply } from './save.js?v=free-mvp-r005';
 
 const canvas = document.getElementById('game');
 const s = createState();

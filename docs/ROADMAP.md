@@ -21,8 +21,8 @@ Living plan — not a commitment calendar.
 - [x] Design-system + docs backbone ([00_START_HERE](./00_START_HERE.md),
       [brand/](../brand/), [SCREEN-SPECS](./SCREEN-SPECS.md), ADRs) — system-first
       redesign foundation; runtime unchanged
-- [x] Redesign control plane — 33 focused issues grouped into 6 autonomous
-      delivery sessions with one final integrated evidence gate
+- [x] Redesign control plane — the original 33 focused issues plus R-005,
+      grouped into 7 autonomous delivery sessions with one visual-owner gate
 - [x] Runtime token foundation — `brand/tokens.css` imported by `css/game.css`,
       532 color literals migrated with exact pixel preservation, and static token
       contract enforced in headless QA
@@ -41,6 +41,8 @@ Living plan — not a commitment calendar.
       [QA-CHECKLIST](./QA-CHECKLIST.md)
 - [ ] Schema rename bytes→signal (with save migrate)
 - [x] Mobile layout polish, safe-area coverage, and long-press gesture hardening
+- [x] Free MVP economy cut: no demo store, paid power, coin rewards, Gear Boxes,
+      Auto-Sprint unlock, or Time Warp; old premium save data remains inert
 - [ ] PWA manifest
 - [ ] Daily login / offline claim UI polish
 - [ ] More enemy variants + elite modifiers
@@ -58,6 +60,7 @@ Living plan — not a commitment calendar.
 
 - [ ] Optional higher-fidelity GLB-derived Host atlas tier if budgets permit
 - [ ] Shared APN account cosmetics (site-linked)
+- [ ] Evidence-led cosmetic monetization proposal; no paid progression power
 - [ ] Challenge modes (boss rush, speed zones)
 - [ ] Localization (i18n content packs)
 

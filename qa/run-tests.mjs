@@ -18,10 +18,6 @@ import {
   leaveSeason,
   setSprint,
   isSprinting,
-  unlockPro,
-  buyBoost2x,
-  buyCoinPack,
-  buyGearBox,
   equipGear,
   unequipGear,
   economyMult,
@@ -47,8 +43,15 @@ import {
   queryGearBag,
   toggleJunk,
 } from '../js/loot.js';
-import { SKILLS, PREMIUM, nextSkillUnlock } from '../js/content.js';
-import { hubOnKill, emptyHub, DAILY_DEFS, hubObjectiveState } from '../js/hub.js';
+import { SKILLS, nextSkillUnlock } from '../js/content.js';
+import {
+  hubOnKill,
+  emptyHub,
+  DAILY_DEFS,
+  WEEKLY_DEFS,
+  SEASON_MILESTONES,
+  hubObjectiveState,
+} from '../js/hub.js';
 import { itemArtKey } from '../js/icons.js';
 import { feedbackAllowed, hapticPattern } from '../js/sfx.js';
 import {
@@ -151,6 +154,10 @@ ok(hubObjectiveState(hubStateFixture, DAILY_DEFS[0], 'daily') === 'claimable', '
 hubStateFixture.daily.claimed[DAILY_DEFS[0].id] = true;
 ok(hubObjectiveState(hubStateFixture, DAILY_DEFS[0], 'daily') === 'claimed', 'Hub objective becomes claimed');
 const shellMarkup = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+const gameSource = readFileSync(new URL('../js/game.js', import.meta.url), 'utf8');
+const contentSource = readFileSync(new URL('../js/content.js', import.meta.url), 'utf8');
+const uiSource = readFileSync(new URL('../js/ui.js', import.meta.url), 'utf8');
+const cssSource = readFileSync(new URL('../css/game.css', import.meta.url), 'utf8');
 const navAdr = readFileSync(new URL('../docs/decisions/ADR-0007-keep-five-navigation.md', import.meta.url), 'utf8');
 ok((shellMarkup.match(/class="nav-btn"/g) || []).length === 5, 'Navigation keeps exactly five tabs');
 for (const label of ['Build', 'Ship', 'Hub', 'Boosts', 'Menu']) {
@@ -159,8 +166,30 @@ for (const label of ['Build', 'Ship', 'Hub', 'Boosts', 'Menu']) {
 ok(shellMarkup.includes('id="btn-bag"') && shellMarkup.includes('data-panel="gear"'), 'Gear remains a separate FAB');
 ok((shellMarkup.match(/aria-controls="sheet-root"/g) || []).length === 6, 'All six sheet launchers expose their controlled surface');
 ok(navAdr.includes('Option A') && navAdr.includes('minimal active fill'), 'Keep-five Option A is locked in ADR-0007');
-for (const section of ['Accessibility', 'Audio', 'Account', 'Purchases', 'Reset']) {
+for (const section of ['Accessibility', 'Audio', 'Account', 'Reset']) {
   ok(shellMarkup.includes(`menu-section-title">${section}`), `Menu has ${section} section`);
+}
+ok(!shellMarkup.includes('menu-section-title">Purchases'), 'Free MVP Menu has no Purchases section');
+ok(!shellMarkup.includes('premium-body') && !shellMarkup.includes('Demo store'), 'Free MVP shell has no demo store');
+ok(!shellMarkup.includes('id="v-pro"'), 'Free MVP HUD has no Pro badge');
+ok(!uiSource.includes('data-premium'), 'Free MVP UI has no purchase actions');
+ok(!contentSource.includes('export const PREMIUM'), 'Free MVP has no premium product catalog');
+ok(!contentSource.includes('Live & Pro'), 'Free MVP Boost copy has no retired Pro claim');
+const buildId = shellMarkup.match(/js\/main\.js\?v=([^"']+)/)?.[1];
+ok(Boolean(buildId), 'runtime shell declares a JS build id');
+for (const moduleName of ['main', 'game', 'ui', 'render', 'assets', 'save']) {
+  const source = readFileSync(new URL(`../js/${moduleName}.js`, import.meta.url), 'utf8');
+  const imports = [...source.matchAll(/from ['"](\.\/[^'"]+\.js(?:\?v=[^'"]+)?)['"]/g)].map((match) => match[1]);
+  ok(imports.every((specifier) => specifier.endsWith(`?v=${buildId}`)), `${moduleName}.js pins every runtime import to ${buildId}`);
+}
+for (const selector of ['.premium-', '.prem-', '.box-grid', '.box-card', '.menu-purchases', '.menu-demo-note', '.purchase-support', '.stage-pro', '.btn-sprint.is-auto', '.meta-pill.pro']) {
+  ok(!cssSource.includes(selector), `Free MVP CSS removes ${selector}`);
+}
+for (const action of ['unlockPro', 'unlockAutoSprint', 'buyBoost2x', 'timeWarp', 'buyCoinPack', 'buyGearBox']) {
+  ok(!gameSource.includes(`export function ${action}`), `Free MVP removes ${action}`);
+}
+for (const def of [...DAILY_DEFS, ...WEEKLY_DEFS, ...SEASON_MILESTONES]) {
+  ok(!Object.hasOwn(def.reward || {}, 'coins'), `${def.id || `Season ${def.lv}`} has no dead coin reward`);
 }
 ok(!shellMarkup.includes('id="v-attrs"'), 'Menu has no attribute debug string');
 ok((shellMarkup.match(/class="switch-ui"/g) || []).length === 2, 'Menu uses one switch component twice');
@@ -238,6 +267,7 @@ globalThis.localStorage = {
 };
 migratedRoute.settings.gearSort = 'rarity';
 migratedRoute.settings.gearFilter = 'junk';
+migratedRoute.meta.premium.providerReceipt = 'opaque-legacy-value';
 saveState(migratedRoute);
 ok(saveMemory.has(SAVE_KEY_V2), 'save writes v2 key');
 ok(!saveMemory.has(SAVE_KEY_V1), 'save does not write legacy key');
@@ -246,6 +276,7 @@ ok(roundTrip?.v === 2 && roundTrip.route?.zone === 1905, 'v2 save round trip');
 const appliedRoundTrip = createState();
 applySave(appliedRoundTrip, roundTrip);
 ok(appliedRoundTrip.settings.gearSort === 'rarity' && appliedRoundTrip.settings.gearFilter === 'junk', 'gear view preferences persist');
+ok(appliedRoundTrip.meta.premium.providerReceipt === 'opaque-legacy-value', 'legacy premium save data survives inert round trip');
 saveMemory.clear();
 saveMemory.set(SAVE_KEY_V1, JSON.stringify({ v: 1, ts: 1, run: { zone: 77 } }));
 ok(loadState()?.v === 1, 'load falls back to legacy key');
@@ -300,9 +331,10 @@ ok(combatStats(crit1).crit > combatStats(crit0).crit, 'sharp eye raises crit');
 // —— Ship ——
 s3.run.patches = 5;
 s3.meta.live = 1.1;
+s3.meta.premium.coins = 11;
 ok(shipPatches(s3), 'ship patches');
 ok(s3.authority.amount >= 5, 'authority gained');
-ok(s3.meta.premium.coins >= 1, 'ship grants coins');
+ok(s3.meta.premium.coins === 11, 'ship leaves legacy coins inert');
 
 // —— Scanner ——
 const s4 = createState();
@@ -419,7 +451,7 @@ ok(queryGearBag(viewGear, { sort: 'level' })[0]?.id === highView.id, 'level sort
 const normalizedView = ng(viewGear);
 ok(normalizedView.bag.find((it) => it.id === lowView.id)?.junk === true, 'junk state survives normalization');
 
-// —— Prestige keeps gear + boosts + pro, resets signal ——
+// —— Prestige keeps progression and leaves legacy premium data inert ——
 const s7 = createState();
 s7.route.zone = 20;
 s7.ui.seasonDone = true;
@@ -430,6 +462,11 @@ s7.authority.upgrades.signal_power = 3;
 s7.meta.live = 1.1;
 s7.meta.premium.pro = true;
 s7.meta.premium.coins = 10;
+s7.meta.premium.boostEndsAt = Date.now() + 60_000;
+s7.meta.premium.autoSprint = true;
+s7.meta.premium.warpCdUntil = Date.now() + 30_000;
+s7.meta.premium.extraLegacyReceipt = 'preserve-me';
+const legacyPremiumBefore = structuredClone(s7.meta.premium);
 s7.meta.gear = emptyGear();
 const drop = rollItem(25, 'weapon');
 offerItem(s7.meta.gear, drop);
@@ -444,43 +481,26 @@ ok(s7.route.zone === routeBefore, 'global route kept');
 ok(s7.run.hero.scanner === 0, 'signal reset');
 ok(s7.authority.upgrades.signal_power === 3, 'boosts kept');
 ok(s7.authority.amount === 100, 'rep kept');
-ok(s7.meta.premium.pro === true, 'pro kept');
-ok(s7.meta.premium.coins >= 10 + 15, 'season coins granted');
+ok(JSON.stringify(s7.meta.premium) === JSON.stringify(legacyPremiumBefore), 'prestige leaves legacy premium data inert');
 ok(s7.meta.gear.weapon?.name === gearName, 'gear kept');
 ok(s7.meta.gear.chest?.name === chestName, 'chest kept');
 ok(s7.meta.live > liveBefore, 'live grew');
 
-// —— Premium mult (energy empty so Auto-Sprint doesn’t add SPRINT_DMG) ——
+// —— Free MVP economy ignores every legacy paid-power flag ——
 const s8 = createState();
 s8.run.hero.scanner = 5;
-s8.run.hero.energy = 0;
-const base = combatStats(s8).dmg;
-ok(unlockPro(s8), 'unlock pro');
-s8.run.hero.energy = 0;
-ok(Math.abs(combatStats(s8).dmg / base - 1.25) < 0.02, 'pro ×1.25 dmg');
-ok(economyMult(s8) >= 1.25, 'economy mult pro');
-ok(s8.meta.premium.autoSprint === true, 'pro includes auto-sprint');
-s8.meta.premium.coins = 100;
-ok(buyBoost2x(s8), 'buy 2x boost');
-ok(economyMult(s8) >= 2.4, `boost stacks (${economyMult(s8).toFixed(2)})`);
-ok(buyCoinPack(s8, 'coins_100'), 'coin pack');
-ok(s8.meta.premium.coins >= 100, 'pack coins');
-
-// —— Premium gear boxes ——
-ok(Array.isArray(PREMIUM.boxes) && PREMIUM.boxes.length >= 3, 'box catalog');
-const sBox = createState();
-sBox.meta.premium.coins = 500;
-sBox.route.zone = 12;
-ok(buyGearBox(sBox, 'box_signal'), 'open signal crate');
-const after1 = Object.values(sBox.meta.gear).filter((x) => x && typeof x === 'object' && x.id).length
-  + (sBox.meta.gear.bag?.length || 0);
-// count properly via slots
-let pieces = SLOTS.filter((sl) => sBox.meta.gear[sl]).length + (sBox.meta.gear.bag?.length || 0);
-ok(pieces >= 1, `box gave gear (${pieces})`);
-ok(buyGearBox(sBox, 'box_loadout'), 'open loadout box');
-pieces = SLOTS.filter((sl) => sBox.meta.gear[sl]).length + (sBox.meta.gear.bag?.length || 0);
-ok(pieces >= 3, `loadout box stacked (${pieces})`);
-ok(sBox.meta.premium.coins < 500, 'coins spent on boxes');
+s8.meta.live = 1.25;
+s8.meta.premium.pro = true;
+s8.meta.premium.boostEndsAt = Date.now() + 60_000;
+s8.meta.premium.autoSprint = true;
+const paidFlagsDmg = combatStats(s8).dmg;
+const s8Control = createState();
+s8Control.run.hero.scanner = 5;
+s8Control.meta.live = 1.25;
+ok(Math.abs(paidFlagsDmg - combatStats(s8Control).dmg) < 0.001, 'legacy paid flags cannot change damage');
+ok(Math.abs(economyMult(s8) - s8.meta.live) < 0.001, 'Live Mult is the only economy multiplier');
+setSprint(s8, false);
+ok(!isSprinting(s8), 'legacy Auto-Sprint cannot activate Sprint');
 
 // equip / unequip
 const sEq = createState();

@@ -9,7 +9,7 @@ import {
   clamp,
   killsNeeded,
   isSeasonCheckpoint,
-} from './formulas.js';
+} from './formulas.js?v=free-mvp-r005';
 import {
   SEASON,
   META,
@@ -19,12 +19,11 @@ import {
   ATTR_LABEL,
   ATTR_META,
   nextSkillUnlock,
-  PREMIUM,
   FEED_COPY,
   skillSpCost,
-} from './content.js';
-import { packForRoute } from './route.js';
-import { GAME_PACKS } from './generated/game-packs.js';
+} from './content.js?v=free-mvp-r005';
+import { packForRoute } from './route.js?v=free-mvp-r005';
+import { GAME_PACKS } from './generated/game-packs.js?v=free-mvp-r005';
 import {
   combatStats,
   allocAttr,
@@ -43,25 +42,15 @@ import {
   equipGear,
   unequipGear,
   sellGear,
-  buyGearBox,
   END_SEASON_CONTRACT,
   rarityColor,
   rarityLabel,
-  unlockPro,
-  unlockAutoSprint,
-  buyBoost2x,
-  buyCoinPack,
-  timeWarp,
-  ensurePremium,
   economyMult,
-  boostActive,
-  boostSecondsLeft,
-  hasAutoSprint,
   claimHubObjective,
   claimSeasonMilestone,
   ensureHub,
   normalizeGear,
-} from './game.js';
+} from './game.js?v=free-mvp-r005';
 import {
   formatAffix,
   sellValue,
@@ -75,7 +64,7 @@ import {
   primaryStat,
   queryGearBag,
   toggleJunk,
-} from './loot.js';
+} from './loot.js?v=free-mvp-r005';
 import {
   DAILY_DEFS,
   WEEKLY_DEFS,
@@ -86,10 +75,10 @@ import {
   seasonLevel,
   SEASON_MILESTONES,
   formatReward,
-} from './hub.js';
-import { skillIco, attrIco, metaIco, hubIco, gearIcon } from './icons.js';
-import { save, clear } from './save.js';
-import { sfx, unlockAudio, setMuted, setReducedMotion } from './sfx.js';
+} from './hub.js?v=free-mvp-r005';
+import { skillIco, attrIco, metaIco, hubIco, gearIcon } from './icons.js?v=free-mvp-r005';
+import { save, clear } from './save.js?v=free-mvp-r005';
+import { sfx, unlockAudio, setMuted, setReducedMotion } from './sfx.js?v=free-mvp-r005';
 
 const PANEL_TITLES = {
   skills: 'Build',
@@ -340,24 +329,6 @@ export function bindUI(s) {
     }
   });
 
-  $('panel-settings')?.addEventListener('click', (e) => {
-    const t = e.target.closest('[data-premium]');
-    if (!t) return;
-    const act = t.dataset.premium;
-    let ok = false;
-    if (act === 'pro') ok = unlockPro(s);
-    else if (act === 'boost') ok = buyBoost2x(s);
-    else if (act === 'auto') ok = unlockAutoSprint(s);
-    else if (act === 'warp') ok = timeWarp(s);
-    else if (act.startsWith('box_')) ok = buyGearBox(s, act);
-    else if (act.startsWith('coins_')) ok = buyCoinPack(s, act);
-    if (ok) {
-      save(s);
-      renderPremium(s);
-      if (s.settings.sfx !== false) sfx('click');
-    } else if (s.settings.sfx !== false) sfx('error');
-  });
-
   $('panel-hub')?.addEventListener('click', (e) => {
     const claim = e.target.closest('[data-claim]');
     if (claim) {
@@ -427,7 +398,6 @@ function openSheet(s, panel) {
     if (sx) sx.checked = s.settings.sfx !== false;
     const mo = document.getElementById('chk-motion');
     if (mo) mo.checked = !!s.settings.reducedMotion;
-    renderPremium(s);
   }
   if (panel !== 'ship') s.ui.endSeasonConfirm = false;
   if (lastPanel !== panel && s.settings.sfx !== false) sfx('sheet');
@@ -612,79 +582,6 @@ function renderSkills(s) {
     }
     html += `</div>`;
   }
-  root.innerHTML = html;
-}
-
-function renderPremium(s) {
-  const root = document.getElementById('premium-body');
-  if (!root) return;
-  ensurePremium(s);
-  const p = s.meta.premium;
-  const eco = economyMult(s);
-  const boostOn = boostActive(s);
-  const left = boostSecondsLeft(s);
-  const leftM = Math.ceil(left / 60);
-  const auto = hasAutoSprint(s);
-  const loadout = equippedCount(normalizeGear(s.meta.gear));
-
-  let html = `
-  <div class="sp-bank compact rep-bank">
-    <span class="sp-bank-label">Coins</span>
-    <strong class="sp-bank-val gold">${formatNum(p.coins)}</strong>
-    <span class="sp-bank-hint">×${eco.toFixed(2)}${boostOn ? ` · 2× ${leftM}m` : ''}${auto ? ' · Auto' : ''} · ${loadout}/4 gear</span>
-  </div>
-  <div class="premium-card compact ${p.pro ? 'owned' : ''}">
-    <div class="premium-card-top">
-      <span class="premium-ico">${hubIco('pro')}</span>
-      <strong>APN Pro</strong>
-      <span class="premium-tag">${p.pro ? 'ON' : 'DEMO'}</span>
-    </div>
-    <p class="fine prem-one">${PREMIUM.pro.benefits.slice(0, 2).join(' · ')}</p>
-    <button type="button" class="btn-primary" data-premium="pro" ${p.pro ? 'disabled' : ''}>
-      <span class="btn-primary-title">${p.pro ? 'Pro Active' : 'Try APN Pro'}</span>
-      <span class="btn-primary-sub">${p.pro ? `×${PREMIUM.pro.mult}` : 'Demo unlock · no payment'}</span>
-    </button>
-  </div>
-  <div class="prem-row">
-    <button type="button" class="prem-chip ${auto ? 'on' : ''}" data-premium="auto" ${auto ? 'disabled' : ''}>
-      <strong>Auto-Sprint</strong>
-      <small>${PREMIUM.auto_sprint.desc}</small>
-      <span>${auto ? 'On' : `${PREMIUM.auto_sprint.coinCost} Coins`}</span>
-    </button>
-    <button type="button" class="prem-chip" data-premium="boost">
-      <strong>2× Boost</strong>
-      <small>${PREMIUM.boost_2x.desc}</small>
-      <span>${boostOn ? `+${PREMIUM.boost_2x.minutes}m` : `${PREMIUM.boost_2x.coinCost} Coins`}</span>
-    </button>
-    <button type="button" class="prem-chip" data-premium="warp">
-      <strong>Warp +1h</strong>
-      <small>${PREMIUM.time_warp.desc}</small>
-      <span>${PREMIUM.time_warp.coinCost} Coins</span>
-    </button>
-  </div>
-  <div class="section-lab">Gear Boxes <span class="section-count">coins</span></div>
-  <div class="box-grid">`;
-  for (const box of PREMIUM.boxes || []) {
-    const can = p.coins >= box.coinCost;
-    html += `
-    <button type="button" class="box-card ${can ? 'can' : ''}" data-premium="${box.id}">
-      <span class="box-ico">${hubIco('gift')}</span>
-      <strong class="box-name">${box.name}</strong>
-      <span class="box-meta">${box.rolls}× gear${box.minRarity ? ` · ${box.minRarity}+` : ''}</span>
-      <span class="box-cost">${box.coinCost} Coins</span>
-    </button>`;
-  }
-  html += `</div>
-  <div class="section-lab">Coins</div>
-  <div class="premium-packs compact">`;
-  for (const pack of PREMIUM.packs) {
-    html += `
-    <button type="button" class="pack-chip" data-premium="${pack.id}">
-      <strong>+${pack.coins} Coins</strong>
-      <span>Demo grant · ${pack.priceLabel}</span>
-    </button>`;
-  }
-  html += `</div>`;
   root.innerHTML = html;
 }
 
@@ -1030,21 +927,15 @@ export function renderHUD(s) {
     b.dataset.badge = s.run.hero.sp > 0 ? String(s.run.hero.sp) : '';
   });
   set($('v-zone'), String(s.route.zone + 1));
-  // Show full economy mult when boost/pro active, else base Live
+  // Live Mult is the launch economy multiplier.
   const eco = economyMult(s);
   set($('v-live'), eco.toFixed(2));
   set($('v-level'), String(h.level));
   set($('v-sp'), String(h.sp));
   const livePill = document.querySelector('.stage-stat.live');
   if (livePill) {
-    livePill.title = `Economy ×${eco.toFixed(2)} (Live ${s.meta.live.toFixed(2)}${
-      s.meta.premium?.pro ? ' · Pro' : ''
-    }${boostActive(s) ? ' · 2×' : ''})`;
-    livePill.classList.toggle('pro-on', !!(s.meta.premium?.pro || boostActive(s)));
-  }
-  const proBadge = $('v-pro');
-  if (proBadge) {
-    proBadge.hidden = !s.meta.premium?.pro;
+    livePill.title = `Live Mult ×${eco.toFixed(2)}`;
+    livePill.classList.remove('pro-on');
   }
   // CTA cost + afford state
   const cost = scannerCost(h.scanner);
@@ -1120,15 +1011,14 @@ export function renderHUD(s) {
   }
   const spBtn = $('btn-sprint');
   if (spBtn) {
-    const auto = hasAutoSprint(s);
     spBtn.classList.toggle('is-active', sprinting);
     spBtn.classList.toggle('is-empty', h.energy < 1);
-    spBtn.classList.toggle('is-auto', auto);
+    spBtn.classList.remove('is-auto');
     const sub = spBtn.querySelector('.btn-sprint-sub');
     if (sub) {
-      if (sprinting) set(sub, auto ? 'AUTO · ×1.85' : `×${(st.timeScale || 1.85).toFixed(2)} LIVE`);
+      if (sprinting) set(sub, `×${(st.timeScale || 1.85).toFixed(2)} LIVE`);
       else if (h.energy < 1) set(sub, 'Need energy');
-      else set(sub, auto ? 'Auto on · ×1.85' : 'Hold · ×1.85');
+      else set(sub, 'Hold · ×1.85');
     }
   }
   // Hub badge when claimable

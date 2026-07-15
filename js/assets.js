@@ -1,5 +1,5 @@
-import { GAME_PACKS } from './generated/game-packs.js';
-import { packForRoute } from './route.js';
+import { GAME_PACKS } from './generated/game-packs.js?v=free-mvp-r005';
+import { packForRoute } from './route.js?v=free-mvp-r005';
 
 const browserImage = (src) => new Promise((resolve, reject) => {
   const image = new Image();

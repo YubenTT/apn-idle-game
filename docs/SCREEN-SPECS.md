@@ -129,15 +129,15 @@ Decision: "which permanent Rep buy is best?" Every row shows **current → next
 delta**, affordability, and a value cue; add category grouping and a
 "recommended" cue. Rep header should feel like permanent growth, not a flat list.
 
-### MENU / MORE (split settings from store from reset)
+### MENU / MORE (free MVP settings)
 
 Decision depends on section. **Separate** concerns into grouped sections:
-Accessibility · Audio · Account · Purchases · Reset. Fixes:
+Accessibility · Audio · Account · Reset. Fixes:
 
 - Move the debug `Build: Damage 3·Crit 0·Utility 1` string **out** of player UI.
 - Toggles use the component-library switch, not a mismatched checkbox.
-- Premium card earns its visual weight: clear benefit line + restore-purchases /
-  manage-subscription / legal per [MONETIZATION](./MONETIZATION.md).
+- Launch contains no purchase, demo-store, paid-power, or restore surface; Legal
+  stays under Account per [MONETIZATION](./MONETIZATION.md).
 - `New Game` (destructive) sits at the bottom, low weight, behind confirm.
 
 ## Definition of "screen done"
