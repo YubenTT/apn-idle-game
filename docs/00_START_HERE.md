@@ -51,6 +51,7 @@ must be updated to match, not argued with.
 | Architectural decisions (why we chose X) | [decisions/](./decisions/) (ADRs) | All |
 | Monetization posture | [MONETIZATION.md](./MONETIZATION.md) | Design |
 | Redesign execution plan (issues) | [REDESIGN-PLAN.md](./REDESIGN-PLAN.md) | Producer |
+| Approved end-to-end execution sequence | [2026-07-15 complete redesign plan](./superpowers/plans/2026-07-15-apn-idle-complete-redesign.md) | Producer + Eng + Art + QA |
 | Roadmap | [ROADMAP.md](./ROADMAP.md) | Producer |
 | Site embed | [EMBED.md](./EMBED.md) | Eng |
 | Agent working rules | [../AGENTS.md](../AGENTS.md) | All |
