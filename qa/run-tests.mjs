@@ -207,7 +207,10 @@ ok(combatStats(s4).dmg > d0, 'scanner increases dmg');
 ok(isBossZone(9), 'boss zone 10');
 ok(killsNeeded(9) === 1, 'boss needs 1');
 ok(enemyHp(5) > enemyHp(0), 'hp scales');
-ok(expectedHits(0, 0) < 8, `Z1 starter (${expectedHits(0, 0).toFixed(1)}h)`);
+ok(
+  expectedHits(0, 0) >= 8 && expectedHits(0, 0) <= 18,
+  `Z1 readable multi-hit (${expectedHits(0, 0).toFixed(1)}h)`
+);
 ok(expectedHits(20, 8) > 2.5, `Z21 lag multi (${expectedHits(20, 8).toFixed(1)})`);
 
 // —— Season push ——
@@ -239,6 +242,7 @@ for (let i = 0; i < 60 * 60; i++) {
 ok(s6.route.zone >= 20, `past Z20 zone=${s6.route.zone}`);
 
 // —— Brand 4-slot gear (Weapon · Chest · Legs · Visor) ——
+installSeededRandom(0x47454152); // "GEAR" — isolates loot assertions from prior RNG use.
 ok(SLOTS.length === 4, '4 brand gear slots');
 ok(SLOTS.includes('chest') && SLOTS.includes('legs') && SLOTS.includes('visor'), 'brand armor slots');
 const gSlots = emptyGear();
@@ -269,7 +273,6 @@ ok(Object.values(bon).some((v) => v > 0), 'multi-slot bonuses stack');
 
 // worse item never auto-equips
 const weak = rollItem(1, 'weapon');
-weak.score = 1;
 const strong = gSlots.weapon;
 const resW = offerItem(gSlots, weak);
 ok(!resW.equipped, 'worse weapon stays bag');

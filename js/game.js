@@ -6,7 +6,8 @@ import {
   scannerCost,
   scannerDamage,
   xpToNext,
-  enemyHp,
+  routeEnemyHp,
+  offlineRouteBudget,
   killsNeeded,
   isBossZone,
   typeHpMult,
@@ -404,7 +405,16 @@ export function spawnEnemy(s) {
     tip(s, 'boss');
   }
 
-  const hp = enemyHp(zone, typeHpMult(type));
+  const gear = gearBonuses(s.meta.gear);
+  const permanentPower =
+    (1 + metaPer(s, 'signal_power')) *
+    (1 + Math.max(0, gear.dmg_pct || 0) / 100) *
+    ((C.BASE_DAMAGE + Math.max(0, gear.flat_dmg || 0)) / C.BASE_DAMAGE) *
+    (1 + Math.max(0, gear.atk_spd || 0) / 100) *
+    (1 + Math.max(0, gear.crit_pct || 0) / 100) *
+    Math.max(1, s.meta.live || 1);
+  const corruptionTier = Math.max(0, s.route.corruptionByPack?.[s.route.currentPackId] || 0);
+  const hp = routeEnemyHp(zone, s.run.hero.scanner, permanentPower, corruptionTier, typeHpMult(type));
   const alive = s.world.enemies.filter((e) => e.hp > 0);
   // Spawn ahead of melee stop so approach is clear (enemy not glued to mascot)
   const x = s.world.heroX + 150 + Math.random() * 28;
@@ -462,6 +472,8 @@ function onKill(s, e) {
   }
 
   const zone = s.route.zone;
+  const localZone = zone % C.SEASON_ZONES;
+  const maturityReward = Math.min(0.5, Math.floor(zone / C.SEASON_ZONES) * 0.05);
   const gb = gearBonuses(s.meta.gear);
   const eco = economyMult(s);
   const byteM =
@@ -482,7 +494,12 @@ function onKill(s, e) {
   }
 
   const bytes =
-    C.BYTE_BASE * (1 + 0.09 * zone) * typeByte * byteM * comboMult * (0.9 + Math.random() * 0.2);
+    C.BYTE_BASE *
+    (1 + 0.09 * localZone + maturityReward) *
+    typeByte *
+    byteM *
+    comboMult *
+    (0.9 + Math.random() * 0.2);
   s.run.bytes += bytes;
   floater(s, e.displayX, 170, `+${bytes | 0} Signal`, '#6cb8ff');
   particles(s, e.displayX, 190, '#6cb8ff', 10 + Math.min(14, s.stats.combo), 'coin');
@@ -491,7 +508,10 @@ function onKill(s, e) {
   if (s.settings.sfx !== false) sfx(e.type === 'patch' ? 'notes' : 'coin');
 
   const xpM = (1 + metaPer(s, 'xp_posts')) * (1 + metaPer(s, 'xp_global'));
-  grantXp(s, C.XP_BASE * (1 + 0.11 * zone) * typeXp * xpM * comboMult);
+  grantXp(
+    s,
+    C.XP_BASE * (1 + 0.11 * localZone + maturityReward) * typeXp * xpM * comboMult
+  );
 
   const patchM =
     (1 + metaPer(s, 'patch_gain')) * (1 + (gb.notes_pct || 0) / 100) * eco;
@@ -702,7 +722,8 @@ export function step(s, dt) {
     if (s.world.bossTimer <= 0) {
       const boss = s.world.enemies.find((e) => e.type === 'boss' && e.hp > 0);
       if (boss) {
-        boss.hp = boss.hpMax;
+        // The timer is pressure/telemetry, never a permanent idle wall. Damage
+        // carries into the next cycle so every attack remains meaningful.
         toast(s, pick(BOSS_FAIL));
       }
       s.world.bossTimer = C.BOSS_TIMER;
@@ -1274,7 +1295,8 @@ export {
 };
 
 export function simulateOffline(s, seconds) {
-  const T = Math.min(seconds, C.OFFLINE_CAP);
+  const budget = offlineRouteBudget(s.route.zone, seconds);
+  const T = budget.seconds;
   if (T < 3) return null;
   const before = {
     bytes: s.run.bytes,
@@ -1282,39 +1304,55 @@ export function simulateOffline(s, seconds) {
     level: s.run.hero.level,
     zone: s.route.zone,
     kills: s.meta.kills,
+    bosses: s.meta.bosses,
   };
   s.world.sprinting = false;
-  const steps = Math.min(Math.floor(T / C.FIXED_DT), 60 * 60 * 3);
-  for (let i = 0; i < steps; i++) step(s, C.FIXED_DT);
+  const previousSfx = s.settings.sfx;
+  s.settings.sfx = false;
+  const maxSimulatedSeconds = 3 * 3600;
+  const stepLimit = Math.min(
+    Math.floor(T / C.FIXED_DT),
+    Math.floor(maxSimulatedSeconds / C.FIXED_DT)
+  );
+  let steps = 0;
+  try {
+    while (steps < stepLimit && s.route.zone < budget.boundary) {
+      step(s, C.FIXED_DT);
+      steps += 1;
+    }
+  } finally {
+    s.settings.sfx = previousSfx;
+  }
   const sim = steps * C.FIXED_DT;
-  if (T > sim) {
+  const overflowSeconds = Math.max(0, T - sim);
+  if (overflowSeconds > 0) {
     let idle = C.IDLE_EFF;
     if (s.meta.premium?.pro) idle = Math.min(0.96, idle + 0.06);
-    const ratio = ((T - sim) / Math.max(sim, 1)) * idle;
     const db = Math.max(0, s.run.bytes - before.bytes);
     const dp = Math.max(0, s.run.patches - before.patches);
-    s.run.bytes += db * ratio;
-    s.run.patches += dp * ratio;
-    // zone/xp approx
-    const dk = Math.max(0, s.meta.kills - before.kills) * ratio;
-    let rem = Math.floor(dk);
-    while (rem-- > 0) {
-      s.route.killsInZone += 1;
-      s.meta.kills += 1;
-      if (s.route.killsInZone >= killsNeeded(s.route.zone)) {
-        s.route.zone += 1;
-        s.route.killsInZone = 0;
-        if (isSeasonCheckpoint(s.route.zone)) s.ui.seasonDone = true;
-      }
-    }
+    const signalRate = db > 0 ? db / Math.max(sim, 1) : C.BYTE_BASE / 10;
+    const notesRate = dp > 0 ? dp / Math.max(sim, 1) : 0;
+    s.run.bytes += signalRate * overflowSeconds * idle;
+    s.run.patches += notesRate * overflowSeconds * idle;
   }
+  const signal = s.run.bytes - before.bytes;
+  const notes = s.run.patches - before.patches;
+  const ranks = s.run.hero.level - before.level;
   return {
     seconds: T,
-    bytes: s.run.bytes - before.bytes,
-    patches: s.run.patches - before.patches,
-    levels: s.run.hero.level - before.level,
+    simulatedSeconds: sim,
+    overflowSeconds,
+    signal,
+    notes,
+    ranks,
     zones: s.route.zone - before.zone,
     kills: s.meta.kills - before.kills,
+    bosses: s.meta.bosses - before.bosses,
+    stoppedAtSeasonBoundary: s.route.zone >= budget.boundary,
+    // Compatibility aliases for the current offline recap UI.
+    bytes: signal,
+    patches: notes,
+    levels: ranks,
   };
 }
 

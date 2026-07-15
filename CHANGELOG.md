@@ -9,6 +9,9 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Added
 
+- Added deterministic active/idle pacing profiles and a silent Zone 1000/offline
+  long-run gate. The Clean Era now measures 10.2 active-assisted hours or about
+  2.4 mostly-idle calendar days before Corruption.
 - Added 20 stable Clean Era Game Pack manifests, a byte-stable frozen runtime
   catalog, seeded different-genre season scheduling, and bounded corruption tiers.
 - Accepted the catalog-driven Game Pack Route: 20 clean ten-zone packs, persistent
@@ -41,6 +44,9 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Changed
 
+- Reworked combat scaling around season-local Weapon power, bounded Route
+  maturity, permanent-power budgeting, and soft boss timer cycles. Eight-hour
+  offline rewards now stop Route progress at the next End Season boundary.
 - Save schema v2 moves world progress from season-scoped `run` into persistent
   `route` state. End Season now keeps Route Zone and pack history.
 - Loading checks v2 first and migrates v1 Zone/kills without deleting the legacy

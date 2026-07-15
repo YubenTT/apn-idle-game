@@ -32,19 +32,19 @@ export const C = {
 
   // HP tracks pace weapon so multi-hit stays true without brick walls
   ENEMY_HP_BASE: 40,
-  /** Pace scanner ≈ zone * this (player should stay near this) */
+  /** Pace scanner ≈ local season zone * this (weapon resets every season) */
   ENEMY_PACE_SCANNER: 0.9,
   /** Hits-to-kill at pace weapon (before attrs/boosts/live) */
   // Slightly snappier early, still multi-hit mid/late at pace
-  ENEMY_HITS_BASE: 3.6,
-  ENEMY_HITS_PER_ZONE: 0.06,
+  ENEMY_HITS_BASE: 10.5,
+  ENEMY_HITS_PER_ZONE: 0.75,
   /** Extra budget for attrs / skills / gear / premium beyond bare weapon */
   ENEMY_POWER_BUDGET: 1.45,
   ENEMY_HP_STEP_EVERY: 5,
   ENEMY_HP_STEP_BONUS: 0.035,
 
-  ZONE_KILLS: 5,
-  ZONE_KILLS_PER5: 1,
+  ZONE_KILLS: 10,
+  ZONE_KILLS_PER5: 5,
   BOSS_HP_MULT: 9,
   BOSS_TIMER: 50,
   CHAMPION_CHANCE: 0.14,
@@ -101,13 +101,35 @@ export function xpToNext(level) {
  * - Ahead weapon → faster clears, still rarely true one-shots until very ahead
  * Live Mult / Boosts / attrs sit outside this budget → still matter.
  */
-export function enemyHp(zone, typeMult = 1) {
+export function routeEnemyHp(
+  zone,
+  runPower = Math.floor(Math.max(0, zone | 0) * C.ENEMY_PACE_SCANNER),
+  permanentMultiplier = 1,
+  corruptionTier = 0,
+  typeMult = 1
+) {
   const z = Math.max(0, zone | 0);
-  const pace = Math.floor(z * C.ENEMY_PACE_SCANNER);
-  const hits = C.ENEMY_HITS_BASE + z * C.ENEMY_HITS_PER_ZONE;
-  const step = 1 + C.ENEMY_HP_STEP_BONUS * Math.floor(z / C.ENEMY_HP_STEP_EVERY);
+  const localZone = z % C.SEASON_ZONES;
+  const pace = Math.floor(localZone * C.ENEMY_PACE_SCANNER);
+  const maturityHits = Math.min(55, Math.floor(z / C.SEASON_ZONES) * 10);
+  const hits = C.ENEMY_HITS_BASE + localZone * C.ENEMY_HITS_PER_ZONE + maturityHits;
+  const step =
+    1 + C.ENEMY_HP_STEP_BONUS * Math.floor(localZone / C.ENEMY_HP_STEP_EVERY);
   const raw = scannerDamage(pace) * C.ENEMY_POWER_BUDGET * hits * step;
-  return Math.floor(Math.max(C.ENEMY_HP_BASE, raw) * typeMult);
+  const catchUp = 1 - Math.min(0.25, Math.max(0, pace - Math.max(0, runPower)) * 0.01);
+  const permanentBudget = Math.min(14, Math.max(1, permanentMultiplier) ** 0.9);
+  const corruptionBudget = 1 + 0.18 * Math.min(4, Math.max(0, corruptionTier | 0));
+  return Math.floor(
+    Math.max(C.ENEMY_HP_BASE, raw) * catchUp * permanentBudget * corruptionBudget * typeMult
+  );
+}
+
+/** Compatibility wrapper for existing callers and external headless checks. */
+export function enemyHp(zone, typeMult = 1) {
+  const pace = Math.floor(
+    (Math.max(0, zone | 0) % C.SEASON_ZONES) * C.ENEMY_PACE_SCANNER
+  );
+  return routeEnemyHp(zone, pace, 1, 0, typeMult);
 }
 
 /** Expected hits for a raw weapon level (debug / tests). */
@@ -121,6 +143,16 @@ export function killsNeeded(zone) {
   if (isBossZone(zone)) return 1;
   const bonus = Math.min(10, C.ZONE_KILLS_PER5 * Math.floor(zone / 5));
   return C.ZONE_KILLS + bonus;
+}
+
+export const routeKillsNeeded = (zone) => killsNeeded(zone);
+
+export function offlineRouteBudget(routeZone, seconds) {
+  const zone = Math.max(0, routeZone | 0);
+  return {
+    seconds: Math.min(Math.max(0, Number(seconds) || 0), C.OFFLINE_CAP),
+    boundary: (Math.floor(zone / C.SEASON_ZONES) + 1) * C.SEASON_ZONES,
+  };
 }
 
 export function isBossZone(zone) {

@@ -192,9 +192,16 @@ Add a seeded, silent long-run QA profile for active-assisted, idle, and offline
 play through at least Zone 1000. The test fails on runaway acceleration, a hard
 wall, missed boss cadence, scheduler repetition, or save nondeterminism.
 
+The accepted seeded implementation evidence is maintained in
+[BALANCE](./BALANCE.md#measured-seeded-profiles). Active decisions are sampled
+every 30 seconds; mostly-idle decisions every 20 minutes. The latter's calendar
+window assumes at most six credited play/offline hours per day because each
+return stops at an End Season decision rather than silently crossing it.
+
 ## Offline progression
 
-- Existing offline efficiency/cap remains the starting constraint.
+- Existing eight-hour reward cap remains the starting constraint; detailed
+  combat simulation is additionally bounded to three hours per return.
 - Offline route advancement stops at the next 20-zone End Season boundary.
 - Overflow time may generate bounded existing resources, but cannot silently skip
   another two Game Packs.
