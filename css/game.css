@@ -5402,6 +5402,18 @@ button[hidden] {
   top: calc(var(--touch-min) + var(--sp-4));
 }
 
+#app.is-sprinting .hud-stage {
+  box-shadow: none;
+}
+
+#app.is-overdrive .hud-stage {
+  box-shadow: none;
+}
+
+#app.is-overdrive .hud-stage::after {
+  display: none;
+}
+
 @media (orientation: landscape) {
   .hud-stage {
     min-height: calc(var(--size-inventory-slot) * 2);
