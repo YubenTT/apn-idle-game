@@ -44,7 +44,7 @@ import {
   queryGearBag,
   toggleJunk,
 } from '../js/loot.js';
-import { SKILLS, PREMIUM } from '../js/content.js';
+import { SKILLS, PREMIUM, nextSkillUnlock } from '../js/content.js';
 import { hubOnKill } from '../js/hub.js';
 import {
   createRouteState,
@@ -112,6 +112,11 @@ for (const check of checkEconomyColorContract()) {
   ok(check.pass, `${check.message} (${check.detail})`);
 }
 for (const message of checkRouteContract()) ok(true, `route ${message}`);
+
+// —— Build decision previews ——
+ok(nextSkillUnlock('scan', 0)?.id === 'hotfix', 'Damage next unlock starts at Burst');
+ok(nextSkillUnlock('scan', 1)?.id === 'scroll_speed', 'Damage next unlock advances to Speed');
+ok(nextSkillUnlock('scan', 5) === null, 'Damage reports all skills open');
 
 // —— Persistent global Route + save v2 migration ——
 const freshRoute = createState();

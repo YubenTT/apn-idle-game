@@ -299,10 +299,10 @@ acceptance boxes, fresh tests, browser proof, and one focused commit per issue.
 
 ### I-020 · Build sheet skill cards — 🔴 M
 - **Acceptance:**
-  - [ ] Each skill row = card: icon · name · ROLE-tag · current→next · SP cost · unlock/ROI.
-  - [ ] Attribute cards show what the next point *opens*, not bare `+`.
-  - [ ] SP badge shows affordability; crimson marks primary progression only.
-  - [ ] No red-outline-everything; most rows neutral + positive affordance cue.
+  - [x] Each skill row = card: icon · name · ROLE-tag · current→next · SP cost · unlock/ROI.
+  - [x] Attribute cards show what the next point *opens*, not bare `+`.
+  - [x] SP badge shows affordability; crimson marks primary progression only.
+  - [x] No red-outline-everything; most rows neutral + positive affordance cue.
 - **Files:** `index.html`, `css/game.css`, `js/ui.js`, `js/content.js`, `js/icons.js`.
 
 ### I-022 · Ship prestige transparency — 🔴 M

@@ -50,6 +50,9 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Changed
 
+- Rebuilt Build around explicit SP decisions: attribute cards name the next
+  unlock, skill cards show role, rank delta, ROI, cost, and affordability, and
+  neutral surfaces reserve positive color for actions the player can afford.
 - Reweighted the Run dock around one `Upgrade Weapon` CTA with real Damage and
   level deltas plus a Signal cost chip; Sprint is a neutral mod and four skills
   retain equal secondary weight with non-crimson toggle states.
