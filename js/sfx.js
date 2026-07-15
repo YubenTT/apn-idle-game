@@ -6,6 +6,29 @@
 let ctx = null;
 let muted = false;
 let unlocked = false;
+let inAppReduced = false;
+let lastHapticAt = 0;
+
+const HAPTICS = Object.freeze({
+  hit: [4],
+  crit: [10, 18, 12],
+  loot: [8, 22, 16],
+  rank: [10, 28, 10, 28, 18],
+  sheet: [6],
+  afford: [8, 16, 8],
+});
+
+export function hapticPattern(name) {
+  return [...(HAPTICS[name] || [])];
+}
+
+export function feedbackAllowed({
+  muted: isMuted = muted,
+  inAppReduced: appReduced = inAppReduced,
+  osReduced = typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches,
+} = {}) {
+  return !isMuted && !appReduced && !osReduced;
+}
 
 function ac() {
   if (typeof window === 'undefined') return null;
@@ -40,6 +63,10 @@ export function unlockAudio() {
 
 export function setMuted(m) {
   muted = !!m;
+}
+
+export function setReducedMotion(value) {
+  inAppReduced = !!value;
 }
 
 function tone(freq, dur, type = 'square', vol = 0.08, slide = 0) {
@@ -129,15 +156,39 @@ const SFX = {
   error() {
     tone(140, 0.1, 'sawtooth', 0.05, -40);
   },
+  loot() {
+    tone(523, 0.07, 'triangle', 0.055, 160);
+    tone(880, 0.11, 'sine', 0.045, 220);
+  },
+  sheet() {
+    tone(360, 0.045, 'triangle', 0.03, 80);
+  },
+  afford() {
+    tone(480, 0.05, 'square', 0.04, 120);
+    tone(720, 0.08, 'triangle', 0.035, 120);
+  },
 };
 
 export function sfx(name) {
+  if (!feedbackAllowed()) return;
   const fn = SFX[name];
   if (fn) {
     try {
       fn();
     } catch {
       /* ignore */
+    }
+  }
+  const hapticName = ({ coin: 'loot', notes: 'loot', upgrade: 'afford', buy: 'afford' })[name] || name;
+  const pattern = HAPTICS[hapticName];
+  const now = Date.now();
+  const throttled = hapticName === 'hit' && now - lastHapticAt < 80;
+  if (pattern && !throttled && typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+    try {
+      navigator.vibrate(pattern);
+      lastHapticAt = now;
+    } catch {
+      /* unsupported haptics are a silent no-op */
     }
   }
 }

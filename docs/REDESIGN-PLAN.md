@@ -377,7 +377,7 @@ acceptance boxes, fresh tests, browser proof, and one focused commit per issue.
 ## Wave 4 — Feel · pipeline · QA
 
 ### I-040 · Motion / haptic / SFX pass — 🟡 M
-- **Acceptance:** hit/crit/loot/rank-up/sheet-open/afford cues; all gated by
+- **Acceptance:** [x] hit/crit/loot/rank-up/sheet-open/afford cues; all gated by
   reduced-motion (OS + in-app). Files: `js/sfx.js`, `js/render.js`, `js/game.js`.
 
 ### I-041 · Asset pipeline + size gates — 🟡 M

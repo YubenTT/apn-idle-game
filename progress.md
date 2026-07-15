@@ -21,9 +21,11 @@ Original prompt: Complete the APN Idle redesign autonomously, including QA, revi
 - I-034 backgrounds are locked across all 20 packs with visible APN billboard,
   signal-rail, patchline, and archive-light motifs; every WebP is below 150 KB
   and the Run surface remains zero-overflow in direct Chrome.
+- I-040 feedback is complete: hit, crit, loot, rank, sheet, and afford cues share
+  deterministic haptics and are silenced by mute plus OS/in-app reduced motion.
 - Browser QA uses Chrome Extension or isolated direct Chrome with `mute=1`; no
   standalone Playwright process is used.
 
 ## Open chain
 
-- I-040 feel → I-042 copy → I-044 nav → I-043 device-matrix QA.
+- I-042 copy → I-044 nav → I-043 device-matrix QA.
