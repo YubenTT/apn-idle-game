@@ -11,6 +11,10 @@ const banned = [
   ['non-canonical Reputation term', /\bReputation\b/i],
   ['currency presented as upgrade object', /Signal (?:Lv|upgrade)/i],
   ['player debug copy', /Damage \d+[^\n]*Crit \d+[^\n]*Utility \d+/i],
+  // PR-2 retires the two-action ship/leave model for the single Go Live checkpoint.
+  // Matches player copy ("End Season", "End-Season") but not code identifiers
+  // (leaveSeason, END_SEASON_CONTRACT, shippedThisSeason) — those have no space/hyphen split.
+  ['retired End-Season action copy', /End[\s-]+Season/i],
 ];
 
 let failures = 0;

@@ -316,15 +316,16 @@ ok(SAVE_VERSION === 3, 'save schema version is 3');
 ok(isGoLiveBoundary(10) && !isGoLiveBoundary(20) && isGoLiveBoundary(30) && !isGoLiveBoundary(40), 'Go Live boundaries land at 10, 30, 50');
 ok(nextGoLiveBoundary(0) === 10 && nextGoLiveBoundary(10) === 30 && nextGoLiveBoundary(15) === 30, 'next Go Live boundary is correct');
 
-// Strictly additive: the legacy ship + End Season paths still work this PR.
+// Back-compat: the legacy ship + prestige domain paths stay callable (save migration + tests);
+// PR-2 removed only their UI, routing the player through goLive() alone.
 const additive = createState();
 additive.route.zone = 20;
 additive.run.patches = 30;
-ok(shipPatches(additive), 'ship Notes path still works (additive)');
+ok(shipPatches(additive), 'legacy ship path still callable');
 additive.ui.seasonDone = true;
 const seasonBefore = additive.meta.goLiveCount;
-ok(leaveSeason(additive), 'End Season path still works (additive)');
-ok(additive.meta.goLiveCount === seasonBefore + 1, 'End Season increments goLiveCount');
+ok(leaveSeason(additive), 'legacy prestige path still callable');
+ok(additive.meta.goLiveCount === seasonBefore + 1, 'legacy prestige increments goLiveCount');
 
 // goLive at the first boundary (zone 10): Route kept, temp power reset, idempotent.
 const glState = createState();

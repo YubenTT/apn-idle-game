@@ -19,7 +19,7 @@ export const ATTR_META = {
   amplify: { label: 'Utility', sub: 'Raises skill resources' },
 };
 
-/** Permanent Rep boosts — survive End Season */
+/** Permanent Rep boosts — survive Go Live */
 export const META = {
   xp_posts: {
     id: 'xp_posts',
@@ -243,7 +243,7 @@ export const TIPS = {
   ship: 'Ship Notes for Rep. Stuck? Improve Boosts, Gear, or Weapon.',
   combo: 'Feed streak! Bonus Signal while it holds.',
   season:
-    'Checkpoint! Ship Notes, End Season: +Live Mult · Gear and Rep Boosts stay · Weapon Lv resets.',
+    'Checkpoint! Go Live banks Notes → Rep and grows your Live Mult. Gear and Rep Boosts stay · run power resets.',
   gear: 'Loadout: Weapon · Chest · Legs · Visor. Tap an item to compare, equip, mark, or scrap.',
 };
 

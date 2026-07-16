@@ -8,10 +8,9 @@ import {
   liveGain,
   clamp,
   killsNeeded,
-  isSeasonCheckpoint,
+  nextGoLiveBoundary,
 } from './formulas.js?v=free-mvp-r005';
 import {
-  SEASON,
   META,
   SKILLS,
   SKILL_TREES,
@@ -31,9 +30,10 @@ import {
   canLearn,
   skillLv,
   buyScanner,
-  shipPatches,
   buyMeta,
-  leaveSeason,
+  goLive,
+  canGoLive,
+  GO_LIVE_CONTRACT,
   castHotfix,
   castSummary,
   metaUpgradePreview,
@@ -42,7 +42,6 @@ import {
   equipGear,
   unequipGear,
   sellGear,
-  END_SEASON_CONTRACT,
   rarityColor,
   rarityLabel,
   economyMult,
@@ -82,7 +81,7 @@ import { sfx, unlockAudio, setMuted, setReducedMotion } from './sfx.js?v=free-mv
 
 const PANEL_TITLES = {
   skills: 'Build',
-  ship: 'Ship Notes',
+  ship: 'Go Live',
   gear: 'Gear',
   hub: 'Hub',
   meta: 'Boosts',
@@ -148,30 +147,37 @@ export function bindUI(s) {
     unlockAudio();
     castSummary(s);
   });
-  $('btn-ship')?.addEventListener('click', () => {
+  // Single Go Live sheet — one CTA arms an inline confirm; confirm banks Notes and
+  // prestiges atomically via goLive(), then swaps the sheet to the receipt. Delegated so
+  // the dynamically-rendered controls (arm / confirm / cancel / dismiss) stay keyboard-operable.
+  $('panel-ship')?.addEventListener('click', (e) => {
+    const control = e.target.closest('[data-golive]');
+    if (!control) return;
     unlockAudio();
-    if (shipPatches(s)) {
-      save(s);
-      fillShip(s);
-    } else if (s.settings.sfx !== false) sfx('error');
-  });
-  $('btn-leave')?.addEventListener('click', () => {
-    s.ui.endSeasonConfirm = true;
-    const confirmPanel = $('season-confirm');
-    if (confirmPanel) {
-      confirmPanel.hidden = false;
-      requestAnimationFrame(() => confirmPanel.scrollIntoView({ block: 'end' }));
-    }
-  });
-  $('btn-leave-cancel')?.addEventListener('click', () => {
-    s.ui.endSeasonConfirm = false;
-    const confirmPanel = $('season-confirm');
-    if (confirmPanel) confirmPanel.hidden = true;
-  });
-  $('btn-leave-confirm')?.addEventListener('click', () => {
-    if (leaveSeason(s)) {
-      save(s);
-      closeSheet(s);
+    const action = control.dataset.golive;
+    if (action === 'arm') {
+      if (canGoLive(s)) {
+        s.ui.goLiveArmed = true;
+        fillGoLive(s);
+        focusGoLive('[data-golive="confirm"]');
+      } else if (s.settings.sfx !== false) sfx('error');
+    } else if (action === 'cancel') {
+      s.ui.goLiveArmed = false;
+      fillGoLive(s);
+      focusGoLive('[data-golive="arm"]');
+    } else if (action === 'confirm') {
+      const receipt = goLive(s);
+      if (receipt) {
+        s.ui.goLiveArmed = false;
+        s.ui.goLiveReceipt = receipt;
+        save(s);
+        fillGoLive(s);
+        focusGoLive('[data-golive="dismiss"]');
+      } else if (s.settings.sfx !== false) sfx('error');
+    } else if (action === 'dismiss') {
+      s.ui.goLiveReceipt = null;
+      fillGoLive(s);
+      focusGoLive('[data-golive="arm"]');
     }
   });
   $('btn-tracker')?.addEventListener('click', () => {
@@ -218,7 +224,15 @@ export function bindUI(s) {
   });
 
   window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && s.ui.panel) closeSheet(s);
+    if (e.key !== 'Escape' || !s.ui.panel) return;
+    // Esc backs an armed Go Live out of confirm before it closes the whole sheet.
+    if (s.ui.panel === 'ship' && s.ui.goLiveArmed) {
+      s.ui.goLiveArmed = false;
+      fillGoLive(s);
+      focusGoLive('[data-golive="arm"]');
+      return;
+    }
+    closeSheet(s);
   });
 
   $('panel-skills')?.addEventListener('click', (e) => {
@@ -390,7 +404,7 @@ function openSheet(s, panel) {
   });
   if (panel === 'skills') renderSkills(s);
   if (panel === 'meta') renderMeta(s);
-  if (panel === 'ship') fillShip(s);
+  if (panel === 'ship') fillGoLive(s);
   if (panel === 'gear') renderGear(s);
   if (panel === 'hub') renderHub(s);
   if (panel === 'settings') {
@@ -399,7 +413,11 @@ function openSheet(s, panel) {
     const mo = document.getElementById('chk-motion');
     if (mo) mo.checked = !!s.settings.reducedMotion;
   }
-  if (panel !== 'ship') s.ui.endSeasonConfirm = false;
+  // Leaving the Go Live sheet drops any armed confirm and stale receipt.
+  if (panel !== 'ship') {
+    s.ui.goLiveArmed = false;
+    s.ui.goLiveReceipt = null;
+  }
   if (lastPanel !== panel && s.settings.sfx !== false) sfx('sheet');
   lastPanel = panel;
   s.ui.panelDirty = false;
@@ -408,7 +426,8 @@ function openSheet(s, panel) {
 
 function closeSheet(s) {
   s.ui.panel = null;
-  s.ui.endSeasonConfirm = false;
+  s.ui.goLiveArmed = false;
+  s.ui.goLiveReceipt = null;
   lastPanel = null;
   const root = document.getElementById('sheet-root');
   if (root) {
@@ -428,45 +447,97 @@ function closeSheet(s) {
   if (resetConfirm) resetConfirm.hidden = true;
 }
 
-function fillShip(s) {
+/** Move keyboard focus onto a freshly-rendered Go Live control (confirm / cancel / continue). */
+function focusGoLive(selector) {
+  requestAnimationFrame(() => document.getElementById('ship-info')?.querySelector(selector)?.focus());
+}
+
+/**
+ * The single Go Live sheet (ADR-0008): one CTA banks unshipped Notes → Rep and grows the
+ * Live Mult in one atomic checkpoint, keeping the Route. Renders one of three states into
+ * #ship-info — receipt (post-Go-Live impact), inline confirm, or the preview (impact +
+ * kept/reset contract + safety). Focus is moved by the caller, never here, so the HUD's
+ * dirty re-render can repaint without stealing focus.
+ */
+function fillGoLive(s) {
   const el = document.getElementById('ship-info');
   if (!el) return;
-  const notes = Math.floor(s.run.patches);
-  const gain = Math.floor(notes * economyMult(s));
-  const liveNext = liveGain(s.authority.shippedThisSeason);
-  const seasonReady = s.ui.seasonDone || isSeasonCheckpoint(s.route.zone);
-  const nextZ = SEASON.zones * (Math.floor(s.route.zone / SEASON.zones) + 1);
-  const eco = economyMult(s);
   el.className = 'ship-stats ship-preview';
-  const resetItems = END_SEASON_CONTRACT.resets.map((item) => `<li>${item}</li>`).join('');
-  const keepItems = END_SEASON_CONTRACT.keeps.map((item) => `<li>${item}</li>`).join('');
-  el.innerHTML = `
-    <div class="ship-gain-card">
-      <span>You'll gain</span>
-      <strong>+${formatNum(gain)} Rep</strong>
-      <small>${notes > 0 ? 'Ready to ship now' : 'Collect Notes to ship'}</small>
+
+  // Receipt — the impact summary after a Go Live; one Continue returns to the Route.
+  const receipt = s.ui.goLiveReceipt;
+  if (receipt) {
+    const prevLive = Math.max(1, receipt.liveMult - receipt.liveGain);
+    const nextDisplay = nextGoLiveBoundary(receipt.boundaryZone) + 1;
+    el.innerHTML = `
+      <div class="ship-gain-card ready">
+        <span>You're live · Go Live #${receipt.goLiveCount}</span>
+        <strong>×${receipt.liveMult.toFixed(2)} Live Mult</strong>
+        <small>Route kept · fresh run underway</small>
+      </div>
+      <div class="ship-formula" aria-label="Go Live receipt">
+        ${row('Notes banked', receipt.repGained > 0 ? `${formatNum(receipt.notesBanked)} → +${formatNum(receipt.repGained)} Rep` : 'None this cycle', receipt.repGained > 0 ? 'hi' : '', 'notes')}
+        ${row('Live Mult', `×${prevLive.toFixed(2)} → ×${receipt.liveMult.toFixed(2)}`, 'hi')}
+        ${row('Cycle gain', `+${receipt.liveGain.toFixed(3)} Live`)}
+        ${row('Rep total', formatNum(receipt.repTotal))}
+        ${row('Next Go Live', `Zone ${nextDisplay}`)}
+      </div>
+      <button type="button" class="btn-primary" data-golive="dismiss">
+        <span class="btn-primary-title">Continue</span>
+        <span class="btn-primary-sub">Back to the Route</span>
+      </button>`;
+    return;
+  }
+
+  const notes = Math.floor(s.run.patches);
+  const rep = notes >= 1 ? Math.floor(notes * economyMult(s)) : 0; // SHIP_RATE is 1 → matches goLive()
+  const notesLine = notes > 0 ? `${formatNum(notes)} → +${formatNum(rep)} Rep` : 'Collect Notes first';
+  // goLive() banks the unshipped Notes before growing the Mult, so the preview must count
+  // the Rep those Notes will add to the cycle — otherwise it under-promises the gain.
+  const liveNext = liveGain(s.authority.shippedThisSeason + rep);
+  const ready = canGoLive(s);
+  if (s.ui.goLiveArmed && !ready) s.ui.goLiveArmed = false;
+  const nextDisplay = nextGoLiveBoundary(s.route.zone) + 1;
+  const keptItems = GO_LIVE_CONTRACT.keeps.map((item) => `<li>${item}</li>`).join('');
+  const resetItems = GO_LIVE_CONTRACT.resets.map((item) => `<li>${item}</li>`).join('');
+
+  const impact = `
+    <div class="ship-gain-card${ready ? ' ready' : ''}">
+      <span>Go Live impact</span>
+      <strong>+${liveNext.toFixed(3)} Live Mult</strong>
+      <small>${ready ? 'Checkpoint reached — ready now' : `Unlocks at Zone ${nextDisplay}`}</small>
     </div>
-    <div class="ship-formula" aria-label="Rep conversion preview">
-      ${row('Notes', formatNum(notes), notes > 0 ? 'hi' : '', 'notes')}
-      ${row('Rate', '1 Note → 1 Rep')}
-      ${row('Mult', `×${eco.toFixed(2)}`)}
-      ${seasonReady ? row('End-Season bonus', `+${liveNext.toFixed(3)} Live`, 'hi') : row('End-Season bonus', `Unlocks at Zone ${nextZ}`)}
+    <div class="ship-formula" aria-label="Go Live preview">
+      ${row('Notes', notesLine, notes > 0 ? 'hi' : '', 'notes')}
+      ${row('Grow Live Mult', `+${liveNext.toFixed(3)} Live`, ready ? 'hi' : '')}
+      ${row('Fresh run', 'Weapon · Rank · SP · Skills reset')}
+      ${row('Next Go Live', ready ? 'Available now' : `Zone ${nextDisplay}`)}
     </div>
     <div class="season-contract">
+      <section><h3>Kept</h3><ul>${keptItems}</ul></section>
       <section><h3>Resets</h3><ul>${resetItems}</ul></section>
-      <section><h3>Kept</h3><ul>${keepItems}</ul></section>
-    </div>`;
-  const cta = document.getElementById('btn-ship');
-  if (cta) {
-    cta.disabled = notes < 1;
-    cta.classList.toggle('is-locked', notes < 1);
+    </div>
+    <p class="fine golive-safety">Nothing is ever burned — Go Live banks your Notes to Rep first.</p>`;
+
+  // Armed → inline confirm replaces the CTA (keyboard cancel/confirm, no separate dialog).
+  if (s.ui.goLiveArmed && ready) {
+    el.innerHTML = `${impact}
+      <div class="season-confirm" role="group" aria-label="Confirm Go Live">
+        <strong>Go Live now?</strong>
+        <p>Banks ${formatNum(notes)} Notes to Rep and starts a fresh run. Route, Rep, Gear, and Live Mult stay.</p>
+        <div class="season-confirm-actions">
+          <button type="button" class="btn-ghost" data-golive="cancel">Not yet</button>
+          <button type="button" class="btn-danger" data-golive="confirm">Go Live</button>
+        </div>
+      </div>`;
+    return;
   }
-  const ctaSub = document.getElementById('ship-cta-sub');
-  if (ctaSub) set(ctaSub, notes > 0 ? `${formatNum(notes)} Notes → +${formatNum(gain)} Rep` : 'Collect Notes first');
-  const leave = document.getElementById('btn-leave');
-  if (leave) leave.hidden = !seasonReady;
-  const confirmPanel = document.getElementById('season-confirm');
-  if (confirmPanel) confirmPanel.hidden = !s.ui.endSeasonConfirm;
+
+  el.innerHTML = `${impact}
+    <button type="button" class="btn-primary${ready ? '' : ' is-locked'}" data-golive="arm"${ready ? '' : ' disabled'}>
+      <span class="btn-primary-title">Go Live</span>
+      <span class="btn-primary-sub">${ready ? `Bank ${formatNum(notes)} Notes · +${liveNext.toFixed(3)} Live` : `Unlocks at Zone ${nextDisplay}`}</span>
+    </button>`;
 }
 
 function row(k, v, cls = '', tone = '') {
@@ -595,7 +666,7 @@ function renderMeta(s) {
   <div class="sp-bank compact rep-bank">
     <span class="sp-bank-label">Rep</span>
     <strong class="sp-bank-val gold">${formatNum(rep)}</strong>
-    <span class="sp-bank-hint">Permanent growth · survives End Season</span>
+    <span class="sp-bank-hint">Permanent growth · survives Go Live</span>
   </div>
   <div class="boosts-tree">`;
   for (const category of categories) {
@@ -1093,7 +1164,7 @@ export function renderHUD(s) {
     const scrollY = body ? body.scrollTop : 0;
     if (s.ui.panel === 'skills') renderSkills(s);
     if (s.ui.panel === 'meta') renderMeta(s);
-    if (s.ui.panel === 'ship') fillShip(s);
+    if (s.ui.panel === 'ship') fillGoLive(s);
     if (s.ui.panel === 'gear') renderGear(s);
     if (s.ui.panel === 'hub') renderHub(s);
     if (body) body.scrollTop = scrollY;

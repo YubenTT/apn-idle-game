@@ -25,7 +25,7 @@ export const C = {
   XP_GROWTH: 1.26,
   BYTE_BASE: 3,
 
-  // Weapon (run-only — resets on End Season)
+  // Weapon (run-only — resets on Go Live)
   SCANNER_COST_BASE: 14,
   SCANNER_COST_GROWTH: 1.22, // steep sink → always something to buy
   SCANNER_DMG_GROWTH: 1.085, // soft so zone HP stays multi-hit
