@@ -1,9 +1,11 @@
+// Direct Chrome CDP smoke for the atomic Go Live checkpoint (PR-1 / ADR-0008).
+// Drives the real in-browser goLive() through the __APN_QA__ action surface and
+// asserts a valid receipt, a preserved Route, and a clean console at each viewport.
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawn, execFileSync } from 'node:child_process';
 
-/** Resolve a Chrome/Chromium binary: CHROME_BIN → macOS app → Linux PATH names. */
 function resolveChrome() {
   if (process.env.CHROME_BIN && fs.existsSync(process.env.CHROME_BIN)) return process.env.CHROME_BIN;
   if (process.platform === 'darwin') {
@@ -20,15 +22,13 @@ function resolveChrome() {
 }
 
 const CHROME = resolveChrome();
-/** Viewports the smoke must stay console-clean and overflow-free at. */
 const VIEWPORTS = [
   { label: 'mobile-428', width: 428, height: 926, mobile: true, scale: 2 },
   { label: 'mobile-375', width: 375, height: 812, mobile: true, scale: 2 },
-  { label: 'landscape-844', width: 844, height: 390, mobile: true, scale: 2 },
 ];
-const port = 9387;
-const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'apn-chrome-'));
-const output = path.resolve(process.argv[2] || path.join(os.tmpdir(), 'apn-route-evidence'));
+const port = 9389;
+const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'apn-go-live-chrome-'));
+const output = path.resolve(process.argv[2] || path.join(os.tmpdir(), 'apn-go-live-evidence'));
 fs.mkdirSync(output, { recursive: true });
 
 const chrome = spawn(CHROME, [
@@ -98,12 +98,12 @@ function connect(url) {
 }
 
 const assert = (condition, message) => {
-  if (!condition) throw new Error(`Chrome Route smoke: ${message}`);
+  if (!condition) throw new Error(`Chrome Go Live smoke: ${message}`);
   console.log(`OK ${message}`);
 };
 
-async function scenario(displayZone, viewport) {
-  const tag = `Zone ${displayZone} @ ${viewport.label}`;
+async function scenario(viewport) {
+  const tag = `Go Live @ ${viewport.label}`;
   const page = await createPage();
   const cdp = connect(page.webSocketDebuggerUrl);
   await cdp.opened;
@@ -112,30 +112,35 @@ async function scenario(displayZone, viewport) {
   await cdp.send('Log.enable');
   await cdp.send('Network.enable');
   await cdp.send('Emulation.setDeviceMetricsOverride', { width: viewport.width, height: viewport.height, deviceScaleFactor: viewport.scale, mobile: viewport.mobile });
-  await cdp.send('Page.navigate', { url: `http://127.0.0.1:8791/?autostart=1&mute=1&zone=${displayZone}&chrome-smoke=1` });
+  // Zone 11 (route.zone 10) sits on the first Go Live boundary.
+  await cdp.send('Page.navigate', { url: `http://127.0.0.1:8791/?autostart=1&mute=1&zone=11&chrome-smoke=1` });
   for (let attempt = 0; attempt < 50; attempt++) {
     const ready = await cdp.send('Runtime.evaluate', {
-      expression: `Boolean(window.__APN_QA__?.assets.currentId && window.__APN_QA__.assets.packs.get(window.__APN_QA__.assets.currentId)?.ready && document.querySelector('#title-screen')?.hidden)`,
+      expression: `Boolean(window.__APN_QA__?.actions && document.querySelector('#title-screen')?.hidden)`,
       returnByValue: true,
     });
     if (ready.result.value) break;
     await delay(100);
   }
-  await delay(500);
+  await delay(300);
   const evaluation = await cdp.send('Runtime.evaluate', {
-    expression: `JSON.stringify({
-      zone: document.querySelector('#v-zone')?.textContent,
-      sound: document.querySelector('#chk-sfx')?.checked,
-      canvas: (() => { const r = document.querySelector('#game')?.getBoundingClientRect(); return r && { width:r.width,height:r.height }; })(),
-      overflow: document.documentElement.scrollWidth - innerWidth,
-      titleHidden: document.querySelector('#title-screen')?.hidden,
-      visible: !document.hidden,
-      currentPack: window.__APN_QA__?.assets.currentId,
-      nextPack: window.__APN_QA__?.assets.nextId,
-      decodedPacks: window.__APN_QA__ ? [...window.__APN_QA__.assets.packs.keys()] : [],
-      heroX: window.__APN_QA__?.state.world.heroDisplayX,
-      targetX: window.__APN_QA__?.state.world.enemies.find((enemy) => enemy.hp > 0)?.displayX
-    })`,
+    expression: `(() => {
+      const q = window.__APN_QA__;
+      const before = q.state.route.zone;
+      const availBefore = q.actions.goLiveAvailableZone();
+      const receipt = q.actions.goLive();
+      const again = q.actions.goLive();
+      return JSON.stringify({
+        before,
+        availBefore,
+        receipt,
+        idempotentId: again && receipt ? again.checkpointId === receipt.checkpointId : false,
+        zoneAfter: q.state.route.zone,
+        count: q.state.meta.goLiveCount,
+        live: q.state.meta.live,
+        heroLevel: q.state.run.hero.level,
+      });
+    })()`,
     returnByValue: true,
   });
   const result = JSON.parse(evaluation.result.value);
@@ -143,31 +148,23 @@ async function scenario(displayZone, viewport) {
     (event.method === 'Runtime.exceptionThrown') ||
     (event.method === 'Log.entryAdded' && ['error', 'warning'].includes(event.params?.entry?.level))
   );
-  assert(result.zone === String(displayZone), `${tag} HUD matches Route`);
-  assert(result.sound === false, `${tag} SFX is off`);
-  // Proportional so a short landscape viewport still asserts a filled canvas.
-  const minW = Math.min(300, viewport.width * 0.6);
-  const minH = Math.min(300, viewport.height * 0.5);
-  assert(result.canvas?.width > minW && result.canvas?.height > minH, `${tag} Canvas is visible (${result.canvas?.width}×${result.canvas?.height})`);
-  assert(result.titleHidden === true && result.visible === true, `${tag} is playable`);
+  assert(result.availBefore >= 10, `${tag} checkpoint available at the boundary (zone ${result.availBefore})`);
+  assert(result.receipt && result.receipt.schema === 'apn.go-live-receipt', `${tag} emits a Go Live receipt`);
+  assert(result.receipt.goLiveCount === 1 && result.count === 1, `${tag} counts exactly one Go Live`);
+  assert(result.zoneAfter === result.before, `${tag} keeps the Route zone (${result.zoneAfter})`);
+  assert(result.heroLevel === 1, `${tag} resets temporary power`);
+  assert(result.idempotentId === true, `${tag} double-click is idempotent`);
   assert(errors.length === 0, `${tag} has no Chrome console errors/warnings`);
-  assert(result.currentPack && result.decodedPacks.includes(result.currentPack), `${tag} current pack is decoded (${result.currentPack})`);
-  assert(result.decodedPacks.length > 0 && result.decodedPacks.length <= 2, `${tag} retains at most current + next packs (${result.decodedPacks.join(',')})`);
-  assert(result.targetX == null || result.targetX > result.heroX, `${tag} target approaches from the right`);
-  console.log(`INFO ${tag} viewport overflow ${result.overflow}px`);
   const shot = await cdp.send('Page.captureScreenshot', { format: 'png', fromSurface: true });
-  fs.writeFileSync(path.join(output, `${viewport.label}-zone-${String(displayZone).padStart(3, '0')}.png`), Buffer.from(shot.data, 'base64'));
+  fs.writeFileSync(path.join(output, `${viewport.label}-go-live.png`), Buffer.from(shot.data, 'base64'));
   cdp.close();
   await fetch(`http://127.0.0.1:${port}/json/close/${page.id}`);
 }
 
 try {
   await waitForChrome();
-  const [primary, ...secondary] = VIEWPORTS;
-  for (const zone of [1, 10, 11, 20, 200, 201]) await scenario(zone, primary);
-  // The added viewports (375×812 + landscape) cover a pack boundary each.
-  for (const viewport of secondary) for (const zone of [1, 20]) await scenario(zone, viewport);
-  console.log(`CHROME ROUTE PASS ${output}`);
+  for (const viewport of VIEWPORTS) await scenario(viewport);
+  console.log(`CHROME GO LIVE PASS ${output}`);
 } finally {
   chrome.kill('SIGTERM');
   await Promise.race([chromeExit, delay(3000)]);
