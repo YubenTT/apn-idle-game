@@ -1,3 +1,6 @@
+<!-- go-live-v2-superseded -->
+> **⚠ Superseded (go-live v2).** This entry point predates the go-live v2 chain. **Start instead at** `docs/superpowers/plans/2026-07-16-infinite-patchline-go-live-v2.md` (the law) and `docs/product/` (imported V3 authority, see `RECONCILIATION.md`). The **Ship Notes + End Season** model here is replaced by **Go Live** ([ADR-0008](decisions/ADR-0008-go-live-sole-checkpoint.md)).
+
 # START HERE — APN Idle docs index
 
 > One-screen map of every document, who owns it, and which doc is the **source of

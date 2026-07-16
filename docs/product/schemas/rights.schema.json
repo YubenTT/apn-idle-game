@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://allpatchnotes.com/schemas/apn-idle/rights.schema.json",
+  "title": "APN Idle Pack Rights (canonical)",
+  "description": "Canonical rights contract for every Game Pack (plan v2 §PR-7 / ADR-0009). Declared canonical in PR-0; the enforcing validator + marks denylist land in PR-7. The reconciled echo-pack.schema.json rights sub-object mirrors these field names and enum so a pack's rights block validates against both.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["mode", "editorialReference", "reviewedBy"],
+  "properties": {
+    "mode": {
+      "description": "Rights posture. `apn-original`: fully original, no editorial reference. `homage-only`: original art + genre homage, no real title anywhere player-facing. `editorial-text-original-art`: original art; real title only in the feed ticker as editorialReference + one non-affiliation line. `licensed-spotlight`: direct branded assets under a written license. `blocked`: must not ship. `pending-review`: transitional — validator WARNS (not blocks) for wave packs only (ADR-0011).",
+      "enum": [
+        "apn-original",
+        "homage-only",
+        "editorial-text-original-art",
+        "licensed-spotlight",
+        "blocked",
+        "pending-review"
+      ]
+    },
+    "editorialReference": {
+      "description": "Real game title — feed-ticker editorial reference only, never a runtime display name. Empty string only when mode is apn-original.",
+      "type": "string",
+      "minLength": 0,
+      "maxLength": 120
+    },
+    "reviewedBy": {
+      "description": "Human reviewer who cleared the rights posture; null until reviewed. (Canonical field name — supersedes the V3-original `reviewer`.)",
+      "type": ["string", "null"],
+      "maxLength": 120
+    },
+    "reviewStatus": {
+      "description": "Review lifecycle state, distinct from mode (the intended posture).",
+      "enum": ["needs-legal-review", "approved-original-echo", "licensed", "rejected"]
+    },
+    "reviewedAt": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "killSwitch": {
+      "description": "Stable id of the runtime flag that disables this pack.",
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "minLength": 2,
+      "maxLength": 64
+    },
+    "licenseRecord": {
+      "description": "Present only when mode is licensed-spotlight.",
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["recordId", "territories", "expiresAt", "allowedUses"],
+      "properties": {
+        "recordId": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "territories": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 2, "maxLength": 64 } },
+        "expiresAt": { "type": ["string", "null"], "format": "date-time" },
+        "allowedUses": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 2, "maxLength": 240 } }
+      }
+    },
+    "forbiddenMotifs": {
+      "description": "Marks / characters / athletes / trade dress that may never appear as a ref OR in prompt text (packet 01_RIGHTS/forbidden-anchors.txt is the runtime file; gate 4.1).",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 40,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 2, "maxLength": 120 }
+    }
+  },
+  "$comment": "PR-7 adds: (1) title-vs-mode check against a marks denylist (a pack whose display title is a raw trademark fails), (2) repo-wide block of `fan-policy-noncommercial` framing, (3) wave-pack warn vs launch-pack block on `pending-review` (ADR-0011)."
+}
