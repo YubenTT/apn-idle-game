@@ -13,7 +13,7 @@
 | **SP** | Skill Points from ranking up; spent in Build | `--c-sp` (violet) | No (reset) |
 | **Live Mult** | Prestige multiplier from End Season; multiplies damage + Ship | `--apn-primary` | **Yes** |
 | **DPS** | Displayed damage-per-second (derived, not stored) | `--c-positive` (green) | n/a |
-| **Zone** | Endless stage counter; kills-to-clear | `--c-zone` (cyan) | resets per season path |
+| **Route Zone** | Endless world-stage counter; kills-to-clear | `--c-zone` (cyan) | **Yes** |
 | **Rank** | XP track that grants SP | `--c-rep` context | soft-infinite |
 | **Boosts** | Permanent meta upgrades bought with Rep | `--c-rep` | **Yes** |
 | **Build** | Season skill/attribute allocation (Damage/Crit/Utility + skills) | — | No (reset) |
@@ -21,6 +21,7 @@
 | **End Season** | Optional prestige at a checkpoint → +Live Mult | `--apn-primary` | action |
 | **Gear** | Equippable items with rarity; loadout + inventory | rarity tokens | **Yes** (collection) |
 | **Host** | The APN mascot the player embodies | — | — |
+| **Focus** | Regenerating Run meter spent by active skills | `--c-signal` context | No (reset) |
 
 ## Enemy / target names (canonical)
 
@@ -49,17 +50,17 @@ is how you read the code.
 | `scan` / `verify` / `amplify` | Damage / Crit / Utility attrs | Build attributes |
 | `scanner` | Weapon level | "Upgrade Weapon" object |
 | `mask` | (legacy skill grouping) | see `content.SKILLS` |
-| `hero.energy` / `hero.mana` | Energy / (Mana → rename) | see flag below |
+| `hero.energy` / legacy `hero.mana` | Energy / **Focus** | legacy `mana` migrates on load |
 | `meta.live` | **Live Mult** | prestige |
 | `seasonDone` | season checkpoint reached | unlocks End Season |
+| `route.zone` / `route.killsInZone` | **Route Zone** progress | v2 owner; never reset by End Season |
+| legacy `run.zone` / `run.killsInZone` | **Route Zone** progress | read-only v1 migration input |
 
 ## Flagged renames (open)
 
 | Current | Should be | Where | Blocker |
 |---------|-----------|-------|---------|
-| "Mana Flow" skill / `mana` | Signal Flow / editorial term | `content.SKILLS`, `game.js` | off-brand fantasy word (NAMING) |
 | `bytes` / `patches` / `authority` | `signal` / `notes` / `rep` | save schema | needs migration in `save.js` |
-| Notes crimson, SP crimson | rose / violet tokens | `css/game.css` | visual-regression pass |
 
 ## Abbreviations
 

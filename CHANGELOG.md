@@ -9,6 +9,36 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Added
 
+- Added the final five-viewport, seven-screen regression pack (35 accepted
+  captures), exact-dimension baseline QA, opt-in browser performance probes, and
+  an integrated release report with zero open Blocker/Critical defects.
+- Added ADR-0007 to lock the five-destination navigation with Gear as a separate
+  stage FAB; every launcher now exposes its sheet expansion state to assistive
+  technology.
+- Added coordinated hit, crit, loot, rank-up, sheet-open, and afford feedback
+  cues with throttled mobile haptics; mute, OS reduced-motion, and the in-app
+  reduced-motion setting gate the complete feedback layer.
+- Added a 12-piece APN techwear item atlas covering matte polymer, laminated
+  paper, and anodized metal families, with deterministic slot/name mapping,
+  transparent runtime sprites, and asset-budget QA.
+- Added the canonical Host WebGL2 render-lock and ten-pose runtime atlas, derived
+  directly from the existing GLB with fixed camera, flat three-band shading, and
+  one-pixel pivot/ratio/visor QA.
+- Added a deterministic zero-npm asset pipeline for atlas layout, pivot/trim
+  metadata, fixed WebP profiles, SHA-256 manifests, hot-pack ownership, and hard
+  first-playable/per-pack size gates.
+- Added deterministic active/idle pacing profiles and a silent Zone 1000/offline
+  long-run gate. The Clean Era now measures 10.2 active-assisted hours or about
+  2.4 mostly-idle calendar days before Corruption.
+- Added 20 stable Clean Era Game Pack manifests, a byte-stable frozen runtime
+  catalog, seeded different-genre season scheduling, and bounded corruption tiers.
+- Accepted the catalog-driven Game Pack Route: 20 clean ten-zone packs, persistent
+  world progress, bounded Corruption revisits, and one deterministic expansion path.
+- Added ADR-0005 for GLB-locked hybrid Host rendering: image generation may guide
+  pose/cleanup, while shipped geometry and pivots remain canonical GLB derivatives.
+- Added a documentation contract test and a 33-issue, six-session autonomous
+  implementation graph with a single final localhost review gate.
+
 - **Design-system + docs backbone** (system-first redesign foundation; no runtime
   change — the vanilla ES + Canvas 2D game is untouched):
   - `brand/` design system — `tokens.css` (canonical CSS custom properties,
@@ -18,9 +48,9 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
     · `SCREEN-SPECS.md` (mobile-first per-screen redesign) · `ART-PIPELINE.md` ·
     `PERF-BUDGET.md` · `QA-CHECKLIST.md` · `GLOSSARY.md` · `DEFINITION-OF-DONE.md` ·
     `DOC-UPDATE-POLICY.md`
-  - `docs/REDESIGN-PLAN.md` — sequenced issue backlog (24 issues, 5 waves) grouped
-    into 7 autonomous delivery sessions, with per-issue acceptance criteria,
-    dependencies, one visual user gate, and a release gate
+  - `docs/REDESIGN-PLAN.md` — sequenced issue backlog (33 issues) grouped into 6
+    autonomous delivery sessions, with per-issue acceptance criteria,
+    dependencies, one final integrated user gate, and a release gate
   - `docs/decisions/` ADRs — **ADR-0001** keep vanilla ES + Canvas 2D (reject
     PixiJS/React rewrite), **ADR-0002** token-driven design system, **ADR-0003**
     GLB single-source mascot
@@ -32,6 +62,78 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Changed
 
+- Rebuilt Run as one continuous mobile game surface: the combat Canvas now reaches
+  both app edges; Zone/Rank/Live sit in a flat telemetry band; Energy and Focus
+  expose live values; Sprint copy stays stable; the action dock uses a clear
+  30/70 secondary/primary hierarchy; and the Signal price no longer collapses
+  into a cramped two-line pill.
+- Cut the launch economy back to the free MVP contract: removed the demo
+  Purchases surface, APN Pro and paid multipliers, Auto-Sprint purchase, coin
+  grants/packs, timed 2× Boost, Time Warp, and paid Gear Boxes. Live Mult is now
+  the only global economy multiplier; old premium save fields round-trip but are
+  inert.
+- Hardened the complete mobile game surface against iOS long-press text/object
+  selection, native touch callouts, and media dragging without disabling sheet
+  scrolling, native controls, or Sprint hold; added a static regression contract
+  and a cache-busted stylesheet handoff.
+- Completed the player-copy contract across all screens: active skills now spend
+  Focus, legacy Mana saves migrate safely, target names match the glossary, and
+  automated QA rejects fantasy, desktop-only, debug, and currency-object copy.
+- Locked every Clean Era background to the shared APN editorial cityline grammar:
+  modular billboards, signal rails, patchline routing, and archive lights now sit
+  inside each pack's own environment silhouette and remain below 150 KB.
+- Rebuilt Boosts as a permanent Ranks/Combat/Economy ROI tree; domain previews
+  now own exact current→next effects, Rep costs, affordability, value cues, and
+  one catch-up recommendation or next target.
+- Split Menu into Accessibility, Audio, Account, and Reset; replaced checkboxes
+  with the canonical 51×31 switch, removed attribute debug copy and the retired
+  demo store, and put New Game behind an inline gate.
+- Turned Hub into a Daily/Weekly/Season live-ops board with explicit locked,
+  claimable, and claimed states, readable currency reward pills, 8px progress
+  tracks, and milestone cards whose availability is visible without interaction.
+- Reworked Ship into a transparent Notes-to-Rep preview with conversion rate,
+  multiplier, gain, end-season bonus, a domain-owned reset/keep contract, and a
+  separate low-weight End Season confirmation step.
+- Rebuilt Build around explicit SP decisions: attribute cards name the next
+  unlock, skill cards show role, rank delta, ROI, cost, and affordability, and
+  neutral surfaces reserve positive color for actions the player can afford.
+- Reweighted the Run dock around one `Upgrade Weapon` CTA with real Damage and
+  level deltas plus a Signal cost chip; Sprint is a neutral mod and four skills
+  retain equal secondary weight with non-crimson toggle states.
+- Turned the Patchline into a full-bleed gameplay surface, replaced tiny enemy
+  meters with target-owned HP banners, anchored damage to targets, and added
+  reduced-motion-aware Signal/Notes flights to their HUD chips.
+- Folded Zone, Rank, and Live into one compact in-stage header with independent
+  8px progress tracks for Route and Rank growth.
+- Replaced the scrolling website-style ticker with a single-line live feed rail
+  bound to the currently scheduled Game Pack.
+- Replaced the running wordmark/analytics header with a notch-aware 44pt strip
+  containing only actionable Signal, Notes, and SP resources.
+- Rebuilt Gear as a full-height collection surface with the canonical Host,
+  four equipped item cards, a five-column 24-slot inventory, explicit compare
+  deltas, persisted sort/filter and junk states, and safe equip/scrap actions.
+- Replaced happy-path procedural biome rotation with scheduled Game Pack
+  backgrounds and target atlases; the loader decodes only current and next packs
+  and releases cold image references across Route transitions.
+- Completed Clean Era Game Packs 16–20, including the focused Marvel source
+  closure and the approved Tarkov, Rocket League, and Elden Ring production sets.
+- Produced Clean Era Game Packs 11–15, retaining the approved heist, stadium,
+  industrial, river, and horror silhouette language under the shared atlas gates.
+- Produced Clean Era Game Packs 06–10 with the same deterministic target,
+  environment, prop, corruption, source-evidence, and pivot contract.
+- Produced Clean Era Game Packs 01–05 as deterministic APN Patchline runtime
+  sets, including approved target atlases, authored environments, props, masks,
+  source records, and locked right-to-left foot pivots.
+- Unified inline, Gear, and feed marks under one monochrome 2px rounded-stroke
+  grammar; removed per-icon gradients/colors and added a static grammar gate.
+- Reworked combat scaling around season-local Weapon power, bounded Route
+  maturity, permanent-power budgeting, and soft boss timer cycles. Eight-hour
+  offline rewards now stop Route progress at the next End Season boundary.
+- Save schema v2 moves world progress from season-scoped `run` into persistent
+  `route` state. End Season now keeps Route Zone and pack history.
+- Loading checks v2 first and migrates v1 Zone/kills without deleting the legacy
+  key; explicit New Game clears both keys.
+
 - All font sizes, touch minimums, and safe-area values use exact design tokens.
   Screen-specific legacy geometry remains unchanged until its owning redesign issue.
 - Notes now use canonical rose `#ff6a8f`; SP uses canonical violet `#b07cff`
@@ -40,6 +142,9 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Tests
 
+- Added negative free-MVP contracts proving that no purchase catalog/action or
+  coin reward ships, legacy paid flags cannot alter damage/economy/Sprint, and
+  retired premium save data remains inert across prestige and save round trips.
 - Added CSS token-contract checks for first-rule import order, raw color literals,
   unresolved custom properties, and active canonical Notes/SP tokens.
 - Added economy-role checks for legacy alias retirement, exact DOM selectors,
@@ -61,8 +166,7 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 - Save schema rename (bytes → signal) with migration
 - PWA manifest
-- Wire real IAP receipts for APN Pro / coin packs / boxes
-- Rewarded-ad stubs (MindStudios monetization playbook)
+- Revisit cosmetics-only APN benefits after MVP retention evidence; no paid power
 
 ## [1.7.2] — 2026-07-13
 

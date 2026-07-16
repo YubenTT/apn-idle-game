@@ -6,7 +6,8 @@ import {
   scannerCost,
   scannerDamage,
   xpToNext,
-  enemyHp,
+  routeEnemyHp,
+  offlineRouteBudget,
   killsNeeded,
   isBossZone,
   typeHpMult,
@@ -14,8 +15,8 @@ import {
   metaCost,
   lerp,
   isSeasonCheckpoint,
-} from './formulas.js';
-import { SEASON, META, SKILLS, ENEMY_FLAVOR, PREMIUM, skillSpCost } from './content.js';
+} from './formulas.js?v=free-mvp-r005';
+import { SEASON, META, SKILLS, ENEMY_FLAVOR, skillSpCost } from './content.js?v=free-mvp-r005';
 import {
   ensureHub,
   hubOnKill,
@@ -31,7 +32,7 @@ import {
   applyReward,
   seasonLevel,
   SEASON_MILESTONES,
-} from './hub.js';
+} from './hub.js?v=free-mvp-r005';
 import {
   killLine,
   pick,
@@ -41,8 +42,8 @@ import {
   LEVEL_LINES,
   SHIP_LINES,
   SCANNER_LINES,
-} from './comedy.js';
-import { sfx } from './sfx.js';
+} from './comedy.js?v=free-mvp-r005';
+import { sfx } from './sfx.js?v=free-mvp-r005';
 import {
   emptyGear,
   normalizeGear,
@@ -58,11 +59,13 @@ import {
   pickSlotForGear,
   SLOTS,
   BAG_CAP,
-} from './loot.js';
+} from './loot.js?v=free-mvp-r005';
+import { createRouteState, nextSeasonBoundary, packForRoute } from './route.js?v=free-mvp-r005';
+import { GAME_PACKS } from './generated/game-packs.js?v=free-mvp-r005';
 
 export function createState() {
   return {
-    v: 1,
+    v: 2,
     meta: {
       live: 1,
       season: 0,
@@ -72,12 +75,7 @@ export function createState() {
       postsShippedTotal: 0,
       /** Permanent loadout — survives End Season */
       gear: emptyGear(),
-      /**
-       * Monetization surface (survives End Season).
-       * pro: permanent APN Pro mult
-       * coins: premium soft currency (bosses/ships/IAP packs)
-       * boostEndsAt: ms timestamp for timed 2× boost
-       */
+      /** Legacy demo-store data survives save round trips but is inert in the free MVP. */
       premium: {
         pro: false,
         coins: 0,
@@ -92,9 +90,8 @@ export function createState() {
       shippedThisSeason: 0,
       upgrades: Object.fromEntries(Object.keys(META).map((k) => [k, 0])),
     },
+    route: createRouteState(),
     run: {
-      zone: 0,
-      killsInZone: 0,
       bytes: 0,
       patches: 0,
       hero: {
@@ -105,7 +102,7 @@ export function createState() {
         verify: 0,
         amplify: 0,
         energy: C.ENERGY_MAX,
-        mana: C.MANA_MAX,
+        focus: C.FOCUS_MAX,
         scanner: 0,
         skills: {},
         trackerOn: false,
@@ -125,6 +122,7 @@ export function createState() {
       alerts: [],
       floaters: [],
       particles: [],
+      lootFlights: [],
       confetti: [],
       shocks: [],
       spawnCd: 0.3,
@@ -147,7 +145,13 @@ export function createState() {
       seasonDone: false,
       panelDirty: true,
     },
-    settings: { reducedMotion: false, sfx: true, lastTs: Date.now() },
+    settings: {
+      reducedMotion: false,
+      sfx: true,
+      gearSort: 'power',
+      gearFilter: 'all',
+      lastTs: Date.now(),
+    },
     stats: { dps: 0, dpsAcc: 0, dpsT: 0, combo: 0, comboT: 0, bestCombo: 0 },
   };
 }
@@ -166,61 +170,55 @@ export function metaPer(s, id) {
   return d.per * metaLv(s, id);
 }
 
-/** Auto-sprint = Pro or paid unlock (not free mask) */
-export function hasAutoSprint(s) {
-  ensurePremium(s);
-  return !!(s.meta.premium.pro || s.meta.premium.autoSprint);
+function formatMetaEffect(def, level) {
+  const value = Math.max(0, level | 0) * def.per;
+  if (def.unit === 'percent') return `+${Math.round(value * 100)}%`;
+  return `+${Math.round(value * 10) / 10}`;
 }
 
-/** Sprint when holding OR auto-sprint, while energy remains */
+export function metaUpgradePreview(s, id) {
+  const def = META[id];
+  if (!def) return null;
+  const level = metaLv(s, id);
+  const cost = metaCost(def.base, def.growth, level);
+  return {
+    id,
+    level,
+    current: formatMetaEffect(def, level),
+    next: formatMetaEffect(def, level + 1),
+    cost,
+    affordable: s.authority.amount >= cost,
+    category: def.category || 'Growth',
+    valueCue: def.valueCue || def.desc,
+  };
+}
+
+/** Catch-up recommendation: affordable lowest-rank node, then lowest exact cost. */
+export function recommendedMetaId(s) {
+  const order = Object.keys(META);
+  const candidates = order.map((id, index) => ({ ...metaUpgradePreview(s, id), index }));
+  candidates.sort((a, b) =>
+    Number(b.affordable) - Number(a.affordable) ||
+    a.level - b.level ||
+    a.cost - b.cost ||
+    a.index - b.index
+  );
+  return candidates[0]?.id || null;
+}
+
+/** Sprint follows the explicit hold input while energy remains. */
 export function isSprinting(s) {
-  const want = s.world.sprinting || hasAutoSprint(s);
-  return !!(want && s.run.hero.energy > 0.5);
+  return !!(s.world.sprinting && s.run.hero.energy > 0.5);
 }
 
 export function setSprint(s, on) {
   s.world.sprinting = !!on;
-  s.ui.sprintWanted = !!on || hasAutoSprint(s);
+  s.ui.sprintWanted = !!on;
 }
 
-/** Ensure premium blob exists (save migration) */
-export function ensurePremium(s) {
-  if (!s.meta.premium) {
-    s.meta.premium = {
-      pro: false,
-      coins: 0,
-      boostEndsAt: 0,
-      autoSprint: false,
-      warpCdUntil: 0,
-    };
-  }
-  const p = s.meta.premium;
-  if (typeof p.coins !== 'number') p.coins = 0;
-  if (typeof p.boostEndsAt !== 'number') p.boostEndsAt = 0;
-  if (typeof p.autoSprint !== 'boolean') p.autoSprint = false;
-  if (typeof p.warpCdUntil !== 'number') p.warpCdUntil = 0;
-  // Pro includes auto-sprint
-  if (p.pro) p.autoSprint = true;
-  return p;
-}
-
-/** Live × Pro × timed 2× — multiplies damage + Signal/Notes income */
+/** Live Mult is the free MVP's only global economy multiplier. */
 export function economyMult(s) {
-  ensurePremium(s);
-  let m = Math.max(1, s.meta.live || 1);
-  if (s.meta.premium.pro) m *= PREMIUM.pro.mult;
-  if (s.meta.premium.boostEndsAt > Date.now()) m *= PREMIUM.boost_2x.mult;
-  return m;
-}
-
-export function boostActive(s) {
-  ensurePremium(s);
-  return s.meta.premium.boostEndsAt > Date.now();
-}
-
-export function boostSecondsLeft(s) {
-  ensurePremium(s);
-  return Math.max(0, (s.meta.premium.boostEndsAt - Date.now()) / 1000);
+  return Math.max(1, s.meta.live || 1);
 }
 
 export function combatStats(s) {
@@ -242,8 +240,8 @@ export function combatStats(s) {
   let move = C.MOVE_SPEED * (1 + metaPer(s, 'feed_speed')) * (1 + (g.move_pct || 0) / 100);
   let eMax = C.ENERGY_MAX + 4 * h.verify + (g.energy || 0);
   let eRegen = C.ENERGY_REGEN + (g.e_regen || 0);
-  let mMax = C.MANA_MAX + 8 * h.amplify;
-  let mRegen = C.MANA_REGEN + 0.08 * h.amplify;
+  let fMax = C.FOCUS_MAX + 8 * h.amplify;
+  let fRegen = C.FOCUS_REGEN + 0.08 * h.amplify;
   let skillMult = 1;
   let sprintDrain = C.SPRINT_DRAIN;
   let timeScale = 1;
@@ -290,8 +288,8 @@ export function combatStats(s) {
     move,
     eMax,
     eRegen,
-    mMax,
-    mRegen,
+    fMax,
+    fRegen,
     skillMult,
     sprintDrain,
     sprintOn,
@@ -320,7 +318,7 @@ function tip(s, id) {
 // Domain events carry a semantic visual role; render.js owns the CSS token value.
 const tone = (role) => ({ tone: role });
 
-function floater(s, x, y, text, color, big = false) {
+function floater(s, x, y, text, color, big = false, anchorId = null) {
   s.world.floaters.push({
     x: x + (Math.random() - 0.5) * 18,
     y,
@@ -330,6 +328,19 @@ function floater(s, x, y, text, color, big = false) {
     life: big ? 1.25 : 1.0,
     vy: big ? -78 : -56,
     big,
+    anchorId,
+  });
+}
+
+function lootFlight(s, enemy, target) {
+  if (s.settings.reducedMotion) return;
+  s.world.lootFlights.push({
+    x: enemy.displayX,
+    y: null,
+    enemyId: enemy.id,
+    target,
+    t: 0.72,
+    life: 0.72,
   });
 }
 
@@ -391,10 +402,12 @@ function pickEnemyType(zone, forceBoss) {
 }
 
 export function spawnEnemy(s) {
-  const zone = s.run.zone;
+  const zone = s.route.zone;
+  const pack = packForRoute(s.route, GAME_PACKS);
+  if (pack) s.route.currentPackId = pack.id;
   const boss = isBossZone(zone);
   if (boss && s.world.bossActive) return null;
-  if (boss && s.run.killsInZone > 0) return null;
+  if (boss && s.route.killsInZone > 0) return null;
 
   const type = pickEnemyType(zone, boss && !s.world.bossActive);
   if (type === 'boss') {
@@ -404,16 +417,29 @@ export function spawnEnemy(s) {
     tip(s, 'boss');
   }
 
-  const hp = enemyHp(zone, typeHpMult(type));
+  const gear = gearBonuses(s.meta.gear);
+  const permanentPower =
+    (1 + metaPer(s, 'signal_power')) *
+    (1 + Math.max(0, gear.dmg_pct || 0) / 100) *
+    ((C.BASE_DAMAGE + Math.max(0, gear.flat_dmg || 0)) / C.BASE_DAMAGE) *
+    (1 + Math.max(0, gear.atk_spd || 0) / 100) *
+    (1 + Math.max(0, gear.crit_pct || 0) / 100) *
+    Math.max(1, s.meta.live || 1);
+  const corruptionTier = Math.max(0, pack?.tier || s.route.corruptionByPack?.[s.route.currentPackId] || 0);
+  const hp = routeEnemyHp(zone, s.run.hero.scanner, permanentPower, corruptionTier, typeHpMult(type));
   const alive = s.world.enemies.filter((e) => e.hp > 0);
   // Spawn ahead of melee stop so approach is clear (enemy not glued to mascot)
   const x = s.world.heroX + 150 + Math.random() * 28;
   const flavor = ENEMY_FLAVOR[type] || ENEMY_FLAVOR.stale;
+  const targetIndex = ({ stale: 0, rumor: 1, lag: 2, spoiler: 3, patch: 3, event: 4 })[type] ?? 0;
+  const target = type === 'boss' ? pack?.boss : pack?.targets?.[targetIndex];
 
   return {
     id: Math.random().toString(36).slice(2, 9),
     type,
-    label: flavor.label,
+    label: target?.label || flavor.label,
+    packId: pack?.id || s.route.currentPackId,
+    frame: type === 'boss' ? pack?.boss?.frame || 'boss' : target?.frame || 'common-a',
     color: flavor.color,
     x,
     displayX: x,
@@ -449,7 +475,7 @@ function grantXp(s, amount) {
 
 function onKill(s, e) {
   s.meta.kills += 1;
-  s.run.killsInZone += 1;
+  s.route.killsInZone += 1;
 
   // combo juice
   s.stats.combo += 1;
@@ -461,7 +487,9 @@ function onKill(s, e) {
     tip(s, 'combo');
   }
 
-  const zone = s.run.zone;
+  const zone = s.route.zone;
+  const localZone = zone % C.SEASON_ZONES;
+  const maturityReward = Math.min(0.5, Math.floor(zone / C.SEASON_ZONES) * 0.05);
   const gb = gearBonuses(s.meta.gear);
   const eco = economyMult(s);
   const byteM =
@@ -482,16 +510,25 @@ function onKill(s, e) {
   }
 
   const bytes =
-    C.BYTE_BASE * (1 + 0.09 * zone) * typeByte * byteM * comboMult * (0.9 + Math.random() * 0.2);
+    C.BYTE_BASE *
+    (1 + 0.09 * localZone + maturityReward) *
+    typeByte *
+    byteM *
+    comboMult *
+    (0.9 + Math.random() * 0.2);
   s.run.bytes += bytes;
   floater(s, e.displayX, 170, `+${bytes | 0} Signal`, '#6cb8ff');
+  lootFlight(s, e, 'signal');
   particles(s, e.displayX, 190, '#6cb8ff', 10 + Math.min(14, s.stats.combo), 'coin');
   s.ui.chipPulse = s.ui.chipPulse || {};
   s.ui.chipPulse.bytes = 0.35;
   if (s.settings.sfx !== false) sfx(e.type === 'patch' ? 'notes' : 'coin');
 
   const xpM = (1 + metaPer(s, 'xp_posts')) * (1 + metaPer(s, 'xp_global'));
-  grantXp(s, C.XP_BASE * (1 + 0.11 * zone) * typeXp * xpM * comboMult);
+  grantXp(
+    s,
+    C.XP_BASE * (1 + 0.11 * localZone + maturityReward) * typeXp * xpM * comboMult
+  );
 
   const patchM =
     (1 + metaPer(s, 'patch_gain')) * (1 + (gb.notes_pct || 0) / 100) * eco;
@@ -499,6 +536,7 @@ function onKill(s, e) {
     const p = C.PATCH_FROM_CHAMP * patchM;
     s.run.patches += p;
     floater(s, e.displayX, 135, `+${p | 0} Notes`, tone('notes'), true);
+    lootFlight(s, e, 'notes');
     particles(s, e.displayX, 150, tone('notes'), 20, 'coin');
     confetti(s, e.displayX, 180, [tone('notes'), '#fff', '#e6b84d'], 24);
     tip(s, 'patch');
@@ -506,12 +544,10 @@ function onKill(s, e) {
   }
   if (e.type === 'boss') {
     s.run.patches += C.PATCH_FROM_BOSS * patchM;
+    lootFlight(s, e, 'notes');
     s.meta.bosses += 1;
     s.world.bossActive = false;
     s.world.bossTimer = 0;
-    ensurePremium(s);
-    s.meta.premium.coins += PREMIUM.coinsPerBoss;
-    floater(s, e.displayX, 80, `+${PREMIUM.coinsPerBoss} coins`, '#e6b84d');
     toast(s, pick(BOSS_WIN));
     floater(s, e.displayX, 115, 'GATE CLEARED', '#FF2F4B', true);
     confetti(s, e.displayX, 170, ['#FC1243', '#FF2F4B', '#e6b84d', '#fff'], 40);
@@ -549,7 +585,7 @@ function onKill(s, e) {
       tip(s, 'gear');
     }
     s.ui.panelDirty = true;
-    if (s.settings.sfx !== false) sfx('upgrade');
+    if (s.settings.sfx !== false) sfx('loot');
   }
 
   particles(s, e.displayX, 210, e.color, e.type === 'boss' ? 26 : 14);
@@ -561,23 +597,32 @@ function onKill(s, e) {
 
   // zone progress — endless; checkpoints every SEASON.zones for prestige
   const need = killsNeeded(zone);
-  if (s.run.killsInZone >= need) {
-    s.run.zone += 1;
-    s.run.killsInZone = 0;
+  if (s.route.killsInZone >= need) {
+    const completedPack = packForRoute(s.route, GAME_PACKS);
+    s.route.zone += 1;
+    s.route.killsInZone = 0;
     s.world.enemies = [];
     s.world.bossActive = false;
     s.world.spawnCd = 0.35;
+    const nextPack = packForRoute(s.route, GAME_PACKS);
+    if (completedPack && nextPack && completedPack.id !== nextPack.id) {
+      const alreadySeen = s.route.seenPackIds.includes(completedPack.id);
+      if (!alreadySeen) s.route.seenPackIds.push(completedPack.id);
+      else s.route.corruptionByPack[completedPack.id] = Math.min(4, (s.route.corruptionByPack[completedPack.id] || 0) + 1);
+      s.route.lastSeenByPack[completedPack.id] = s.route.zone;
+      s.route.currentPackId = nextPack.id;
+    }
     if (s.settings.sfx !== false) sfx('zone');
     hubOnZone(s);
 
-    if (isSeasonCheckpoint(s.run.zone)) {
+    if (isSeasonCheckpoint(s.route.zone)) {
       s.ui.seasonDone = true;
-      toast(s, `Zone ${s.run.zone} checkpoint! Ship Notes, then End Season for Live Mult.`);
+      toast(s, `Zone ${s.route.zone} checkpoint! Ship Notes, then End Season for Live Mult.`);
       tip(s, 'season');
     } else {
-      toast(s, `Zone ${s.run.zone + 1}`, 1.4);
+      toast(s, `Zone ${s.route.zone + 1}`, 1.4);
     }
-    if (isBossZone(s.run.zone)) tip(s, 'boss');
+    if (isBossZone(s.route.zone)) tip(s, 'boss');
   }
 }
 
@@ -597,7 +642,8 @@ function dealDamage(s, e, amount, isCrit) {
     155 + Math.random() * 20,
     `${isCrit ? 'CRIT ' : ''}${Math.round(amount)}`,
     isCrit ? '#FF2F4B' : '#F5F6F8',
-    isCrit
+    isCrit,
+    e.id
   );
   particles(s, e.displayX, 200, isCrit ? '#FC1243' : '#F5F6F8', isCrit ? 8 : 4);
   if (s.settings.sfx !== false) sfx(isCrit ? 'crit' : 'hit');
@@ -637,7 +683,7 @@ export function step(s, dt) {
   const sprintOn = isSprinting(s);
   const eRegenNow = sprintOn ? st.eRegen * 0.25 : st.eRegen;
   h.energy = clamp(h.energy + eRegenNow * dt, 0, st.eMax);
-  h.mana = clamp(h.mana + st.mRegen * dt, 0, st.mMax);
+  h.focus = clamp(h.focus + st.fRegen * dt, 0, st.fMax);
   h.attackAnim = Math.max(0, h.attackAnim - dt * 4);
   h.hitRecoil = Math.max(0, h.hitRecoil - dt * 5);
 
@@ -656,7 +702,7 @@ export function step(s, dt) {
     if (h.energy > 0) {
       h.energy = Math.max(0, h.energy - st.sprintDrain * dt);
       s.ui.sprintEmptyToast = false;
-    } else if ((s.ui.sprintWanted || hasAutoSprint(s)) && !s.ui.sprintEmptyToast) {
+    } else if (s.ui.sprintWanted && !s.ui.sprintEmptyToast) {
       s.ui.sprintEmptyToast = true;
       toast(s, 'Energy empty — grab green orbs or wait', 1.8);
     }
@@ -702,7 +748,8 @@ export function step(s, dt) {
     if (s.world.bossTimer <= 0) {
       const boss = s.world.enemies.find((e) => e.type === 'boss' && e.hp > 0);
       if (boss) {
-        boss.hp = boss.hpMax;
+        // The timer is pressure/telemetry, never a permanent idle wall. Damage
+        // carries into the next cycle so every attack remains meaningful.
         toast(s, pick(BOSS_FAIL));
       }
       s.world.bossTimer = C.BOSS_TIMER;
@@ -797,6 +844,10 @@ export function step(s, dt) {
     if (p.spin) p.rot = (p.rot || 0) + p.spin * dt;
     return p.t > 0;
   });
+  s.world.lootFlights = (s.world.lootFlights || []).filter((flight) => {
+    flight.t -= dt;
+    return flight.t > 0;
+  });
   if (!s.world.confetti) s.world.confetti = [];
   s.world.confetti = s.world.confetti.filter((c) => {
     c.t -= dt;
@@ -833,7 +884,7 @@ export function collectAlert(s, a) {
     );
     floater(s, a.x, a.y, '+ENERGY', '#10B981');
   } else {
-    const b = (4 + 0.6 * s.run.zone) * bonus * n * economyMult(s);
+    const b = (4 + 0.6 * s.route.zone) * bonus * n * economyMult(s);
     s.run.bytes += b;
     floater(s, a.x, a.y, `+${b | 0} Signal`, '#6cb8ff');
   }
@@ -848,11 +899,11 @@ export function castHotfix(s) {
   if (lv < 1) return false;
   const st = combatStats(s);
   const cost = 10;
-  if (s.run.hero.mana < cost) {
-    toast(s, 'Not enough mana');
+  if (s.run.hero.focus < cost) {
+    toast(s, `Burst Hit needs ${cost} Focus`);
     return false;
   }
-  s.run.hero.mana -= cost;
+  s.run.hero.focus -= cost;
   const target = s.world.enemies.find((e) => e.hp > 0);
   if (!target) {
     toast(s, 'Hotfix ready — no target');
@@ -867,11 +918,11 @@ export function castHotfix(s) {
 export function castSummary(s) {
   const lv = skillLv(s, 'summary_burst');
   if (lv < 1) return false;
-  if (s.run.hero.mana < 12) {
-    toast(s, 'Not enough mana');
+  if (s.run.hero.focus < 12) {
+    toast(s, 'Summary Burst needs 12 Focus');
     return false;
   }
-  s.run.hero.mana -= 12;
+  s.run.hero.focus -= 12;
   s.run.hero.summaryT = 3.2 + 0.25 * lv;
   toast(s, 'Summary Burst!');
   particles(s, s.world.heroX, 200, '#6cb8ff', 14);
@@ -931,14 +982,14 @@ export function buyScanner(s) {
   toast(s, pick(SCANNER_LINES) + ` (Lv ${s.run.hero.scanner})`);
   particles(s, s.world.heroX, 200, '#FC1243', 16);
   confetti(s, s.world.heroX, 190, ['#FC1243', '#ff6b8a', '#fff'], 16);
-  floater(s, s.world.heroX, 150, `SIGNAL Lv ${s.run.hero.scanner}`, '#FC1243', true);
+  floater(s, s.world.heroX, 150, `WEAPON Lv ${s.run.hero.scanner}`, '#FC1243', true);
   s.ui.chipPulse = s.ui.chipPulse || {};
   s.ui.chipPulse.bytes = 0.3;
   if (s.settings.sfx !== false) sfx('upgrade');
   return true;
 }
 
-/** Convert banked Notes → permanent Reputation */
+/** Convert banked Notes → permanent Rep */
 export function shipPatches(s) {
   const p = Math.floor(s.run.patches);
   if (p < 1) {
@@ -946,15 +997,13 @@ export function shipPatches(s) {
     tip(s, 'ship');
     return false;
   }
-  // Live Mult already in economy; ship payout uses live × pro × boost via economyMult / live
+  // Live Mult is already represented by economyMult.
   const gained = Math.floor(p * C.SHIP_RATE * economyMult(s));
   s.run.patches = 0;
   s.authority.amount += gained;
   s.authority.shippedThisSeason += gained;
   s.meta.ships += 1;
   s.meta.postsShippedTotal += gained;
-  ensurePremium(s);
-  s.meta.premium.coins += PREMIUM.coinsPerShip;
   hubOnShip(s, p);
   s.run.hero.energy = combatStats(s).eMax;
   toast(s, pick(SHIP_LINES) + ` (+${gained} Rep)`);
@@ -975,7 +1024,7 @@ export function buyMeta(s, id) {
   const lv = metaLv(s, id);
   const cost = metaCost(d.base, d.growth, lv);
   if (s.authority.amount < cost) {
-    toast(s, 'Not enough Reputation');
+    toast(s, 'Not enough Rep');
     return false;
   }
   s.authority.amount -= cost;
@@ -988,17 +1037,18 @@ export function buyMeta(s, id) {
   return true;
 }
 
-/**
- * End Season (prestige).
- * KEEP: Live Mult, Boosts, Rep, gear (weapon+armor+bag).
- * RESET: zone, Signal weapon Lv, rank, attrs, skills, Notes.
- */
+export const END_SEASON_CONTRACT = Object.freeze({
+  resets: Object.freeze(['Weapon level', 'Rank and SP', 'Build skills', 'Notes', '85% of Signal']),
+  keeps: Object.freeze(['Route Zone', 'Rep and Boosts', 'Gear', 'Live Mult']),
+});
+
+/** End Season (prestige). UI reads END_SEASON_CONTRACT before this mutation. */
 export function leaveSeason(s) {
-  if (!s.ui.seasonDone && s.run.zone < SEASON.zones) {
-    toast(s, `Reach Zone ${SEASON.zones} checkpoint to End Season`);
+  if (!s.ui.seasonDone && !isSeasonCheckpoint(s.route.zone)) {
+    toast(s, `Reach Zone ${nextSeasonBoundary(s.route.zone)} checkpoint to End Season`);
     return false;
   }
-  if (!s.ui.seasonDone && s.run.zone >= SEASON.zones) {
+  if (!s.ui.seasonDone && isSeasonCheckpoint(s.route.zone)) {
     s.ui.seasonDone = true;
   }
   const gain = liveGain(s.authority.shippedThisSeason);
@@ -1007,8 +1057,7 @@ export function leaveSeason(s) {
   s.authority.shippedThisSeason = 0;
   // gear is on meta — intentionally untouched (normalize for multi-slot)
   s.meta.gear = normalizeGear(s.meta.gear);
-  s.run.zone = 0;
-  s.run.killsInZone = 0;
+  s.route.killsInZone = 0;
   s.run.bytes = Math.floor(s.run.bytes * 0.15);
   s.run.patches = 0;
   const h = s.run.hero;
@@ -1019,7 +1068,7 @@ export function leaveSeason(s) {
   h.skills = {};
   h.scanner = 0; // Signal level is season-only
   h.energy = C.ENERGY_MAX;
-  h.mana = C.MANA_MAX;
+  h.focus = C.FOCUS_MAX;
   h.trackerOn = false;
   h.deepOn = false;
   h.trackerStacks = 0;
@@ -1027,11 +1076,9 @@ export function leaveSeason(s) {
   s.world.bossActive = false;
   s.world.attackCd = 0;
   s.ui.seasonDone = false;
-  ensurePremium(s);
-  s.meta.premium.coins += PREMIUM.coinsPerSeason;
   toast(
     s,
-    `New season! Live ×${s.meta.live.toFixed(2)} (+${gain.toFixed(3)}). Gear · Boosts · Pro kept · Signal Lv reset · +${PREMIUM.coinsPerSeason} coins`
+    `New season! Live ×${s.meta.live.toFixed(2)} (+${gain.toFixed(3)}). Gear · Rep Boosts kept · Weapon Lv reset`
   );
   s.ui.panelDirty = true;
   confetti(s, s.world.heroX, 180, ['#e6b84d', '#FC1243', '#fff', '#3ecf8e'], 36);
@@ -1070,152 +1117,6 @@ export function sellGear(s, itemId) {
   s.ui.panelDirty = true;
   if (s.settings.sfx !== false) sfx('coin');
   return res;
-}
-
-/**
- * Open a premium gear box (coin sink).
- * Rolls N pieces, offers each (equip if empty/better), shows last as loot card.
- */
-export function buyGearBox(s, boxId) {
-  ensurePremium(s);
-  const def = PREMIUM.boxes?.find((b) => b.id === boxId);
-  if (!def) return false;
-  if (s.meta.premium.coins < def.coinCost) {
-    toast(s, `Need ${def.coinCost} coins`);
-    return false;
-  }
-  s.meta.gear = normalizeGear(s.meta.gear);
-  s.meta.premium.coins -= def.coinCost;
-
-  const rolls = Math.max(1, def.rolls | 0);
-  let last = null;
-  let equippedAny = false;
-  for (let i = 0; i < rolls; i++) {
-    const slot = pickSlotForGear(s.meta.gear, def.preferEmpty !== false);
-    const item = rollItem(s.run.zone, slot, {
-      luck: def.luck || 1.5,
-      minRarity: def.minRarity || null,
-    });
-    const res = offerItem(s.meta.gear, item);
-    if (res.equipped) equippedAny = true;
-    last = { item, equipped: res.equipped };
-  }
-
-  if (last) {
-    s.ui.lootDrop = {
-      item: last.item,
-      equipped: last.equipped,
-      t: 2.8,
-      life: 2.8,
-    };
-  }
-  hubOnGear(s);
-  const nLab = rolls > 1 ? `${rolls} pieces` : '1 piece';
-  toast(
-    s,
-    `${def.name} · ${nLab}${equippedAny ? ' · equipped upgrades' : ' · bag'}`
-  );
-  confetti(s, s.world.heroX, 180, ['#e6b84d', '#5eb0ff', '#FC1243', '#fff'], 26);
-  tip(s, 'gear');
-  s.ui.panelDirty = true;
-  if (s.settings.sfx !== false) sfx('upgrade');
-  return true;
-}
-
-/** Unlock APN Pro (IAP hook — demo unlock in Menu) */
-export function unlockPro(s) {
-  ensurePremium(s);
-  if (s.meta.premium.pro) {
-    toast(s, 'APN Pro already active');
-    return false;
-  }
-  s.meta.premium.pro = true;
-  s.meta.premium.autoSprint = true;
-  toast(s, `APN Pro · ×${PREMIUM.pro.mult} + Auto-Sprint`);
-  tip(s, 'premium');
-  s.ui.panelDirty = true;
-  confetti(s, s.world.heroX, 180, ['#e6b84d', '#FC1243', '#fff'], 28);
-  if (s.settings.sfx !== false) sfx('rank');
-  return true;
-}
-
-/** Buy Auto-Sprint without full Pro (coin sink) */
-export function unlockAutoSprint(s) {
-  ensurePremium(s);
-  if (s.meta.premium.autoSprint || s.meta.premium.pro) {
-    toast(s, 'Auto-Sprint already on');
-    return false;
-  }
-  const cost = PREMIUM.auto_sprint.coinCost;
-  if (s.meta.premium.coins < cost) {
-    toast(s, `Need ${cost} coins`);
-    return false;
-  }
-  s.meta.premium.coins -= cost;
-  s.meta.premium.autoSprint = true;
-  toast(s, 'Auto-Sprint on · still drains energy');
-  s.ui.panelDirty = true;
-  if (s.settings.sfx !== false) sfx('upgrade');
-  return true;
-}
-
-/** Buy timed 2× boost with coins */
-export function buyBoost2x(s) {
-  ensurePremium(s);
-  const cost = PREMIUM.boost_2x.coinCost;
-  if (s.meta.premium.coins < cost) {
-    toast(s, `Need ${cost} coins (bosses, ships, hub rewards)`);
-    return false;
-  }
-  s.meta.premium.coins -= cost;
-  const add = PREMIUM.boost_2x.minutes * 60 * 1000;
-  const base = Math.max(Date.now(), s.meta.premium.boostEndsAt || 0);
-  s.meta.premium.boostEndsAt = base + add;
-  toast(s, `2× Boost · ${PREMIUM.boost_2x.minutes}m`);
-  s.ui.panelDirty = true;
-  confetti(s, s.world.heroX, 180, ['#e6b84d', '#fff'], 20);
-  if (s.settings.sfx !== false) sfx('upgrade');
-  return true;
-}
-
-/** Time Warp +1h idle (cooldown) */
-export function timeWarp(s) {
-  ensurePremium(s);
-  const def = PREMIUM.time_warp;
-  if (Date.now() < (s.meta.premium.warpCdUntil || 0)) {
-    const m = Math.ceil((s.meta.premium.warpCdUntil - Date.now()) / 60000);
-    toast(s, `Time Warp cooling down · ${m}m`);
-    return false;
-  }
-  if (s.meta.premium.coins < def.coinCost) {
-    toast(s, `Need ${def.coinCost} coins`);
-    return false;
-  }
-  s.meta.premium.coins -= def.coinCost;
-  s.meta.premium.warpCdUntil = Date.now() + 8 * 60 * 1000; // 8 min CD
-  const summary = simulateOffline(s, def.seconds);
-  toast(
-    s,
-    summary
-      ? `Time Warp +1h · +${Math.floor(summary.bytes)} Signal · Z+${summary.zones}`
-      : 'Time Warp complete'
-  );
-  s.ui.panelDirty = true;
-  confetti(s, s.world.heroX, 180, ['#5eb0ff', '#fff', '#FC1243'], 24);
-  if (s.settings.sfx !== false) sfx('zone');
-  return true;
-}
-
-/** Mock coin pack purchase (IAP stub) */
-export function buyCoinPack(s, packId) {
-  ensurePremium(s);
-  const pack = PREMIUM.packs.find((p) => p.id === packId);
-  if (!pack) return false;
-  s.meta.premium.coins += pack.coins;
-  toast(s, `+${pack.coins} coins (${pack.priceLabel})`);
-  s.ui.panelDirty = true;
-  if (s.settings.sfx !== false) sfx('coin');
-  return true;
 }
 
 /** Claim a daily/weekly hub objective */
@@ -1267,54 +1168,69 @@ export {
   gearBonuses,
   rarityColor,
   rarityLabel,
-  PREMIUM,
   ensureHub,
   normalizeGear,
   SLOTS,
 };
 
 export function simulateOffline(s, seconds) {
-  const T = Math.min(seconds, C.OFFLINE_CAP);
+  const budget = offlineRouteBudget(s.route.zone, seconds);
+  const T = budget.seconds;
   if (T < 3) return null;
   const before = {
     bytes: s.run.bytes,
     patches: s.run.patches,
     level: s.run.hero.level,
-    zone: s.run.zone,
+    zone: s.route.zone,
     kills: s.meta.kills,
+    bosses: s.meta.bosses,
   };
   s.world.sprinting = false;
-  const steps = Math.min(Math.floor(T / C.FIXED_DT), 60 * 60 * 3);
-  for (let i = 0; i < steps; i++) step(s, C.FIXED_DT);
+  const previousSfx = s.settings.sfx;
+  s.settings.sfx = false;
+  const maxSimulatedSeconds = 3 * 3600;
+  const stepLimit = Math.min(
+    Math.floor(T / C.FIXED_DT),
+    Math.floor(maxSimulatedSeconds / C.FIXED_DT)
+  );
+  let steps = 0;
+  try {
+    while (steps < stepLimit && s.route.zone < budget.boundary) {
+      step(s, C.FIXED_DT);
+      steps += 1;
+    }
+  } finally {
+    s.settings.sfx = previousSfx;
+  }
   const sim = steps * C.FIXED_DT;
-  if (T > sim) {
-    let idle = C.IDLE_EFF;
-    if (s.meta.premium?.pro) idle = Math.min(0.96, idle + 0.06);
-    const ratio = ((T - sim) / Math.max(sim, 1)) * idle;
+  const overflowSeconds = Math.max(0, T - sim);
+  if (overflowSeconds > 0) {
+    const idle = C.IDLE_EFF;
     const db = Math.max(0, s.run.bytes - before.bytes);
     const dp = Math.max(0, s.run.patches - before.patches);
-    s.run.bytes += db * ratio;
-    s.run.patches += dp * ratio;
-    // zone/xp approx
-    const dk = Math.max(0, s.meta.kills - before.kills) * ratio;
-    let rem = Math.floor(dk);
-    while (rem-- > 0) {
-      s.run.killsInZone += 1;
-      s.meta.kills += 1;
-      if (s.run.killsInZone >= killsNeeded(s.run.zone)) {
-        s.run.zone += 1;
-        s.run.killsInZone = 0;
-        if (isSeasonCheckpoint(s.run.zone)) s.ui.seasonDone = true;
-      }
-    }
+    const signalRate = db > 0 ? db / Math.max(sim, 1) : C.BYTE_BASE / 10;
+    const notesRate = dp > 0 ? dp / Math.max(sim, 1) : 0;
+    s.run.bytes += signalRate * overflowSeconds * idle;
+    s.run.patches += notesRate * overflowSeconds * idle;
   }
+  const signal = s.run.bytes - before.bytes;
+  const notes = s.run.patches - before.patches;
+  const ranks = s.run.hero.level - before.level;
   return {
     seconds: T,
-    bytes: s.run.bytes - before.bytes,
-    patches: s.run.patches - before.patches,
-    levels: s.run.hero.level - before.level,
-    zones: s.run.zone - before.zone,
+    simulatedSeconds: sim,
+    overflowSeconds,
+    signal,
+    notes,
+    ranks,
+    zones: s.route.zone - before.zone,
     kills: s.meta.kills - before.kills,
+    bosses: s.meta.bosses - before.bosses,
+    stoppedAtSeasonBoundary: s.route.zone >= budget.boundary,
+    // Compatibility aliases for the current offline recap UI.
+    bytes: signal,
+    patches: notes,
+    levels: ranks,
   };
 }
 

@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>APN Host Render Lock</title>
+    <style>
+      html, body { margin: 0; min-height: 100%; background: #07111c; color: #f5f6f8; font: 14px system-ui; }
+      body { display: grid; place-items: center; }
+      main { display: grid; gap: 12px; justify-items: center; }
+      canvas { width: 512px; height: 512px; max-width: 90vw; background: #101b28; border: 1px solid #294059; }
+      p { margin: 0; color: #9fb0c3; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <canvas id="stage" width="512" height="512" aria-label="Canonical APN Host GLB render"></canvas>
+      <p>Canonical GLB · orthographic 18°Y / 9°X · foot-center pivot</p>
+    </main>
+    <script type="module" src="./render.js"></script>
+  </body>
+</html>

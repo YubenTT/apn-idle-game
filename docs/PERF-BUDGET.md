@@ -14,10 +14,11 @@ and hold frame rate on mid/low devices. A slow idle game defeats its own purpose
 |--------|-------:|
 | First-playable compressed asset set | `< 5 MB` |
 | Core runtime JS (all `js/*.js`, ungzipped today) | keep lean; audit if `> 250 KB` raw |
-| Core UI/sprite atlas (when packed) | `≤ 512 KB` WebP |
+| Core UI/sprite atlas | `≤ 512 KB` WebP |
 | Mascot base atlas | `≤ 650 KB` WebP |
-| Enemy atlas | `≤ 800 KB` WebP |
-| Background atlas | `≤ 700 KB` WebP |
+| Per-pack target atlas | `≤ 140 KB` WebP |
+| Per-pack background | `≤ 150 KB` WebP |
+| Per-pack props + masks | `≤ 50 KB` combined |
 | SFX preload | `≤ 300 KB` (currently WebAudio-synth, ~0 asset bytes) |
 | Cold start (Wi-Fi) | `< 3.5 s` |
 | Cold start (good 4G) | `< 6 s` |
@@ -58,7 +59,7 @@ a reason.
 |-------|------|
 | Domain correctness (no browser) | `node qa/run-tests.mjs` |
 | Frame time / heap | browser devtools Performance + Memory on the target device matrix |
-| Asset size gate | `scripts/verify_sizes.mjs` (planned) or manual `ls -la assets` |
+| Asset size gate | `node scripts/assets/verify-sizes.mjs` |
 | Visual regression | `qa/screenshots/` reference diffs |
 
 ## Budget-breach policy
@@ -66,3 +67,10 @@ a reason.
 If a change breaks a budget: either bring it back under, or open an
 [ADR](./decisions/) accepting the new number with rationale. Silent overruns are
 the bug — a breach with a recorded decision is fine.
+
+`assets/manifest.json` is deterministic and records byte size plus SHA-256 for
+every shipped raster/vector/GLB/JSON. `qa/check-assets.mjs` regenerates it twice,
+requires byte-identical output, and enforces at most two hot pack records.
+`qa/check-asset-loader.mjs` additionally executes current/next preload, optional
+fallback, transition release, Zone 200/201, and explicit close semantics without
+a browser; muted Chrome then verifies the real decode/composite path.

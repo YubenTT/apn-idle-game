@@ -6,41 +6,32 @@
     <meta name="theme-color" content="#0d1217" />
     <meta name="color-scheme" content="dark" />
     <title>APN Idle</title>
-    <link rel="icon" href="./assets/apn-logo.svg" />
-    <link rel="stylesheet" href="./css/game.css?v=ux1" />
+    <link rel="icon" href="./assets/apn-logo.svg?v=round-v1" />
+    <link rel="stylesheet" href="./css/game.css?v=run-surface-r006" />
   </head>
   <body>
     <div id="app">
       <header class="hud-top">
-        <div class="hud-brand">
-          <strong class="hud-title">APN <span>Idle</span></strong>
-          <div class="hud-meta" role="status">
-            <span id="v-combo" class="meta-pill combo" hidden></span>
-            <span class="meta-pill" title="Economy mult (Live × Pro × Boost)"><span class="meta-k">×</span><em id="v-live">1.00</em></span>
-            <span class="meta-pill pro-badge" id="v-pro" hidden title="APN Pro">PRO</span>
-            <span class="meta-pill sp" title="Unspent skill points"><em id="v-sp">0</em><span class="meta-k">sp</span></span>
-
+        <div class="hud-res" role="status" aria-label="Run resources">
+          <div class="chip signal" title="Signal — Upgrade Weapon">
+            <small>Signal</small><strong id="v-bytes">0</strong>
           </div>
-        </div>
-        <div class="hud-res">
-          <div class="chip" title="Signal — Upgrade Weapon">
-            <strong id="v-bytes">0</strong><small>sig</small>
+          <span class="resource-cutout" aria-hidden="true"></span>
+          <div class="chip notes" title="Notes — Ship for Rep">
+            <small>Notes</small><strong id="v-patches">0</strong>
           </div>
-          <div class="chip" title="Notes — Ship for Rep">
-            <strong id="v-patches">0</strong><small>notes</small>
-          </div>
-          <div class="chip" title="Rep — permanent Boosts">
-            <strong id="v-auth">0</strong><small>rep</small>
-          </div>
-          <div class="chip" title="Damage per second">
-            <strong id="v-dps">0</strong><small>dps</small>
+          <div class="chip sp" title="SP — spend in Build">
+            <small>SP</small><strong id="v-sp">0</strong>
           </div>
         </div>
       </header>
 
-      <div class="hud-ticker">
-        <div class="live-tag">LIVE</div>
-        <div class="ticker-clip"><div class="ticker-track" id="ticker-track"></div></div>
+      <div class="hud-ticker" role="status" aria-label="Current live patch feed">
+        <img class="feed-source" src="./assets/apn-logo.svg?v=round-v1" alt="" width="16" height="16" />
+        <strong class="feed-game" id="feed-game">Valorant</strong>
+        <span class="feed-kind patch">Patch</span>
+        <span class="feed-copy" id="feed-copy">Agent update notes live</span>
+        <span class="feed-live"><i aria-hidden="true"></i>Live</span>
       </div>
 
       <main class="hud-stage">
@@ -59,32 +50,23 @@
             </div>
             <div class="stage-stat-track"><i id="bar-xp" class="xp"></i></div>
           </div>
+          <div class="stage-stat live">
+            <div class="stage-stat-top">
+              <span class="stage-stat-lab">LIVE</span>
+              <span class="stage-live-value">×<em id="v-live">1.00</em></span>
+            </div>
+            <div class="stage-live-meta">
+              <span id="v-combo" class="stage-combo" hidden></span>
+              <span class="stage-live-state"><i aria-hidden="true"></i>ACTIVE</span>
+            </div>
+          </div>
         </div>
         <canvas id="game"></canvas>
         <!-- In-stage bag FAB (Gear) — icon-only, left rail -->
-        <button type="button" class="bag-fab" id="btn-bag" data-panel="gear" title="Gear" aria-label="Open Gear">
+        <button type="button" class="bag-fab" id="btn-bag" data-panel="gear" title="Gear" aria-label="Open Gear" aria-controls="sheet-root" aria-expanded="false">
           <svg class="bag-fab-ico" viewBox="0 0 32 32" aria-hidden="true">
-            <defs>
-              <linearGradient id="bagBody" x1="0%" y1="0%" x2="40%" y2="100%">
-                <stop offset="0%" stop-color="#ff8a5c"/>
-                <stop offset="55%" stop-color="#fc1243"/>
-                <stop offset="100%" stop-color="#b80d32"/>
-              </linearGradient>
-              <linearGradient id="bagTop" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stop-color="#ffd27a"/>
-                <stop offset="100%" stop-color="#e6b84d"/>
-              </linearGradient>
-            </defs>
-            <!-- strap -->
-            <path fill="none" stroke="#e6b84d" stroke-width="2.2" stroke-linecap="round"
-              d="M11 12V9.2a5 5 0 0110 0V12"/>
-            <!-- body -->
-            <path fill="url(#bagBody)" d="M7.5 12.5h17a2.2 2.2 0 012.2 2.2v11.6a2.7 2.7 0 01-2.7 2.7H8a2.7 2.7 0 01-2.7-2.7V14.7a2.2 2.2 0 012.2-2.2z"/>
-            <!-- flap highlight -->
-            <path fill="url(#bagTop)" opacity="0.95" d="M7.5 12.5h17a2.2 2.2 0 012.2 2.2v1.6H5.3v-1.6a2.2 2.2 0 012.2-2.2z"/>
-            <!-- clasp -->
-            <circle cx="16" cy="17.2" r="1.6" fill="#fff6d6"/>
-            <path fill="#1a0c10" opacity="0.25" d="M14.2 20.5h3.6v5.2h-3.6z"/>
+            <path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"
+              d="M10 12V9a6 6 0 0112 0v3M6 12h20v16H6zM6 17h20M14 21h4" />
           </svg>
           <span class="bag-fab-badge" id="bag-badge" hidden>0</span>
         </button>
@@ -95,12 +77,12 @@
       <section class="hud-bars">
         <div class="bar-row2">
           <div class="bar" id="bar-energy-wrap">
-            <div class="bar-lab"><span>Energy</span><span id="v-energy-lab">Sprint fuel</span></div>
+            <div class="bar-lab"><span>Energy</span><span id="v-energy-lab">100%</span></div>
             <div class="bar-bg"><div id="bar-energy" class="bar-fg en"></div></div>
           </div>
           <div class="bar">
-            <div class="bar-lab"><span>Mana</span><span>Skills</span></div>
-            <div class="bar-bg"><div id="bar-mana" class="bar-fg mn"></div></div>
+            <div class="bar-lab"><span>Focus</span><span id="v-focus-lab">100%</span></div>
+            <div class="bar-bg"><div id="bar-focus" class="bar-fg mn"></div></div>
           </div>
         </div>
       </section>
@@ -111,14 +93,18 @@
             <span class="btn-sprint-ico" aria-hidden="true">⚡</span>
             <span class="btn-sprint-txt">
               <span class="btn-sprint-title">Sprint</span>
-              <span class="btn-sprint-sub">Hold · ×1.85 speed</span>
+              <span class="btn-sprint-sub">Hold · ×1.85</span>
             </span>
           </button>
           <button type="button" id="btn-scanner" class="btn-primary">
-            <span class="btn-primary-title">Upgrade Signal</span>
-            <span class="btn-primary-sub"
-              ><span id="v-cost">14</span> Signal · Lv <span id="v-scanner">0</span></span
-            >
+            <svg class="cta-weapon-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 11h12l-2-2 2-2 6 5-6 5-2-2 2-2H3z" />
+            </svg>
+            <span class="cta-weapon-copy">
+              <span class="btn-primary-title">Upgrade Weapon</span>
+              <span class="btn-primary-sub"><span id="v-scan-delta">+8%</span> Damage · Lv <span id="v-scanner">0</span>→<span id="v-scanner-next">1</span></span>
+            </span>
+            <span class="cost-chip"><strong id="v-cost">14</strong><small>Signal</small></span>
           </button>
         </div>
         <div class="btn-skills" id="skill-shortcuts">
@@ -130,7 +116,7 @@
       </section>
 
       <nav class="hud-nav" aria-label="Main">
-        <button type="button" data-panel="skills" class="nav-btn">
+        <button type="button" data-panel="skills" class="nav-btn" aria-controls="sheet-root" aria-expanded="false">
           <svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"
             ><path
               fill="currentColor"
@@ -139,13 +125,13 @@
           >
           <span>Build</span>
         </button>
-        <button type="button" data-panel="ship" class="nav-btn">
+        <button type="button" data-panel="ship" class="nav-btn" aria-controls="sheet-root" aria-expanded="false">
           <svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"
             ><path fill="currentColor" d="M4 18h16v2H4v-2zm2-4l4-8 2 4 4-6 4 10H6z"
           /></svg>
           <span>Ship</span>
         </button>
-        <button type="button" data-panel="hub" class="nav-btn">
+        <button type="button" data-panel="hub" class="nav-btn" aria-controls="sheet-root" aria-expanded="false">
           <svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"
             ><path
               fill="currentColor"
@@ -154,7 +140,7 @@
           >
           <span>Hub</span>
         </button>
-        <button type="button" data-panel="meta" class="nav-btn">
+        <button type="button" data-panel="meta" class="nav-btn" aria-controls="sheet-root" aria-expanded="false">
           <svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"
             ><path
               fill="currentColor"
@@ -163,7 +149,7 @@
           >
           <span>Boosts</span>
         </button>
-        <button type="button" data-panel="settings" class="nav-btn">
+        <button type="button" data-panel="settings" class="nav-btn" aria-controls="sheet-root" aria-expanded="false">
           <svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"
             ><path
               fill="currentColor"
@@ -190,9 +176,17 @@
             <div id="ship-info" class="ship-stats" role="status"></div>
             <button type="button" id="btn-ship" class="btn-primary">
               <span class="btn-primary-title">Ship Notes → Rep</span>
-              <span class="btn-primary-sub">Permanent</span>
+              <span class="btn-primary-sub" id="ship-cta-sub">Permanent Rep</span>
             </button>
-            <button type="button" id="btn-leave" class="btn-ghost" hidden>End Season</button>
+            <button type="button" id="btn-leave" class="btn-ghost" hidden>End Season…</button>
+            <div id="season-confirm" class="season-confirm" hidden role="alertdialog" aria-labelledby="season-confirm-title">
+              <strong id="season-confirm-title">End this season?</strong>
+              <p>This applies the reset list above. Route progress and permanent growth stay.</p>
+              <div class="season-confirm-actions">
+                <button type="button" id="btn-leave-cancel" class="btn-ghost">Keep Playing</button>
+                <button type="button" id="btn-leave-confirm" class="btn-danger">End Season</button>
+              </div>
+            </div>
           </section>
           <section id="panel-gear" hidden>
             <div id="gear-body"></div>
@@ -204,14 +198,40 @@
             <div id="meta-body"></div>
           </section>
           <section id="panel-settings" hidden>
-            <div class="menu-block">
-              <label class="chk"><input type="checkbox" id="chk-motion" /> Reduced motion</label>
-              <label class="chk"><input type="checkbox" id="chk-sfx" checked /> Sound effects</label>
-            </div>
-            <p class="fine" id="v-attrs">Damage 0 · Crit 0 · Utility 0</p>
-            <div class="section-lab">Premium</div>
-            <div id="premium-body"></div>
-            <button type="button" id="btn-wipe" class="btn-ghost">New Game</button>
+            <section class="menu-section">
+              <h3 class="menu-section-title">Accessibility</h3>
+              <label class="menu-setting" for="chk-motion">
+                <span class="menu-setting-copy"><strong>Reduced motion</strong><small>Limits stage and interface movement</small></span>
+                <input type="checkbox" id="chk-motion" />
+                <span class="switch-ui" aria-hidden="true"></span>
+              </label>
+            </section>
+            <section class="menu-section">
+              <h3 class="menu-section-title">Audio</h3>
+              <label class="menu-setting" for="chk-sfx">
+                <span class="menu-setting-copy"><strong>Sound effects</strong><small>Combat, rewards, and interface cues</small></span>
+                <input type="checkbox" id="chk-sfx" checked />
+                <span class="switch-ui" aria-hidden="true"></span>
+              </label>
+            </section>
+            <section class="menu-section">
+              <h3 class="menu-section-title">Account</h3>
+              <div class="menu-info-row"><span><strong>Local save</strong><small>Stored only in this browser</small></span><b>Active</b></div>
+              <div class="menu-info-row"><span><strong>APN account</strong><small>Cross-device sync is not available</small></span><b>Local</b></div>
+              <a class="menu-link" href="./LICENSE" target="_blank" rel="noopener"><span>Legal</span><small>Open-source license</small></a>
+            </section>
+            <section class="menu-section menu-reset">
+              <h3 class="menu-section-title">Reset</h3>
+              <p>Deletes this browser's local progress. This cannot be undone.</p>
+              <button type="button" id="btn-wipe" class="btn-ghost">New Game…</button>
+              <div id="reset-confirm" class="reset-confirm" hidden role="alertdialog" aria-labelledby="reset-confirm-title">
+                <strong id="reset-confirm-title">Delete local progress?</strong>
+                <div class="reset-confirm-actions">
+                  <button type="button" id="btn-wipe-cancel" class="btn-ghost">Keep Save</button>
+                  <button type="button" id="btn-wipe-confirm" class="btn-danger">Delete Save</button>
+                </div>
+              </div>
+            </section>
           </section>
         </div>
       </div>
@@ -226,7 +246,7 @@
       </div>
       <div class="modal-card title-card">
         <div class="title-mark" aria-hidden="true">
-          <img src="./assets/apn-logo.svg" alt="" width="72" height="72" />
+          <img src="./assets/apn-logo.svg?v=round-v1" alt="" width="72" height="72" />
         </div>
         <h1 class="title-word">APN <span>Idle</span></h1>
         <button type="button" id="btn-start" class="btn-primary title-play">Play</button>
@@ -241,6 +261,6 @@
       </div>
     </div>
 
-    <script type="module" src="./js/main.js?v=ux1"></script>
+    <script type="module" src="./js/main.js?v=free-mvp-r005"></script>
   </body>
 </html>

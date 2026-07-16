@@ -1,0 +1,83 @@
+{
+  "id": "fc-26",
+  "order": 5,
+  "title": "EA Sports FC 26",
+  "genre": "sports-football",
+  "zones": 10,
+  "targets": [
+    {
+      "id": "wing-runner",
+      "role": "common-a",
+      "label": "Wing Runner",
+      "frame": "common-a",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "pressing-midfielder",
+      "role": "common-b",
+      "label": "Pressing Midfielder",
+      "frame": "common-b",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "set-piece-specialist",
+      "role": "common-c",
+      "label": "Set-Piece Specialist",
+      "frame": "common-c",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "sweeper-keeper",
+      "role": "elite",
+      "label": "Sweeper Keeper",
+      "frame": "elite",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "captain-card",
+      "role": "event",
+      "label": "Captain Card",
+      "frame": "event",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    }
+  ],
+  "boss": {
+    "id": "ultimate-xi",
+    "label": "Ultimate XI",
+    "frame": "boss",
+    "breakFrame": "boss-break",
+    "pivot": {
+      "x": 0.5,
+      "y": 1
+    }
+  },
+  "assets": {
+    "background": "assets/game-packs/fc-26/background.webp",
+    "targets": "assets/game-packs/fc-26/targets.webp",
+    "targetData": "assets/game-packs/fc-26/targets.json",
+    "props": "assets/game-packs/fc-26/props.webp",
+    "corruptionMask": "assets/game-packs/fc-26/corruption-mask.webp"
+  },
+  "sourceBoard": "assets/game-packs/fc-26/source-board.md",
+  "corruptionMasks": [
+    "signal-drift",
+    "corrupted",
+    "overrun",
+    "zero-day"
+  ]
+}

@@ -1,0 +1,1662 @@
+[
+  {
+    "id": "valorant",
+    "order": 1,
+    "title": "Valorant",
+    "genre": "tactical-shooter",
+    "zones": 10,
+    "targets": [
+      {
+        "id": "entry-duelist",
+        "role": "common-a",
+        "label": "Entry Duelist",
+        "frame": "common-a",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "smoke-controller",
+        "role": "common-b",
+        "label": "Smoke Controller",
+        "frame": "common-b",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "recon-initiator",
+        "role": "common-c",
+        "label": "Recon Initiator",
+        "frame": "common-c",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "site-sentinel",
+        "role": "elite",
+        "label": "Site Sentinel",
+        "frame": "elite",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "spike-courier",
+        "role": "event",
+        "label": "Spike Courier",
+        "frame": "event",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    ],
+    "boss": {
+      "id": "radiant-protocol",
+      "label": "Radiant Protocol",
+      "frame": "boss",
+      "breakFrame": "boss-break",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "assets": {
+      "background": "assets/game-packs/valorant/background.webp",
+      "targets": "assets/game-packs/valorant/targets.webp",
+      "targetData": "assets/game-packs/valorant/targets.json",
+      "props": "assets/game-packs/valorant/props.webp",
+      "corruptionMask": "assets/game-packs/valorant/corruption-mask.webp"
+    },
+    "sourceBoard": "assets/game-packs/valorant/source-board.md",
+    "corruptionMasks": [
+      "signal-drift",
+      "corrupted",
+      "overrun",
+      "zero-day"
+    ]
+  },
+  {
+    "id": "league",
+    "order": 2,
+    "title": "League of Legends",
+    "genre": "moba",
+    "zones": 10,
+    "targets": [
+      {
+        "id": "lane-scout",
+        "role": "common-a",
+        "label": "Lane Scout",
+        "frame": "common-a",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "jungle-stalker",
+        "role": "common-b",
+        "label": "Jungle Stalker",
+        "frame": "common-b",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "siege-minion",
+        "role": "common-c",
+        "label": "Siege Minion",
+        "frame": "common-c",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "river-support",
+        "role": "elite",
+        "label": "River Support",
+        "frame": "elite",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "nexus-herald",
+        "role": "event",
+        "label": "Nexus Herald",
+        "frame": "event",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    ],
+    "boss": {
+      "id": "baron-patch",
+      "label": "Baron Patch",
+      "frame": "boss",
+      "breakFrame": "boss-break",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "assets": {
+      "background": "assets/game-packs/league/background.webp",
+      "targets": "assets/game-packs/league/targets.webp",
+      "targetData": "assets/game-packs/league/targets.json",
+      "props": "assets/game-packs/league/props.webp",
+      "corruptionMask": "assets/game-packs/league/corruption-mask.webp"
+    },
+    "sourceBoard": "assets/game-packs/league/source-board.md",
+    "corruptionMasks": [
+      "signal-drift",
+      "corrupted",
+      "overrun",
+      "zero-day"
+    ]
+  },
+  {
+    "id": "fortnite",
+    "order": 3,
+    "title": "Fortnite",
+    "genre": "battle-royale",
+    "zones": 10,
+    "targets": [
+      {
+        "id": "storm-runner",
+        "role": "common-a",
+        "label": "Storm Runner",
+        "frame": "common-a",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "build-raider",
+        "role": "common-b",
+        "label": "Build Raider",
+        "frame": "common-b",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "supply-scout",
+        "role": "common-c",
+        "label": "Supply Scout",
+        "frame": "common-c",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "glider-hunter",
+        "role": "elite",
+        "label": "Glider Hunter",
+        "frame": "elite",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "mythic-guard",
+        "role": "event",
+        "label": "Mythic Guard",
+        "frame": "event",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    ],
+    "boss": {
+      "id": "zero-point-warden",
+      "label": "Zero-Point Warden",
+      "frame": "boss",
+      "breakFrame": "boss-break",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "assets": {
+      "background": "assets/game-packs/fortnite/background.webp",
+      "targets": "assets/game-packs/fortnite/targets.webp",
+      "targetData": "assets/game-packs/fortnite/targets.json",
+      "props": "assets/game-packs/fortnite/props.webp",
+      "corruptionMask": "assets/game-packs/fortnite/corruption-mask.webp"
+    },
+    "sourceBoard": "assets/game-packs/fortnite/source-board.md",
+    "corruptionMasks": [
+      "signal-drift",
+      "corrupted",
+      "overrun",
+      "zero-day"
+    ]
+  },
+  {
+    "id": "world-of-warcraft",
+    "order": 4,
+    "title": "World of Warcraft",
+    "genre": "mmorpg",
+    "zones": 10,
+    "targets": [
+      {
+        "id": "kobold-scout",
+        "role": "common-a",
+        "label": "Kobold Scout",
+        "frame": "common-a",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "plague-caster",
+        "role": "common-b",
+        "label": "Plague Caster",
+        "frame": "common-b",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "iron-raider",
+        "role": "common-c",
+        "label": "Iron Raider",
+        "frame": "common-c",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "arcane-keeper",
+        "role": "elite",
+        "label": "Arcane Keeper",
+        "frame": "elite",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "raid-champion",
+        "role": "event",
+        "label": "Raid Champion",
+        "frame": "event",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    ],
+    "boss": {
+      "id": "lich-gatekeeper",
+      "label": "Lich Gatekeeper",
+      "frame": "boss",
+      "breakFrame": "boss-break",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "assets": {
+      "background": "assets/game-packs/world-of-warcraft/background.webp",
+      "targets": "assets/game-packs/world-of-warcraft/targets.webp",
+      "targetData": "assets/game-packs/world-of-warcraft/targets.json",
+      "props": "assets/game-packs/world-of-warcraft/props.webp",
+      "corruptionMask": "assets/game-packs/world-of-warcraft/corruption-mask.webp"
+    },
+    "sourceBoard": "assets/game-packs/world-of-warcraft/source-board.md",
+    "corruptionMasks": [
+      "signal-drift",
+      "corrupted",
+      "overrun",
+      "zero-day"
+    ]
+  },
+  {
+    "id": "fc-26",
+    "order": 5,
+    "title": "EA Sports FC 26",
+    "genre": "sports-football",
+    "zones": 10,
+    "targets": [
+      {
+        "id": "wing-runner",
+        "role": "common-a",
+        "label": "Wing Runner",
+        "frame": "common-a",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "pressing-midfielder",
+        "role": "common-b",
+        "label": "Pressing Midfielder",
+        "frame": "common-b",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "set-piece-specialist",
+        "role": "common-c",
+        "label": "Set-Piece Specialist",
+        "frame": "common-c",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "sweeper-keeper",
+        "role": "elite",
+        "label": "Sweeper Keeper",
+        "frame": "elite",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "captain-card",
+        "role": "event",
+        "label": "Captain Card",
+        "frame": "event",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    ],
+    "boss": {
+      "id": "ultimate-xi",
+      "label": "Ultimate XI",
+      "frame": "boss",
+      "breakFrame": "boss-break",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "assets": {
+      "background": "assets/game-packs/fc-26/background.webp",
+      "targets": "assets/game-packs/fc-26/targets.webp",
+      "targetData": "assets/game-packs/fc-26/targets.json",
+      "props": "assets/game-packs/fc-26/props.webp",
+      "corruptionMask": "assets/game-packs/fc-26/corruption-mask.webp"
+    },
+    "sourceBoard": "assets/game-packs/fc-26/source-board.md",
+    "corruptionMasks": [
+      "signal-drift",
+      "corrupted",
+      "overrun",
+      "zero-day"
+    ]
+  },
+  {
+    "id": "minecraft",
+    "order": 6,
+    "title": "Minecraft",
+    "genre": "sandbox-survival",
+    "zones": 10,
+    "targets": [
+      {
+        "id": "block-scout",
+        "role": "common-a",
+        "label": "Block Scout",
+        "frame": "common-a",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "blast-blocker",
+        "role": "common-b",
+        "label": "Blast Blocker",
+        "frame": "common-b",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "skeleton-archer",
+        "role": "common-c",
+        "label": "Skeleton Archer",
+        "frame": "common-c",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "end-walker",
+        "role": "elite",
+        "label": "End Walker",
+        "frame": "elite",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "redstone-golem",
+        "role": "event",
+        "label": "Redstone Golem",
+        "frame": "event",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    ],
+    "boss": {
+      "id": "ender-titan",
+      "label": "Ender Titan",
+      "frame": "boss",
+      "breakFrame": "boss-break",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "assets": {
+      "background": "assets/game-packs/minecraft/background.webp",
+      "targets": "assets/game-packs/minecraft/targets.webp",
+      "targetData": "assets/game-packs/minecraft/targets.json",
+      "props": "assets/game-packs/minecraft/props.webp",
+      "corruptionMask": "assets/game-packs/minecraft/corruption-mask.webp"
+    },
+    "sourceBoard": "assets/game-packs/minecraft/source-board.md",
+    "corruptionMasks": [
+      "signal-drift",
+      "corrupted",
+      "overrun",
+      "zero-day"
+    ]
+  },
+  {
+    "id": "counter-strike-2",
+    "order": 7,
+    "title": "Counter-Strike 2",
+    "genre": "tactical-shooter",
+    "zones": 10,
+    "targets": [
+      {
+        "id": "entry-fragger",
+        "role": "common-a",
+        "label": "Entry Fragger",
+        "frame": "common-a",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "smoke-anchor",
+        "role": "common-b",
+        "label": "Smoke Anchor",
+        "frame": "common-b",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "awp-watcher",
+        "role": "common-c",
+        "label": "AWP Watcher",
+        "frame": "common-c",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "eco-rusher",
+        "role": "elite",
+        "label": "Eco Rusher",
+        "frame": "elite",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "defuse-specialist",
+        "role": "event",
+        "label": "Defuse Specialist",
+        "frame": "event",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    ],
+    "boss": {
+      "id": "global-sentinel",
+      "label": "Global Sentinel",
+      "frame": "boss",
+      "breakFrame": "boss-break",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "assets": {
+      "background": "assets/game-packs/counter-strike-2/background.webp",
+      "targets": "assets/game-packs/counter-strike-2/targets.webp",
+      "targetData": "assets/game-packs/counter-strike-2/targets.json",
+      "props": "assets/game-packs/counter-strike-2/props.webp",
+      "corruptionMask": "assets/game-packs/counter-strike-2/corruption-mask.webp"
+    },
+    "sourceBoard": "assets/game-packs/counter-strike-2/source-board.md",
+    "corruptionMasks": [
+      "signal-drift",
+      "corrupted",
+      "overrun",
+      "zero-day"
+    ]
+  },
+  {
+    "id": "old-school-runescape",
+    "order": 8,
+    "title": "Old School RuneScape",
+    "genre": "mmorpg",
+    "zones": 10,
+    "targets": [
+      {
+        "id": "goblin-scout",
+        "role": "common-a",
+        "label": "Goblin Scout",
+        "frame": "common-a",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "rune-archer",
+        "role": "common-b",
+        "label": "Rune Archer",
+        "frame": "common-b",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "hill-giant",
+        "role": "common-c",
+        "label": "Hill Giant",
+        "frame": "common-c",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "abyssal-stalker",
+        "role": "elite",
+        "label": "Abyssal Stalker",
+        "frame": "elite",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "barrows-guardian",
+        "role": "event",
+        "label": "Barrows Guardian",
+        "frame": "event",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    ],
+    "boss": {
+      "id": "jad-gate",
+      "label": "Jad Gate",
+      "frame": "boss",
+      "breakFrame": "boss-break",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "assets": {
+      "background": "assets/game-packs/old-school-runescape/background.webp",
+      "targets": "assets/game-packs/old-school-runescape/targets.webp",
+      "targetData": "assets/game-packs/old-school-runescape/targets.json",
+      "props": "assets/game-packs/old-school-runescape/props.webp",
+      "corruptionMask": "assets/game-packs/old-school-runescape/corruption-mask.webp"
+    },
+    "sourceBoard": "assets/game-packs/old-school-runescape/source-board.md",
+    "corruptionMasks": [
+      "signal-drift",
+      "corrupted",
+      "overrun",
+      "zero-day"
+    ]
+  },
+  {
+    "id": "nba-2k26",
+    "order": 9,
+    "title": "NBA 2K26",
+    "genre": "sports-basketball",
+    "zones": 10,
+    "targets": [
+      {
+        "id": "rim-runner",
+        "role": "common-a",
+        "label": "Rim Runner",
+        "frame": "common-a",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "perimeter-lock",
+        "role": "common-b",
+        "label": "Perimeter Lock",
+        "frame": "common-b",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "stretch-shooter",
+        "role": "common-c",
+        "label": "Stretch Shooter",
+        "frame": "common-c",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "floor-general",
+        "role": "elite",
+        "label": "Floor General",
+        "frame": "elite",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "sixth-man-card",
+        "role": "event",
+        "label": "Sixth-Man Card",
+        "frame": "event",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    ],
+    "boss": {
+      "id": "mycareer-legend",
+      "label": "MyCareer Legend",
+      "frame": "boss",
+      "breakFrame": "boss-break",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "assets": {
+      "background": "assets/game-packs/nba-2k26/background.webp",
+      "targets": "assets/game-packs/nba-2k26/targets.webp",
+      "targetData": "assets/game-packs/nba-2k26/targets.json",
+      "props": "assets/game-packs/nba-2k26/props.webp",
+      "corruptionMask": "assets/game-packs/nba-2k26/corruption-mask.webp"
+    },
+    "sourceBoard": "assets/game-packs/nba-2k26/source-board.md",
+    "corruptionMasks": [
+      "signal-drift",
+      "corrupted",
+      "overrun",
+      "zero-day"
+    ]
+  },
+  {
+    "id": "overwatch",
+    "order": 10,
+    "title": "Overwatch",
+    "genre": "hero-shooter",
+    "zones": 10,
+    "targets": [
+      {
+        "id": "flank-runner",
+        "role": "common-a",
+        "label": "Flank Runner",
+        "frame": "common-a",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "shield-tank",
+        "role": "common-b",
+        "label": "Shield Tank",
+        "frame": "common-b",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "support-drone",
+        "role": "common-c",
+        "label": "Support Drone",
+        "frame": "common-c",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "rail-sharpshooter",
+        "role": "elite",
+        "label": "Rail Sharpshooter",
+        "frame": "elite",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "payload-guard",
+        "role": "event",
+        "label": "Payload Guard",
+        "frame": "event",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    ],
+    "boss": {
+      "id": "omnic-colossus",
+      "label": "Omnic Colossus",
+      "frame": "boss",
+      "breakFrame": "boss-break",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "assets": {
+      "background": "assets/game-packs/overwatch/background.webp",
+      "targets": "assets/game-packs/overwatch/targets.webp",
+      "targetData": "assets/game-packs/overwatch/targets.json",
+      "props": "assets/game-packs/overwatch/props.webp",
+      "corruptionMask": "assets/game-packs/overwatch/corruption-mask.webp"
+    },
+    "sourceBoard": "assets/game-packs/overwatch/source-board.md",
+    "corruptionMasks": [
+      "signal-drift",
+      "corrupted",
+      "overrun",
+      "zero-day"
+    ]
+  },
+  {
+    "id": "grand-theft-auto-v",
+    "order": 11,
+    "title": "Grand Theft Auto V",
+    "genre": "open-world-action",
+    "zones": 10,
+    "targets": [
+      {
+        "id": "street-runner",
+        "role": "common-a",
+        "label": "Street Runner",
+        "frame": "common-a",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "heist-wheelman",
+        "role": "common-b",
+        "label": "Heist Wheelman",
+        "frame": "common-b",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "tactical-enforcer",
+        "role": "common-c",
+        "label": "Tactical Enforcer",
+        "frame": "common-c",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "chop-shop-bruiser",
+        "role": "elite",
+        "label": "Chop-Shop Bruiser",
+        "frame": "elite",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "skyline-pilot",
+        "role": "event",
+        "label": "Skyline Pilot",
+        "frame": "event",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    ],
+    "boss": {
+      "id": "five-star-juggernaut",
+      "label": "Five-Star Juggernaut",
+      "frame": "boss",
+      "breakFrame": "boss-break",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "assets": {
+      "background": "assets/game-packs/grand-theft-auto-v/background.webp",
+      "targets": "assets/game-packs/grand-theft-auto-v/targets.webp",
+      "targetData": "assets/game-packs/grand-theft-auto-v/targets.json",
+      "props": "assets/game-packs/grand-theft-auto-v/props.webp",
+      "corruptionMask": "assets/game-packs/grand-theft-auto-v/corruption-mask.webp"
+    },
+    "sourceBoard": "assets/game-packs/grand-theft-auto-v/source-board.md",
+    "corruptionMasks": [
+      "signal-drift",
+      "corrupted",
+      "overrun",
+      "zero-day"
+    ]
+  },
+  {
+    "id": "madden-nfl-26",
+    "order": 12,
+    "title": "Madden NFL 26",
+    "genre": "sports-football",
+    "zones": 10,
+    "targets": [
+      {
+        "id": "route-runner",
+        "role": "common-a",
+        "label": "Route Runner",
+        "frame": "common-a",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "pass-rusher",
+        "role": "common-b",
+        "label": "Pass Rusher",
+        "frame": "common-b",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "field-general",
+        "role": "common-c",
+        "label": "Field General",
+        "frame": "common-c",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "lockdown-corner",
+        "role": "elite",
+        "label": "Lockdown Corner",
+        "frame": "elite",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "special-teams-ace",
+        "role": "event",
+        "label": "Special Teams Ace",
+        "frame": "event",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    ],
+    "boss": {
+      "id": "franchise-champion",
+      "label": "Franchise Champion",
+      "frame": "boss",
+      "breakFrame": "boss-break",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "assets": {
+      "background": "assets/game-packs/madden-nfl-26/background.webp",
+      "targets": "assets/game-packs/madden-nfl-26/targets.webp",
+      "targetData": "assets/game-packs/madden-nfl-26/targets.json",
+      "props": "assets/game-packs/madden-nfl-26/props.webp",
+      "corruptionMask": "assets/game-packs/madden-nfl-26/corruption-mask.webp"
+    },
+    "sourceBoard": "assets/game-packs/madden-nfl-26/source-board.md",
+    "corruptionMasks": [
+      "signal-drift",
+      "corrupted",
+      "overrun",
+      "zero-day"
+    ]
+  },
+  {
+    "id": "apex-legends",
+    "order": 13,
+    "title": "Apex Legends",
+    "genre": "battle-royale",
+    "zones": 10,
+    "targets": [
+      {
+        "id": "phase-skirmisher",
+        "role": "common-a",
+        "label": "Phase Skirmisher",
+        "frame": "common-a",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "tracker-scout",
+        "role": "common-b",
+        "label": "Tracker Scout",
+        "frame": "common-b",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "shield-support",
+        "role": "common-c",
+        "label": "Shield Support",
+        "frame": "common-c",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "zipline-hunter",
+        "role": "elite",
+        "label": "Zipline Hunter",
+        "frame": "elite",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "care-package-guard",
+        "role": "event",
+        "label": "Care-Package Guard",
+        "frame": "event",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    ],
+    "boss": {
+      "id": "apex-predator",
+      "label": "Apex Predator",
+      "frame": "boss",
+      "breakFrame": "boss-break",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "assets": {
+      "background": "assets/game-packs/apex-legends/background.webp",
+      "targets": "assets/game-packs/apex-legends/targets.webp",
+      "targetData": "assets/game-packs/apex-legends/targets.json",
+      "props": "assets/game-packs/apex-legends/props.webp",
+      "corruptionMask": "assets/game-packs/apex-legends/corruption-mask.webp"
+    },
+    "sourceBoard": "assets/game-packs/apex-legends/source-board.md",
+    "corruptionMasks": [
+      "signal-drift",
+      "corrupted",
+      "overrun",
+      "zero-day"
+    ]
+  },
+  {
+    "id": "dota-2",
+    "order": 14,
+    "title": "Dota 2",
+    "genre": "moba",
+    "zones": 10,
+    "targets": [
+      {
+        "id": "lane-creep",
+        "role": "common-a",
+        "label": "Lane Creep",
+        "frame": "common-a",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "roaming-support",
+        "role": "common-b",
+        "label": "Roaming Support",
+        "frame": "common-b",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "jungle-beast",
+        "role": "common-c",
+        "label": "Jungle Beast",
+        "frame": "common-c",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "core-duelist",
+        "role": "elite",
+        "label": "Core Duelist",
+        "frame": "elite",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "ancient-guard",
+        "role": "event",
+        "label": "Ancient Guard",
+        "frame": "event",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    ],
+    "boss": {
+      "id": "roshan-protocol",
+      "label": "Roshan Protocol",
+      "frame": "boss",
+      "breakFrame": "boss-break",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "assets": {
+      "background": "assets/game-packs/dota-2/background.webp",
+      "targets": "assets/game-packs/dota-2/targets.webp",
+      "targetData": "assets/game-packs/dota-2/targets.json",
+      "props": "assets/game-packs/dota-2/props.webp",
+      "corruptionMask": "assets/game-packs/dota-2/corruption-mask.webp"
+    },
+    "sourceBoard": "assets/game-packs/dota-2/source-board.md",
+    "corruptionMasks": [
+      "signal-drift",
+      "corrupted",
+      "overrun",
+      "zero-day"
+    ]
+  },
+  {
+    "id": "dead-by-daylight",
+    "order": 15,
+    "title": "Dead by Daylight",
+    "genre": "asymmetric-horror",
+    "zones": 10,
+    "targets": [
+      {
+        "id": "fog-runner",
+        "role": "common-a",
+        "label": "Fog Runner",
+        "frame": "common-a",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "hook-warden",
+        "role": "common-b",
+        "label": "Hook Warden",
+        "frame": "common-b",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "generator-shade",
+        "role": "common-c",
+        "label": "Generator Shade",
+        "frame": "common-c",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "totem-stalker",
+        "role": "elite",
+        "label": "Totem Stalker",
+        "frame": "elite",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "trial-survivor",
+        "role": "event",
+        "label": "Trial Survivor",
+        "frame": "event",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    ],
+    "boss": {
+      "id": "entity-hand",
+      "label": "Entity Hand",
+      "frame": "boss",
+      "breakFrame": "boss-break",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "assets": {
+      "background": "assets/game-packs/dead-by-daylight/background.webp",
+      "targets": "assets/game-packs/dead-by-daylight/targets.webp",
+      "targetData": "assets/game-packs/dead-by-daylight/targets.json",
+      "props": "assets/game-packs/dead-by-daylight/props.webp",
+      "corruptionMask": "assets/game-packs/dead-by-daylight/corruption-mask.webp"
+    },
+    "sourceBoard": "assets/game-packs/dead-by-daylight/source-board.md",
+    "corruptionMasks": [
+      "signal-drift",
+      "corrupted",
+      "overrun",
+      "zero-day"
+    ]
+  },
+  {
+    "id": "path-of-exile-2",
+    "order": 16,
+    "title": "Path of Exile 2",
+    "genre": "action-rpg",
+    "zones": 10,
+    "targets": [
+      {
+        "id": "exile-scout",
+        "role": "common-a",
+        "label": "Exile Scout",
+        "frame": "common-a",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "corrupted-archer",
+        "role": "common-b",
+        "label": "Corrupted Archer",
+        "frame": "common-b",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "vaal-construct",
+        "role": "common-c",
+        "label": "Vaal Construct",
+        "frame": "common-c",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "map-stalker",
+        "role": "elite",
+        "label": "Map Stalker",
+        "frame": "elite",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "ascendant-guard",
+        "role": "event",
+        "label": "Ascendant Guard",
+        "frame": "event",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    ],
+    "boss": {
+      "id": "atlas-devourer",
+      "label": "Atlas Devourer",
+      "frame": "boss",
+      "breakFrame": "boss-break",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "assets": {
+      "background": "assets/game-packs/path-of-exile-2/background.webp",
+      "targets": "assets/game-packs/path-of-exile-2/targets.webp",
+      "targetData": "assets/game-packs/path-of-exile-2/targets.json",
+      "props": "assets/game-packs/path-of-exile-2/props.webp",
+      "corruptionMask": "assets/game-packs/path-of-exile-2/corruption-mask.webp"
+    },
+    "sourceBoard": "assets/game-packs/path-of-exile-2/source-board.md",
+    "corruptionMasks": [
+      "signal-drift",
+      "corrupted",
+      "overrun",
+      "zero-day"
+    ]
+  },
+  {
+    "id": "marvel-rivals",
+    "order": 17,
+    "title": "Marvel Rivals",
+    "genre": "hero-shooter",
+    "zones": 10,
+    "targets": [
+      {
+        "id": "vanguard",
+        "role": "common-a",
+        "label": "Vanguard",
+        "frame": "common-a",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "duelist",
+        "role": "common-b",
+        "label": "Duelist",
+        "frame": "common-b",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "strategist",
+        "role": "common-c",
+        "label": "Strategist",
+        "frame": "common-c",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "portal-scout",
+        "role": "elite",
+        "label": "Portal Scout",
+        "frame": "elite",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "cosmic-guard",
+        "role": "event",
+        "label": "Cosmic Guard",
+        "frame": "event",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    ],
+    "boss": {
+      "id": "multiverse-sentinel",
+      "label": "Multiverse Sentinel",
+      "frame": "boss",
+      "breakFrame": "boss-break",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "assets": {
+      "background": "assets/game-packs/marvel-rivals/background.webp",
+      "targets": "assets/game-packs/marvel-rivals/targets.webp",
+      "targetData": "assets/game-packs/marvel-rivals/targets.json",
+      "props": "assets/game-packs/marvel-rivals/props.webp",
+      "corruptionMask": "assets/game-packs/marvel-rivals/corruption-mask.webp"
+    },
+    "sourceBoard": "assets/game-packs/marvel-rivals/source-board.md",
+    "corruptionMasks": [
+      "signal-drift",
+      "corrupted",
+      "overrun",
+      "zero-day"
+    ]
+  },
+  {
+    "id": "escape-from-tarkov",
+    "order": 18,
+    "title": "Escape from Tarkov",
+    "genre": "extraction-shooter",
+    "zones": 10,
+    "targets": [
+      {
+        "id": "scav-scout",
+        "role": "common-a",
+        "label": "Scav Scout",
+        "frame": "common-a",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "armored-raider",
+        "role": "common-b",
+        "label": "Armored Raider",
+        "frame": "common-b",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "marksman",
+        "role": "common-c",
+        "label": "Marksman",
+        "frame": "common-c",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "breach-operator",
+        "role": "elite",
+        "label": "Breach Operator",
+        "frame": "elite",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "extraction-guard",
+        "role": "event",
+        "label": "Extraction Guard",
+        "frame": "event",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    ],
+    "boss": {
+      "id": "labs-overseer",
+      "label": "Labs Overseer",
+      "frame": "boss",
+      "breakFrame": "boss-break",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "assets": {
+      "background": "assets/game-packs/escape-from-tarkov/background.webp",
+      "targets": "assets/game-packs/escape-from-tarkov/targets.webp",
+      "targetData": "assets/game-packs/escape-from-tarkov/targets.json",
+      "props": "assets/game-packs/escape-from-tarkov/props.webp",
+      "corruptionMask": "assets/game-packs/escape-from-tarkov/corruption-mask.webp"
+    },
+    "sourceBoard": "assets/game-packs/escape-from-tarkov/source-board.md",
+    "corruptionMasks": [
+      "signal-drift",
+      "corrupted",
+      "overrun",
+      "zero-day"
+    ]
+  },
+  {
+    "id": "rocket-league",
+    "order": 19,
+    "title": "Rocket League",
+    "genre": "sports-driving",
+    "zones": 10,
+    "targets": [
+      {
+        "id": "boost-striker",
+        "role": "common-a",
+        "label": "Boost Striker",
+        "frame": "common-a",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "aerial-defender",
+        "role": "common-b",
+        "label": "Aerial Defender",
+        "frame": "common-b",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "demo-chaser",
+        "role": "common-c",
+        "label": "Demo Chaser",
+        "frame": "common-c",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "wall-rider",
+        "role": "elite",
+        "label": "Wall Rider",
+        "frame": "elite",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "goalkeeper",
+        "role": "event",
+        "label": "Goalkeeper",
+        "frame": "event",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    ],
+    "boss": {
+      "id": "supersonic-titan",
+      "label": "Supersonic Titan",
+      "frame": "boss",
+      "breakFrame": "boss-break",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "assets": {
+      "background": "assets/game-packs/rocket-league/background.webp",
+      "targets": "assets/game-packs/rocket-league/targets.webp",
+      "targetData": "assets/game-packs/rocket-league/targets.json",
+      "props": "assets/game-packs/rocket-league/props.webp",
+      "corruptionMask": "assets/game-packs/rocket-league/corruption-mask.webp"
+    },
+    "sourceBoard": "assets/game-packs/rocket-league/source-board.md",
+    "corruptionMasks": [
+      "signal-drift",
+      "corrupted",
+      "overrun",
+      "zero-day"
+    ]
+  },
+  {
+    "id": "elden-ring",
+    "order": 20,
+    "title": "Elden Ring",
+    "genre": "action-rpg",
+    "zones": 10,
+    "targets": [
+      {
+        "id": "wandering-soldier",
+        "role": "common-a",
+        "label": "Wandering Soldier",
+        "frame": "common-a",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "glintstone-adept",
+        "role": "common-b",
+        "label": "Glintstone Adept",
+        "frame": "common-b",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "grafted-hound",
+        "role": "common-c",
+        "label": "Grafted Hound",
+        "frame": "common-c",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "crucible-guard",
+        "role": "elite",
+        "label": "Crucible Guard",
+        "frame": "elite",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      },
+      {
+        "id": "black-knife-shade",
+        "role": "event",
+        "label": "Black-Knife Shade",
+        "frame": "event",
+        "pivot": {
+          "x": 0.5,
+          "y": 1
+        }
+      }
+    ],
+    "boss": {
+      "id": "elden-gate-sovereign",
+      "label": "Elden Gate Sovereign",
+      "frame": "boss",
+      "breakFrame": "boss-break",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    "assets": {
+      "background": "assets/game-packs/elden-ring/background.webp",
+      "targets": "assets/game-packs/elden-ring/targets.webp",
+      "targetData": "assets/game-packs/elden-ring/targets.json",
+      "props": "assets/game-packs/elden-ring/props.webp",
+      "corruptionMask": "assets/game-packs/elden-ring/corruption-mask.webp"
+    },
+    "sourceBoard": "assets/game-packs/elden-ring/source-board.md",
+    "corruptionMasks": [
+      "signal-drift",
+      "corrupted",
+      "overrun",
+      "zero-day"
+    ]
+  }
+]

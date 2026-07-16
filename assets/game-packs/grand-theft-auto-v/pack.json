@@ -1,0 +1,83 @@
+{
+  "id": "grand-theft-auto-v",
+  "order": 11,
+  "title": "Grand Theft Auto V",
+  "genre": "open-world-action",
+  "zones": 10,
+  "targets": [
+    {
+      "id": "street-runner",
+      "role": "common-a",
+      "label": "Street Runner",
+      "frame": "common-a",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "heist-wheelman",
+      "role": "common-b",
+      "label": "Heist Wheelman",
+      "frame": "common-b",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "tactical-enforcer",
+      "role": "common-c",
+      "label": "Tactical Enforcer",
+      "frame": "common-c",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "chop-shop-bruiser",
+      "role": "elite",
+      "label": "Chop-Shop Bruiser",
+      "frame": "elite",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "skyline-pilot",
+      "role": "event",
+      "label": "Skyline Pilot",
+      "frame": "event",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    }
+  ],
+  "boss": {
+    "id": "five-star-juggernaut",
+    "label": "Five-Star Juggernaut",
+    "frame": "boss",
+    "breakFrame": "boss-break",
+    "pivot": {
+      "x": 0.5,
+      "y": 1
+    }
+  },
+  "assets": {
+    "background": "assets/game-packs/grand-theft-auto-v/background.webp",
+    "targets": "assets/game-packs/grand-theft-auto-v/targets.webp",
+    "targetData": "assets/game-packs/grand-theft-auto-v/targets.json",
+    "props": "assets/game-packs/grand-theft-auto-v/props.webp",
+    "corruptionMask": "assets/game-packs/grand-theft-auto-v/corruption-mask.webp"
+  },
+  "sourceBoard": "assets/game-packs/grand-theft-auto-v/source-board.md",
+  "corruptionMasks": [
+    "signal-drift",
+    "corrupted",
+    "overrun",
+    "zero-day"
+  ]
+}

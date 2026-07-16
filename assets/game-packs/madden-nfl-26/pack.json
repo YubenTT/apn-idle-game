@@ -1,0 +1,83 @@
+{
+  "id": "madden-nfl-26",
+  "order": 12,
+  "title": "Madden NFL 26",
+  "genre": "sports-football",
+  "zones": 10,
+  "targets": [
+    {
+      "id": "route-runner",
+      "role": "common-a",
+      "label": "Route Runner",
+      "frame": "common-a",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "pass-rusher",
+      "role": "common-b",
+      "label": "Pass Rusher",
+      "frame": "common-b",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "field-general",
+      "role": "common-c",
+      "label": "Field General",
+      "frame": "common-c",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "lockdown-corner",
+      "role": "elite",
+      "label": "Lockdown Corner",
+      "frame": "elite",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "special-teams-ace",
+      "role": "event",
+      "label": "Special Teams Ace",
+      "frame": "event",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    }
+  ],
+  "boss": {
+    "id": "franchise-champion",
+    "label": "Franchise Champion",
+    "frame": "boss",
+    "breakFrame": "boss-break",
+    "pivot": {
+      "x": 0.5,
+      "y": 1
+    }
+  },
+  "assets": {
+    "background": "assets/game-packs/madden-nfl-26/background.webp",
+    "targets": "assets/game-packs/madden-nfl-26/targets.webp",
+    "targetData": "assets/game-packs/madden-nfl-26/targets.json",
+    "props": "assets/game-packs/madden-nfl-26/props.webp",
+    "corruptionMask": "assets/game-packs/madden-nfl-26/corruption-mask.webp"
+  },
+  "sourceBoard": "assets/game-packs/madden-nfl-26/source-board.md",
+  "corruptionMasks": [
+    "signal-drift",
+    "corrupted",
+    "overrun",
+    "zero-day"
+  ]
+}

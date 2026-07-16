@@ -32,6 +32,8 @@ must be updated to match, not argued with.
 | Why the game exists / fantasy | [CONCEPT.md](./CONCEPT.md), [GAME-DESIGN.md](./GAME-DESIGN.md) | Design |
 | Design pillars & non-goals (the decision filter) | [VISION.md](./VISION.md) | Design |
 | Core loop & systems | [GAME-DESIGN.md](./GAME-DESIGN.md) | Design |
+| Long-form Game Pack route / Corruption proposal | [GAME-PACK-ROUTE.md](./GAME-PACK-ROUTE.md) | Design + Art + Eng |
+| Game Pack asset inventory / official source boards | [GAME-PACK-ASSET-BIBLE.md](./GAME-PACK-ASSET-BIBLE.md) | Art + Design |
 | Balance curves & costs | [BALANCE.md](./BALANCE.md) + `js/formulas.js` (`C`) | Design + Eng |
 | Code architecture & module contracts | [ARCHITECTURE.md](./ARCHITECTURE.md) | Eng |
 | Visual tokens (color, type, spacing, motion) | [../brand/DESIGN-TOKENS.md](../brand/DESIGN-TOKENS.md) + [../brand/tokens.css](../brand/tokens.css) | Design |
@@ -49,6 +51,7 @@ must be updated to match, not argued with.
 | Architectural decisions (why we chose X) | [decisions/](./decisions/) (ADRs) | All |
 | Monetization posture | [MONETIZATION.md](./MONETIZATION.md) | Design |
 | Redesign execution plan (issues) | [REDESIGN-PLAN.md](./REDESIGN-PLAN.md) | Producer |
+| Approved end-to-end execution sequence | [2026-07-15 complete redesign plan](./superpowers/plans/2026-07-15-apn-idle-complete-redesign.md) | Producer + Eng + Art + QA |
 | Roadmap | [ROADMAP.md](./ROADMAP.md) | Producer |
 | Site embed | [EMBED.md](./EMBED.md) | Eng |
 | Agent working rules | [../AGENTS.md](../AGENTS.md) | All |

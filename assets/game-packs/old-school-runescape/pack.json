@@ -1,0 +1,83 @@
+{
+  "id": "old-school-runescape",
+  "order": 8,
+  "title": "Old School RuneScape",
+  "genre": "mmorpg",
+  "zones": 10,
+  "targets": [
+    {
+      "id": "goblin-scout",
+      "role": "common-a",
+      "label": "Goblin Scout",
+      "frame": "common-a",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "rune-archer",
+      "role": "common-b",
+      "label": "Rune Archer",
+      "frame": "common-b",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "hill-giant",
+      "role": "common-c",
+      "label": "Hill Giant",
+      "frame": "common-c",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "abyssal-stalker",
+      "role": "elite",
+      "label": "Abyssal Stalker",
+      "frame": "elite",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "barrows-guardian",
+      "role": "event",
+      "label": "Barrows Guardian",
+      "frame": "event",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    }
+  ],
+  "boss": {
+    "id": "jad-gate",
+    "label": "Jad Gate",
+    "frame": "boss",
+    "breakFrame": "boss-break",
+    "pivot": {
+      "x": 0.5,
+      "y": 1
+    }
+  },
+  "assets": {
+    "background": "assets/game-packs/old-school-runescape/background.webp",
+    "targets": "assets/game-packs/old-school-runescape/targets.webp",
+    "targetData": "assets/game-packs/old-school-runescape/targets.json",
+    "props": "assets/game-packs/old-school-runescape/props.webp",
+    "corruptionMask": "assets/game-packs/old-school-runescape/corruption-mask.webp"
+  },
+  "sourceBoard": "assets/game-packs/old-school-runescape/source-board.md",
+  "corruptionMasks": [
+    "signal-drift",
+    "corrupted",
+    "overrun",
+    "zero-day"
+  ]
+}

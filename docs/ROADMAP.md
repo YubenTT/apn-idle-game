@@ -21,8 +21,8 @@ Living plan — not a commitment calendar.
 - [x] Design-system + docs backbone ([00_START_HERE](./00_START_HERE.md),
       [brand/](../brand/), [SCREEN-SPECS](./SCREEN-SPECS.md), ADRs) — system-first
       redesign foundation; runtime unchanged
-- [x] Redesign control plane — 24 focused issues grouped into 7 autonomous
-      delivery sessions with one combined visual evidence gate
+- [x] Redesign control plane — the original 33 focused issues plus R-005,
+      grouped into 7 autonomous delivery sessions with one visual-owner gate
 - [x] Runtime token foundation — `brand/tokens.css` imported by `css/game.css`,
       532 color literals migrated with exact pixel preservation, and static token
       contract enforced in headless QA
@@ -31,27 +31,36 @@ Living plan — not a commitment calendar.
 
 ## Near term
 
-- [ ] Redesign screens against [SCREEN-SPECS](./SCREEN-SPECS.md) (Run HUD, Gear,
+- [x] Persistent global Route + dual-key save v2 migration; End Season keeps world progress
+- [x] Deterministic 20-pack manifest catalog + seeded least-recent scheduler
+- [x] Multi-day pacing and season-bounded offline progression
+- [x] Production asset pipeline, canonical Host atlas, 20 Clean Era Game Packs,
+      and current+next lazy runtime composition
+- [x] Redesign screens against [SCREEN-SPECS](./SCREEN-SPECS.md) (Run HUD, Gear,
       Build, Ship, Hub, Boosts, Menu) — one screen at a time, each through
       [QA-CHECKLIST](./QA-CHECKLIST.md)
 - [ ] Schema rename bytes→signal (with save migrate)
-- [ ] Mobile layout polish + PWA manifest
+- [x] Mobile layout polish, safe-area coverage, and long-press gesture hardening
+- [x] Free MVP economy cut: no demo store, paid power, coin rewards, Gear Boxes,
+      Auto-Sprint unlock, or Time Warp; old premium save data remains inert
+- [ ] PWA manifest
 - [ ] Daily login / offline claim UI polish
 - [ ] More enemy variants + elite modifiers
 - [ ] Analytics hooks (opt-in) for embed
 
 ## Mid term
 
-- [ ] Season themes (art + enemy pack + ticker set)
-- [ ] Hand-authored biome plates (replace procedural strips)
+- [ ] New clean Game Packs entering at End Season boundaries
+- [ ] Higher Corruption tiers reusing the bounded mask system
 - [ ] Skill tree visual map
 - [ ] Accessibility: full keyboard sheet nav, ARIA live regions
 - [ ] Optional ESBuild/Vite package for site monorepo — keep raw static entry
 
 ## Long term
 
-- [ ] GLB Host in WebGL/three overlay (optional quality tier)
+- [ ] Optional higher-fidelity GLB-derived Host atlas tier if budgets permit
 - [ ] Shared APN account cosmetics (site-linked)
+- [ ] Evidence-led cosmetic monetization proposal; no paid progression power
 - [ ] Challenge modes (boss rush, speed zones)
 - [ ] Localization (i18n content packs)
 

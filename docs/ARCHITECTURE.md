@@ -4,7 +4,7 @@
 
 1. **Playable as static files** — no build step required for players.
 2. **Testable domain** — Node can import `game.js` / `formulas.js` without DOM.
-3. **Safe to grow** — skills, meta, biomes, embed, optional bundler later.
+3. **Safe to grow** — skills, meta, catalog-driven Game Packs, embed, optional bundler later.
 4. **Clear ownership** — one place for balance, one place for copy, one place for draw.
 
 ## Runtime diagram
@@ -35,6 +35,11 @@ flowchart TB
     FN[scannerCost · enemyHp · xpToNext]
   end
 
+  subgraph Route["route.js"]
+    RS[global Route state]
+    RF[display · season-boundary helpers]
+  end
+
   subgraph Data["content.js"]
     SK[SKILLS · META]
     TK[TICKER · TIPS]
@@ -44,6 +49,7 @@ flowchart TB
   B --> AC
   FT --> Domain
   Domain --> Pure
+  Domain --> Route
   Domain --> Data
   DR --> ST
   HUD --> ST
@@ -61,8 +67,22 @@ flowchart TB
 ### `game.js`
 
 - `createState()`, `step(s, dt)`, economy actions (`buyScanner`, `allocSkill`, …).
-- Owns `s.world` (enemies, particles, sprint flag) and `s.run` / `s.meta`.
+- Owns `s.world` (enemies, particles, sprint flag), `s.run`, `s.meta`, and Route
+  state transitions. Combat reads world progress from `s.route`.
 - May import comedy / content; must still run under Node with stubbed optional SFX.
+
+### `route.js`
+
+- Pure global Route state construction, sanitization, display, and boundary helpers.
+- Stable string IDs and route history survive End Season; no DOM or storage access.
+- Owns pure pack lookup, seeded two-pack scheduling, least-recent revisit selection,
+  and bounded corruption tier. Renderer never chooses Route content.
+
+### `generated/game-packs.js`
+
+- Frozen runtime catalog generated from 20 stable `assets/game-packs/*/pack.json` sources.
+- Generation is byte-stable; source manifests own identity, roles, pivots, and paths.
+- Never hand-edit the generated module or persist array indexes in saves.
 
 ### `content.js`
 
@@ -73,9 +93,17 @@ flowchart TB
 
 ### `render.js`
 
-- Stateless draw from `s` (except image cache).
-- Procedural biomes + sprite blit.
+- Stateless draw from `s` plus an explicit decoded asset store.
+- The scheduled Game Pack owns the happy-path environment and target atlas;
+  procedural Patchline scenery is a missing/slow-asset fallback only.
 - Never grant currency.
+
+### `assets.js`
+
+- Owns browser decode promises and explicit current/next Game Pack references.
+- Deduplicates loads, treats props/masks as optional, releases cold decoded images,
+  and never keeps more than two pack records after a transition.
+- Reads pure Route scheduling; it does not calculate combat or choose balance.
 
 ### `ui.js`
 
@@ -85,8 +113,11 @@ flowchart TB
 
 ### `save.js`
 
-- Schema version `v: 1`.
-- Persist run + meta + settings; strip ephemeral anim fields.
+- Schema version `v: 2`; writes `apn_idle_save_v2` only.
+- Loads v2 first, then v1; v1 `run.zone` / `run.killsInZone` migrate to `s.route`.
+- The v1 key remains rollback evidence until explicit New Game clears both keys.
+- Persist Route + run + meta + settings (including Gear sort/filter preferences);
+  strip ephemeral animation fields.
 
 ### `sfx.js`
 
@@ -98,14 +129,14 @@ flowchart TB
 s
 ├── meta        live, season, kills, ships, bosses
 ├── authority   amount (Rep), shippedThisSeason, upgrades{}
+├── route       zone, killsInZone, currentPackId, history, deck, seed, catalogVersion
 ├── run
-│   ├── zone, killsInZone
 │   ├── bytes (Signal), patches (Notes)
-│   └── hero { level, xp, sp, scan, verify, amplify, scanner, skills, mask, energy, mana, … }
+│   └── hero { level, xp, sp, scan, verify, amplify, scanner, skills, energy, focus, … }
 ├── world       enemies, alerts, floaters, particles, confetti, sprinting, scroll
 ├── ui          panel, toast, seasonDone, tips, chipPulse, fx
 ├── stats       dps, combo
-└── settings    reducedMotion, sfx, lastTs
+└── settings    reducedMotion, sfx, gearSort, gearFilter, lastTs
 ```
 
 Naming debt: internal `bytes` / `patches` / `authority` / `scan` map to UI Signal / Notes / Rep / Damage. Renames should be schema-migrated in `save.js` when done.
@@ -128,8 +159,8 @@ Keeps combat deterministic enough for headless tests and fair offline simulation
 |------|--------|
 | New skill | `content.SKILLS` + `game.combatStats` / cast + optional chip |
 | New boost | `content.META` + `metaPer` usage |
-| New enemy type | `ENEMY_FLAVOR` + sprite + `typeHpMult` / rewards |
-| New biome | `render.js` BIOMES array |
+| New Game Pack | manifest + generated catalog + static atlas; schedule at End Season |
+| New fallback enemy type | `ENEMY_FLAVOR` + sprite + `typeHpMult` / rewards |
 | New currency | formulas + game grant + HUD chip + save migrate |
 | 3D hero | GLB assets already in `assets/`; replace `drawHero` path |
 | Bundler | Optional later; keep import map simple |
@@ -151,3 +182,7 @@ CI runs the same command (see `.github/workflows/ci.yml`).
 - Server authoritative combat
 - Paid IAP (site may add later as separate product surface)
 - Heavy frameworks (React/Vue) for the playable core
+
+Save schema v2 still round-trips the retired `meta.premium` demo-store object for
+backward compatibility. The free MVP treats every value in that object as inert;
+only `meta.live` contributes to the global economy multiplier.
