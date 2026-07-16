@@ -1,0 +1,205 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "fashion-dream",
+  "catalogVersion": 1,
+  "status": "concept",
+  "enabled": false,
+  "editorial": {
+    "displayName": "Barbie",
+    "contentType": "NEWS",
+    "feedCopy": "Fashion-world update coverage live",
+    "apnUrl": "https://allpatchnotes.com/",
+    "sources": [
+      {
+        "id": "barbie-official-context",
+        "owner": "Mattel",
+        "title": "Barbie official site — factual editorial context only",
+        "url": "https://www.barbie.com/",
+        "accessedAt": "2026-07-16T00:00:00Z",
+        "use": "factual-context"
+      },
+      {
+        "id": "mattel-terms-review",
+        "owner": "Mattel",
+        "title": "Mattel Terms and Conditions",
+        "url": "https://mattelsupport.com/terms-conditions/",
+        "accessedAt": "2026-07-16T00:00:00Z",
+        "use": "visual-do-not-copy"
+      }
+    ],
+    "nonEndorsement": true
+  },
+  "runtime": {
+    "title": "Fashion Dream",
+    "subtitle": "Build a clean style chain under shifting spotlights",
+    "fantasy": "The Host verifies color, shape and sequence signals across a living editorial runway without using any third-party character, logo, outfit, architecture or product design.",
+    "genre": "fashion-style-chain",
+    "artBriefId": "fashion-dream-originality-v1"
+  },
+  "rights": {
+    "mode": "editorial-reference",
+    "reviewStatus": "needs-legal-review",
+    "reviewedAt": null,
+    "reviewer": null,
+    "killSwitch": "disable-fashion-dream",
+    "licenseRecord": null,
+    "forbiddenMotifs": [
+      "Barbie wordmark or logo",
+      "recognizable Barbie character likeness",
+      "official doll faces, hair silhouettes or body proportions",
+      "Dreamhouse architecture or recognizable room layouts",
+      "official outfits, accessories, packaging or vehicles",
+      "Mattel product photography",
+      "signature pink trade-dress composition",
+      "official music, dialogue or interface elements"
+    ]
+  },
+  "route": {
+    "zones": 10,
+    "primaryGenre": "fashion",
+    "secondaryGenres": ["cozy", "timing", "collection"],
+    "difficultyBand": 3,
+    "minimumDropIndex": 4
+  },
+  "mechanics": {
+    "signature": "style_chain",
+    "modifier": "resource_choice",
+    "parameters": {
+      "chainLength": 3,
+      "choiceWindowSeconds": 2.8,
+      "perfectBonus": 0.18,
+      "mistakeReset": false,
+      "choiceA": "Focus",
+      "choiceB": "Notes"
+    },
+    "fallbackBehavior": "If style-chain presentation fails, each target becomes a normal single-target clear with the same base reward and no progression penalty."
+  },
+  "palette": {
+    "accent": "#FF4F8B",
+    "secondary": "#52D6D1",
+    "surface": "#101725",
+    "ink": "#F6F8FC",
+    "semanticRoles": {
+      "positive": "#3ECF8E",
+      "warning": "#F4C35B",
+      "focus": "#A78BFA"
+    }
+  },
+  "targets": [
+    {
+      "id": "palette-scout",
+      "role": "common-a",
+      "label": "Palette Scout",
+      "silhouette": "A compact fan-shaped signal with three large, unequal swatches and one grounded stem.",
+      "behavior": "Shows the first broad color family in the current style chain and rewards a fast correct scan.",
+      "frame": "common-a",
+      "pivot": { "x": 0.5, "y": 1 }
+    },
+    {
+      "id": "stitch-courier",
+      "role": "common-b",
+      "label": "Stitch Courier",
+      "silhouette": "A slim folded-paper courier with one oversized route ribbon and no human likeness.",
+      "behavior": "Carries the second chain symbol between two fixed lanes before entering scan range.",
+      "frame": "common-b",
+      "pivot": { "x": 0.5, "y": 1 }
+    },
+    {
+      "id": "mirror-node",
+      "role": "common-c",
+      "label": "Mirror Node",
+      "silhouette": "An asymmetric oval reflector inside a low tripod frame with a broken diagonal reflection line.",
+      "behavior": "Repeats one earlier chain property and asks the player to verify rather than simply match color.",
+      "frame": "common-c",
+      "pivot": { "x": 0.5, "y": 1 }
+    },
+    {
+      "id": "spotlight-rival",
+      "role": "elite",
+      "label": "Spotlight Rival",
+      "silhouette": "A tall aperture tower with two rotating shutters and a broad triangular base.",
+      "behavior": "Changes the active spotlight rhythm and offers a Focus-or-Notes choice when cleared.",
+      "frame": "elite",
+      "pivot": { "x": 0.5, "y": 1 }
+    },
+    {
+      "id": "runway-signal",
+      "role": "event",
+      "label": "Runway Signal",
+      "silhouette": "A horizontal light rail with three raised editorial tabs and one centered verification beacon.",
+      "behavior": "Foreshadows the Gate by presenting a full three-part chain with a forgiving timing window.",
+      "frame": "event",
+      "pivot": { "x": 0.5, "y": 1 }
+    }
+  ],
+  "boss": {
+    "id": "prism-director",
+    "label": "Prism Director",
+    "silhouette": "A large radial editorial rig with four broad shutters, one central prism and a stable grounded pedestal.",
+    "behavior": "Runs three readable style-chain phases; each completed phase breaks one shutter and locks in a permanent reward multiplier for the encounter only.",
+    "frame": "boss",
+    "breakFrame": "boss-break",
+    "pivot": { "x": 0.5, "y": 1 }
+  },
+  "easterEggs": [
+    {
+      "id": "perfect-day-read",
+      "tier": "read",
+      "description": "The Pack moves from morning pastels to an evening editorial spotlight over its ten Zones.",
+      "originalityNote": "A day-to-night fashion-show arc is a broad genre convention; the environment, timing, shapes, copy and characters are original APN designs and do not reproduce a protected scene or property.",
+      "trigger": "Complete Zones 1, 5 and 9 in the same Pack.",
+      "killSwitch": "disable-fashion-read"
+    },
+    {
+      "id": "three-look-wink",
+      "tier": "wink",
+      "description": "Three consecutive perfect chains make the runway rail briefly arrange itself into a clean three-look editorial spread.",
+      "originalityNote": "The reward references fashion editorial sequencing generally; it contains no branded outfit, doll, wordmark, packaging or recognizable third-party design.",
+      "trigger": "Achieve three perfect style chains without a miss.",
+      "killSwitch": "disable-fashion-wink"
+    },
+    {
+      "id": "archive-pink-deep-cut",
+      "tier": "deep-cut",
+      "description": "A rare archive card records the color name 'Signal Rose 59' and unlocks an APN-only visor accent.",
+      "originalityNote": "The color is an APN semantic token with an internal catalog number, not an official brand color name, product reference or third-party mark.",
+      "trigger": "Clear the Prism Director with Priority Tag active and at least 90% Focus.",
+      "killSwitch": "disable-fashion-deep-cut"
+    }
+  ],
+  "assets": {
+    "environment": {
+      "far": "assets/echo-packs/fashion-dream/environment-far.webp",
+      "mid": "assets/echo-packs/fashion-dream/environment-mid.webp",
+      "ground": "assets/echo-packs/fashion-dream/environment-ground.webp"
+    },
+    "targets": "assets/echo-packs/fashion-dream/targets.webp",
+    "targetData": "assets/echo-packs/fashion-dream/targets.json",
+    "boss": "assets/echo-packs/fashion-dream/boss.webp",
+    "fx": "assets/echo-packs/fashion-dream/fx.webp",
+    "fallback": "assets/echo-packs/fashion-dream/fallback.webp",
+    "corruptionMask": "assets/echo-packs/fashion-dream/corruption-mask.webp",
+    "budgetBytes": {
+      "environment": 150000,
+      "targets": 130000,
+      "bossAndFx": 90000,
+      "props": 40000,
+      "metadata": 20000,
+      "total": 430000
+    }
+  },
+  "fallback": {
+    "packId": "apn-core",
+    "reasonCopy": "Fashion Dream is temporarily using the APN Core signal route.",
+    "preserveRewards": true
+  },
+  "provenance": {
+    "status": "planned",
+    "sourceBoard": "assets/echo-packs/fashion-dream/source-board.md",
+    "originalityBrief": "assets/echo-packs/fashion-dream/originality-brief.md",
+    "visualPromptContainsThirdPartyMarks": false,
+    "records": [],
+    "reviewers": [],
+    "contentCredentialsRef": null
+  }
+}
