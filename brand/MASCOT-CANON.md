@@ -52,6 +52,21 @@ Large spherical head · slim body · integrated black visor · short cylindrical
 - Final runtime frames are deterministic GLB renders plus controlled 2D composite
   cleanup. If the reference and GLB disagree, the reference is rejected.
 
+### Production gate order
+
+Host work advances through one fail-fast sequence:
+
+1. Lock a neutral front, three-quarter, side, and back identity proof from the
+   canonical GLB.
+2. Check the same silhouette at 72, 128, and 192 px before producing motion.
+3. Approve pose keyframes before rendering a complete motion set.
+4. Approve loop, pivot, and visor stability before packing the runtime atlas.
+
+Do not generate a replacement mesh, rig, full frame set, or atlas to compensate
+for a failed earlier gate. Provider outputs, turntables, and comparison renders
+remain local candidates; only an approved master, its deterministic runtime
+exports, and compact approval evidence enter the repository.
+
 ## Role variants (NOT new characters)
 
 Same mascot, same silhouette — only a small accent/prop changes.
