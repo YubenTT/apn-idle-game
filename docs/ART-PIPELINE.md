@@ -88,3 +88,7 @@ atlases are produced issue-by-issue. The pipeline and gates are active now:
 - New sprites must enter through pivot-preserving atlas JSON.
 - Runtime rasters are WebP; editable masters stay out of first-playable bytes.
 - Playback remains plain `Image()` + Canvas with no build or runtime dependency.
+- Generated mesh candidates, provider receipts, turntables, and rejected motion
+  batches stay outside the repository. Promote only an approved editable master,
+  deterministic runtime exports, and the minimum evidence needed to reproduce
+  the approval.
