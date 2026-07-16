@@ -7,9 +7,10 @@
 
 Production status: all packs 01–20 are exported from the approved proof language as
 textless APN Patchline masters with deterministic backgrounds, target atlases,
-props, masks, pivots, and source-board records. Marvel Rivals closes its missing
-focused proof with recorded official transparent hero sources and the same APN
-outline, silhouette, pivot, and break-state normalization as every other pack.
+props, masks, pivots, and source-board records. Official third-party captures are
+banned from this repository in any form (purged 2026-07-16, including git history);
+research rows describe archetypes only, and `qa/check-assets.mjs` fails the build
+if a pack `master/` directory contains anything but generated SVG/MD sources.
 
 ## What must be produced
 

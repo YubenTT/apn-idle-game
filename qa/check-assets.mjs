@@ -21,7 +21,6 @@ for (const script of [
   'scripts/assets/pack-atlas.mjs',
   'scripts/assets/convert-webp.mjs',
   'scripts/assets/export-mascot.mjs',
-  'scripts/assets/extract-approved-pack-art.mjs',
   'scripts/assets/produce-game-packs.mjs',
 ]) {
   const source = fs.readFileSync(path.join(root, script), 'utf8');
@@ -83,6 +82,11 @@ for (const manifestFile of manifests.files) {
     assert(backgroundSource.includes(`id="${motif}"`), `${packId} background locks ${motif}`);
   }
   assert(fs.statSync(path.join(directory, 'background.webp')).size <= 150 * 1024, `${packId} background stays under 150 KB`);
+  const masterDir = path.join(directory, 'master');
+  if (fs.existsSync(masterDir)) {
+    const foreign = fs.readdirSync(masterDir).filter((name) => !/\.(svg|md)$/.test(name));
+    assert(foreign.length === 0, `${packId} master holds only generated sources (no vendored pixels: ${foreign.join(', ') || 'clean'})`);
+  }
   productionPacks.push(packId);
 }
 assert([0, 5, 10, 15, 20].includes(productionPacks.length), `production lands in five-pack groups (${productionPacks.length})`);
