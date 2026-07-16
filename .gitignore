@@ -3,6 +3,7 @@
 Thumbs.db
 *.swp
 *.swo
+*.blend1
 .idea/
 .vscode/
 *.code-workspace
@@ -34,3 +35,4 @@ coverage/
 
 # Keep qa screenshots intentional; ignore ad-hoc local dumps
 qa/screenshots/_local/
+assets/mascot/**/candidates/
