@@ -1,3 +1,6 @@
+<!-- go-live-v2-superseded -->
+> **⚠ Superseded on the prestige model (go-live v2).** The **End Season** prestige framing in this ADR is superseded by [ADR-0008](./ADR-0008-go-live-sole-checkpoint.md) (Go Live is the sole checkpoint). The Route/catalog/save structure here otherwise stands; see plan v2 + `docs/product/RECONCILIATION.md`.
+
 # ADR-0004 — Catalog-driven Game Pack Route
 
 - Status: Accepted
