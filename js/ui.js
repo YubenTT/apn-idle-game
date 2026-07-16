@@ -83,7 +83,7 @@ const PANEL_TITLES = {
   skills: 'Build',
   ship: 'Go Live',
   gear: 'Gear',
-  hub: 'Hub',
+  hub: 'Route',
   meta: 'Boosts',
   settings: 'Menu',
 };
@@ -510,7 +510,7 @@ function fillGoLive(s) {
     <div class="ship-formula" aria-label="Go Live preview">
       ${row('Notes', notesLine, notes > 0 ? 'hi' : '', 'notes')}
       ${row('Grow Live Mult', `+${liveNext.toFixed(3)} Live`, ready ? 'hi' : '')}
-      ${row('Fresh run', 'Weapon · Rank · SP · Skills reset')}
+      ${row('Fresh run', 'Scanner · Rank · SP · Skills reset')}
       ${row('Next Go Live', ready ? 'Available now' : `Zone ${nextDisplay}`)}
     </div>
     <div class="season-contract">

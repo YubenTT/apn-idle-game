@@ -1,4 +1,5 @@
 import { pathToFileURL } from 'node:url';
+import { readFileSync } from 'node:fs';
 import { GAME_PACKS, PACK_BY_ID } from '../js/generated/game-packs.js';
 import {
   createRouteState,
@@ -43,12 +44,45 @@ export function checkRouteContract() {
   assert(JSON.stringify(revisitA) === JSON.stringify(revisitB), 'seeded schedule deterministic');
   assert(corruptionTierFor(mature, revisitA[0].id) === 1, 'mature tier calculation');
 
+  // Nav contract (ADR-0007): exactly five primary destinations + the separate Gear FAB.
+  // PR-3 renamed the display labels (Ship→Go Live, Hub→Route) while keeping the data-panel
+  // IDs stable (A1 display/ID split), so every sheet stays wired to its handler.
+  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const navMatch = html.match(/<nav class="hud-nav"[\s\S]*?<\/nav>/);
+  assert(navMatch, 'hud-nav present in index.html');
+  const navHtml = navMatch[0];
+  const navBtnCount = (navHtml.match(/class="nav-btn"/g) || []).length;
+  assert(navBtnCount === 5, `exactly five nav destinations (found ${navBtnCount})`);
+  const dests = [
+    ...navHtml.matchAll(
+      /<button\b[^>]*\bdata-panel="([^"]+)"[^>]*class="nav-btn"[\s\S]*?<span>([^<]+)<\/span>\s*<\/button>/g,
+    ),
+  ].map((m) => ({ panel: m[1], label: m[2].trim() }));
+  assert(dests.length === 5, `each nav destination exposes a text label (parsed ${dests.length})`);
+  assert(
+    dests.map((d) => d.panel).join(',') === 'skills,ship,hub,meta,settings',
+    'nav destination IDs stay stable (A1 display/ID split)',
+  );
+  assert(
+    dests.map((d) => d.label).join(',') === 'Build,Go Live,Route,Boosts,Menu',
+    'nav labels are the PR-3 set (Build · Go Live · Route · Boosts · Menu)',
+  );
+  assert(!dests.some((d) => /\b(?:Ship|Hub|Weapon)\b/.test(d.label)), 'no retired nav label leaks');
+  assert(
+    html.includes('id="btn-bag"') &&
+      html.includes('data-panel="gear"') &&
+      !dests.some((d) => d.panel === 'gear'),
+    'Gear stays a separate FAB outside the five (ADR-0007)',
+  );
+
   return [
     '20 Clean Era packs',
     'stable IDs and order',
     'five targets + boss',
     'pure deterministic scheduler',
     'bounded corruption tier',
+    'five nav destinations + separate Gear FAB (ADR-0007)',
+    'nav labels Build · Go Live · Route · Boosts · Menu',
   ];
 }
 
