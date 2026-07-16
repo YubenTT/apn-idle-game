@@ -81,7 +81,7 @@ export function createState() {
       ships: 0,
       bosses: 0,
       postsShippedTotal: 0,
-      /** Permanent loadout — survives End Season */
+      /** Permanent loadout — survives Go Live */
       gear: emptyGear(),
       /** Legacy demo-store data survives save round trips but is inert in the free MVP. */
       premium: {
@@ -630,7 +630,7 @@ function onKill(s, e) {
     }
     if (isSeasonCheckpoint(s.route.zone)) {
       s.ui.seasonDone = true;
-      toast(s, `Zone ${s.route.zone} checkpoint! Ship Notes, then End Season for Live Mult.`);
+      toast(s, `Zone ${s.route.zone} checkpoint! Go Live to bank Notes and grow your Live Mult.`);
       tip(s, 'season');
     } else {
       toast(s, `Zone ${s.route.zone + 1}`, 1.4);
@@ -1055,10 +1055,10 @@ export const END_SEASON_CONTRACT = Object.freeze({
   keeps: Object.freeze(['Route Zone', 'Rep and Boosts', 'Gear', 'Live Mult']),
 });
 
-/** End Season (prestige). UI reads END_SEASON_CONTRACT before this mutation. */
+/** Legacy prestige path, superseded by goLive(). Retained for save back-compat + tests. */
 export function leaveSeason(s) {
   if (!s.ui.seasonDone && !isSeasonCheckpoint(s.route.zone)) {
-    toast(s, `Reach Zone ${nextSeasonBoundary(s.route.zone)} checkpoint to End Season`);
+    toast(s, `Reach Zone ${nextSeasonBoundary(s.route.zone)} checkpoint first`);
     return false;
   }
   if (!s.ui.seasonDone && isSeasonCheckpoint(s.route.zone)) {

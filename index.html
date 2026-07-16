@@ -173,20 +173,8 @@
             <div id="skills-body"></div>
           </section>
           <section id="panel-ship" hidden>
-            <div id="ship-info" class="ship-stats" role="status"></div>
-            <button type="button" id="btn-ship" class="btn-primary">
-              <span class="btn-primary-title">Ship Notes → Rep</span>
-              <span class="btn-primary-sub" id="ship-cta-sub">Permanent Rep</span>
-            </button>
-            <button type="button" id="btn-leave" class="btn-ghost" hidden>End Season…</button>
-            <div id="season-confirm" class="season-confirm" hidden role="alertdialog" aria-labelledby="season-confirm-title">
-              <strong id="season-confirm-title">End this season?</strong>
-              <p>This applies the reset list above. Route progress and permanent growth stay.</p>
-              <div class="season-confirm-actions">
-                <button type="button" id="btn-leave-cancel" class="btn-ghost">Keep Playing</button>
-                <button type="button" id="btn-leave-confirm" class="btn-danger">End Season</button>
-              </div>
-            </div>
+            <!-- Single Go Live sheet: preview → inline confirm → receipt, rendered by fillGoLive(). -->
+            <div id="ship-info" class="ship-stats" role="status" aria-live="polite"></div>
           </section>
           <section id="panel-gear" hidden>
             <div id="gear-body"></div>
