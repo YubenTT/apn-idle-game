@@ -66,6 +66,7 @@ import {
   packZoneDisplay,
   nextSeasonBoundary,
 } from '../js/route.js';
+import { ANALYTICS_EVENTS, ANALYTICS_EVENT_NAMES } from '../js/analytics.js';
 import {
   apply as applySave,
   save as saveState,
@@ -153,11 +154,30 @@ for (const check of checkMobileGestureContract()) {
 }
 for (const message of checkRouteContract()) ok(true, `route ${message}`);
 
+// —— Dormant analytics event-name contract (PR-3, IDLE-DESIGN-CONTEXT §6) ——
+// Names only: reserved, frozen, snake_case, unique. There is no telemetry runtime to
+// assert because none exists yet — this guards the vocabulary, not any firing.
+ok(Object.isFrozen(ANALYTICS_EVENTS), 'analytics event map is frozen');
+ok(ANALYTICS_EVENT_NAMES.length >= 12, 'analytics reserves the §6 + progression events');
+ok(
+  ANALYTICS_EVENT_NAMES.every((n) => /^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$/.test(n)),
+  'every analytics name is snake_case',
+);
+ok(new Set(ANALYTICS_EVENT_NAMES).size === ANALYTICS_EVENT_NAMES.length, 'analytics names are unique');
+ok(
+  ['go_live', 'panel_open', 'offline_return', 'route_claim'].every((n) => ANALYTICS_EVENT_NAMES.includes(n)),
+  'analytics anchors Go Live + the §6 metrics',
+);
+ok(
+  !ANALYTICS_EVENT_NAMES.some((n) => /ship|weapon|satisfied_return/.test(n)),
+  'analytics uses current vocabulary (no retired ship/weapon, no struck metric)',
+);
+
 // —— Build decision previews ——
 ok(nextSkillUnlock('scan', 0)?.id === 'hotfix', 'Damage next unlock starts at Burst');
 ok(nextSkillUnlock('scan', 1)?.id === 'scroll_speed', 'Damage next unlock advances to Speed');
 ok(nextSkillUnlock('scan', 5) === null, 'Damage reports all skills open');
-ok(END_SEASON_CONTRACT.resets.includes('Weapon level'), 'End Season contract names Weapon reset');
+ok(END_SEASON_CONTRACT.resets.includes('Scanner level'), 'End Season contract names Scanner reset');
 ok(END_SEASON_CONTRACT.keeps.includes('Route Zone'), 'End Season contract keeps Route Zone');
 const hubStateFixture = emptyHub();
 ok(hubObjectiveState(hubStateFixture, DAILY_DEFS[0], 'daily') === 'locked', 'Hub objective starts locked');
@@ -182,7 +202,7 @@ ok(shellMarkup.includes('id="v-energy-lab"') && shellMarkup.includes('id="v-focu
 ok(uiSource.includes("spBtn.disabled = h.energy < 1"), 'Sprint empty state uses native disabled semantics');
 ok(/\.btn-chip\s*\{[^}]*min-height:\s*calc\(var\(--touch-min\) \+ var\(--sp-1\)\)/s.test(cssSource), 'Run skills preserve touch targets');
 ok((shellMarkup.match(/class="nav-btn"/g) || []).length === 5, 'Navigation keeps exactly five tabs');
-for (const label of ['Build', 'Ship', 'Hub', 'Boosts', 'Menu']) {
+for (const label of ['Build', 'Go Live', 'Route', 'Boosts', 'Menu']) {
   ok(shellMarkup.includes(`<span>${label}</span>`), `Navigation keeps ${label}`);
 }
 ok(shellMarkup.includes('id="btn-bag"') && shellMarkup.includes('data-panel="gear"'), 'Gear remains a separate FAB');
@@ -528,7 +548,7 @@ for (let i = 0; i < 60 * 60; i++) {
 }
 ok(s6.route.zone >= 20, `past Z20 zone=${s6.route.zone}`);
 
-// —— Brand 4-slot gear (Weapon · Chest · Legs · Visor) ——
+// —— Brand 4-slot gear (Scanner · Chest · Legs · Visor) ——
 installSeededRandom(0x47454152); // "GEAR" — isolates loot assertions from prior RNG use.
 ok(SLOTS.length === 4, '4 brand gear slots');
 ok(SLOTS.includes('chest') && SLOTS.includes('legs') && SLOTS.includes('visor'), 'brand armor slots');

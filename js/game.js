@@ -995,7 +995,7 @@ export function buyScanner(s) {
   toast(s, pick(SCANNER_LINES) + ` (Lv ${s.run.hero.scanner})`);
   particles(s, s.world.heroX, 200, '#FC1243', 16);
   confetti(s, s.world.heroX, 190, ['#FC1243', '#ff6b8a', '#fff'], 16);
-  floater(s, s.world.heroX, 150, `WEAPON Lv ${s.run.hero.scanner}`, '#FC1243', true);
+  floater(s, s.world.heroX, 150, `SCANNER Lv ${s.run.hero.scanner}`, '#FC1243', true);
   s.ui.chipPulse = s.ui.chipPulse || {};
   s.ui.chipPulse.bytes = 0.3;
   if (s.settings.sfx !== false) sfx('upgrade');
@@ -1051,7 +1051,7 @@ export function buyMeta(s, id) {
 }
 
 export const END_SEASON_CONTRACT = Object.freeze({
-  resets: Object.freeze(['Weapon level', 'Rank and SP', 'Build skills', 'Notes', '85% of Signal']),
+  resets: Object.freeze(['Scanner level', 'Rank and SP', 'Build skills', 'Notes', '85% of Signal']),
   keeps: Object.freeze(['Route Zone', 'Rep and Boosts', 'Gear', 'Live Mult']),
 });
 
@@ -1091,7 +1091,7 @@ export function leaveSeason(s) {
   s.ui.seasonDone = false;
   toast(
     s,
-    `New season! Live ×${s.meta.live.toFixed(2)} (+${gain.toFixed(3)}). Gear · Rep Boosts kept · Weapon Lv reset`
+    `New season! Live ×${s.meta.live.toFixed(2)} (+${gain.toFixed(3)}). Gear · Rep Boosts kept · Scanner Lv reset`
   );
   s.ui.panelDirty = true;
   confetti(s, s.world.heroX, 180, ['#e6b84d', '#FC1243', '#fff', '#3ecf8e'], 36);
@@ -1103,7 +1103,7 @@ export function leaveSeason(s) {
 export const GO_LIVE_CONTRACT = Object.freeze({
   banks: Object.freeze(['Unshipped Notes → Rep', 'Cycle Rep → Live Mult']),
   keeps: Object.freeze(['Route Zone', 'Rep and Boosts', 'Gear', 'Live Mult']),
-  resets: Object.freeze(['Weapon level', 'Rank and SP', 'Build skills', '85% of Signal']),
+  resets: Object.freeze(['Scanner level', 'Rank and SP', 'Build skills', '85% of Signal']),
 });
 
 /**
@@ -1155,7 +1155,7 @@ export function goLive(s, checkpointId = null, opts = {}) {
     return s.meta.lastGoLive;
   }
 
-  // 1) Bank unshipped Notes → Rep (fold the ship step into the atomic action).
+  // 1) Bank unshipped Notes → Rep (fold the bank step into the atomic action).
   const notesBanked = Math.max(0, Math.floor(s.run.patches));
   const repGained = notesBanked >= 1 ? Math.floor(notesBanked * C.SHIP_RATE * economyMult(s)) : 0;
   if (repGained > 0) {

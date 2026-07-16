@@ -13,11 +13,11 @@
     <div id="app">
       <header class="hud-top">
         <div class="hud-res" role="status" aria-label="Run resources">
-          <div class="chip signal" title="Signal — Upgrade Weapon">
+          <div class="chip signal" title="Signal — Upgrade Scanner">
             <small>Signal</small><strong id="v-bytes">0</strong>
           </div>
           <span class="resource-cutout" aria-hidden="true"></span>
-          <div class="chip notes" title="Notes — Ship for Rep">
+          <div class="chip notes" title="Notes — Go Live for Rep">
             <small>Notes</small><strong id="v-patches">0</strong>
           </div>
           <div class="chip sp" title="SP — spend in Build">
@@ -101,7 +101,7 @@
               <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 11h12l-2-2 2-2 6 5-6 5-2-2 2-2H3z" />
             </svg>
             <span class="cta-weapon-copy">
-              <span class="btn-primary-title">Upgrade Weapon</span>
+              <span class="btn-primary-title">Upgrade Scanner</span>
               <span class="btn-primary-sub"><span id="v-scan-delta">+8%</span> Damage · Lv <span id="v-scanner">0</span>→<span id="v-scanner-next">1</span></span>
             </span>
             <span class="cost-chip"><strong id="v-cost">14</strong><small>Signal</small></span>
@@ -129,7 +129,7 @@
           <svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"
             ><path fill="currentColor" d="M4 18h16v2H4v-2zm2-4l4-8 2 4 4-6 4 10H6z"
           /></svg>
-          <span>Ship</span>
+          <span>Go Live</span>
         </button>
         <button type="button" data-panel="hub" class="nav-btn" aria-controls="sheet-root" aria-expanded="false">
           <svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"
@@ -138,7 +138,7 @@
               d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 5v5l4 2-.8 1.6L11 13V7h2z"
             /></svg
           >
-          <span>Hub</span>
+          <span>Route</span>
         </button>
         <button type="button" data-panel="meta" class="nav-btn" aria-controls="sheet-root" aria-expanded="false">
           <svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"

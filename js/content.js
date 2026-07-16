@@ -14,7 +14,7 @@ export const ATTR_LABEL = {
 };
 
 export const ATTR_META = {
-  scan: { label: 'Damage', sub: 'Raises weapon power' },
+  scan: { label: 'Damage', sub: 'Raises scanner power' },
   verify: { label: 'Crit', sub: 'Raises crit chance' },
   amplify: { label: 'Utility', sub: 'Raises skill resources' },
 };
@@ -74,7 +74,7 @@ export const META = {
     per: 0.05,
     category: 'Economy',
     unit: 'percent',
-    valueCue: 'More Weapon upgrades',
+    valueCue: 'More Scanner upgrades',
   },
   patch_gain: {
     id: 'patch_gain',
@@ -85,7 +85,7 @@ export const META = {
     per: 0.07,
     category: 'Economy',
     unit: 'percent',
-    valueCue: 'More Notes to ship',
+    valueCue: 'More Notes to bank',
   },
   cold_start: {
     id: 'cold_start',
@@ -234,17 +234,17 @@ export const ENEMY_FLAVOR = {
 
 export const TIPS = {
   start:
-    'Clear noise → Signal funds Weapon upgrades. Build spends SP. Ship Notes for permanent Rep.',
-  kill: 'Upgrade Weapon each season. Put SP into Damage / Crit / Utility, then unlock skills.',
+    'Clear noise → Signal funds Scanner upgrades. Build spends SP. Go Live to bank Notes for permanent Rep.',
+  kill: 'Upgrade Scanner each season. Put SP into Damage / Crit / Utility, then unlock skills.',
   level: 'Rank up! Open Build — attributes first, then skills in that tree.',
-  patch: 'Notes banked. Ship → permanent Rep → Boosts.',
+  patch: 'Notes banked. Go Live → permanent Rep → Boosts.',
   alert: 'Collect orbs for Energy and Signal. Sprint spends Energy.',
   boss: 'Version Gate drops gear. Kill before the timer.',
-  ship: 'Ship Notes for Rep. Stuck? Improve Boosts, Gear, or Weapon.',
+  ship: 'Go Live to bank Notes for Rep. Stuck? Improve Boosts, Gear, or Scanner.',
   combo: 'Feed streak! Bonus Signal while it holds.',
   season:
     'Checkpoint! Go Live banks Notes → Rep and grows your Live Mult. Gear and Rep Boosts stay · run power resets.',
-  gear: 'Loadout: Weapon · Chest · Legs · Visor. Tap an item to compare, equip, mark, or scrap.',
+  gear: 'Loadout: Scanner · Chest · Legs · Visor. Tap an item to compare, equip, mark, or scrap.',
 };
 
 export const FEED_COPY = {

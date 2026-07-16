@@ -26,8 +26,8 @@ export const GEAR_FILTERS = ['all', 'upgrades', 'junk', ...SLOTS];
 export const SLOT_META = {
   weapon: {
     id: 'weapon',
-    label: 'Weapon',
-    short: 'Wpn',
+    label: 'Scanner',
+    short: 'Scan',
     primary: 'Damage',
     /** Affix keys preferred for card primary (order = priority) */
     primaryKeys: ['dmg_pct', 'flat_dmg', 'crit_pct', 'atk_spd'],

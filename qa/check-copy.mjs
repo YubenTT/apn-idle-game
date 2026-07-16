@@ -3,7 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const files = ['index.html', 'js/content.js', 'js/comedy.js', 'js/ui.js', 'js/game.js'];
+const files = ['index.html', 'js/content.js', 'js/comedy.js', 'js/ui.js', 'js/game.js', 'js/hub.js'];
 const banned = [
   ['fantasy Mana term', /\bmana\b/i],
   ['currency-named upgrade', /Upgrade Signal/i],
@@ -15,6 +15,13 @@ const banned = [
   // Matches player copy ("End Season", "End-Season") but not code identifiers
   // (leaveSeason, END_SEASON_CONTRACT, shippedThisSeason) — those have no space/hyphen split.
   ['retired End-Season action copy', /End[\s-]+Season/i],
+  // PR-3 renames the run-power upgrade → Scanner and the prestige action → Go Live.
+  // The A1 display/ID split (AUDIT B-3) keeps every lowercase identifier and CSS class:
+  // data-panel="ship", ship-row/ship-info, cta-weapon-icon, slot id 'weapon', shipPatches,
+  // s.ui.panel === 'ship'. So these bans match ONLY the Title/UPPER display forms a player
+  // reads ("Weapon", "WEAPON Lv", "Ship Notes") — never the lowercase code forms.
+  ['retired Weapon label', /\bWeapon\b|\bWEAPON\b/],
+  ['retired Ship label', /\bShip\b|\bSHIP\b/],
 ];
 
 let failures = 0;
