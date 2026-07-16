@@ -12,7 +12,7 @@
 | Logical portrait canvas | 428 × 926 pt |
 | 3× export | 1284 × 2778 px |
 | Landscape (secondary) | 844 × 390 CSS px |
-| Side margin | 16 pt · Gutter 8 pt · 4-col grid |
+| Side margin | 16 pt · Gutter 8 pt · 4-col grid; Run gameplay surface is full-bleed |
 | Safe areas | `env(safe-area-inset-*)` — real layout input, not decoration |
 | App max-width (desktop) | 480 px (matches shipped sheet width) |
 
@@ -23,9 +23,9 @@ Portrait is primary. Landscape sheets open **full-screen**, not right-rail.
 | Band | Height | Contents |
 |------|-------:|----------|
 | Safe top | 59 pt | notch / Dynamic Island |
-| Resource strip | 44 pt | Signal (left) · Notes · SP (right), center cutout reserved |
+| Resource strip | 44 pt | Signal · Notes · SP in three balanced safe-area columns |
 | Feed rail | 40 pt | single-line live APN feed |
-| Stage card | ~434 pt | stage header + viewport + footer |
+| Gameplay surface | ~434 pt | flat stage telemetry + edge-to-edge viewport |
 | Action dock | 56 pt | primary CTA + one mod control |
 | Skill row | 48 pt | 3–4 skill buttons |
 | Tab bar | 60 pt + safe bottom | 5 top-level tabs |
@@ -57,16 +57,18 @@ fill, not a full crimson slab.
 
 Fixes over the shipped run screen:
 
-1. **Resource strip around the notch** carries **Signal / Notes / SP** only — the
-   three the player acts on. Drop the "APN Idle" wordmark from the running HUD
+1. **Resource strip below the safe top** carries **Signal / Notes / SP** only —
+   the three the player acts on, distributed evenly without a fake fixed cutout.
+   Drop the "APN Idle" wordmark from the running HUD
    (brand trust comes from component discipline; logomark lives on splash/menu per
    APN press-kit restraint). Move **Rep** and **DPS** out of the run HUD into their
    owning sheets (Ship/Boosts show Rep; a stats peek shows DPS).
 2. **Feed rail**, not a website header: one line, source mark 16 · game name 15 ·
    type pill 20–22. It carries *run context* (what's live now), never a scrolling
    news marquee. Good truncation, one cell readable at a glance.
-3. **Stage header** absorbs Zone / Rank / Live into a compact strip **inside** the
-   stage card — Rank reads as an in-run growth metric, not a top-HUD analytics row.
+3. **Stage header** absorbs Zone / Rank / Live into a compact flat strip attached
+   to the gameplay viewport — Rank reads as an in-run growth metric, not a top-HUD
+   analytics row.
 4. **Patchline stage** must read as gameplay: camera framing so mascot + target
    are both legible; enemy HP as a clear banner over the target; hit anchor so
    damage numbers attach to the target, not float loose; loot flies to the HUD;
@@ -76,6 +78,10 @@ Fixes over the shipped run screen:
    - Mod control (Sprint): a *behavior toggle*, visually lighter than the CTA.
    - Skill buttons (48pt): equal, secondary. Overdrive is a toggle, not a CTA-weight button.
    - **Never** title the CTA "Upgrade Signal" ([NAMING](../brand/NAMING.md)).
+6. **Run surface is continuous:** resource strip, feed, telemetry, canvas, meters,
+   action dock, and navigation share one vertical rhythm. The combat viewport has
+   no outer margin, border, radius, or card shadow. Energy/Focus expose live values;
+   Sprint keeps stable helper copy instead of substituting low-energy warnings.
 
 ## Sheets (bottom-sheet pattern)
 

@@ -21,8 +21,8 @@ every box is ticked and `node qa/run-tests.mjs` is green.
 
 ## Autonomous delivery sessions
 
-The original 33 focused issues plus release issue R-005 still land as one issue =
-one PR, but execution is grouped into seven long-running delivery sessions in one autonomous chain. Sessions are
+The original 33 focused issues plus release issues R-005–R-006 still land as one issue =
+one PR, but execution is grouped into eight long-running delivery sessions in one autonomous chain. Sessions are
 work packages, not separate chats or one-agent-per-issue handoffs.
 
 | Session | Issues / work | Outcome | User action |
@@ -34,10 +34,11 @@ work packages, not separate chats or one-agent-per-issue handoffs.
 | 5 | I-020, I-022, I-023, I-025, I-024 | Decision sheets | None |
 | 6 | I-033, I-034, I-040, I-042, I-044, I-043, I-045 | Remaining art, feel, copy, nav, integrated QA, physical-input hardening | **Final integrated evidence review** |
 | 7 | R-005 | Free MVP economy cut and release re-verification | None |
+| 8 | R-006 | Continuous Run surface polish and release re-verification | **Single plan-lock approval complete** |
 
 The original Session 6 review is complete. R-005 is verified autonomously against
-its negative economy contract and muted browser evidence. The next single user gate is the Host V2 motion proof; no creature, item, or runtime Host replacement
-may proceed before that visual-owner approval.
+its negative economy contract and muted browser evidence. R-006 owns the approved
+Run-surface correction and proceeds without additional visual-owner gates.
 
 ## Phasing (dependency waves — do in order)
 
@@ -48,14 +49,14 @@ Wave 1  Collection vertical   I-021
 Wave 2  Run screen (hero)      I-010 → I-014
 Wave 3  Sheets (decisions)     I-020, I-022–I-025
 Wave 4  Remaining art/feel/QA I-033, I-034, I-040, I-042 → I-044 → I-043 → I-045
-Release hardening               R-005
+Release hardening               R-005 → R-006
 ```
 
 Locked execution order:
 `I-000 → I-001 → I-002 → I-003 → I-004 → I-005 → I-006 → I-041 → I-030 →
 I-031 → I-032A → I-032B → I-032C → I-032D → I-007 → I-021 → I-010 → I-011 →
 I-012 → I-013 → I-014 → I-020 → I-022 → I-023 → I-025 → I-024 → I-033 →
-I-034 → I-040 → I-042 → I-044 → I-043 → I-045 → R-005`.
+I-034 → I-040 → I-042 → I-044 → I-043 → I-045 → R-005 → R-006`.
 
 Rule: **do not start a wave until the prior wave's 🔴 Must issues are merged.** The
 approved asset system now precedes UI implementation so the Run and Gear slices
@@ -99,12 +100,13 @@ are built once against production contracts. The chain stays linear.
 | I-044 | Nav | Keep-5 navigation refinement + implementation | 🟡 | S | I-010 | [SCREEN-SPECS §Navigation](./SCREEN-SPECS.md) |
 | I-045 | QA | Mobile long-press gesture hardening | 🔴 | S | I-043 | [QA-CHECKLIST](./QA-CHECKLIST.md) |
 | R-005 | Release | Free MVP economy cut | 🔴 | S | I-045 | [MONETIZATION](./MONETIZATION.md) |
+| R-006 | Release | Continuous Run surface polish | 🔴 | S | R-005 | [SCREEN-SPECS §RUN](./SCREEN-SPECS.md) |
 
 ## Effort roll-up
 
 | Priority | Issues | Rough range |
 |----------|-------:|------------:|
-| 🔴 Must | 24 | measured issue-by-issue |
+| 🔴 Must | 25 | measured issue-by-issue |
 | 🟡 Fix | 10 | measured issue-by-issue |
 | ⚪ Optional | (seasonal swaps, cosmetics, PWA — see ROADMAP) | ~60–90 h |
 
@@ -174,7 +176,7 @@ acceptance boxes, fresh tests, browser proof, and one focused commit per issue.
         428×926, Run/Build 375×812, Run/Build 844×390, Ship 375×812, and Hub
         375×812. Computed colors match the locked tokens, layout is unchanged,
         and browser console errors are zero. The approved board closes this
-        historical preproduction check; Session 6 is the sole remaining user gate.
+        historical preproduction check; its Session 6 evidence gate is complete.
   - [x] Semantic Canvas proof renders Notes/SP floaters through a cached
         `render.js` token map; domain events carry roles, not palette values.
   - [x] `node qa/run-tests.mjs` green with the economy-color contract.
@@ -189,7 +191,8 @@ acceptance boxes, fresh tests, browser proof, and one focused commit per issue.
 - **Acceptance:**
   - [x] ADR-0004 is Accepted; VISION and ART-DIRECTION agree with it.
   - [x] ADR-0005 preserves GLB geometry while defining the approved hybrid reference boundary.
-  - [x] Backlog contains all 33 focused issues in dependency order with only one final user gate.
+  - [x] Backlog contains all 33 focused implementation issues in dependency order;
+        the later R-006 plan-lock gate is recorded separately and is complete.
   - [x] Approved concept proofs are registered as review evidence, not runtime assets.
   - [x] `node qa/check-doc-contracts.mjs` and `node qa/run-tests.mjs` pass.
 - **Files:** owning design/art docs, ADR-0004/0005, backlog, proof registry, QA contract.
@@ -451,6 +454,28 @@ acceptance boxes, fresh tests, browser proof, and one focused commit per issue.
 - **Out of scope:** new currencies, reward replacements, balance buffs, asset
   replacement, accounts, payment plumbing, or future cosmetic products.
 
+### R-006 · Continuous Run surface polish — 🔴 S
+- **Goal:** make Run read as one direct mobile game surface instead of a stack of
+  nested cards while preserving the approved decision hierarchy.
+- **Acceptance:**
+  - [x] Resource strip, feed, telemetry, Canvas, meters, action dock, and navigation
+        form one continuous vertical rhythm; the Canvas viewport is edge-to-edge.
+  - [x] Stage margin, border, radius, and shadow are removed without changing
+        combat, economy, target anchors, or render ownership.
+  - [x] Energy and Focus show live values; Sprint helper copy stays stable and no
+        `Need energy` or low-energy filler copy appears in the HUD.
+  - [x] Sprint/Upgrade retain a roughly 30/70 hierarchy, Upgrade Weapon is the only
+        crimson primary, and Signal cost remains readable at the 375 px floor.
+  - [x] Skill and navigation controls remain at least 44 pt, safe areas are
+        encoded in layout, the five exact-dimension viewport contracts pass, and
+        muted Chrome desktop/embed QA has zero relevant console output.
+  - [x] `node qa/run-tests.mjs` ends in `ALL PASS` and the shipping branch contains
+        no rejected Host/GLB candidate or unrelated artifact.
+- **Files:** `index.html`, `js/ui.js`, `css/game.css`, Run/component docs, QA,
+  changelog.
+- **Out of scope:** game balance, new mechanics, navigation changes, art or Host
+  replacement, monetization, accounts, and distribution plumbing.
+
 ---
 
 ## Definition of "epic done"
@@ -462,6 +487,6 @@ release.
 
 ## Release gate (redesign V1)
 
-Ship redesign V1 when: all 34 issue acceptance lists are complete · all 24 Must + 10 Fix branches are integrated · Sessions 1–7 are complete · QA matrix (I-043) is green ·
+Ship redesign V1 when: all 35 issue acceptance lists are complete · all 25 Must + 10 Fix branches are integrated · Sessions 1–8 are complete · QA matrix (I-043) is green ·
 no Blocker/Critical is open · every shipping screen passes Silhouette / Contrast /
 Touch / Decision gates.

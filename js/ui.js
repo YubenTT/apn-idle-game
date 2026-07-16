@@ -1005,21 +1005,19 @@ export function renderHUD(s) {
   if (eWrap) eWrap.classList.toggle('is-sprinting', sprinting);
   const eLab = $('v-energy-lab');
   if (eLab) {
-    if (sprinting) set(eLab, `×${(st.timeScale || 1.85).toFixed(2)} SPEED`);
-    else if (h.energy < st.eMax * 0.2) set(eLab, 'Low — grab orbs');
-    else set(eLab, 'Sprint fuel');
+    const energyPct = Math.round((h.energy / Math.max(1, st.eMax)) * 100);
+    set(eLab, sprinting ? `Active ×${(st.timeScale || 1.85).toFixed(2)}` : `${energyPct}%`);
   }
+  const focusLab = $('v-focus-lab');
+  if (focusLab) set(focusLab, `${Math.round((h.focus / Math.max(1, st.fMax)) * 100)}%`);
   const spBtn = $('btn-sprint');
   if (spBtn) {
     spBtn.classList.toggle('is-active', sprinting);
     spBtn.classList.toggle('is-empty', h.energy < 1);
+    spBtn.disabled = h.energy < 1;
     spBtn.classList.remove('is-auto');
     const sub = spBtn.querySelector('.btn-sprint-sub');
-    if (sub) {
-      if (sprinting) set(sub, `×${(st.timeScale || 1.85).toFixed(2)} LIVE`);
-      else if (h.energy < 1) set(sub, 'Need energy');
-      else set(sub, 'Hold · ×1.85');
-    }
+    if (sub) set(sub, 'Hold · ×1.85');
   }
   // Hub badge when claimable
   ensureHub(s);
