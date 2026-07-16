@@ -5,6 +5,8 @@ import {
   isBossZone,
   killsNeeded,
   expectedHits,
+  isGoLiveBoundary,
+  nextGoLiveBoundary,
 } from '../js/formulas.js';
 import {
   createState,
@@ -16,6 +18,10 @@ import {
   shipPatches,
   combatStats,
   leaveSeason,
+  goLive,
+  canGoLive,
+  goLiveAvailableZone,
+  simulateOffline,
   setSprint,
   isSprinting,
   equipGear,
@@ -67,6 +73,7 @@ import {
   clear as clearSave,
   SAVE_KEY_V1,
   SAVE_KEY_V2,
+  SAVE_VERSION,
 } from '../js/save.js';
 import { checkCssTokenContract } from './check-css-tokens.mjs';
 import { checkEconomyColorContract } from './check-economy-colors.mjs';
@@ -117,6 +124,11 @@ process.stdout.write(
 );
 process.stdout.write(
   execFileSync(process.execPath, [fileURLToPath(new URL('./check-visual-baselines.mjs', import.meta.url))], {
+    encoding: 'utf8',
+  })
+);
+process.stdout.write(
+  execFileSync(process.execPath, [fileURLToPath(new URL('./check-go-live.mjs', import.meta.url))], {
     encoding: 'utf8',
   })
 );
@@ -223,7 +235,9 @@ for (const cue of ['hit', 'crit', 'loot', 'rank', 'sheet', 'afford']) {
 
 // —— Persistent global Route + save v2 migration ——
 const freshRoute = createState();
-ok(freshRoute.v === 2, 'fresh state schema v2');
+ok(freshRoute.v === 3, 'fresh state schema v3');
+ok(freshRoute.meta.goLiveCount === 0 && freshRoute.meta.pendingGoLiveZone === 0, 'fresh Go Live counters zeroed');
+ok(!('season' in freshRoute.meta), 'retired season counter absent from fresh state');
 ok(freshRoute.route.zone === 0, 'fresh global route');
 ok(freshRoute.route.currentPackId === 'valorant', 'fresh first pack');
 ok(!('zone' in freshRoute.run), 'fresh run zone retired');
@@ -282,7 +296,7 @@ saveState(migratedRoute);
 ok(saveMemory.has(SAVE_KEY_V2), 'save writes v2 key');
 ok(!saveMemory.has(SAVE_KEY_V1), 'save does not write legacy key');
 const roundTrip = loadState();
-ok(roundTrip?.v === 2 && roundTrip.route?.zone === 1905, 'v2 save round trip');
+ok(roundTrip?.v === 3 && roundTrip.route?.zone === 1905, 'v3 save round trip');
 const appliedRoundTrip = createState();
 applySave(appliedRoundTrip, roundTrip);
 ok(appliedRoundTrip.settings.gearSort === 'rarity' && appliedRoundTrip.settings.gearFilter === 'junk', 'gear view preferences persist');
@@ -295,6 +309,129 @@ saveMemory.set(SAVE_KEY_V2, '{corrupt-json');
 ok(loadState()?.v === 1, 'corrupt v2 falls back to valid legacy save');
 clearSave();
 ok(!saveMemory.has(SAVE_KEY_V1) && !saveMemory.has(SAVE_KEY_V2), 'New Game clears both save keys');
+
+// —— Go Live: additivity, boundaries, idempotency (PR-1 / ADR-0008) ——
+ok(SAVE_VERSION === 3, 'save schema version is 3');
+// Boundary formula: first at 10, then every 20 (10, 30, 50, …).
+ok(isGoLiveBoundary(10) && !isGoLiveBoundary(20) && isGoLiveBoundary(30) && !isGoLiveBoundary(40), 'Go Live boundaries land at 10, 30, 50');
+ok(nextGoLiveBoundary(0) === 10 && nextGoLiveBoundary(10) === 30 && nextGoLiveBoundary(15) === 30, 'next Go Live boundary is correct');
+
+// Strictly additive: the legacy ship + End Season paths still work this PR.
+const additive = createState();
+additive.route.zone = 20;
+additive.run.patches = 30;
+ok(shipPatches(additive), 'ship Notes path still works (additive)');
+additive.ui.seasonDone = true;
+const seasonBefore = additive.meta.goLiveCount;
+ok(leaveSeason(additive), 'End Season path still works (additive)');
+ok(additive.meta.goLiveCount === seasonBefore + 1, 'End Season increments goLiveCount');
+
+// goLive at the first boundary (zone 10): Route kept, temp power reset, idempotent.
+const glState = createState();
+glState.route.zone = 10;
+glState.meta.pendingGoLiveZone = 10;
+glState.run.hero.level = 30;
+glState.authority.shippedThisSeason = 300;
+ok(canGoLive(glState) && goLiveAvailableZone(glState) === 10, 'Go Live available at zone 10');
+const rec1 = goLive(glState);
+ok(rec1 && rec1.goLiveCount === 1 && rec1.boundaryZone === 10, 'goLive #1 mints a receipt at zone 10');
+ok(glState.route.zone === 10, 'goLive keeps the global Route zone');
+ok(glState.run.hero.level === 1 && glState.meta.live > 1, 'goLive resets temp power and grows Live Mult');
+const rec2 = goLive(glState);
+ok(rec2 && rec2.checkpointId === rec1.checkpointId && glState.meta.goLiveCount === 1, 'goLive double-click is idempotent (no second prestige)');
+
+// Zero-notes contract: a Go Live with nothing banked is a clean no-bank.
+const zeroNotes = createState();
+zeroNotes.route.zone = 10;
+zeroNotes.meta.pendingGoLiveZone = 10;
+const recZero = goLive(zeroNotes);
+ok(recZero && recZero.notesBanked === 0 && recZero.repGained === 0, 'goLive with zero Notes banks nothing (no crash)');
+
+// Zone-1000 contract: a Go Live at a deep boundary stays finite.
+const deep = createState();
+deep.route.zone = 1010; // (1010-10) % 20 === 0 → a boundary
+deep.meta.pendingGoLiveZone = 1010;
+const recDeep = goLive(deep);
+ok(recDeep && recDeep.boundaryZone === 1010 && Number.isFinite(recDeep.liveMult), 'goLive at Zone 1010 boundary is finite');
+
+// —— PR-1 save-v3 migration matrix ——
+// Row 1: v1 save → v3 direct (no crash; goLiveCount 0; season retired).
+const mV1 = createState();
+applySave(mV1, { v: 1, ts: 1, run: { zone: 40, killsInZone: 0, bytes: 5, patches: 2, hero: { scan: 3, verify: 2, amplify: 1 } } });
+ok(mV1.v === 3, 'matrix v1→v3: schema upgraded to 3');
+ok(mV1.meta.goLiveCount === 0 && mV1.meta.pendingGoLiveZone === 0, 'matrix v1→v3: goLiveCount=0, none pending');
+ok(!('season' in mV1.meta) && mV1.route.zone === 40, 'matrix v1→v3: season retired, no crash');
+
+// Row 2: v2 clean boundary (zone 20) → v3 (goLiveCount === old season; available).
+const mV2clean = createState();
+applySave(mV2clean, {
+  v: 2, ts: 1,
+  meta: { season: 4, live: 1.5 },
+  route: { zone: 20, killsInZone: 0 },
+  authority: { amount: 500, shippedThisSeason: 120 },
+  ui: { seasonDone: true },
+});
+ok(mV2clean.meta.goLiveCount === 4, 'matrix v2 clean: goLiveCount === old meta.season');
+ok(mV2clean.meta.pendingGoLiveZone === 20 && canGoLive(mV2clean), 'matrix v2 clean: Go Live available at 20');
+ok(!('season' in mV2clean.meta), 'matrix v2 clean: season deleted (Object.assign cannot resurrect)');
+
+// Row 3: v2 overshoot (zone 27, seasonDone) → v3 (pending=20, available now, not 40).
+const mV2over = createState();
+applySave(mV2over, {
+  v: 2, ts: 1,
+  meta: { season: 2 },
+  route: { zone: 27, killsInZone: 0 },
+  authority: { shippedThisSeason: 80 },
+  ui: { seasonDone: true },
+});
+ok(mV2over.meta.pendingGoLiveZone === 20, 'matrix v2 overshoot z27: pending=20 (not 40)');
+ok(canGoLive(mV2over) && mV2over.meta.goLiveCount === 2, 'matrix v2 overshoot: available now, count preserved');
+
+// Row 4: 8h offline crossing the boundary banks only pre-boundary Notes (no 7.5h farm).
+const savedRandom = Math.random;
+installSeededRandom(0x41504e);
+const offCross = createState();
+offCross.route.zone = 18; // boundary 20, reached early in the window
+offCross.run.hero.scanner = 40;
+const crossSummary = simulateOffline(offCross, 8 * 3600);
+installSeededRandom(0x41504e);
+const offRef = createState();
+offRef.route.zone = 18;
+offRef.run.hero.scanner = 40;
+const refSummary = simulateOffline(offRef, crossSummary.simulatedSeconds);
+Math.random = savedRandom; // restore the main deterministic stream for later tests
+ok(crossSummary && crossSummary.stoppedAtSeasonBoundary === true, 'matrix offline: halts at the checkpoint boundary');
+ok(crossSummary.overflowSeconds > 6 * 3600, 'matrix offline: leaves >6h unspent past the boundary');
+ok(crossSummary.notes === refSummary.notes, 'matrix offline: banks only pre-boundary Notes, never 7.5h post-boundary');
+
+// Row 5: write-guard refuses to overwrite a higher-version save on disk.
+saveMemory.clear();
+const futureSave = { v: SAVE_VERSION + 1, ts: 999, meta: { goLiveCount: 9 }, route: { zone: 5 } };
+saveMemory.set(SAVE_KEY_V2, JSON.stringify(futureSave));
+const guardState = createState();
+guardState.route.zone = 3;
+ok(saveState(guardState) === false, 'matrix write-guard: refuses to overwrite a higher-version save');
+ok(JSON.parse(saveMemory.get(SAVE_KEY_V2)).v === SAVE_VERSION + 1, 'matrix write-guard: higher-version save left intact');
+saveMemory.set(SAVE_KEY_V2, JSON.stringify({ ...futureSave, v: SAVE_VERSION }));
+ok(saveState(guardState) === true, 'matrix write-guard: same-version overwrite still allowed');
+clearSave();
+
+// meta.hub is on the persist manifest (its dailies/weeklies were orphaned pre-PR-1).
+const hubState = createState();
+hubState.meta.hub.seasonXp = 42;
+hubState.meta.hub.daily.ships = 3;
+hubState.meta.hub.weekly.notes = 88;
+saveMemory.clear();
+saveState(hubState);
+const hubReloaded = createState();
+applySave(hubReloaded, loadState());
+ok(
+  hubReloaded.meta.hub?.seasonXp === 42 &&
+    hubReloaded.meta.hub?.daily?.ships === 3 &&
+    hubReloaded.meta.hub?.weekly?.notes === 88,
+  'meta.hub persists across a v3 save round trip',
+);
+clearSave();
 
 // —— Basic combat ——
 const s = createState();

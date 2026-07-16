@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://allpatchnotes.com/schemas/apn-idle/go-live-receipt.schema.json",
+  "title": "APN Idle Go Live receipt",
+  "description": "The receipt emitted by the atomic Go Live checkpoint (ADR-0008, plan v2 §PR-1). One receipt per claimed boundary; re-calling on the same checkpoint returns the same receipt (idempotent). Declared here per the PR-0 RECONCILIATION deferral (receipt shape → PR-1). `qa/check-go-live.mjs` validates every emitted receipt against this contract.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "version",
+    "checkpointId",
+    "boundaryZone",
+    "goLiveCount",
+    "notesBanked",
+    "repGained",
+    "repTotal",
+    "cycleContribution",
+    "liveGain",
+    "liveMult",
+    "completedPackIds",
+    "nextPackIds",
+    "ts"
+  ],
+  "properties": {
+    "schema": {
+      "description": "Discriminator marking this object as a Go Live receipt.",
+      "const": "apn.go-live-receipt"
+    },
+    "version": {
+      "description": "Receipt-shape version. Bumped only when the receipt fields change.",
+      "type": "integer",
+      "minimum": 1
+    },
+    "checkpointId": {
+      "description": "Stable id for the claimed checkpoint (default `gl-z<boundaryZone>`). Two calls with the same id resolve to the same receipt — the idempotency key.",
+      "type": "string",
+      "minLength": 1
+    },
+    "boundaryZone": {
+      "description": "Route zone of the boundary this checkpoint was minted from (first at zone 10, then every 20).",
+      "type": "integer",
+      "minimum": 1
+    },
+    "goLiveCount": {
+      "description": "Total Go Live checkpoints claimed after this one (1-based).",
+      "type": "integer",
+      "minimum": 1
+    },
+    "notesBanked": {
+      "description": "Unshipped Notes folded into this checkpoint before conversion.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "repGained": {
+      "description": "Rep minted from notesBanked at this checkpoint.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "repTotal": {
+      "description": "Permanent Rep balance after the checkpoint applied.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "cycleContribution": {
+      "description": "Rep-denominated cycle contribution that fed the Live Mult gain (migration may supply a legacy value).",
+      "type": "number",
+      "minimum": 0
+    },
+    "liveGain": {
+      "description": "Live Mult increment added by this checkpoint.",
+      "type": "number",
+      "minimum": 0
+    },
+    "liveMult": {
+      "description": "Live Mult after the checkpoint applied.",
+      "type": "number",
+      "minimum": 1
+    },
+    "completedPackIds": {
+      "description": "Game Pack ids completed during the cycle. Empty until the Echo archive lands (PR-6); minItems 0 so the reference implementation's default `[]` validates.",
+      "type": "array",
+      "minItems": 0,
+      "items": { "type": "string" }
+    },
+    "nextPackIds": {
+      "description": "Upcoming Game Pack ids after the checkpoint. Empty until the Echo archive lands (PR-6); minItems 0.",
+      "type": "array",
+      "minItems": 0,
+      "items": { "type": "string" }
+    },
+    "ts": {
+      "description": "Epoch milliseconds the receipt was minted.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "migration": {
+      "description": "Optional §7.6 migration marker — present only on the first checkpoint claimed from a migrated save, recording the version migrated from. Absent on native checkpoints.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fromVersion"],
+      "properties": {
+        "fromVersion": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

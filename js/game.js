@@ -15,6 +15,9 @@ import {
   metaCost,
   lerp,
   isSeasonCheckpoint,
+  isGoLiveBoundary,
+  goLiveBoundaryAtOrBelow,
+  nextGoLiveBoundary,
 } from './formulas.js?v=free-mvp-r005';
 import { SEASON, META, SKILLS, ENEMY_FLAVOR, skillSpCost } from './content.js?v=free-mvp-r005';
 import {
@@ -65,10 +68,15 @@ import { GAME_PACKS } from './generated/game-packs.js?v=free-mvp-r005';
 
 export function createState() {
   return {
-    v: 2,
+    v: 3,
     meta: {
       live: 1,
-      season: 0,
+      /** Go Live prestige count (ADR-0008; supersedes the retired `season` counter). */
+      goLiveCount: 0,
+      /** Zone of an earned-but-unclaimed Go Live checkpoint (0 = none pending). */
+      pendingGoLiveZone: 0,
+      /** Highest boundary already claimed — monotonic idempotency guard. */
+      lastGoLiveZone: 0,
       kills: 0,
       ships: 0,
       bosses: 0,
@@ -615,6 +623,11 @@ function onKill(s, e) {
     if (s.settings.sfx !== false) sfx('zone');
     hubOnZone(s);
 
+    // Go Live checkpoint (ADR-0008): mint a pending checkpoint at the boundary
+    // and keep it until claimed, so an overshoot never forfeits the checkpoint.
+    if (isGoLiveBoundary(s.route.zone) && s.route.zone > (s.meta.lastGoLiveZone || 0)) {
+      s.meta.pendingGoLiveZone = s.route.zone;
+    }
     if (isSeasonCheckpoint(s.route.zone)) {
       s.ui.seasonDone = true;
       toast(s, `Zone ${s.route.zone} checkpoint! Ship Notes, then End Season for Live Mult.`);
@@ -1053,7 +1066,7 @@ export function leaveSeason(s) {
   }
   const gain = liveGain(s.authority.shippedThisSeason);
   s.meta.live += gain;
-  s.meta.season += 1;
+  s.meta.goLiveCount += 1;
   s.authority.shippedThisSeason = 0;
   // gear is on meta — intentionally untouched (normalize for multi-slot)
   s.meta.gear = normalizeGear(s.meta.gear);
@@ -1084,6 +1097,138 @@ export function leaveSeason(s) {
   confetti(s, s.world.heroX, 180, ['#e6b84d', '#FC1243', '#fff', '#3ecf8e'], 36);
   if (s.settings.sfx !== false) sfx('rank');
   return true;
+}
+
+/** What a Go Live keeps vs. resets — UI reads this before the mutation. */
+export const GO_LIVE_CONTRACT = Object.freeze({
+  banks: Object.freeze(['Unshipped Notes → Rep', 'Cycle Rep → Live Mult']),
+  keeps: Object.freeze(['Route Zone', 'Rep and Boosts', 'Gear', 'Live Mult']),
+  resets: Object.freeze(['Weapon level', 'Rank and SP', 'Build skills', '85% of Signal']),
+});
+
+/**
+ * The earned-but-unclaimed Go Live boundary for `s`, or 0 when none is available.
+ * A boundary counts only if it is above the last one already claimed, so a
+ * double-click (or a reload sitting on the boundary) can never prestige twice.
+ */
+export function goLiveAvailableZone(s) {
+  const claimed = s.meta.lastGoLiveZone || 0;
+  const pending = s.meta.pendingGoLiveZone || 0;
+  if (pending > claimed) return pending;
+  if (isGoLiveBoundary(s.route.zone) && s.route.zone > claimed) return s.route.zone;
+  return 0;
+}
+
+export function canGoLive(s) {
+  return goLiveAvailableZone(s) > 0;
+}
+
+/**
+ * Go Live (ADR-0008): the single atomic prestige checkpoint. Banks unshipped
+ * Notes → Rep, converts the cycle's banked Rep → Live Mult, resets temporary
+ * power, and KEEPS the global Route. Idempotent: passing a `checkpointId` (or
+ * re-calling on the same boundary) returns the prior receipt without a second
+ * mutation. Returns a schema-valid receipt object, or null when unavailable.
+ *
+ * `opts.legacyContribution` overrides the cycle contribution feeding liveGain
+ * (Rep-denominated by default — matches the live formula); used by migration.
+ * `opts.migratedFrom` stamps the §7.6 migration marker on the receipt.
+ */
+export function goLive(s, checkpointId = null, opts = {}) {
+  // Idempotency (explicit id): re-calling with a claimed checkpoint's id returns it.
+  if (checkpointId && s.meta.lastGoLive && s.meta.lastGoLive.checkpointId === checkpointId) {
+    return s.meta.lastGoLive;
+  }
+  const boundaryZone = goLiveAvailableZone(s);
+  if (boundaryZone <= 0) {
+    // Idempotency (double-click): still standing on the just-claimed boundary
+    // with nothing new earned → return the prior receipt, never a second prestige.
+    if (s.meta.lastGoLive && s.route.zone === (s.meta.lastGoLiveZone || 0)) {
+      return s.meta.lastGoLive;
+    }
+    toast(s, `Reach Zone ${nextGoLiveBoundary(s.route.zone)} to Go Live`);
+    return null;
+  }
+  const id = checkpointId || `gl-z${boundaryZone}`;
+  // Idempotency: the same checkpoint already produced a receipt → return it.
+  if (s.meta.lastGoLive && s.meta.lastGoLive.checkpointId === id) {
+    return s.meta.lastGoLive;
+  }
+
+  // 1) Bank unshipped Notes → Rep (fold the ship step into the atomic action).
+  const notesBanked = Math.max(0, Math.floor(s.run.patches));
+  const repGained = notesBanked >= 1 ? Math.floor(notesBanked * C.SHIP_RATE * economyMult(s)) : 0;
+  if (repGained > 0) {
+    s.run.patches = 0;
+    s.authority.amount += repGained;
+    s.authority.shippedThisSeason += repGained;
+    s.meta.ships += 1;
+    s.meta.postsShippedTotal += repGained;
+    hubOnShip(s, notesBanked);
+  }
+
+  // 2) Cycle Rep → Live Mult (Rep-denominated; migration may override).
+  const cycleContribution = Number.isFinite(opts.legacyContribution)
+    ? opts.legacyContribution
+    : s.authority.shippedThisSeason;
+  const gain = liveGain(cycleContribution);
+  s.meta.live += gain;
+  s.meta.goLiveCount += 1;
+
+  // 3) Reset temporary power; KEEP Route / gear / Rep / boosts / Live Mult.
+  s.meta.gear = normalizeGear(s.meta.gear);
+  s.route.killsInZone = 0;
+  s.run.bytes = Math.floor(s.run.bytes * 0.15);
+  s.run.patches = 0;
+  const h = s.run.hero;
+  h.level = 1;
+  h.xp = 0;
+  h.sp = 0;
+  h.scan = h.verify = h.amplify = 0;
+  h.skills = {};
+  h.scanner = 0;
+  h.energy = C.ENERGY_MAX;
+  h.focus = C.FOCUS_MAX;
+  h.trackerOn = false;
+  h.deepOn = false;
+  h.trackerStacks = 0;
+  s.world.enemies = [];
+  s.world.bossActive = false;
+  s.world.attackCd = 0;
+
+  // 4) Clear the cycle: consume the pending checkpoint, advance the guard.
+  s.authority.shippedThisSeason = 0;
+  s.meta.pendingGoLiveZone = 0;
+  s.meta.lastGoLiveZone = boundaryZone;
+  s.ui.seasonDone = false;
+
+  const receipt = {
+    schema: 'apn.go-live-receipt',
+    version: 1,
+    checkpointId: id,
+    boundaryZone,
+    goLiveCount: s.meta.goLiveCount,
+    notesBanked,
+    repGained,
+    repTotal: Math.floor(s.authority.amount),
+    cycleContribution,
+    liveGain: gain,
+    liveMult: s.meta.live,
+    completedPackIds: [],
+    nextPackIds: [],
+    ts: Date.now(),
+  };
+  if (Number.isFinite(opts.migratedFrom)) {
+    receipt.migration = { fromVersion: opts.migratedFrom };
+  }
+  s.meta.lastGoLive = receipt;
+
+  toast(s, `Go Live #${s.meta.goLiveCount}! Live ×${s.meta.live.toFixed(2)} (+${gain.toFixed(3)}). Route kept.`);
+  s.ui.panelDirty = true;
+  s.ui.fx = { kind: 'rank', t: 0.4 };
+  confetti(s, s.world.heroX, 180, ['#e6b84d', '#FC1243', '#fff', '#3ecf8e'], 36);
+  if (s.settings.sfx !== false) sfx('rank');
+  return receipt;
 }
 
 export function equipGear(s, itemId) {
@@ -1204,7 +1349,11 @@ export function simulateOffline(s, seconds) {
   }
   const sim = steps * C.FIXED_DT;
   const overflowSeconds = Math.max(0, T - sim);
-  if (overflowSeconds > 0) {
+  // Offline→currency conversion is preserved but CAPPED at the checkpoint boundary
+  // (ADR-0008): if the sim halted because it hit the boundary, no post-boundary
+  // overflow is banked — otherwise 8h AFK past a boundary would farm prestige fuel.
+  const reachedBoundary = s.route.zone >= budget.boundary;
+  if (overflowSeconds > 0 && !reachedBoundary) {
     const idle = C.IDLE_EFF;
     const db = Math.max(0, s.run.bytes - before.bytes);
     const dp = Math.max(0, s.run.patches - before.patches);

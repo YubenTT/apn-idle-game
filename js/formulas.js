@@ -57,6 +57,8 @@ export const C = {
   ALERT_INTERVAL: 3.2,
   SP_PER_LEVEL: 3,
   SEASON_ZONES: 20,
+  /** First Go Live checkpoint lands early (tutorial prestige), then every SEASON_ZONES. */
+  FIRST_GO_LIVE_ZONE: 10,
   /** Stop distance from hero center — keep enemies clearly separate (not “worn”) */
   MELEE_RANGE: 86,
   HIT_FLASH: 0.12,
@@ -169,6 +171,29 @@ export function seasonFromZone(zone) {
 
 export function isSeasonCheckpoint(zoneAfterAdvance) {
   return zoneAfterAdvance > 0 && zoneAfterAdvance % C.SEASON_ZONES === 0;
+}
+
+/**
+ * Go Live checkpoint boundaries (ADR-0008): first at FIRST_GO_LIVE_ZONE (10),
+ * then every SEASON_ZONES (20) → 10, 30, 50, 70, …
+ */
+export function isGoLiveBoundary(zone) {
+  const z = zone | 0;
+  return z >= C.FIRST_GO_LIVE_ZONE && (z - C.FIRST_GO_LIVE_ZONE) % C.SEASON_ZONES === 0;
+}
+
+/** Most recent Go Live boundary at or below `zone` (0 when none reached yet). */
+export function goLiveBoundaryAtOrBelow(zone) {
+  const z = zone | 0;
+  if (z < C.FIRST_GO_LIVE_ZONE) return 0;
+  return C.FIRST_GO_LIVE_ZONE + Math.floor((z - C.FIRST_GO_LIVE_ZONE) / C.SEASON_ZONES) * C.SEASON_ZONES;
+}
+
+/** Next Go Live boundary strictly above `zone`. */
+export function nextGoLiveBoundary(zone) {
+  const z = zone | 0;
+  if (z < C.FIRST_GO_LIVE_ZONE) return C.FIRST_GO_LIVE_ZONE;
+  return goLiveBoundaryAtOrBelow(z) + C.SEASON_ZONES;
 }
 
 export function typeHpMult(type) {

@@ -43,3 +43,45 @@ jobs:
           test -f assets/mascot-host.png
           test -d assets/enemies
           test -d assets/icons
+
+  smoke:
+    name: Browser smoke
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          package-manager-cache: false
+
+      - name: Resolve Chrome
+        run: |
+          CHROME_BIN="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium-browser || command -v chromium || true)"
+          test -n "$CHROME_BIN" || { echo "No Chrome/Chromium on the runner"; exit 1; }
+          echo "CHROME_BIN=$CHROME_BIN" >> "$GITHUB_ENV"
+          echo "Using $CHROME_BIN"
+
+      - name: Serve + run Chrome smokes
+        run: |
+          python3 -m http.server 8791 --bind 127.0.0.1 &
+          SERVER_PID=$!
+          for i in $(seq 1 40); do
+            curl -sf http://127.0.0.1:8791/index.html >/dev/null && break
+            sleep 0.5
+          done
+          node qa/browser/chrome-route-smoke.mjs "$RUNNER_TEMP/route-evidence"
+          node qa/browser/chrome-go-live-smoke.mjs "$RUNNER_TEMP/go-live-evidence"
+          kill "$SERVER_PID" 2>/dev/null || true
+
+      - name: Upload smoke screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrome-smoke-evidence
+          path: |
+            ${{ runner.temp }}/route-evidence
+            ${{ runner.temp }}/go-live-evidence
+          if-no-files-found: ignore

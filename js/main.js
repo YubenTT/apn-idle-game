@@ -1,7 +1,7 @@
 /** APN Idle bootstrap */
 
 import { C } from './formulas.js?v=free-mvp-r005';
-import { createState, step, collectAlert, simulateOffline, setSprint, isSprinting } from './game.js?v=free-mvp-r005';
+import { createState, step, collectAlert, simulateOffline, setSprint, isSprinting, goLive, canGoLive, goLiveAvailableZone } from './game.js?v=free-mvp-r005';
 import { sizeCanvas, draw } from './render.js?v=free-mvp-r005';
 import { createAssetStore, preloadRouteAssets, packWindowForRoute } from './assets.js?v=free-mvp-r005';
 import { bindUI, renderHUD } from './ui.js?v=free-mvp-r005';
@@ -13,8 +13,16 @@ const assetStore = createAssetStore();
 const qaParams = new URLSearchParams(location.search);
 const qaMetricsEnabled = qaParams.has('qa_metrics');
 if (qaParams.has('chrome-smoke')) {
-  // Read-only route/render evidence for the direct Chrome CDP gate.
-  window.__APN_QA__ = { state: s, assets: assetStore };
+  // Route/render evidence + a thin action surface for the direct Chrome CDP gates.
+  window.__APN_QA__ = {
+    state: s,
+    assets: assetStore,
+    actions: {
+      goLive: (id = null, opts = {}) => goLive(s, id, opts),
+      canGoLive: () => canGoLive(s),
+      goLiveAvailableZone: () => goLiveAvailableZone(s),
+    },
+  };
 }
 
 const saved = load();

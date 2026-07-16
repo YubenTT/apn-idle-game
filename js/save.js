@@ -1,12 +1,15 @@
 import { normalizeGear, emptyGear, GEAR_SORTS, GEAR_FILTERS } from './loot.js?v=free-mvp-r005';
 import { normalizeRoute } from './route.js?v=free-mvp-r005';
+import { C } from './formulas.js?v=free-mvp-r005';
 
 export const SAVE_KEY_V1 = 'apn_idle_save_v1';
 export const SAVE_KEY_V2 = 'apn_idle_save_v2';
+/** Current persisted save-schema version (Go Live checkpoint model, ADR-0008). */
+export const SAVE_VERSION = 3;
 
 export function save(s) {
   const data = {
-    v: 2,
+    v: SAVE_VERSION,
     ts: Date.now(),
     meta: {
       ...s.meta,
@@ -19,6 +22,9 @@ export function save(s) {
         warpCdUntil: 0,
       },
       hub: s.meta.hub || null,
+      // The last receipt is a session/UI artifact — cross-reload idempotency
+      // rides on lastGoLiveZone, so keep it out of the persisted blob.
+      lastGoLive: undefined,
     },
     authority: s.authority,
     route: normalizeRoute(s.route),
@@ -35,6 +41,20 @@ export function save(s) {
       gearFilter: GEAR_FILTERS.includes(s.settings.gearFilter) ? s.settings.gearFilter : 'all',
     },
   };
+  // Write-guard: never let an older client clobber a newer save shape. A stale
+  // CDN client (v2 code) loading null would otherwise overwrite a v3 save within
+  // one autosave tick — refuse when the on-disk version is higher than ours.
+  try {
+    const existingRaw = localStorage.getItem(SAVE_KEY_V2);
+    if (existingRaw) {
+      const existing = JSON.parse(existingRaw);
+      if (Number.isFinite(existing?.v) && existing.v > data.v) {
+        return false;
+      }
+    }
+  } catch {
+    // Corrupt/unreadable existing save → let the write proceed and heal it.
+  }
   try {
     localStorage.setItem(SAVE_KEY_V2, JSON.stringify(data));
     s.settings.lastTs = data.ts;
@@ -55,13 +75,17 @@ export function load() {
       return null;
     }
   };
-  return readVersion(SAVE_KEY_V2, 2) || readVersion(SAVE_KEY_V1, 1);
+  return (
+    readVersion(SAVE_KEY_V2, 3) ||
+    readVersion(SAVE_KEY_V2, 2) ||
+    readVersion(SAVE_KEY_V1, 1)
+  );
 }
 
 export function apply(s, d) {
   if (!d) return 0;
-  s.v = 2;
-  s.route = normalizeRoute(d.v === 2 ? d.route : null, d.v === 1 ? d.run : null);
+  s.v = SAVE_VERSION;
+  s.route = normalizeRoute(d.v === 2 || d.v === 3 ? d.route : null, d.v === 1 ? d.run : null);
   Object.assign(s.meta, d.meta || {});
   // Migrate gear and preserve the retired demo-store bucket as inert data.
   s.meta.gear = normalizeGear(d.meta?.gear || s.meta.gear || emptyGear());
@@ -85,6 +109,24 @@ export function apply(s, d) {
     };
   }
   if (d.meta?.hub) s.meta.hub = d.meta.hub;
+  // —— Go Live migration (ADR-0008): season model → checkpoint model ——
+  // The Object.assign above may have resurrected a legacy `meta.season`; fold it
+  // into goLiveCount, derive the checkpoint fields, then delete `season` so it
+  // can never linger as a shadow counter that drifts from goLiveCount.
+  if (d.v !== 3) {
+    s.meta.goLiveCount = Number.isFinite(d.meta?.season) ? d.meta.season : 0;
+    s.meta.pendingGoLiveZone = 0;
+    s.meta.lastGoLiveZone = 0;
+    // A v2 `seasonDone` = a crossed-but-unspent 20-grid checkpoint. Honor it so
+    // Go Live is available now (e.g. zone 27 → pending 20), not only at zone 40.
+    if (d.ui?.seasonDone && s.route.zone > 0) {
+      s.meta.pendingGoLiveZone = Math.floor(s.route.zone / C.SEASON_ZONES) * C.SEASON_ZONES;
+    }
+  }
+  if (!Number.isFinite(s.meta.goLiveCount)) s.meta.goLiveCount = 0;
+  if (!Number.isFinite(s.meta.pendingGoLiveZone)) s.meta.pendingGoLiveZone = 0;
+  if (!Number.isFinite(s.meta.lastGoLiveZone)) s.meta.lastGoLiveZone = 0;
+  delete s.meta.season;
   // strip legacy mask skills from save
   if (s.run.hero) {
     delete s.run.hero.mask;
