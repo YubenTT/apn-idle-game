@@ -35,6 +35,7 @@ const chrome = spawn(CHROME, [
   '--headless=new',
   '--no-first-run',
   '--no-sandbox',
+  '--disable-gpu',
   '--disable-dev-shm-usage',
   '--disable-background-networking',
   '--disable-extensions',
@@ -44,19 +45,21 @@ const chrome = spawn(CHROME, [
   '--remote-allow-origins=*',
   `--user-data-dir=${profile}`,
   'about:blank',
-], { stdio: 'ignore' });
+], { stdio: ['ignore', 'ignore', 'pipe'] });
+let chromeStderr = '';
+chrome.stderr?.on('data', (chunk) => { chromeStderr += chunk.toString(); });
 const chromeExit = new Promise((resolve) => chrome.once('exit', resolve));
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 async function waitForChrome() {
-  for (let attempt = 0; attempt < 60; attempt++) {
+  for (let attempt = 0; attempt < 150; attempt++) {
     try {
       const response = await fetch(`http://127.0.0.1:${port}/json/version`);
       if (response.ok) return;
     } catch {}
     await delay(100);
   }
-  throw new Error('Chrome DevTools endpoint did not start');
+  throw new Error(`Chrome DevTools endpoint did not start\n${chromeStderr}`);
 }
 
 async function createPage() {
