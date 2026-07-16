@@ -5,15 +5,15 @@
     {
       "id": "apn-logo-square.png",
       "path": "assets/apn-logo-square.png",
-      "bytes": 36117,
-      "sha256": "e95f21139002fd0004c5a745f29bba28955b951888d58b636e471f585bd9541c",
+      "bytes": 10985,
+      "sha256": "1f2b8901bc80b48c3a4296d799d67425e11a707099f149b4aaeca6f801dbb78a",
       "firstPlayable": true
     },
     {
       "id": "apn-logo.svg",
       "path": "assets/apn-logo.svg",
-      "bytes": 1740,
-      "sha256": "fc9f76bf1aca4456270198c3ded15d080bd98d9b8e77e19a9f80d35250d6b6e3",
+      "bytes": 1683,
+      "sha256": "b2186684b4a80f09a7fcdb7e6725f554637b2bf39517eb79ab34693e29ae99e7",
       "firstPlayable": true
     },
     {

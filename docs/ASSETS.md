@@ -16,7 +16,7 @@
 | `mascot-host.png` | Primary combat sprite (flipped to face right) |
 | `mascot-title.png` | Title screen |
 | `mascot-*.png/jpg` | Refs / alternates |
-| `apn-logo.svg` / `apn-logo-square.png` | Favicon / brand |
+| `apn-logo.svg` / `apn-logo-square.png` | Circular APN mark on a square transparent canvas; favicon / brand |
 | `apn-mascot-glb-host.glb` | Future 3D / site embed |
 | `apn-mascot-glb-analyst.glb` | Future analyst variant |
 

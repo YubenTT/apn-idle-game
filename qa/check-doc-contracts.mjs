@@ -25,10 +25,10 @@ if (art.includes('We do **not** copy third-party game characters')) {
 if (!backlog.includes('I-003') || !backlog.includes('I-007')) {
   failures.push('foundation backlog');
 }
-if (!backlog.includes('original 33 focused issues') || !backlog.includes('24 Must + 10 Fix')) {
+if (!backlog.includes('original 33 focused issues') || !backlog.includes('25 Must + 10 Fix')) {
   failures.push('backlog counts');
 }
-if (!backlog.includes('next single user gate is the Host V2 motion proof')) {
+if (!backlog.includes('R-006 owns the approved') || !backlog.includes('without additional visual-owner gates')) {
   failures.push('user gate');
 }
 if (executionPlan.includes('Separate Accessibility, Audio, Account, Purchases, Reset') || executionPlan.includes('demo purchase surface')) {
