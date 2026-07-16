@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "image": "assets/items/item-atlas.webp",
+  "grid": { "columns": 4, "rows": 3, "sourceWidth": 1536, "sourceHeight": 1024 },
+  "items": {
+    "mod-stick": { "name": "Mod Stick Mk I", "slot": "weapon", "col": 0, "row": 0, "material": "matte-polymer" },
+    "scanner-lash": { "name": "Scanner Lash", "slot": "weapon", "col": 1, "row": 0, "material": "anodized-metal" },
+    "patch-mail": { "name": "Patch Mail Vest", "slot": "chest", "col": 2, "row": 0, "material": "laminated-paper" },
+    "press-plate": { "name": "Press Plate", "slot": "chest", "col": 3, "row": 0, "material": "anodized-metal" },
+    "link-gloves": { "name": "Link Gloves", "slot": "legs", "col": 0, "row": 1, "material": "matte-polymer" },
+    "route-leggings": { "name": "Route Leggings", "slot": "legs", "col": 1, "row": 1, "material": "matte-polymer" },
+    "archive-boots": { "name": "Archive Boots", "slot": "legs", "col": 2, "row": 1, "material": "matte-polymer" },
+    "cache-belt": { "name": "Cache Belt", "slot": "legs", "col": 3, "row": 1, "material": "laminated-paper" },
+    "source-seal": { "name": "Source Seal", "slot": "visor", "col": 0, "row": 2, "material": "laminated-paper" },
+    "visor-coil": { "name": "Visor Coil", "slot": "visor", "col": 1, "row": 2, "material": "anodized-metal" },
+    "overdrive-core": { "name": "Overdrive Core", "slot": "visor", "col": 2, "row": 2, "material": "anodized-metal" },
+    "publisher-satchel": { "name": "Publisher Satchel", "slot": "chest", "col": 3, "row": 2, "material": "laminated-paper" }
+  }
+}

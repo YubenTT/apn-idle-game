@@ -1,0 +1,174 @@
+{
+  "image": "apn-mascot-base.png",
+  "source": "assets/apn-mascot-glb-host.glb",
+  "renderLock": {
+    "cameraY": 18,
+    "cameraX": 9,
+    "projection": "orthographic",
+    "pivot": "foot-center"
+  },
+  "padding": 2,
+  "maxWidth": 2048,
+  "frames": [
+    {
+      "name": "idle",
+      "file": "idle.png",
+      "w": 192,
+      "h": 192,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "metrics": {
+        "footX": 96,
+        "footY": 184,
+        "headBodyRatio": 1.72,
+        "visorCoverage": 0.24
+      }
+    },
+    {
+      "name": "run",
+      "file": "run.png",
+      "w": 192,
+      "h": 192,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "metrics": {
+        "footX": 96,
+        "footY": 184,
+        "headBodyRatio": 1.72,
+        "visorCoverage": 0.24
+      }
+    },
+    {
+      "name": "scan",
+      "file": "scan.png",
+      "w": 192,
+      "h": 192,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "metrics": {
+        "footX": 96,
+        "footY": 184,
+        "headBodyRatio": 1.72,
+        "visorCoverage": 0.24
+      }
+    },
+    {
+      "name": "crit",
+      "file": "crit.png",
+      "w": 192,
+      "h": 192,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "metrics": {
+        "footX": 96,
+        "footY": 184,
+        "headBodyRatio": 1.72,
+        "visorCoverage": 0.24
+      }
+    },
+    {
+      "name": "loot",
+      "file": "loot.png",
+      "w": 192,
+      "h": 192,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "metrics": {
+        "footX": 96,
+        "footY": 184,
+        "headBodyRatio": 1.72,
+        "visorCoverage": 0.24
+      }
+    },
+    {
+      "name": "sprint",
+      "file": "sprint.png",
+      "w": 192,
+      "h": 192,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "metrics": {
+        "footX": 96,
+        "footY": 184,
+        "headBodyRatio": 1.72,
+        "visorCoverage": 0.24
+      }
+    },
+    {
+      "name": "overdrive",
+      "file": "overdrive.png",
+      "w": 192,
+      "h": 192,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "metrics": {
+        "footX": 96,
+        "footY": 184,
+        "headBodyRatio": 1.72,
+        "visorCoverage": 0.24
+      }
+    },
+    {
+      "name": "damage",
+      "file": "damage.png",
+      "w": 192,
+      "h": 192,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "metrics": {
+        "footX": 96,
+        "footY": 184,
+        "headBodyRatio": 1.72,
+        "visorCoverage": 0.24
+      }
+    },
+    {
+      "name": "level",
+      "file": "level.png",
+      "w": 192,
+      "h": 192,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "metrics": {
+        "footX": 96,
+        "footY": 184,
+        "headBodyRatio": 1.72,
+        "visorCoverage": 0.24
+      }
+    },
+    {
+      "name": "defeat",
+      "file": "defeat.png",
+      "w": 192,
+      "h": 192,
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "metrics": {
+        "footX": 96,
+        "footY": 184,
+        "headBodyRatio": 1.72,
+        "visorCoverage": 0.24
+      }
+    }
+  ]
+}

@@ -11,6 +11,10 @@
 | [0001](./ADR-0001-vanilla-stack.md) | Keep vanilla ES + Canvas 2D; do **not** migrate to PixiJS/React | Accepted |
 | [0002](./ADR-0002-design-tokens.md) | Adopt a token-driven design system (`brand/tokens.css`) | Accepted |
 | [0003](./ADR-0003-mascot-single-source.md) | GLB is the single source of truth for the mascot | Accepted |
+| [0004](./ADR-0004-game-pack-route.md) | Catalog-driven 10-zone Game Packs + bounded Corruption epochs | Accepted |
+| [0005](./ADR-0005-hybrid-host-render.md) | GLB-locked hybrid Host rendering | Accepted |
+| [0006](./ADR-0006-persistent-route-save-v2.md) | Persist global Route in dual-key save schema v2 | Accepted |
+| [0007](./ADR-0007-keep-five-navigation.md) | Keep five primary destinations plus the Gear FAB | Accepted |
 
 ## When to write one
 

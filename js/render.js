@@ -1,10 +1,16 @@
 /** APN Idle canvas — biomes, death juice, confetti, Host + enemies */
 
-import { C, clamp, easeOutCubic, easeOutQuad } from './formulas.js';
+import { C, clamp, easeOutCubic, easeOutQuad } from './formulas.js?v=free-mvp-r005';
+import { getCurrentPackAssets } from './assets.js?v=free-mvp-r005';
 
 const V = 'v8';
+let hostAtlas = null;
+fetch(`./assets/mascot/atlas/apn-mascot-base.json?${V}`)
+  .then((response) => response.json())
+  .then((atlas) => { hostAtlas = atlas; })
+  .catch(() => { hostAtlas = null; });
 const sprites = {
-  mascot: loadImg(`./assets/mascot-host.png?${V}`),
+  mascot: loadImg(`./assets/mascot/apn-mascot-base.webp?${V}`),
   enemies: {
     stale: loadImg(`./assets/enemies/stale.png?${V}`),
     rumor: loadImg(`./assets/enemies/rumor.png?${V}`),
@@ -17,7 +23,9 @@ const sprites = {
 };
 
 const FOOT_PAD = 2;
+const enemyRenderSize = (enemy) => enemy.type === 'boss' ? 128 : enemy.type === 'patch' ? 94 : 88;
 export const CANVAS_TONE_TOKENS = Object.freeze({
+  signal: '--c-signal',
   notes: '--c-notes',
   sp: '--c-sp',
 });
@@ -182,12 +190,10 @@ function loadImg(src) {
 }
 
 function ready(img) {
-  return img && img._ready && img.naturalWidth > 0;
+  return img && (img._ready || img.complete) && img.naturalWidth > 0;
 }
 
-function biomeFor(zone) {
-  return BIOMES[Math.floor(zone / 4) % BIOMES.length];
-}
+const FALLBACK_BIOME = BIOMES[0];
 
 export function sizeCanvas(canvas) {
   const parent = canvas.parentElement;
@@ -203,14 +209,15 @@ export function sizeCanvas(canvas) {
   return { w, h, ctx };
 }
 
-export function draw(ctx, w, h, s) {
-  const gy = h * 0.78;
+export function draw(ctx, w, h, s, assetStore = null) {
+  const gy = h * 0.86;
   s.world.groundY = gy;
   const t = s.world.time;
   const scroll = s.world.scrollSmooth;
   const shakeX = s.world.shake ? (Math.random() - 0.5) * s.world.shake : 0;
   const shakeY = s.world.shake ? (Math.random() - 0.5) * s.world.shake : 0;
-  const bio = biomeFor(s.run.zone);
+  const bio = FALLBACK_BIOME;
+  const packAssets = assetStore ? getCurrentPackAssets(assetStore, s.route) : null;
 
   ctx.save();
   ctx.translate(shakeX, shakeY);
@@ -261,6 +268,12 @@ export function draw(ctx, w, h, s) {
   drawFeedCards(ctx, w, gy, scroll * 0.55, bio, t);
   drawServerRacks(ctx, w, gy, scroll * 0.75, bio);
 
+  // Catalog-driven environment owns the scene once decoded. The procedural
+  // fallback above remains only for a missing/slow asset and never chooses a pack.
+  if (packAssets?.ready && ready(packAssets.background)) {
+    drawCover(ctx, packAssets.background, 0, 0, w, h);
+  }
+
   // ground plane + texture
   ctx.fillStyle = bio.ground;
   ctx.fillRect(0, gy, w, h - gy);
@@ -308,17 +321,12 @@ export function draw(ctx, w, h, s) {
     ctx.globalAlpha = 1;
   }
 
-  // biome name (subtle — header already shows zone #)
-  if (s.run.zone > 0 || s.world.time > 1) {
-    drawBiomeTag(ctx, w, bio);
-  }
-
   // alerts
   for (const a of s.world.alerts) drawAlert(ctx, a, t);
 
   // enemies (living + dying)
   const show = s.world.enemies.filter((e) => e.hp > 0 || (e.deathT && e.deathT > 0));
-  show.forEach((e, i) => drawEnemy(ctx, e, gy, t, i));
+  show.forEach((e) => drawEnemy(ctx, e, gy, t, packAssets));
 
   // hero
   drawHero(ctx, s.world.heroDisplayX, gy, s, t);
@@ -326,12 +334,22 @@ export function draw(ctx, w, h, s) {
   // particles
   for (const p of s.world.particles) drawParticle(ctx, p);
 
+  // Currency reward travels from the defeated target to its owning HUD chip.
+  for (const flight of s.world.lootFlights || []) drawLootFlight(ctx, flight, s, w, gy);
+
   // confetti
   for (const c of s.world.confetti || []) drawConfettiBit(ctx, c);
 
   // floaters
   ctx.textAlign = 'center';
   for (const f of s.world.floaters) {
+    if (f.anchorId) {
+      const anchor = s.world.enemies.find((enemy) => enemy.id === f.anchorId);
+      if (anchor) {
+        f.x = anchor.displayX;
+        f.y = gy - enemyRenderSize(anchor) * 0.82;
+      }
+    }
     const life = f.life || 1;
     const u = clamp(f.t / life, 0, 1);
     const a = easeOutCubic(u);
@@ -401,8 +419,16 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-function drawBiomeTag(ctx, w, bio) {
-  const label = bio.name || '';
+function drawCover(ctx, image, x, y, width, height) {
+  const scale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
+  const sourceWidth = width / scale;
+  const sourceHeight = height / scale;
+  const sourceX = (image.naturalWidth - sourceWidth) / 2;
+  const sourceY = Math.max(0, image.naturalHeight - sourceHeight);
+  ctx.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, x, y, width, height);
+}
+
+function drawPackTag(ctx, w, label, bio) {
   if (!label) return;
   ctx.save();
   ctx.font = '700 10px system-ui,sans-serif';
@@ -520,6 +546,13 @@ function drawHero(ctx, x, gy, s, t) {
   const eyeX = hx + 12;
   const eyeY = footY - mh * 0.64;
   const overdrive = !!h.deepOn;
+  const hostPose = h.hitRecoil > 0.45
+    ? 'damage'
+    : attack > 0.18
+      ? (attack > 0.78 ? 'crit' : 'scan')
+      : sprinting
+        ? 'sprint'
+        : 'run';
 
   // Soft skill auras UNDER the character (no hard ring lines)
   const cy = footY - mh * 0.42;
@@ -625,9 +658,11 @@ function drawHero(ctx, x, gy, s, t) {
   // Body
   ctx.save();
   ctx.translate(hx, footY);
-  ctx.scale(squashX * -1, squashY);
-  if (img) {
-    ctx.drawImage(img, -mw / 2, -mh, mw, mh);
+  ctx.scale(squashX, squashY);
+  const frame = hostAtlas?.frames?.[hostPose] || hostAtlas?.frames?.idle;
+  if (img && frame) {
+    const rect = frame.rect;
+    ctx.drawImage(img, rect.x, rect.y, rect.w, rect.h, -mw / 2, -mh, mw, mh);
   } else {
     ctx.fillStyle = '#FC1243';
     ctx.beginPath();
@@ -671,7 +706,7 @@ function drawHero(ctx, x, gy, s, t) {
   }
 }
 
-function drawEnemy(ctx, e, gy, t) {
+function drawEnemy(ctx, e, gy, t, packAssets = null) {
   const x = e.displayX;
   const dying = e.deathT > 0 && e.killed;
   const deathU = dying ? 1 - clamp(e.deathT / (e.deathMax || 0.5), 0, 1) : 0;
@@ -679,8 +714,11 @@ function drawEnemy(ctx, e, gy, t) {
   const hurtOff = !dying && e.hurt > 0 ? Math.sin(t * 40) * 1.5 : 0;
   const isBoss = e.type === 'boss';
   const isPatch = e.type === 'patch';
-  const size = isBoss ? 84 : isPatch ? 68 : 60;
+  const size = enemyRenderSize(e);
   const sprite = sprites.enemies[e.type];
+  const atlas = packAssets?.ready && ready(packAssets.targets) ? packAssets.targets : null;
+  const frameName = isBoss && e.hp / e.hpMax < 0.34 ? 'boss-break' : e.frame;
+  const frame = packAssets?.targetData?.frames?.[frameName];
   const footY = gy - FOOT_PAD;
 
   // death transforms
@@ -725,7 +763,21 @@ function drawEnemy(ctx, e, gy, t) {
   ctx.rotate(rot);
   ctx.scale(sx || 0.01, sy);
 
-  if (ready(sprite)) {
+  if (atlas && frame?.rect) {
+    const rect = frame.rect;
+    ctx.drawImage(atlas, rect.x, rect.y, rect.w, rect.h, -size / 2, -size, size, size);
+    if (flash && !dying) {
+      const flashU = clamp(e.hitFlash / (C.HIT_FLASH || 0.12), 0, 1);
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = 0.45 * flashU * alpha;
+      ctx.fillStyle = e.color;
+      ctx.beginPath();
+      ctx.arc(0, -size * 0.5, size * 0.34, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  } else if (ready(sprite)) {
     ctx.drawImage(sprite, -size / 2, -size, size, size);
     // Soft hit bloom (no hard white rectangle)
     if (flash && !dying) {
@@ -776,26 +828,55 @@ function drawEnemy(ctx, e, gy, t) {
 
   if (dying) return; // no HP bar while dying
 
-  const barW = isBoss ? 52 : 38;
-  const barY = footY - size - 12;
+  const barW = isBoss ? 148 : 112;
+  const bannerH = isBoss ? 62 : 54;
+  const barY = footY - size - bannerH - 10;
   const ratio = clamp(e.hp / e.hpMax, 0, 1);
-  ctx.fillStyle = 'rgba(12,16,20,0.9)';
-  roundRect(ctx, x - barW / 2, barY, barW, 6, 2);
+  ctx.fillStyle = 'rgba(7,16,25,0.94)';
+  roundRect(ctx, x - barW / 2, barY, barW, bannerH, 10);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(44,67,94,0.95)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.fillStyle = '#f3f7fb';
+  ctx.font = `800 ${isBoss ? 11 : 10}px system-ui,sans-serif`;
+  ctx.textAlign = 'center';
+  const label = e.label.length > (isBoss ? 18 : 14) ? `${e.label.slice(0, isBoss ? 17 : 13)}…` : e.label;
+  ctx.fillText(label, x, barY + 17);
+  ctx.fillStyle = '#aab7c7';
+  ctx.font = '700 9px system-ui,sans-serif';
+  ctx.fillText(`${Math.ceil(e.hp)}/${e.hpMax}`, x, barY + 32);
+  ctx.fillStyle = '#22364c';
+  roundRect(ctx, x - barW / 2 + 9, barY + bannerH - 14, barW - 18, 8, 4);
   ctx.fill();
   ctx.fillStyle = ratio > 0.3 ? '#fc1243' : '#e6b84d';
   if (ratio > 0.01) {
-    roundRect(ctx, x - barW / 2, barY, Math.max(2, barW * ratio), 6, 2);
+    roundRect(ctx, x - barW / 2 + 9, barY + bannerH - 14, Math.max(4, (barW - 18) * ratio), 8, 4);
     ctx.fill();
   }
-  ctx.fillStyle = '#8b95a5';
-  ctx.font = '600 9px system-ui,sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText(`${Math.ceil(e.hp)}/${e.hpMax}`, x, barY - 3);
-  if (isBoss || isPatch) {
-    ctx.fillStyle = e.color;
-    ctx.font = '700 8px system-ui,sans-serif';
-    ctx.fillText(e.label, x, barY - 13);
-  }
+}
+
+function drawLootFlight(ctx, flight, s, w, gy) {
+  const anchor = s.world.enemies.find((enemy) => enemy.id === flight.enemyId);
+  if (flight.y == null) flight.y = gy - (anchor ? enemyRenderSize(anchor) * 0.55 : 70);
+  if (anchor) flight.x = anchor.displayX;
+  const u = easeOutCubic(1 - clamp(flight.t / flight.life, 0, 1));
+  const targetX = flight.target === 'notes' ? w * 0.62 : w * 0.11;
+  const x = flight.x + (targetX - flight.x) * u;
+  const y = flight.y + (-56 - flight.y) * u - Math.sin(u * Math.PI) * 34;
+  ctx.save();
+  ctx.globalAlpha = Math.min(1, flight.t / 0.16);
+  ctx.translate(x, y);
+  ctx.rotate(u * Math.PI * 1.5);
+  ctx.fillStyle = resolveCanvasPaint({ tone: flight.target === 'notes' ? 'notes' : 'signal' });
+  ctx.beginPath();
+  ctx.moveTo(0, -6);
+  ctx.lineTo(5, 0);
+  ctx.lineTo(0, 6);
+  ctx.lineTo(-5, 0);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
 }
 
 function drawParticle(ctx, p) {

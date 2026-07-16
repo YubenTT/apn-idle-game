@@ -14,10 +14,9 @@ import {
   buyMeta,
   combatStats,
   setSprint,
-  unlockPro,
   economyMult,
 } from '../js/game.js';
-import { META, SKILLS } from '../js/content.js';
+import { SKILLS } from '../js/content.js';
 
 const log = [];
 const note = (m) => {
@@ -31,7 +30,7 @@ function sim(s, seconds, { sprint = false, keepResources = true } = {}) {
   for (let i = 0; i < n; i++) {
     if (keepResources) {
       s.run.hero.energy = Math.max(s.run.hero.energy, 40);
-      s.run.hero.mana = Math.max(s.run.hero.mana, 20);
+      s.run.hero.focus = Math.max(s.run.hero.focus, 20);
     }
     // Auto-buy signal when affordable
     if (s.run.bytes >= 14) {
@@ -45,12 +44,12 @@ function sim(s, seconds, { sprint = false, keepResources = true } = {}) {
 
 const s = createState();
 note('=== NEW GAME ===');
-note(`Z${s.run.zone + 1} sc${s.run.hero.scanner} dmg=${combatStats(s).dmg | 0}`);
+note(`Z${s.route.zone + 1} sc${s.run.hero.scanner} dmg=${combatStats(s).dmg | 0}`);
 
 // Minute 0–2: pure auto
 sim(s, 90);
 note(
-  `t=90s kills=${s.meta.kills} zone=${s.run.zone + 1} rank=${s.run.hero.level} sp=${s.run.hero.sp} sig=${s.run.bytes | 0}`
+  `t=90s kills=${s.meta.kills} zone=${s.route.zone + 1} rank=${s.run.hero.level} sp=${s.run.hero.sp} sig=${s.run.bytes | 0}`
 );
 if (s.meta.kills < 1) {
   console.error('FAIL: no kills in 90s');
@@ -75,17 +74,17 @@ for (let t = 0; t < 40; t++) {
       allocSkill(s, 'notify') || allocAttr(s, 'verify');
     else break;
   }
-  if (s.run.zone >= 9) break;
+  if (s.route.zone >= 9) break;
 }
 note(
-  `mid: Z${s.run.zone + 1} kills=${s.meta.kills} bosses=${s.meta.bosses} sc=${s.run.hero.scanner} notes=${s.run.patches | 0} gear=${['weapon','chest','legs','visor'].filter((sl)=>s.meta.gear?.[sl]).length}/4`
+  `mid: Z${s.route.zone + 1} kills=${s.meta.kills} bosses=${s.meta.bosses} sc=${s.run.hero.scanner} notes=${s.run.patches | 0} gear=${['weapon','chest','legs','visor'].filter((sl)=>s.meta.gear?.[sl]).length}/4`
 );
 
 // Ship notes if any
 if (s.run.patches >= 1) {
   const rep0 = s.authority.amount;
   shipPatches(s);
-  note(`shipped: +${s.authority.amount - rep0} Rep · coins=${s.meta.premium.coins}`);
+  note(`shipped: +${s.authority.amount - rep0} Rep`);
 }
 
 // Buy a cheap boost if possible
@@ -94,13 +93,11 @@ if (s.authority.amount >= 5) {
   note(`boost Faster Ranks Lv ${s.authority.upgrades.xp_posts}`);
 }
 
-// Optional Pro demo
-unlockPro(s);
-note(`Pro on · economy ×${economyMult(s).toFixed(2)}`);
+note(`Free MVP economy · Live ×${economyMult(s).toFixed(2)}`);
 
 // Push toward checkpoint 20
 let guard = 0;
-while (s.run.zone < 20 && guard++ < 200) {
+while (s.route.zone < 20 && guard++ < 200) {
   sim(s, 20, { sprint: true });
   while (s.run.hero.sp > 2) {
     if (s.run.hero.scan < 8) allocAttr(s, 'scan');
@@ -115,29 +112,24 @@ while (s.run.zone < 20 && guard++ < 200) {
   if (s.run.patches >= 3) shipPatches(s);
 }
 note(
-  `late: Z${s.run.zone + 1} seasonDone=${s.ui.seasonDone} bosses=${s.meta.bosses} sc=${s.run.hero.scanner} live=${s.meta.live.toFixed(2)} dps≈${s.stats.dps | 0}`
+  `late: Z${s.route.zone + 1} seasonDone=${s.ui.seasonDone} bosses=${s.meta.bosses} sc=${s.run.hero.scanner} live=${s.meta.live.toFixed(2)} dps≈${s.stats.dps | 0}`
 );
 
 // End season if ready
-if (s.ui.seasonDone || s.run.zone >= 20) {
+if (s.ui.seasonDone || s.route.zone >= 20) {
   const gearSnap = ['weapon', 'chest', 'legs', 'visor'].map(
     (sl) => s.meta.gear?.[sl]?.id || null
   );
-  const pro = s.meta.premium.pro;
   const boosts = { ...s.authority.upgrades };
   leaveSeason(s);
   const gearAfter = ['weapon', 'chest', 'legs', 'visor'].map(
     (sl) => s.meta.gear?.[sl]?.id || null
   );
   note(
-    `prestige: Z${s.run.zone + 1} sc=${s.run.hero.scanner} live×${s.meta.live.toFixed(2)} gear=${gearAfter.filter(Boolean).length}/4 pro=${s.meta.premium.pro}`
+    `prestige: Z${s.route.zone + 1} sc=${s.run.hero.scanner} live×${s.meta.live.toFixed(2)} gear=${gearAfter.filter(Boolean).length}/4`
   );
   if (gearSnap.some((id, i) => id && gearAfter[i] !== id)) {
     console.error('FAIL: gear lost on prestige');
-    process.exit(1);
-  }
-  if (pro && !s.meta.premium.pro) {
-    console.error('FAIL: pro lost');
     process.exit(1);
   }
   if (boosts.signal_power !== s.authority.upgrades.signal_power) {
@@ -167,14 +159,12 @@ note('=== PLAYTHROUGH PASS ===');
 console.log(
   JSON.stringify(
     {
-      zone: s.run.zone + 1,
+      zone: s.route.zone + 1,
       kills: s.meta.kills,
       bosses: s.meta.bosses,
       rank: s.run.hero.level,
       scanner: s.run.hero.scanner,
       live: s.meta.live,
-      pro: s.meta.premium.pro,
-      coins: s.meta.premium.coins,
       gear: ['weapon', 'chest', 'legs', 'visor'].filter((sl) => s.meta.gear?.[sl]).length,
       economy: economyMult(s),
     },

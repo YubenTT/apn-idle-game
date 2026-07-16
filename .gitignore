@@ -22,6 +22,7 @@ APN-Idle-Package.zip
 
 # Optional local noise
 .cache/
+.worktrees/
 tmp/
 *.log
 

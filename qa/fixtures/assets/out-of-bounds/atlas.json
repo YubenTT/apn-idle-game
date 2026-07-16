@@ -1,0 +1,11 @@
+{
+  "frames": {
+    "idle": {
+      "rect": { "x": 20, "y": 0, "w": 16, "h": 24 },
+      "sourceSize": { "w": 16, "h": 24 },
+      "trimOffset": { "x": 0, "y": 0 },
+      "pivot": { "x": 0.5, "y": 1 }
+    }
+  },
+  "meta": { "image": "atlas.webp", "size": { "w": 32, "h": 32 }, "scale": 1 }
+}

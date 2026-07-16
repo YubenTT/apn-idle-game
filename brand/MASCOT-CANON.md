@@ -7,9 +7,11 @@
 
 ## The one rule
 
-**The GLB is the source of truth.** No new illustration, no AI variant, no "make it
-a bit more fit" mesh edits. A fitter look comes from **camera, pose, and cleanup**
-— never from inventing new proportions.
+**The GLB is the geometry source of truth.** No new mesh and no invented
+proportions. A fitter look comes from **camera, pose, shader, and cleanup**. An AI
+image may be used only as a style/cleanup reference after it is conditioned on
+canonical multi-angle GLB renders; the shipped Host is always re-rendered from the
+GLB under this lock. See [ADR-0005](../docs/decisions/ADR-0005-hybrid-host-render.md).
 
 Canonical source files (already in repo):
 
@@ -33,12 +35,22 @@ Large spherical head · slim body · integrated black visor · short cylindrical
 |-------|------|
 | Camera | Orthographic. Y-rotate 18°, X-tilt 8–10°. No lens perspective. |
 | Pivot | Foot-center, fixed across **every** animation. |
-| Frame | Master 192×192 trimmed; export @1× runtime, @2× hi-res. |
+| Frame | Master 192×192; atlas padding 2 px; export @1× runtime. |
 | Light | Single key upper-left 45°, fill ~35%, rim ~15%. |
 | Shader | 2-tone fill + 1 controlled spec. **No HDR bloom.** |
 | Outline | 2px outer line in composite; dark ink/bordo, **not** pure black. |
 | Shadow | Fixed oval drop shadow, opacity 18–22%. |
 | Cleanup | Reduce gloss, sharpen visor edge, kill plastic-toy feel. |
+
+### Hybrid reference boundary
+
+- Input reference sheets must show the canonical GLB from front, locked ¾, side,
+  and back views with the foot pivot marked.
+- Image generation may propose pose energy, flat-light cleanup, and edge economy.
+- It may not change head/body ratio, visor bounds, limb thickness, foot pivot, or
+  the one-piece silhouette.
+- Final runtime frames are deterministic GLB renders plus controlled 2D composite
+  cleanup. If the reference and GLB disagree, the reference is rejected.
 
 ## Role variants (NOT new characters)
 
@@ -70,22 +82,30 @@ Same mascot, same silhouette — only a small accent/prop changes.
 | `level_up` | 6 | 12 | halo / badge flash |
 | `defeat_fall` | 6 | 10 | short, rare |
 
-## Suggested atlas layout
+## Shipped atlas layout
 
 ```
 assets/mascot/
-  apn_mascot_base_2048.webp        # base runner + core clips
-  apn_mascot_variants_2048.webp    # 6 role variants
-  apn_mascot_fx_1024.webp          # beam / loot / level-up fx
-  atlas/apn_mascot_base.json       # frame + pivot data (trim on, pivot preserved)
+  apn-mascot-base.webp             # ten GLB-derived base poses
+  apn-mascot-idle.webp             # DOM/Gear niche derivative
+  apn-mascot-fx.webp               # reserved transparent FX surface
+  atlas/apn-mascot-base.json       # rect + foot pivot + render-lock metadata
+  master/*.png                     # deterministic 192 px exports
 ```
 
-The current `assets/` keeps flat PNGs; the atlas layout above is the export target
-when the [pipeline](../docs/ART-PIPELINE.md) is wired. Until then, hand-exported
-PNGs must still obey the render lock.
+`tools/mascot-render/` parses the canonical GLB directly with a local WebGL2
+renderer. It retains authored node matrices, uses the locked orthographic camera,
+removes clearcoat/bloom through a three-band diffuse shader, and changes poses
+only by rotating existing arm meshes or the whole silhouette. The export script
+packs and converts the result deterministically; image-generation studies never
+enter the atlas.
 
 ## QA hook
 
 Every mascot appearance is checked against **Silhouette QA** in
 [QA-CHECKLIST](../docs/QA-CHECKLIST.md): same head/body ratio, same visor geometry,
 same perspective, same outline — on every screen.
+
+`node qa/check-assets.mjs` additionally fails unless all ten poses share a foot
+pivot within one pixel, head/body ratio within 3%, non-empty visor coverage, the
+18°/9° camera lock, and the canonical GLB source path.

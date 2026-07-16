@@ -1,14 +1,21 @@
 /** APN Idle bootstrap */
 
-import { C } from './formulas.js';
-import { createState, step, collectAlert, simulateOffline, setSprint, isSprinting } from './game.js';
-import { sizeCanvas, draw } from './render.js';
-import { bindUI, renderHUD } from './ui.js';
-import { save, load, apply } from './save.js';
-import { TICKER_ITEMS } from './content.js';
+import { C } from './formulas.js?v=free-mvp-r005';
+import { createState, step, collectAlert, simulateOffline, setSprint, isSprinting } from './game.js?v=free-mvp-r005';
+import { sizeCanvas, draw } from './render.js?v=free-mvp-r005';
+import { createAssetStore, preloadRouteAssets, packWindowForRoute } from './assets.js?v=free-mvp-r005';
+import { bindUI, renderHUD } from './ui.js?v=free-mvp-r005';
+import { save, load, apply } from './save.js?v=free-mvp-r005';
 
 const canvas = document.getElementById('game');
 const s = createState();
+const assetStore = createAssetStore();
+const qaParams = new URLSearchParams(location.search);
+const qaMetricsEnabled = qaParams.has('qa_metrics');
+if (qaParams.has('chrome-smoke')) {
+  // Read-only route/render evidence for the direct Chrome CDP gate.
+  window.__APN_QA__ = { state: s, assets: assetStore };
+}
 
 const saved = load();
 if (saved) {
@@ -23,6 +30,16 @@ if (saved) {
 } else {
   s.ui.pendingTip = 'start';
 }
+if (qaParams.has('autostart') && qaParams.has('zone')) {
+  const displayZone = Math.max(1, Math.floor(Number(qaParams.get('zone')) || 1));
+  s.route.zone = displayZone - 1;
+  s.route.killsInZone = 0;
+  s.world.enemies = [];
+  s.world.spawnCd = 0;
+  s.ui.pendingTip = null;
+}
+// Query override is applied after save hydration so QA can never emit audio.
+if (qaParams.has('mute')) s.settings.sfx = false;
 
 let view = sizeCanvas(canvas);
 window.addEventListener('resize', () => {
@@ -30,6 +47,14 @@ window.addEventListener('resize', () => {
 });
 
 bindUI(s);
+let assetWindowKey = '';
+function syncRouteAssets() {
+  const key = packWindowForRoute(s.route).map((pack) => pack.id).join(',');
+  if (key === assetWindowKey) return;
+  assetWindowKey = key;
+  preloadRouteAssets(assetStore, s.route);
+}
+syncRouteAssets();
 
 function pos(ev) {
   const r = canvas.getBoundingClientRect();
@@ -200,28 +225,18 @@ document.getElementById('btn-start')?.addEventListener('click', () => {
 });
 
 // QA: ?autostart=1 skips title for screenshots / smoke
-if (new URLSearchParams(location.search).has('autostart')) {
+if (qaParams.has('autostart')) {
   document.getElementById('title-screen').hidden = true;
 }
 
 document.getElementById('chk-motion').checked = s.settings.reducedMotion;
 
-// slow game-icon ticker (duplicated for seamless loop)
-const track = document.getElementById('ticker-track');
-if (track) {
-  const items = [...TICKER_ITEMS, ...TICKER_ITEMS];
-  track.innerHTML = items
-    .map((it) => {
-      const src = `./assets/icons/${it.icon}.svg`;
-      return `<span class="ticker-item"><img class="gicon-img" src="${src}" alt="" width="20" height="20" loading="lazy" /><span class="gname">${it.name}</span><span class="kind ${it.kind}">${it.kind}</span>${it.text}</span>`;
-    })
-    .join('');
-}
-
 let last = performance.now();
 let acc = 0;
 let hudT = 0;
 let saveT = 0;
+let qaFrameCount = 0;
+let qaFrameWindowStart = performance.now();
 
 function frame(now) {
   let dt = Math.min(0.05, (now - last) / 1000);
@@ -238,7 +253,23 @@ function frame(now) {
   }
   if (acc > C.FIXED_DT * 4) acc = 0;
 
-  draw(view.ctx, view.w, view.h, s);
+  syncRouteAssets();
+  draw(view.ctx, view.w, view.h, s, assetStore);
+
+  if (qaMetricsEnabled) {
+    qaFrameCount += 1;
+    if (!document.documentElement.dataset.qaReadyMs) {
+      document.documentElement.dataset.qaReadyMs = String(Math.round(now));
+    }
+    const qaElapsed = now - qaFrameWindowStart;
+    if (qaElapsed >= 1000) {
+      document.documentElement.dataset.qaFps = (qaFrameCount * 1000 / qaElapsed).toFixed(1);
+      const heap = performance.memory?.usedJSHeapSize;
+      if (Number.isFinite(heap)) document.documentElement.dataset.qaHeapMb = (heap / 1048576).toFixed(1);
+      qaFrameCount = 0;
+      qaFrameWindowStart = now;
+    }
+  }
 
   hudT += dt;
   if (hudT > 0.08) {

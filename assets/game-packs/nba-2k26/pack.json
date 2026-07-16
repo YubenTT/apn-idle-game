@@ -1,0 +1,83 @@
+{
+  "id": "nba-2k26",
+  "order": 9,
+  "title": "NBA 2K26",
+  "genre": "sports-basketball",
+  "zones": 10,
+  "targets": [
+    {
+      "id": "rim-runner",
+      "role": "common-a",
+      "label": "Rim Runner",
+      "frame": "common-a",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "perimeter-lock",
+      "role": "common-b",
+      "label": "Perimeter Lock",
+      "frame": "common-b",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "stretch-shooter",
+      "role": "common-c",
+      "label": "Stretch Shooter",
+      "frame": "common-c",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "floor-general",
+      "role": "elite",
+      "label": "Floor General",
+      "frame": "elite",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "sixth-man-card",
+      "role": "event",
+      "label": "Sixth-Man Card",
+      "frame": "event",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    }
+  ],
+  "boss": {
+    "id": "mycareer-legend",
+    "label": "MyCareer Legend",
+    "frame": "boss",
+    "breakFrame": "boss-break",
+    "pivot": {
+      "x": 0.5,
+      "y": 1
+    }
+  },
+  "assets": {
+    "background": "assets/game-packs/nba-2k26/background.webp",
+    "targets": "assets/game-packs/nba-2k26/targets.webp",
+    "targetData": "assets/game-packs/nba-2k26/targets.json",
+    "props": "assets/game-packs/nba-2k26/props.webp",
+    "corruptionMask": "assets/game-packs/nba-2k26/corruption-mask.webp"
+  },
+  "sourceBoard": "assets/game-packs/nba-2k26/source-board.md",
+  "corruptionMasks": [
+    "signal-drift",
+    "corrupted",
+    "overrun",
+    "zero-day"
+  ]
+}

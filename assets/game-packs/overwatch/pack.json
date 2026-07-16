@@ -1,0 +1,83 @@
+{
+  "id": "overwatch",
+  "order": 10,
+  "title": "Overwatch",
+  "genre": "hero-shooter",
+  "zones": 10,
+  "targets": [
+    {
+      "id": "flank-runner",
+      "role": "common-a",
+      "label": "Flank Runner",
+      "frame": "common-a",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "shield-tank",
+      "role": "common-b",
+      "label": "Shield Tank",
+      "frame": "common-b",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "support-drone",
+      "role": "common-c",
+      "label": "Support Drone",
+      "frame": "common-c",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "rail-sharpshooter",
+      "role": "elite",
+      "label": "Rail Sharpshooter",
+      "frame": "elite",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "payload-guard",
+      "role": "event",
+      "label": "Payload Guard",
+      "frame": "event",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    }
+  ],
+  "boss": {
+    "id": "omnic-colossus",
+    "label": "Omnic Colossus",
+    "frame": "boss",
+    "breakFrame": "boss-break",
+    "pivot": {
+      "x": 0.5,
+      "y": 1
+    }
+  },
+  "assets": {
+    "background": "assets/game-packs/overwatch/background.webp",
+    "targets": "assets/game-packs/overwatch/targets.webp",
+    "targetData": "assets/game-packs/overwatch/targets.json",
+    "props": "assets/game-packs/overwatch/props.webp",
+    "corruptionMask": "assets/game-packs/overwatch/corruption-mask.webp"
+  },
+  "sourceBoard": "assets/game-packs/overwatch/source-board.md",
+  "corruptionMasks": [
+    "signal-drift",
+    "corrupted",
+    "overrun",
+    "zero-day"
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "id": "dead-by-daylight",
+  "order": 15,
+  "title": "Dead by Daylight",
+  "genre": "asymmetric-horror",
+  "zones": 10,
+  "targets": [
+    {
+      "id": "fog-runner",
+      "role": "common-a",
+      "label": "Fog Runner",
+      "frame": "common-a",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "hook-warden",
+      "role": "common-b",
+      "label": "Hook Warden",
+      "frame": "common-b",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "generator-shade",
+      "role": "common-c",
+      "label": "Generator Shade",
+      "frame": "common-c",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "totem-stalker",
+      "role": "elite",
+      "label": "Totem Stalker",
+      "frame": "elite",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "trial-survivor",
+      "role": "event",
+      "label": "Trial Survivor",
+      "frame": "event",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    }
+  ],
+  "boss": {
+    "id": "entity-hand",
+    "label": "Entity Hand",
+    "frame": "boss",
+    "breakFrame": "boss-break",
+    "pivot": {
+      "x": 0.5,
+      "y": 1
+    }
+  },
+  "assets": {
+    "background": "assets/game-packs/dead-by-daylight/background.webp",
+    "targets": "assets/game-packs/dead-by-daylight/targets.webp",
+    "targetData": "assets/game-packs/dead-by-daylight/targets.json",
+    "props": "assets/game-packs/dead-by-daylight/props.webp",
+    "corruptionMask": "assets/game-packs/dead-by-daylight/corruption-mask.webp"
+  },
+  "sourceBoard": "assets/game-packs/dead-by-daylight/source-board.md",
+  "corruptionMasks": [
+    "signal-drift",
+    "corrupted",
+    "overrun",
+    "zero-day"
+  ]
+}

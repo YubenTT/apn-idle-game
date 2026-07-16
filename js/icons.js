@@ -1,11 +1,11 @@
 /** Inline SVG icons — skills, boosts, hub, premium */
 
 const SVG = (paths, view = '0 0 24 24') =>
-  `<svg class="ico" viewBox="${view}" aria-hidden="true" focusable="false">${paths}</svg>`;
+  `<svg class="ico" viewBox="${view}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${paths}</svg>`;
 
-const p = (d, fill = 'currentColor') => `<path fill="${fill}" d="${d}"/>`;
-const c = (cx, cy, r, fill = 'currentColor') =>
-  `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${fill}"/>`;
+const p = (d) => `<path vector-effect="non-scaling-stroke" d="${d}"/>`;
+const c = (cx, cy, r) =>
+  `<circle vector-effect="non-scaling-stroke" cx="${cx}" cy="${cy}" r="${r}"/>`;
 
 export const ICO = {
   // attrs
@@ -103,6 +103,46 @@ function normSlot(slot) {
   return slot || 'chest';
 }
 
+export function itemArtKey(item) {
+  const name = String(item?.name || '').toLowerCase();
+  const slot = normSlot(item?.slot);
+  if (slot === 'weapon') {
+    if (name.includes('stick') || name.includes('probe') || name.includes('mod')) return 'mod-stick';
+    if (name.includes('beam') || name.includes('rail') || name.includes('lance') || name.includes('tracker') || name.includes('changelog')) return 'scanner-lash';
+    return 'source-seal';
+  }
+  if (slot === 'chest') {
+    if (name.includes('mail') || name.includes('vest') || name.includes('jacket') || name.includes('hoodie') || name.includes('coat')) return 'patch-mail';
+    if (name.includes('plate') || name.includes('plating') || name.includes('guard') || name.includes('shell') || name.includes('armor') || name.includes('suit')) return 'press-plate';
+    if (name.includes('forever') || name.includes('live')) return 'overdrive-core';
+    return 'publisher-satchel';
+  }
+  if (slot === 'legs') {
+    if (name.includes('draft') || name.includes('mod') || name.includes('intern')) return 'link-gloves';
+    if (name.includes('sprint') || name.includes('legging') || name.includes('pants') || name.includes('slack') || name.includes('jogger')) return 'route-leggings';
+    if (name.includes('greave') || name.includes('plate')) return 'archive-boots';
+    return 'cache-belt';
+  }
+  if (name.includes('visor') || name.includes('goggle') || name.includes('spec') || name.includes('lens')) return 'visor-coil';
+  if (name.includes('crown') || name.includes('seeing')) return 'source-seal';
+  return 'overdrive-core';
+}
+
+const ITEM_ART_CELLS = {
+  'mod-stick': [0, 0],
+  'scanner-lash': [1, 0],
+  'patch-mail': [2, 0],
+  'press-plate': [3, 0],
+  'link-gloves': [0, 1],
+  'route-leggings': [1, 1],
+  'archive-boots': [2, 1],
+  'cache-belt': [3, 1],
+  'source-seal': [0, 2],
+  'visor-coil': [1, 2],
+  'overdrive-core': [2, 2],
+  'publisher-satchel': [3, 2],
+};
+
 /** Compact item glyph — brand slots weapon/chest/legs/visor */
 export function gearIcon(item) {
   if (!item) {
@@ -114,6 +154,11 @@ export function gearIcon(item) {
 
   if (!item.name || name === 'empty') {
     return SLOT_EMPTY[slot] || SLOT_EMPTY.chest;
+  }
+
+  const artKey = itemArtKey(item);
+  if (ITEM_ART_CELLS[artKey]) {
+    return `<span class="item-art-frame" aria-hidden="true"><span class="item-sprite item-${artKey}"></span></span>`;
   }
 
   if (slot === 'weapon') {

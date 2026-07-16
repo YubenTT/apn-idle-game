@@ -1,0 +1,83 @@
+{
+  "id": "path-of-exile-2",
+  "order": 16,
+  "title": "Path of Exile 2",
+  "genre": "action-rpg",
+  "zones": 10,
+  "targets": [
+    {
+      "id": "exile-scout",
+      "role": "common-a",
+      "label": "Exile Scout",
+      "frame": "common-a",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "corrupted-archer",
+      "role": "common-b",
+      "label": "Corrupted Archer",
+      "frame": "common-b",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "vaal-construct",
+      "role": "common-c",
+      "label": "Vaal Construct",
+      "frame": "common-c",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "map-stalker",
+      "role": "elite",
+      "label": "Map Stalker",
+      "frame": "elite",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "ascendant-guard",
+      "role": "event",
+      "label": "Ascendant Guard",
+      "frame": "event",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    }
+  ],
+  "boss": {
+    "id": "atlas-devourer",
+    "label": "Atlas Devourer",
+    "frame": "boss",
+    "breakFrame": "boss-break",
+    "pivot": {
+      "x": 0.5,
+      "y": 1
+    }
+  },
+  "assets": {
+    "background": "assets/game-packs/path-of-exile-2/background.webp",
+    "targets": "assets/game-packs/path-of-exile-2/targets.webp",
+    "targetData": "assets/game-packs/path-of-exile-2/targets.json",
+    "props": "assets/game-packs/path-of-exile-2/props.webp",
+    "corruptionMask": "assets/game-packs/path-of-exile-2/corruption-mask.webp"
+  },
+  "sourceBoard": "assets/game-packs/path-of-exile-2/source-board.md",
+  "corruptionMasks": [
+    "signal-drift",
+    "corrupted",
+    "overrun",
+    "zero-day"
+  ]
+}

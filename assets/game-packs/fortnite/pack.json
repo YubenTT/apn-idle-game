@@ -1,0 +1,83 @@
+{
+  "id": "fortnite",
+  "order": 3,
+  "title": "Fortnite",
+  "genre": "battle-royale",
+  "zones": 10,
+  "targets": [
+    {
+      "id": "storm-runner",
+      "role": "common-a",
+      "label": "Storm Runner",
+      "frame": "common-a",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "build-raider",
+      "role": "common-b",
+      "label": "Build Raider",
+      "frame": "common-b",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "supply-scout",
+      "role": "common-c",
+      "label": "Supply Scout",
+      "frame": "common-c",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "glider-hunter",
+      "role": "elite",
+      "label": "Glider Hunter",
+      "frame": "elite",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    },
+    {
+      "id": "mythic-guard",
+      "role": "event",
+      "label": "Mythic Guard",
+      "frame": "event",
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    }
+  ],
+  "boss": {
+    "id": "zero-point-warden",
+    "label": "Zero-Point Warden",
+    "frame": "boss",
+    "breakFrame": "boss-break",
+    "pivot": {
+      "x": 0.5,
+      "y": 1
+    }
+  },
+  "assets": {
+    "background": "assets/game-packs/fortnite/background.webp",
+    "targets": "assets/game-packs/fortnite/targets.webp",
+    "targetData": "assets/game-packs/fortnite/targets.json",
+    "props": "assets/game-packs/fortnite/props.webp",
+    "corruptionMask": "assets/game-packs/fortnite/corruption-mask.webp"
+  },
+  "sourceBoard": "assets/game-packs/fortnite/source-board.md",
+  "corruptionMasks": [
+    "signal-drift",
+    "corrupted",
+    "overrun",
+    "zero-day"
+  ]
+}

@@ -6,7 +6,7 @@ All knobs live in `js/formulas.js` → `C`.
 
 | Moment | Feel |
 |--------|------|
-| First 30s | Kill something (a few hits), see Signal, understand Weapon |
+| First 30s | Kill something (readable multi-hit), see Signal, understand Weapon |
 | First rank | Open Build, spend SP |
 | First red enemy | Notes → **Ship** → permanent Rep |
 | Zone 10 | First Version Gate (boss) |
@@ -43,23 +43,50 @@ Hold Sprint (button / stage / Space):
 | `SPRINT_TIME` | Real game speed while sprinting |
 | `BASE_DAMAGE` / `SCANNER_DMG_GROWTH` | Weapon curve (+ soft DR after Lv25) |
 | `SCANNER_COST_*` | Signal sink (steep) |
-| `ENEMY_HP_*` | Zone difficulty (multi-hit forever) |
-| `ENEMY_HP_SOFT_AFTER` | Very late soft (100+) only |
+| `ENEMY_HP_*` | Season-local Weapon curve plus bounded Route maturity |
 | `ZONE_KILLS*` | Clear length |
 | `SEASON_ZONES` | Prestige checkpoint (20) |
 
 ## HP sketch
 
 ```text
-base * zone^z * step^floor(z/5) * decade^floor(z/10) * typeMult
+scannerDamage(localSeasonPace)
+  × readableHits(localZone + boundedMaturity)
+  × permanentPowerBudget^0.9
+  × corruptionTier
+  × targetType
 ```
 
-Weapon damage soft-caps after high levels so pure Signal spam cannot one-shot late zones.
+Weapon and Rank reset every 20 Route Zones, so their comparison curve is also
+season-local. Route maturity caps after seven seasons; Corruption caps at Tier 4.
+Gear, Live, and permanent Signal Power are partially budgeted into target HP:
+they still save time, but cannot collapse later seasons into seconds. Signal and
+Rank rewards use the same season-local curve plus a bounded maturity bonus.
+
+Boss timer expiry preserves damage. The timer communicates pressure and repeats
+its telemetry cycle; it never restores full HP or creates an unattended hard wall.
+
+## Measured seeded profiles
+
+Run `node qa/pacing-profiles.mjs` for the deterministic evidence. The locked seed
+currently measures:
+
+| Profile | First boss | First season | Mature median | Corruption unlock |
+|---|---:|---:|---:|---:|
+| Active-assisted, 30s decisions | 10.9 min | 30.0 min | 67.6 min | 10.2 h |
+| Mostly idle, 20 min check-ins | 23.8 min | 55.1 min | 99.0 min | 2.4 calendar days at 6 credited h/day |
+
+Offline combat simulates at most three real hours per return, never plays SFX,
+stops at the next End Season boundary, and converts remaining capped time into
+bounded Signal/Notes at the measured pre-boundary rate.
 
 ## Tuning checklist
 
 ```bash
 node qa/run-tests.mjs
+node qa/pacing-profiles.mjs
+node qa/long-run.mjs
 ```
 
-Manual: hold Sprint → energy bar says ×1.85 SPEED; Z20+ multi-hit without upgrades; End Season keeps Boosts, zeros weapon.
+Manual: hold Sprint → energy bar says ×1.85 SPEED; Z20+ stays multi-hit;
+End Season keeps Route/Boosts and resets Weapon; automated checks remain muted.

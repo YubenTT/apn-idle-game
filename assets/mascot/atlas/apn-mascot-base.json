@@ -1,0 +1,279 @@
+{
+  "frames": {
+    "crit": {
+      "rect": {
+        "x": 2,
+        "y": 2,
+        "w": 192,
+        "h": 192
+      },
+      "sourceSize": {
+        "w": 192,
+        "h": 192
+      },
+      "trimOffset": {
+        "x": 0,
+        "y": 0
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "metrics": {
+        "footX": 96,
+        "footY": 184,
+        "headBodyRatio": 1.72,
+        "visorCoverage": 0.24
+      }
+    },
+    "damage": {
+      "rect": {
+        "x": 196,
+        "y": 2,
+        "w": 192,
+        "h": 192
+      },
+      "sourceSize": {
+        "w": 192,
+        "h": 192
+      },
+      "trimOffset": {
+        "x": 0,
+        "y": 0
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "metrics": {
+        "footX": 96,
+        "footY": 184,
+        "headBodyRatio": 1.72,
+        "visorCoverage": 0.24
+      }
+    },
+    "defeat": {
+      "rect": {
+        "x": 390,
+        "y": 2,
+        "w": 192,
+        "h": 192
+      },
+      "sourceSize": {
+        "w": 192,
+        "h": 192
+      },
+      "trimOffset": {
+        "x": 0,
+        "y": 0
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "metrics": {
+        "footX": 96,
+        "footY": 184,
+        "headBodyRatio": 1.72,
+        "visorCoverage": 0.24
+      }
+    },
+    "idle": {
+      "rect": {
+        "x": 584,
+        "y": 2,
+        "w": 192,
+        "h": 192
+      },
+      "sourceSize": {
+        "w": 192,
+        "h": 192
+      },
+      "trimOffset": {
+        "x": 0,
+        "y": 0
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "metrics": {
+        "footX": 96,
+        "footY": 184,
+        "headBodyRatio": 1.72,
+        "visorCoverage": 0.24
+      }
+    },
+    "level": {
+      "rect": {
+        "x": 778,
+        "y": 2,
+        "w": 192,
+        "h": 192
+      },
+      "sourceSize": {
+        "w": 192,
+        "h": 192
+      },
+      "trimOffset": {
+        "x": 0,
+        "y": 0
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "metrics": {
+        "footX": 96,
+        "footY": 184,
+        "headBodyRatio": 1.72,
+        "visorCoverage": 0.24
+      }
+    },
+    "loot": {
+      "rect": {
+        "x": 972,
+        "y": 2,
+        "w": 192,
+        "h": 192
+      },
+      "sourceSize": {
+        "w": 192,
+        "h": 192
+      },
+      "trimOffset": {
+        "x": 0,
+        "y": 0
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "metrics": {
+        "footX": 96,
+        "footY": 184,
+        "headBodyRatio": 1.72,
+        "visorCoverage": 0.24
+      }
+    },
+    "overdrive": {
+      "rect": {
+        "x": 1166,
+        "y": 2,
+        "w": 192,
+        "h": 192
+      },
+      "sourceSize": {
+        "w": 192,
+        "h": 192
+      },
+      "trimOffset": {
+        "x": 0,
+        "y": 0
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "metrics": {
+        "footX": 96,
+        "footY": 184,
+        "headBodyRatio": 1.72,
+        "visorCoverage": 0.24
+      }
+    },
+    "run": {
+      "rect": {
+        "x": 1360,
+        "y": 2,
+        "w": 192,
+        "h": 192
+      },
+      "sourceSize": {
+        "w": 192,
+        "h": 192
+      },
+      "trimOffset": {
+        "x": 0,
+        "y": 0
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "metrics": {
+        "footX": 96,
+        "footY": 184,
+        "headBodyRatio": 1.72,
+        "visorCoverage": 0.24
+      }
+    },
+    "scan": {
+      "rect": {
+        "x": 1554,
+        "y": 2,
+        "w": 192,
+        "h": 192
+      },
+      "sourceSize": {
+        "w": 192,
+        "h": 192
+      },
+      "trimOffset": {
+        "x": 0,
+        "y": 0
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "metrics": {
+        "footX": 96,
+        "footY": 184,
+        "headBodyRatio": 1.72,
+        "visorCoverage": 0.24
+      }
+    },
+    "sprint": {
+      "rect": {
+        "x": 1748,
+        "y": 2,
+        "w": 192,
+        "h": 192
+      },
+      "sourceSize": {
+        "w": 192,
+        "h": 192
+      },
+      "trimOffset": {
+        "x": 0,
+        "y": 0
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      },
+      "metrics": {
+        "footX": 96,
+        "footY": 184,
+        "headBodyRatio": 1.72,
+        "visorCoverage": 0.24
+      }
+    }
+  },
+  "meta": {
+    "image": "apn-mascot-base.png",
+    "size": {
+      "w": 1942,
+      "h": 196
+    },
+    "scale": 1,
+    "source": "assets/apn-mascot-glb-host.glb",
+    "renderLock": {
+      "cameraY": 18,
+      "cameraX": 9,
+      "projection": "orthographic",
+      "pivot": "foot-center"
+    }
+  }
+}

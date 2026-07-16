@@ -3,12 +3,13 @@
 import {
   formatNum,
   scannerCost,
-  metaCost,
+  scannerDamage,
   xpToNext,
   liveGain,
   clamp,
   killsNeeded,
-} from './formulas.js';
+  isSeasonCheckpoint,
+} from './formulas.js?v=free-mvp-r005';
 import {
   SEASON,
   META,
@@ -17,9 +18,12 @@ import {
   TIPS,
   ATTR_LABEL,
   ATTR_META,
-  PREMIUM,
+  nextSkillUnlock,
+  FEED_COPY,
   skillSpCost,
-} from './content.js';
+} from './content.js?v=free-mvp-r005';
+import { packForRoute } from './route.js?v=free-mvp-r005';
+import { GAME_PACKS } from './generated/game-packs.js?v=free-mvp-r005';
 import {
   combatStats,
   allocAttr,
@@ -32,56 +36,49 @@ import {
   leaveSeason,
   castHotfix,
   castSummary,
-  metaLv,
+  metaUpgradePreview,
+  recommendedMetaId,
   isSprinting,
   equipGear,
   unequipGear,
   sellGear,
-  buyGearBox,
+  END_SEASON_CONTRACT,
   rarityColor,
   rarityLabel,
-  unlockPro,
-  unlockAutoSprint,
-  buyBoost2x,
-  buyCoinPack,
-  timeWarp,
-  ensurePremium,
   economyMult,
-  boostActive,
-  boostSecondsLeft,
-  hasAutoSprint,
   claimHubObjective,
   claimSeasonMilestone,
   ensureHub,
   normalizeGear,
-} from './game.js';
+} from './game.js?v=free-mvp-r005';
 import {
   formatAffix,
   sellValue,
   isUpgrade,
   BAG_CAP,
-  itemScore,
   SLOTS,
   slotLabel,
   slotShort,
   equippedCount,
   gearBonuses,
   primaryStat,
-} from './loot.js';
+  queryGearBag,
+  toggleJunk,
+} from './loot.js?v=free-mvp-r005';
 import {
   DAILY_DEFS,
   WEEKLY_DEFS,
   hubProgress,
   hubDone,
   hubClaimed,
+  hubObjectiveState,
   seasonLevel,
   SEASON_MILESTONES,
   formatReward,
-  formatRewardText,
-} from './hub.js';
-import { skillIco, attrIco, metaIco, hubIco, gearIcon } from './icons.js';
-import { save, clear } from './save.js';
-import { sfx, unlockAudio, setMuted } from './sfx.js';
+} from './hub.js?v=free-mvp-r005';
+import { skillIco, attrIco, metaIco, hubIco, gearIcon } from './icons.js?v=free-mvp-r005';
+import { save, clear } from './save.js?v=free-mvp-r005';
+import { sfx, unlockAudio, setMuted, setReducedMotion } from './sfx.js?v=free-mvp-r005';
 
 const PANEL_TITLES = {
   skills: 'Build',
@@ -93,10 +90,20 @@ const PANEL_TITLES = {
 };
 
 let lastPanel = null;
+const QA_METRICS = typeof location !== 'undefined' && new URLSearchParams(location.search).has('qa_metrics');
+
+function applyMotionPreference(value) {
+  setReducedMotion(value);
+  const osReduced = typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  document.documentElement.classList.toggle('reduce-motion', !!value || osReduced);
+}
 
 export function bindUI(s) {
   const $ = (id) => document.getElementById(id);
   setMuted(s.settings.sfx === false);
+  applyMotionPreference(s.settings.reducedMotion);
+  const soundToggle = $('chk-sfx');
+  if (soundToggle) soundToggle.checked = s.settings.sfx !== false;
 
   const unlock = () => unlockAudio();
   document.addEventListener('pointerdown', unlock, { once: true });
@@ -115,7 +122,6 @@ export function bindUI(s) {
         return;
       }
       openSheet(s, p);
-      if (s.settings.sfx !== false) sfx('click');
     });
   });
 
@@ -150,6 +156,19 @@ export function bindUI(s) {
     } else if (s.settings.sfx !== false) sfx('error');
   });
   $('btn-leave')?.addEventListener('click', () => {
+    s.ui.endSeasonConfirm = true;
+    const confirmPanel = $('season-confirm');
+    if (confirmPanel) {
+      confirmPanel.hidden = false;
+      requestAnimationFrame(() => confirmPanel.scrollIntoView({ block: 'end' }));
+    }
+  });
+  $('btn-leave-cancel')?.addEventListener('click', () => {
+    s.ui.endSeasonConfirm = false;
+    const confirmPanel = $('season-confirm');
+    if (confirmPanel) confirmPanel.hidden = true;
+  });
+  $('btn-leave-confirm')?.addEventListener('click', () => {
     if (leaveSeason(s)) {
       save(s);
       closeSheet(s);
@@ -172,13 +191,20 @@ export function bindUI(s) {
     $('offline-modal').hidden = true;
   });
   $('btn-wipe')?.addEventListener('click', () => {
-    if (confirm('Wipe save and start over?')) {
-      clear();
-      location.reload();
-    }
+    const confirmPanel = $('reset-confirm');
+    if (confirmPanel) confirmPanel.hidden = false;
+  });
+  $('btn-wipe-cancel')?.addEventListener('click', () => {
+    const confirmPanel = $('reset-confirm');
+    if (confirmPanel) confirmPanel.hidden = true;
+  });
+  $('btn-wipe-confirm')?.addEventListener('click', () => {
+    clear();
+    location.reload();
   });
   $('chk-motion')?.addEventListener('change', (e) => {
     s.settings.reducedMotion = e.target.checked;
+    applyMotionPreference(e.target.checked);
     save(s);
   });
   $('chk-sfx')?.addEventListener('change', (e) => {
@@ -224,50 +250,23 @@ export function bindUI(s) {
     renderMeta(s);
   });
 
-  // Hold-to-sell on inventory cards (mock: "Hold to sell junk")
-  let holdTimer = null;
-  let holdId = null;
-  let justSold = false;
-  const clearHold = () => {
-    if (holdTimer) clearTimeout(holdTimer);
-    holdTimer = null;
-    holdId = null;
-    document.querySelectorAll('.icard.holding').forEach((el) => el.classList.remove('holding'));
-  };
-  const startHold = (id, el) => {
-    clearHold();
-    holdId = id;
-    el?.classList.add('holding');
-    holdTimer = setTimeout(() => {
-      if (holdId !== id) return;
-      const res = sellGear(s, id);
-      clearHold();
-      justSold = true;
-      if (res) {
-        save(s);
-        s.ui.gearFocus = null;
-        s.ui.gearEqFocus = null;
-        renderGear(s);
-      } else if (s.settings.sfx !== false) sfx('error');
-    }, 550);
-  };
-
-  $('panel-gear')?.addEventListener('pointerdown', (e) => {
-    const inv = e.target.closest('[data-inv]');
-    if (!inv || e.button === 2) return;
-    startHold(inv.dataset.inv, inv);
-  });
-  $('panel-gear')?.addEventListener('pointerup', clearHold);
-  $('panel-gear')?.addEventListener('pointercancel', clearHold);
-  $('panel-gear')?.addEventListener('pointerleave', (e) => {
-    if (e.target === $('panel-gear')) clearHold();
+  $('panel-gear')?.addEventListener('change', (e) => {
+    if (e.target.matches('[data-gear-sort]')) s.settings.gearSort = e.target.value;
+    else if (e.target.matches('[data-gear-filter]')) s.settings.gearFilter = e.target.value;
+    else return;
+    save(s);
+    renderGear(s);
   });
 
   $('panel-gear')?.addEventListener('click', (e) => {
-    if (justSold) {
-      justSold = false;
+    const junkBtn = e.target.closest('[data-junk]');
+    if (junkBtn) {
       e.preventDefault();
       e.stopPropagation();
+      if (toggleJunk(s.meta.gear, junkBtn.dataset.junk) != null) {
+        save(s);
+        renderGear(s);
+      }
       return;
     }
     const sellBtn = e.target.closest('[data-sell]');
@@ -322,36 +321,12 @@ export function bindUI(s) {
       renderGear(s);
       return;
     }
-    const filter = e.target.closest('[data-rarity-filter]');
-    if (filter) {
-      s.ui.gearRarityFilter = filter.dataset.rarityFilter || 'all';
-      renderGear(s);
-      return;
-    }
     if (e.target.closest('.gear-detail')) return;
     if (s.ui.gearFocus || s.ui.gearEqFocus) {
       s.ui.gearFocus = null;
       s.ui.gearEqFocus = null;
       renderGear(s);
     }
-  });
-
-  $('panel-settings')?.addEventListener('click', (e) => {
-    const t = e.target.closest('[data-premium]');
-    if (!t) return;
-    const act = t.dataset.premium;
-    let ok = false;
-    if (act === 'pro') ok = unlockPro(s);
-    else if (act === 'boost') ok = buyBoost2x(s);
-    else if (act === 'auto') ok = unlockAutoSprint(s);
-    else if (act === 'warp') ok = timeWarp(s);
-    else if (act.startsWith('box_')) ok = buyGearBox(s, act);
-    else if (act.startsWith('coins_')) ok = buyCoinPack(s, act);
-    if (ok) {
-      save(s);
-      renderPremium(s);
-      if (s.settings.sfx !== false) sfx('click');
-    } else if (s.settings.sfx !== false) sfx('error');
   });
 
   $('panel-hub')?.addEventListener('click', (e) => {
@@ -390,18 +365,23 @@ function popSpend(el) {
 }
 
 function openSheet(s, panel) {
+  const openedAt = QA_METRICS ? performance.now() : 0;
   s.ui.panel = panel;
   s.ui.panelDirty = true;
   const root = document.getElementById('sheet-root');
   if (root) {
     root.hidden = false;
     root.classList.add('is-open');
+    root.dataset.panel = panel;
   }
   document.getElementById('app')?.classList.add('sheet-open');
   document.querySelectorAll('.hud-nav button').forEach((b) => {
     b.classList.toggle('active', b.dataset.panel === panel);
+    b.setAttribute('aria-expanded', String(b.dataset.panel === panel));
   });
-  document.getElementById('btn-bag')?.classList.toggle('active', panel === 'gear');
+  const gearButton = document.getElementById('btn-bag');
+  gearButton?.classList.toggle('active', panel === 'gear');
+  gearButton?.setAttribute('aria-expanded', String(panel === 'gear'));
   const title = document.getElementById('sheet-title');
   if (title) title.textContent = PANEL_TITLES[panel] || panel;
   ['skills', 'meta', 'ship', 'gear', 'hub', 'settings'].forEach((p) => {
@@ -414,32 +394,38 @@ function openSheet(s, panel) {
   if (panel === 'gear') renderGear(s);
   if (panel === 'hub') renderHub(s);
   if (panel === 'settings') {
-    const a = document.getElementById('v-attrs');
-    if (a) {
-      const h = s.run.hero;
-      a.textContent = `Damage ${h.scan} · Crit ${h.verify} · Utility ${h.amplify}`;
-    }
     const sx = document.getElementById('chk-sfx');
     if (sx) sx.checked = s.settings.sfx !== false;
     const mo = document.getElementById('chk-motion');
     if (mo) mo.checked = !!s.settings.reducedMotion;
-    renderPremium(s);
   }
+  if (panel !== 'ship') s.ui.endSeasonConfirm = false;
+  if (lastPanel !== panel && s.settings.sfx !== false) sfx('sheet');
   lastPanel = panel;
   s.ui.panelDirty = false;
+  if (QA_METRICS) document.documentElement.dataset.qaSheetMs = (performance.now() - openedAt).toFixed(1);
 }
 
 function closeSheet(s) {
   s.ui.panel = null;
+  s.ui.endSeasonConfirm = false;
   lastPanel = null;
   const root = document.getElementById('sheet-root');
   if (root) {
     root.hidden = true;
     root.classList.remove('is-open');
+    delete root.dataset.panel;
   }
   document.getElementById('app')?.classList.remove('sheet-open');
-  document.querySelectorAll('.hud-nav button').forEach((b) => b.classList.remove('active'));
-  document.getElementById('btn-bag')?.classList.remove('active');
+  document.querySelectorAll('.hud-nav button').forEach((b) => {
+    b.classList.remove('active');
+    b.setAttribute('aria-expanded', 'false');
+  });
+  const gearButton = document.getElementById('btn-bag');
+  gearButton?.classList.remove('active');
+  gearButton?.setAttribute('aria-expanded', 'false');
+  const resetConfirm = document.getElementById('reset-confirm');
+  if (resetConfirm) resetConfirm.hidden = true;
 }
 
 function fillShip(s) {
@@ -448,20 +434,39 @@ function fillShip(s) {
   const notes = Math.floor(s.run.patches);
   const gain = Math.floor(notes * economyMult(s));
   const liveNext = liveGain(s.authority.shippedThisSeason);
-  const seasonReady = s.ui.seasonDone || s.run.zone >= SEASON.zones;
-  const nextZ = SEASON.zones * (Math.floor(s.run.zone / SEASON.zones) + 1);
+  const seasonReady = s.ui.seasonDone || isSeasonCheckpoint(s.route.zone);
+  const nextZ = SEASON.zones * (Math.floor(s.route.zone / SEASON.zones) + 1);
   const eco = economyMult(s);
-  el.className = 'ship-stats compact';
-  el.innerHTML = [
-    row('Notes', formatNum(notes), notes > 0 ? 'hi' : '', 'notes'),
-    row('→ Rep', `+${formatNum(gain)}`, gain > 0 ? 'hi' : ''),
-    row('Mult', `×${eco.toFixed(2)}`, ''),
-    seasonReady
-      ? row('End Season', `+${liveNext.toFixed(3)} Live`, 'hi')
-      : row('Checkpoint', `Z${nextZ}`, ''),
-  ].join('');
+  el.className = 'ship-stats ship-preview';
+  const resetItems = END_SEASON_CONTRACT.resets.map((item) => `<li>${item}</li>`).join('');
+  const keepItems = END_SEASON_CONTRACT.keeps.map((item) => `<li>${item}</li>`).join('');
+  el.innerHTML = `
+    <div class="ship-gain-card">
+      <span>You'll gain</span>
+      <strong>+${formatNum(gain)} Rep</strong>
+      <small>${notes > 0 ? 'Ready to ship now' : 'Collect Notes to ship'}</small>
+    </div>
+    <div class="ship-formula" aria-label="Rep conversion preview">
+      ${row('Notes', formatNum(notes), notes > 0 ? 'hi' : '', 'notes')}
+      ${row('Rate', '1 Note → 1 Rep')}
+      ${row('Mult', `×${eco.toFixed(2)}`)}
+      ${seasonReady ? row('End-Season bonus', `+${liveNext.toFixed(3)} Live`, 'hi') : row('End-Season bonus', `Unlocks at Zone ${nextZ}`)}
+    </div>
+    <div class="season-contract">
+      <section><h3>Resets</h3><ul>${resetItems}</ul></section>
+      <section><h3>Kept</h3><ul>${keepItems}</ul></section>
+    </div>`;
+  const cta = document.getElementById('btn-ship');
+  if (cta) {
+    cta.disabled = notes < 1;
+    cta.classList.toggle('is-locked', notes < 1);
+  }
+  const ctaSub = document.getElementById('ship-cta-sub');
+  if (ctaSub) set(ctaSub, notes > 0 ? `${formatNum(notes)} Notes → +${formatNum(gain)} Rep` : 'Collect Notes first');
   const leave = document.getElementById('btn-leave');
   if (leave) leave.hidden = !seasonReady;
+  const confirmPanel = document.getElementById('season-confirm');
+  if (confirmPanel) confirmPanel.hidden = !s.ui.endSeasonConfirm;
 }
 
 function row(k, v, cls = '', tone = '') {
@@ -497,7 +502,6 @@ function skillCard(s, sk) {
   const ok = canLearn(s, sk.id);
   const maxed = lv >= sk.max;
   const owned = lv > 0;
-  const pct = Math.round((lv / sk.max) * 100);
   let state = 'locked';
   if (maxed) state = 'maxed';
   else if (ok) state = 'can';
@@ -508,25 +512,25 @@ function skillCard(s, sk) {
   else cta = `${cost} SP`;
 
   const reqs = Object.keys(sk.req || {}).length ? reqBadges(sk.req, h) : '';
-  const tip = [sk.desc, reqs ? `Needs: ${Object.entries(sk.req).map(([k, v]) => `${ATTR_LABEL[k] || k} ${v}`).join(', ')}` : '']
-    .filter(Boolean)
-    .join(' · ');
+  const afford = !maxed && h.sp >= cost && ok;
+  const nextLevel = Math.min(sk.max, lv + 1);
+  const actionLabel = maxed ? `${sk.name} is at maximum rank` : `Raise ${sk.name} from rank ${lv} to ${nextLevel} for ${cost} SP`;
 
   return `
-  <button type="button" class="skill-card compact ${state}"
-    data-alloc="skill" data-id="${sk.id}" ${maxed ? 'disabled' : ''} title="${tip.replace(/"/g, '&quot;')}">
+  <button type="button" class="skill-card build-skill-card ${state}"
+    data-alloc="skill" data-id="${sk.id}" ${maxed ? 'disabled' : ''} aria-label="${actionLabel}">
     <div class="sk-ico" aria-hidden="true">${skillIco(sk.id)}</div>
     <div class="sk-main">
       <div class="sk-top">
         <span class="sk-name">${sk.short || sk.name}</span>
         <span class="sk-type t-${sk.type}">${typeTag(sk.type)}</span>
       </div>
+      <span class="sk-desc inline">${sk.desc}</span>
       ${reqs ? `<div class="sk-reqs">${reqs}</div>` : ''}
-      <div class="sk-bar"><i style="width:${pct}%"></i></div>
     </div>
     <div class="sk-side">
-      <span class="sk-lv">${lv}<small>/${sk.max}</small></span>
-      <span class="sk-cta">${cta}</span>
+      <span class="sk-delta">${lv}<span aria-hidden="true">→</span>${nextLevel}</span>
+      <span class="sp-cost ${afford ? 'afford' : ''}">${cta}</span>
     </div>
   </button>`;
 }
@@ -541,7 +545,7 @@ function renderSkills(s) {
   <div class="sp-bank compact ${hasSp ? 'has-sp' : ''}">
     <span class="sp-bank-label">SP</span>
     <strong class="sp-bank-val">${h.sp}</strong>
-    <span class="sp-bank-hint">${hasSp ? 'Tap attrs / skills' : 'Rank up for SP'}</span>
+    <span class="sp-bank-hint">${hasSp ? 'Ready to invest' : 'Earn SP by ranking up'}</span>
   </div>
 
   <div class="section-lab">Attributes</div>
@@ -550,12 +554,21 @@ function renderSkills(s) {
   for (const id of ['scan', 'verify', 'amplify']) {
     const m = ATTR_META[id];
     const val = h[id] || 0;
+    const unlock = nextSkillUnlock(id, val);
+    const gate = Number(unlock?.req?.[id] || 0);
+    const unlockCopy = !unlock
+      ? 'All skills open'
+      : gate === val + 1
+        ? `Unlocks ${unlock.short || unlock.name}`
+        : `Next: ${unlock.short || unlock.name} at ${gate}`;
     html += `
-    <button type="button" class="attr-card ${hasSp ? 'can' : 'locked'}" data-alloc="attr" data-id="${id}" title="${m.sub} · 1 SP">
+    <button type="button" class="attr-card build-attr-card ${hasSp ? 'can' : 'locked'}" data-alloc="attr" data-id="${id}" aria-label="Raise ${m.label} from ${val} to ${val + 1} for 1 SP. ${unlockCopy}">
       <span class="attr-ico" aria-hidden="true">${attrIco(id)}</span>
       <span class="attr-lab">${m.label}</span>
-      <span class="attr-lv">${val}</span>
-      <span class="attr-plus" aria-hidden="true">+</span>
+      <span class="attr-delta">${val}<span aria-hidden="true">→</span>${val + 1}</span>
+      <span class="attr-effect">${m.sub}</span>
+      <span class="attr-unlock">${unlockCopy}</span>
+      <span class="sp-cost ${hasSp ? 'afford' : ''}">1 SP</span>
     </button>`;
   }
 
@@ -572,116 +585,51 @@ function renderSkills(s) {
   root.innerHTML = html;
 }
 
-function renderPremium(s) {
-  const root = document.getElementById('premium-body');
-  if (!root) return;
-  ensurePremium(s);
-  const p = s.meta.premium;
-  const eco = economyMult(s);
-  const boostOn = boostActive(s);
-  const left = boostSecondsLeft(s);
-  const leftM = Math.ceil(left / 60);
-  const auto = hasAutoSprint(s);
-  const loadout = equippedCount(normalizeGear(s.meta.gear));
-
-  let html = `
-  <div class="sp-bank compact rep-bank">
-    <span class="sp-bank-label">Coins</span>
-    <strong class="sp-bank-val gold">${formatNum(p.coins)}</strong>
-    <span class="sp-bank-hint">×${eco.toFixed(2)}${boostOn ? ` · 2× ${leftM}m` : ''}${auto ? ' · Auto' : ''} · ${loadout}/4 gear</span>
-  </div>
-  <div class="premium-card compact ${p.pro ? 'owned' : ''}">
-    <div class="premium-card-top">
-      <span class="premium-ico">${hubIco('pro')}</span>
-      <strong>APN Pro</strong>
-      <span class="premium-tag">${p.pro ? 'ON' : 'IAP'}</span>
-    </div>
-    <p class="fine prem-one">${PREMIUM.pro.benefits.slice(0, 2).join(' · ')}</p>
-    <button type="button" class="btn-primary" data-premium="pro" ${p.pro ? 'disabled' : ''}>
-      <span class="btn-primary-title">${p.pro ? 'Pro Active' : 'Unlock Pro'}</span>
-      <span class="btn-primary-sub">${p.pro ? `×${PREMIUM.pro.mult}` : 'Demo'}</span>
-    </button>
-  </div>
-  <div class="prem-row">
-    <button type="button" class="prem-chip ${auto ? 'on' : ''}" data-premium="auto" ${auto ? 'disabled' : ''} title="${PREMIUM.auto_sprint.desc}">
-      <strong>Auto-Sprint</strong>
-      <span>${auto ? 'ON' : `${PREMIUM.auto_sprint.coinCost}¢`}</span>
-    </button>
-    <button type="button" class="prem-chip" data-premium="boost" title="${PREMIUM.boost_2x.desc}">
-      <strong>2× Boost</strong>
-      <span>${boostOn ? `+${PREMIUM.boost_2x.minutes}m` : `${PREMIUM.boost_2x.coinCost}¢`}</span>
-    </button>
-    <button type="button" class="prem-chip" data-premium="warp" title="${PREMIUM.time_warp.desc}">
-      <strong>Warp +1h</strong>
-      <span>${PREMIUM.time_warp.coinCost}¢</span>
-    </button>
-  </div>
-  <div class="section-lab">Gear Boxes <span class="section-count">coins</span></div>
-  <div class="box-grid">`;
-  for (const box of PREMIUM.boxes || []) {
-    const can = p.coins >= box.coinCost;
-    html += `
-    <button type="button" class="box-card ${can ? 'can' : ''}" data-premium="${box.id}" title="${box.desc.replace(/"/g, '&quot;')}">
-      <span class="box-ico">${hubIco('gift')}</span>
-      <strong class="box-name">${box.name}</strong>
-      <span class="box-meta">${box.rolls}× gear${box.minRarity ? ` · ${box.minRarity}+` : ''}</span>
-      <span class="box-cost">${box.coinCost}¢</span>
-    </button>`;
-  }
-  html += `</div>
-  <div class="section-lab">Coins</div>
-  <div class="premium-packs compact">`;
-  for (const pack of PREMIUM.packs) {
-    html += `
-    <button type="button" class="pack-chip" data-premium="${pack.id}">
-      <strong>+${pack.coins}</strong>
-      <span>${pack.priceLabel}</span>
-    </button>`;
-  }
-  html += `</div>`;
-  root.innerHTML = html;
-}
-
 function renderMeta(s) {
   const root = document.getElementById('meta-body');
   if (!root) return;
   const rep = s.authority.amount;
+  const recommended = recommendedMetaId(s);
+  const categories = ['Ranks', 'Combat', 'Economy'];
   let html = `
   <div class="sp-bank compact rep-bank">
     <span class="sp-bank-label">Rep</span>
     <strong class="sp-bank-val gold">${formatNum(rep)}</strong>
-    <span class="sp-bank-hint">Permanent</span>
+    <span class="sp-bank-hint">Permanent growth · survives End Season</span>
   </div>
-  <div class="skill-grid meta-grid">`;
-  for (const u of Object.values(META)) {
-    const lv = metaLv(s, u.id);
-    const cost = metaCost(u.base, u.growth, lv);
-    const ok = rep >= cost;
-    const barPct = Math.min(100, lv * 8);
-    // desc always visible — no hover tooltip
-    html += `
-    <button type="button" class="skill-card compact meta-row ${ok ? 'can' : 'locked'}" data-meta="${u.id}">
-      <div class="sk-ico gold" aria-hidden="true">${metaIco(u.id)}</div>
-      <div class="sk-main">
-        <div class="sk-top">
-          <span class="sk-name">${u.name}</span>
-        </div>
-        <div class="sk-desc inline">${u.desc}</div>
-        <div class="sk-bar"><i style="width:${barPct}%"></i></div>
-      </div>
-      <div class="sk-side">
-        <span class="sk-lv">Lv ${lv}</span>
-        <span class="sk-cta">${formatNum(cost)}</span>
-      </div>
-    </button>`;
+  <div class="boosts-tree">`;
+  for (const category of categories) {
+    const upgrades = Object.values(META).filter((upgrade) => upgrade.category === category);
+    html += `<section class="boost-category"><h3>${category}</h3><div class="boost-list">`;
+    for (const u of upgrades) {
+      const preview = metaUpgradePreview(s, u.id);
+      const isRecommended = recommended === u.id;
+      html += `
+      <button type="button" class="boost-row ${preview.affordable ? 'can' : 'locked'} ${isRecommended ? 'recommended' : ''}" data-meta="${u.id}"
+        aria-label="Raise ${u.name} from ${preview.current} to ${preview.next} for ${preview.cost} Rep">
+        <span class="boost-ico" aria-hidden="true">${metaIco(u.id)}</span>
+        <span class="boost-copy">
+          <span class="boost-name">${u.name}${isRecommended ? `<b>${preview.affordable ? 'Recommended' : 'Next target'}</b>` : ''}</span>
+          <span class="boost-desc">${u.desc}</span>
+          <span class="boost-value">${preview.valueCue}</span>
+        </span>
+        <span class="boost-side">
+          <span class="boost-level">Lv ${preview.level}</span>
+          <span class="boost-delta">${preview.current} → ${preview.next}</span>
+          <span class="rep-cost ${preview.affordable ? 'afford' : ''}">${formatNum(preview.cost)} Rep</span>
+        </span>
+      </button>`;
+    }
+    html += `</div></section>`;
   }
   html += '</div>';
   root.innerHTML = html;
 }
 
 function rewardChips(reward) {
+  const labels = { sig: 'Signal', sp: 'SP', rep: 'Rep', coin: 'Coins', notes: 'Notes' };
   return formatReward(reward)
-    .map((r) => `<span class="rw-chip k-${r.k}">${r.v} ${r.k === 'coin' ? '¢' : r.k}</span>`)
+    .map((r) => `<span class="rw-chip k-${r.k}">${r.v} ${labels[r.k] || r.k}</span>`)
     .join('');
 }
 
@@ -689,29 +637,27 @@ function questRow(s, def, period) {
   ensureHub(s);
   const hub = s.meta.hub;
   const prog = hubProgress(hub, def, period);
-  const done = hubDone(hub, def, period);
-  const claimed = hubClaimed(hub, def, period);
+  const state = hubObjectiveState(hub, def, period);
   const pct = Math.round((prog / def.target) * 100);
-  let cls = 'quest-row compact';
-  if (claimed) cls += ' claimed';
-  else if (done) cls += ' ready';
+  const claimed = state === 'claimed';
+  const ready = state === 'claimable';
   return `
-  <div class="${cls}">
+  <div class="quest-row liveops-${state}">
+    <div class="quest-ico" aria-hidden="true">${hubIco(period === 'daily' ? 'daily' : 'weekly')}</div>
     <div class="quest-main">
       <div class="quest-top">
         <span class="quest-name">${def.label}</span>
-        <span class="quest-prog">${claimed ? '✓' : `${prog}/${def.target}`}</span>
+        <span class="quest-prog">${prog}/${def.target}</span>
       </div>
-      <div class="sk-bar thin"><i style="width:${pct}%"></i></div>
+      <span class="quest-desc">${def.desc}</span>
+      <div class="quest-progress" aria-label="${pct}% complete"><i style="width:${pct}%"></i></div>
       <div class="quest-rw">${rewardChips(def.reward)}</div>
     </div>
-    ${
-      claimed
-        ? ''
-        : done
-          ? `<button type="button" class="quest-cta" data-claim="${period}:${def.id}">Claim</button>`
-          : ''
-    }
+    ${claimed
+      ? '<span class="quest-status state-claimed">Claimed</span>'
+      : ready
+        ? `<button type="button" class="quest-cta" data-claim="${period}:${def.id}" aria-label="Claim ${def.label} rewards">Claim</button>`
+        : '<span class="quest-status state-locked">In progress</span>'}
   </div>`;
 }
 
@@ -722,6 +668,8 @@ function renderHub(s) {
   const hub = s.meta.hub;
   const season = seasonLevel(hub.seasonXp || 0);
   const pct = Math.round((season.into / season.need) * 100);
+  const dailyReady = DAILY_DEFS.filter((def) => hubObjectiveState(hub, def, 'daily') === 'claimable').length;
+  const weeklyReady = WEEKLY_DEFS.filter((def) => hubObjectiveState(hub, def, 'weekly') === 'claimable').length;
 
   let html = `
   <div class="hub-season">
@@ -735,86 +683,77 @@ function renderHub(s) {
   for (const m of SEASON_MILESTONES) {
     const unlocked = season.level >= m.lv;
     const claimed = !!hub.seasonClaimed?.[m.lv];
-    const tip = formatRewardText(m.reward);
+    const milestoneState = claimed ? 'claimed' : unlocked ? 'claimable' : 'locked';
     html += `
-    <button type="button" class="season-mil ${unlocked ? 'on' : ''} ${claimed ? 'claimed' : ''}"
-      data-season-lv="${m.lv}" ${!unlocked || claimed ? 'disabled' : ''} title="${tip}">
-      <span class="sm-lv">${m.label}</span>
+    <button type="button" class="season-mil liveops-${milestoneState}"
+      data-season-lv="${m.lv}" ${!unlocked || claimed ? 'disabled' : ''}
+      aria-label="Season level ${m.lv} reward, ${milestoneState}">
+      <span class="sm-lv">Level ${m.label}</span>
+      <span class="sm-reward">${rewardChips(m.reward)}</span>
+      <span class="sm-state">${claimed ? 'Claimed' : unlocked ? 'Claim' : 'Locked'}</span>
     </button>`;
   }
   html += `</div></div>
 
-  <div class="section-lab">Daily</div>
+  <div class="hub-section-head"><strong>Daily</strong><span>${dailyReady ? `${dailyReady} ready` : 'Live now'}</span></div>
   <div class="quest-list">
     ${DAILY_DEFS.map((d) => questRow(s, d, 'daily')).join('')}
   </div>
 
-  <div class="section-lab">Weekly</div>
+  <div class="hub-section-head"><strong>Weekly</strong><span>${weeklyReady ? `${weeklyReady} ready` : 'This week'}</span></div>
   <div class="quest-list">
     ${WEEKLY_DEFS.map((d) => questRow(s, d, 'weekly')).join('')}
   </div>`;
   root.innerHTML = html;
 }
 
-function itemTooltip(item) {
-  if (!item) return '';
-  const prim = primaryStat(item);
-  const aff = (item.affixes || []).map((a) => formatAffix(a)).join(' · ');
-  return `${item.name} · ${rarityLabel(item.rarity)} · ${slotLabel(item.slot)} · ${prim.text}${aff ? ` · ${aff}` : ''}`;
-}
-
-function tipPopHtml(item, col, extra = '') {
-  if (!item) return '';
-  return `
-    <div class="tip-pop" role="tooltip">
-      <strong style="color:${col}">${item.name}</strong>
-      <span>${rarityLabel(item.rarity)} · ${slotLabel(item.slot)} · i${item.ilvl}</span>
-      ${(item.affixes || []).map((a) => `<span class="tip-aff">${formatAffix(a)}</span>`).join('')}
-      ${extra}
-    </div>`;
-}
-
-/** Brand equip card — large rarity frame + primary stat (mock) */
-function brandEqCard(slot, item, selected) {
+function brandEqCard(slot, item, selected, comparing) {
   const lab = slotLabel(slot).toUpperCase();
   const sel = selected ? ' sel' : '';
+  const compare = comparing ? ' compare' : '';
   if (!item) {
     return `
-    <button type="button" class="gcard empty${sel}" data-eq-slot="${slot}">
+    <button type="button" class="gcard empty${sel}${compare}" data-eq-slot="${slot}" aria-label="${lab}: empty">
       <span class="gcard-slot">${lab}</span>
       <span class="gcard-art muted">${gearIcon({ slot, name: 'empty', rarity: 'white' })}</span>
       <span class="gcard-name">Empty</span>
-      <span class="gcard-stat">—</span>
     </button>`;
   }
-  const col = rarityColor(item.rarity);
-  const prim = primaryStat(item);
   return `
-  <button type="button" class="gcard filled r-${item.rarity}${sel}" data-eq-slot="${slot}" style="--rc:${col}">
+  <button type="button" class="gcard filled r-${item.rarity}${sel}${compare}" data-eq-slot="${slot}"
+    aria-label="${lab}: ${item.name}, level ${item.ilvl}">
     <span class="gcard-slot">${lab}</span>
-    <span class="gcard-art" style="color:${col}">${gearIcon(item)}</span>
-    <span class="gcard-name" style="color:${col}">${item.name}</span>
-    <span class="gcard-stat">${prim.text}</span>
+    <span class="gcard-art">${gearIcon(item)}</span>
     <span class="gcard-ilvl">${item.ilvl}</span>
-    ${tipPopHtml(item, col)}
   </button>`;
 }
 
 function invCard(it, g, focusId) {
-  const col = rarityColor(it.rarity);
   const up = isUpgrade(g, it);
   const sel = focusId === it.id ? ' sel' : '';
-  const prim = primaryStat(it);
   return `
-  <button type="button" class="icard r-${it.rarity}${sel}${up ? ' up' : ''}"
-    data-inv="${it.id}" style="--rc:${col}">
-    <span class="icard-art" style="color:${col}">${gearIcon(it)}</span>
-    <span class="icard-name" style="color:${col}">${it.name}</span>
-    <span class="icard-stat">${prim.text}</span>
+  <button type="button" class="icard r-${it.rarity}${sel}${up ? ' up' : ''}${it.junk ? ' junk' : ''}"
+    data-inv="${it.id}" aria-label="${it.name}, ${rarityLabel(it.rarity)}, level ${it.ilvl}${up ? ', upgrade' : ''}${it.junk ? ', marked junk' : ''}">
+    <span class="icard-art">${gearIcon(it)}</span>
     <span class="icard-ilvl">${it.ilvl}</span>
-    ${up ? '<span class="inv-up">↑</span>' : ''}
-    ${tipPopHtml(it, col, `<span class="tip-sell">Hold to sell · ${sellValue(it)} sig</span>`)}
+    ${up ? '<span class="inv-up" aria-hidden="true">↑</span>' : ''}
+    ${it.junk ? '<span class="inv-junk" aria-hidden="true">×</span>' : ''}
   </button>`;
+}
+
+function selectedCompare(item, equipped) {
+  const next = primaryStat(item);
+  if (!equipped) return { line: next.text, delta: 'Empty slot · immediate gain', tone: 'empty' };
+  const currentAffix = (equipped.affixes || []).find((affix) => affix.key === next.key);
+  const current = currentAffix ? Number(currentAffix.value) || 0 : 0;
+  const unit = currentAffix?.unit === '%' || (item.affixes || []).find((affix) => affix.key === next.key)?.unit === '%' ? '%' : '';
+  const delta = Math.round((next.value - current) * 10) / 10;
+  const sign = delta > 0 ? '+' : '';
+  return {
+    line: `${next.brand} ${current}${unit} → ${next.value}${unit}`,
+    delta: delta === 0 ? 'No primary-stat change' : `${sign}${delta}${unit} equipped delta`,
+    tone: delta > 0 ? 'better' : delta < 0 ? 'worse' : 'same',
+  };
 }
 
 function renderGear(s) {
@@ -822,9 +761,9 @@ function renderGear(s) {
   if (!root) return;
   const g = normalizeGear(s.meta.gear);
   s.meta.gear = g;
-  let bag = g.bag || [];
-  const filter = s.ui.gearRarityFilter || 'all';
-  if (filter !== 'all') bag = bag.filter((it) => it.rarity === filter);
+  const filter = s.settings.gearFilter || 'all';
+  const sort = s.settings.gearSort || 'power';
+  const bag = queryGearBag(g, { filter, sort });
   const focusId = s.ui.gearFocus || null;
   const eqFocus = s.ui.gearEqFocus || null;
   const focus = (g.bag || []).find((x) => x.id === focusId) || null;
@@ -835,89 +774,80 @@ function renderGear(s) {
   let html = `
   <div class="brand-loadout">
     <div class="brand-host">
-      <img class="brand-mascot" src="./assets/mascot-host.png" alt="" width="88" height="88" />
-      <span class="brand-eq-n">${nEq}/4</span>
+      <span class="brand-host-label">HOST</span>
+      <img class="brand-mascot" src="./assets/mascot/apn-mascot-idle.webp" alt="APN Host" width="104" height="104" />
+      <span class="brand-eq-n">${nEq}/4 READY</span>
     </div>
     <div class="brand-slots">
-      ${SLOTS.map((sl) => brandEqCard(sl, g[sl], eqFocus === sl)).join('')}
+      ${SLOTS.map((sl) => brandEqCard(sl, g[sl], eqFocus === sl, focus?.slot === sl)).join('')}
     </div>
   </div>
 
   <div class="inv-head">
     <div class="section-lab">Inventory <span class="section-count">${fullBag.length}/${BAG_CAP}</span></div>
-    <div class="rarity-filters">
-      ${['all', 'green', 'blue', 'yellow', 'unique']
-        .map((r) => {
-          const lab = r === 'all' ? 'All' : r === 'unique' ? 'Unique' : rarityLabel(r);
-          return `<button type="button" class="rf ${filter === r ? 'on' : ''}" data-rarity-filter="${r}">${lab}</button>`;
-        })
-        .join('')}
+    <div class="gear-tools">
+      <label class="gear-tool"><span>Sort</span><select data-gear-sort aria-label="Sort inventory">
+        ${[['power', 'Power'], ['level', 'Level'], ['rarity', 'Rarity']].map(([value, label]) => `<option value="${value}" ${sort === value ? 'selected' : ''}>${label}</option>`).join('')}
+      </select></label>
+      <label class="gear-tool"><span>Filter</span><select data-gear-filter aria-label="Filter inventory">
+        ${[['all', 'All'], ['upgrades', 'Upgrades'], ['junk', 'Junk'], ...SLOTS.map((slot) => [slot, slotLabel(slot)])].map(([value, label]) => `<option value="${value}" ${filter === value ? 'selected' : ''}>${label}</option>`).join('')}
+      </select></label>
     </div>
   </div>
   <div class="inv-cards">`;
 
   if (!fullBag.length) {
-    html += `<div class="inv-empty-state">Bosses & boxes drop gear · fill all 4 slots</div>`;
+    html += `<div class="inv-empty-state">Defeat Version Gates to collect gear.</div>`;
   } else if (!bag.length) {
-    html += `<div class="inv-empty-state">No items match filter</div>`;
+    html += `<div class="inv-empty-state">No items match this view.</div>`;
   } else {
     for (const it of bag) {
       html += invCard(it, g, focusId);
     }
   }
-  // pad empty cells for grid feel
-  const pad = Math.max(0, 4 - (bag.length % 4 || 4)) % 4;
-  if (bag.length && bag.length < BAG_CAP) {
-    for (let i = 0; i < Math.min(pad, 4); i++) {
-      html += `<div class="icard empty" aria-hidden="true"></div>`;
+  if (filter === 'all' && fullBag.length < BAG_CAP) {
+    for (let i = fullBag.length; i < BAG_CAP; i++) {
+      html += `<div class="icard empty" aria-label="Empty inventory slot" role="img"></div>`;
     }
   }
   html += `</div>`;
 
   if (focus) {
-    const col = rarityColor(focus.rarity);
     const up = isUpgrade(g, focus);
     const cur = g[focus.slot];
-    const prim = primaryStat(focus);
-    const cmp = cur
-      ? itemScore(focus) > itemScore(cur)
-        ? 'Better than equipped'
-        : itemScore(focus) < itemScore(cur)
-          ? 'Weaker than equipped'
-          : 'Similar score'
-      : 'Empty slot — safe to equip';
+    const cmp = selectedCompare(focus, cur);
     html += `
-    <div class="gear-detail" style="--rc:${col}">
-      <div class="gd-ico" style="color:${col}">${gearIcon(focus)}</div>
+    <div class="gear-detail r-${focus.rarity}">
+      <div class="gd-ico">${gearIcon(focus)}</div>
       <div class="gd-main">
-        <div class="gd-name" style="color:${col}">${focus.name}</div>
-        <div class="gd-meta">${rarityLabel(focus.rarity)} · ${slotLabel(focus.slot)} · i${focus.ilvl} · ${prim.text}</div>
+        <div class="gd-name">${focus.name}</div>
+        <div class="gd-meta">${slotLabel(focus.slot).toUpperCase()} · ${rarityLabel(focus.rarity).toUpperCase()} · LV ${focus.ilvl}</div>
         <div class="gd-affs">${(focus.affixes || []).map((a) => formatAffix(a)).join(' · ')}</div>
-        <div class="gd-cmp ${up ? 'better' : cur ? 'worse' : 'empty'}">${cmp}</div>
+        <div class="gd-compare">${cmp.line}</div>
+        <div class="gd-cmp ${cmp.tone}">${cmp.delta}</div>
       </div>
       <div class="gd-actions">
         <button type="button" class="gd-equip" data-equip="${focus.id}">${up || !cur ? 'Equip' : 'Swap'}</button>
-        <button type="button" class="gd-sell" data-sell="${focus.id}">Sell · ${sellValue(focus)} sig</button>
+        <button type="button" class="gd-junk" data-junk="${focus.id}">${focus.junk ? 'Keep' : 'Mark junk'}</button>
+        <button type="button" class="gd-sell" data-sell="${focus.id}">Scrap · +${sellValue(focus)} Signal</button>
       </div>
     </div>`;
   } else if (eqItem) {
-    const col = rarityColor(eqItem.rarity);
     const prim = primaryStat(eqItem);
     html += `
-    <div class="gear-detail equipped" style="--rc:${col}">
-      <div class="gd-ico" style="color:${col}">${gearIcon(eqItem)}</div>
+    <div class="gear-detail equipped r-${eqItem.rarity}">
+      <div class="gd-ico">${gearIcon(eqItem)}</div>
       <div class="gd-main">
-        <div class="gd-name" style="color:${col}">${eqItem.name}</div>
+        <div class="gd-name">${eqItem.name}</div>
         <div class="gd-meta">Equipped · ${slotLabel(eqFocus)} · ${rarityLabel(eqItem.rarity)} · ${prim.text}</div>
         <div class="gd-affs">${(eqItem.affixes || []).map((a) => formatAffix(a)).join(' · ')}</div>
       </div>
       <div class="gd-actions">
         <button type="button" class="gd-unequip" data-unequip="${eqFocus}">Unequip</button>
-        <button type="button" class="gd-sell" disabled title="Unequip first">Sell bag only</button>
       </div>
     </div>`;
   } else {
-    html += `<p class="fine bag-empty">Tap slot for stats · Hold to sell junk · Boxes in Menu</p>`;
+    html += `<p class="fine bag-empty">Select an item to compare, equip, mark, or scrap.</p>`;
   }
 
   root.innerHTML = html;
@@ -980,50 +910,52 @@ export function renderHUD(s) {
   const $ = (id) => document.getElementById(id);
   const st = combatStats(s);
   const h = s.run.hero;
+  const pack = packForRoute(s.route, GAME_PACKS);
+  set($('feed-game'), pack?.title || 'Patchline');
+  set($('feed-copy'), FEED_COPY[pack?.genre] || 'Update notes live');
 
   set($('v-bytes'), formatNum(s.run.bytes));
   set($('v-patches'), formatNum(s.run.patches));
-  set($('v-auth'), formatNum(s.authority.amount));
-  set($('v-dps'), formatNum(Math.max(0, Math.round(s.stats.dps))));
   updateLootDrop(s);
   // resource chip pulse on gain
   const chips = document.querySelectorAll('.hud-res .chip');
   if (chips[0]) chips[0].classList.toggle('pulse', !!(s.ui.chipPulse && s.ui.chipPulse.bytes > 0));
   if (chips[1]) chips[1].classList.toggle('pulse', !!(s.ui.chipPulse && s.ui.chipPulse.patches > 0));
-  if (chips[2]) chips[2].classList.toggle('pulse', !!(s.ui.chipPulse && s.ui.chipPulse.auth > 0));
   // Build nav badge when unspent SP
   document.querySelectorAll('.nav-btn[data-panel="skills"]').forEach((b) => {
     b.classList.toggle('has-badge', s.run.hero.sp > 0);
     b.dataset.badge = s.run.hero.sp > 0 ? String(s.run.hero.sp) : '';
   });
-  set($('v-zone'), String(s.run.zone + 1));
-  // Show full economy mult when boost/pro active, else base Live
+  set($('v-zone'), String(s.route.zone + 1));
+  // Live Mult is the launch economy multiplier.
   const eco = economyMult(s);
   set($('v-live'), eco.toFixed(2));
   set($('v-level'), String(h.level));
   set($('v-sp'), String(h.sp));
-  const livePill = document.querySelector('.meta-pill [id="v-live"]')?.parentElement;
+  const livePill = document.querySelector('.stage-stat.live');
   if (livePill) {
-    livePill.title = `Economy ×${eco.toFixed(2)} (Live ${s.meta.live.toFixed(2)}${
-      s.meta.premium?.pro ? ' · Pro' : ''
-    }${boostActive(s) ? ' · 2×' : ''})`;
-    livePill.classList.toggle('pro-on', !!(s.meta.premium?.pro || boostActive(s)));
-  }
-  const proBadge = $('v-pro');
-  if (proBadge) {
-    proBadge.hidden = !s.meta.premium?.pro;
+    livePill.title = `Live Mult ×${eco.toFixed(2)}`;
+    livePill.classList.remove('pro-on');
   }
   // CTA cost + afford state
   const cost = scannerCost(h.scanner);
   const costEl = $('v-cost');
   const scEl = $('v-scanner');
+  const scNextEl = $('v-scanner-next');
+  const deltaEl = $('v-scan-delta');
   const cta = $('btn-scanner');
   if (costEl) costEl.textContent = formatNum(cost);
   if (scEl) scEl.textContent = String(h.scanner);
+  if (scNextEl) scNextEl.textContent = String(h.scanner + 1);
+  if (deltaEl) {
+    const current = scannerDamage(h.scanner);
+    const next = scannerDamage(h.scanner + 1);
+    deltaEl.textContent = `+${Math.max(1, Math.round((next / current - 1) * 100))}%`;
+  }
   if (cta) cta.classList.toggle('is-locked', s.run.bytes < cost);
-  const need = killsNeeded(s.run.zone);
+  const need = killsNeeded(s.route.zone);
   const needXp = xpToNext(h.level);
-  set($('v-kills'), `${s.run.killsInZone}/${need}`);
+  set($('v-kills'), `${s.route.killsInZone}/${need}`);
   set($('v-xp-lab'), `${formatNum(h.xp | 0)}/${formatNum(needXp)}`);
 
   // Left bag FAB badge: upgrades (green) or bag count
@@ -1063,9 +995,9 @@ export function renderHUD(s) {
   }
 
   bar($('bar-xp'), (h.xp / needXp) * 100);
-  bar($('bar-zone'), (s.run.killsInZone / Math.max(1, need)) * 100);
+  bar($('bar-zone'), (s.route.killsInZone / Math.max(1, need)) * 100);
   bar($('bar-energy'), (h.energy / st.eMax) * 100);
-  bar($('bar-mana'), (h.mana / st.mMax) * 100);
+  bar($('bar-focus'), (h.focus / st.fMax) * 100);
 
   // Sprint feedback on energy bar + button
   const sprinting = isSprinting(s);
@@ -1073,22 +1005,19 @@ export function renderHUD(s) {
   if (eWrap) eWrap.classList.toggle('is-sprinting', sprinting);
   const eLab = $('v-energy-lab');
   if (eLab) {
-    if (sprinting) set(eLab, `×${(st.timeScale || 1.85).toFixed(2)} SPEED`);
-    else if (h.energy < st.eMax * 0.2) set(eLab, 'Low — grab orbs');
-    else set(eLab, 'Sprint fuel');
+    const energyPct = Math.round((h.energy / Math.max(1, st.eMax)) * 100);
+    set(eLab, sprinting ? `Active ×${(st.timeScale || 1.85).toFixed(2)}` : `${energyPct}%`);
   }
+  const focusLab = $('v-focus-lab');
+  if (focusLab) set(focusLab, `${Math.round((h.focus / Math.max(1, st.fMax)) * 100)}%`);
   const spBtn = $('btn-sprint');
   if (spBtn) {
-    const auto = hasAutoSprint(s);
     spBtn.classList.toggle('is-active', sprinting);
     spBtn.classList.toggle('is-empty', h.energy < 1);
-    spBtn.classList.toggle('is-auto', auto);
+    spBtn.disabled = h.energy < 1;
+    spBtn.classList.remove('is-auto');
     const sub = spBtn.querySelector('.btn-sprint-sub');
-    if (sub) {
-      if (sprinting) set(sub, auto ? 'AUTO · ×1.85' : `×${(st.timeScale || 1.85).toFixed(2)} LIVE`);
-      else if (h.energy < 1) set(sub, 'Need energy');
-      else set(sub, auto ? 'Auto-Sprint on' : 'Hold · ×1.85 speed');
-    }
+    if (sub) set(sub, 'Hold · ×1.85');
   }
   // Hub badge when claimable
   ensureHub(s);
@@ -1126,7 +1055,10 @@ export function renderHUD(s) {
   ]) {
     const el = $(id);
     if (!el) continue;
-    el.hidden = skillLv(s, sk) < 1;
+    const locked = skillLv(s, sk) < 1;
+    el.hidden = false;
+    el.disabled = locked;
+    el.classList.toggle('locked', locked);
     el.classList.toggle('on', !!on);
     el.setAttribute('aria-pressed', on ? 'true' : 'false');
     const def = SKILLS[sk];
