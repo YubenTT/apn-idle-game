@@ -19,7 +19,7 @@
 | **Route Zone** | Endless world-stage counter; kills-to-clear | `--c-zone` (cyan) | **Yes** |
 | **Rank** | XP track that grants SP | `--c-rep` context | soft-infinite |
 | **Boosts** | Permanent meta upgrades bought with Rep | `--c-rep` | **Yes** |
-| **Build** | Season skill/attribute allocation (Damage/Crit/Utility + skills) | — | No (reset) |
+| **Build** | Temporary Scan/Verify/Relay named-skill allocation | — | No (reset) |
 | **Ship** | Convert Notes → permanent Rep | — | action |
 | **End Season** | Optional prestige at a checkpoint → +Live Mult | `--apn-primary` | action |
 | **Gear** | Equippable items with rarity; loadout + inventory | rarity tokens | **Yes** (collection) |
@@ -50,7 +50,8 @@ is how you read the code.
 | `bytes` | **Signal** | rename target: `signal` |
 | `patches` | **Notes** | rename target: `notes` |
 | `authority` | **Rep** | rename target: `rep` |
-| `scan` / `verify` / `amplify` | Damage / Crit / Utility attrs | Build attributes |
+| `scan` / `verify` / `amplify` | derived Scan / Verify / Relay Mastery compatibility | retired as purchasable attrs; removed from UI in PR-4b |
+| `hero.buildVersion` | Build V2 migration marker | prevents duplicate SP refunds inside save v3 |
 | `scanner` | Weapon level | "Upgrade Weapon" object |
 | `mask` | (legacy skill grouping) | see `content.SKILLS` |
 | `hero.energy` / legacy `hero.mana` | Energy / **Focus** | legacy `mana` migrates on load |

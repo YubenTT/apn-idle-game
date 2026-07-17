@@ -18,6 +18,9 @@ import {
   isGoLiveBoundary,
   goLiveBoundaryAtOrBelow,
   nextGoLiveBoundary,
+  spentSkillPoints,
+  verifyYieldMultiplier,
+  relayIdleEfficiency,
 } from './formulas.js?v=free-mvp-r005';
 import { SEASON, META, SKILLS, ENEMY_FLAVOR, skillSpCost } from './content.js?v=free-mvp-r005';
 import {
@@ -113,6 +116,8 @@ export function createState() {
         focus: C.FOCUS_MAX,
         scanner: 0,
         skills: {},
+        /** Build V2 shape marker; save v3 is intentionally not bumped again. */
+        buildVersion: 2,
         trackerOn: false,
         deepOn: false,
         trackerStacks: 0,
@@ -166,6 +171,38 @@ export function createState() {
 
 export function skillLv(s, id) {
   return s.run.hero.skills[id] || 0;
+}
+
+const BUILD_BRANCH_TREE = Object.freeze({ scan: 'scan', verify: 'verify', relay: 'amplify' });
+
+/** Branch Mastery is derived only from named-ability SP spend. */
+export function branchMastery(s, branch) {
+  const tree = BUILD_BRANCH_TREE[branch];
+  if (!tree) return 0;
+  return Object.values(SKILLS)
+    .filter((skill) => skill.tree === tree)
+    .reduce((sum, skill) => sum + spentSkillPoints(skillLv(s, skill.id)), 0);
+}
+
+export function buildMastery(s) {
+  return ['scan', 'verify', 'relay'].reduce((sum, branch) => sum + branchMastery(s, branch), 0);
+}
+
+export function buildYieldMultiplier(s) {
+  return verifyYieldMultiplier(branchMastery(s, 'verify'));
+}
+
+export function relayOfflineEfficiency(s) {
+  return relayIdleEfficiency(branchMastery(s, 'relay'));
+}
+
+function syncLegacyMasteryFields(s) {
+  const h = s.run.hero;
+  // Transitional read compatibility for PR-4a's old Build renderer. These are
+  // derived counters, not purchasable attributes, and combat never reads them.
+  h.scan = branchMastery(s, 'scan');
+  h.verify = branchMastery(s, 'verify');
+  h.amplify = branchMastery(s, 'relay');
 }
 
 export function metaLv(s, id) {
@@ -234,7 +271,6 @@ export function combatStats(s) {
   const g = gearBonuses(s.meta.gear);
   const flat = metaPer(s, 'cold_start') + (g.flat_dmg || 0);
   let dmg = scannerDamage(h.scanner, flat);
-  dmg *= 1 + 0.024 * h.scan;
   dmg *= 1 + metaPer(s, 'signal_power');
   dmg *= 1 + (g.dmg_pct || 0) / 100;
   dmg *= economyMult(s);
@@ -242,14 +278,14 @@ export function combatStats(s) {
   const sharp = skillLv(s, 'sharp_eye');
   let crit = Math.min(
     0.72,
-    0.012 * h.verify + (g.crit_pct || 0) / 100 + 0.015 * sharp
+    (g.crit_pct || 0) / 100 + 0.015 * sharp
   );
   let interval = C.ATTACK_INTERVAL / (1 + (g.atk_spd || 0) / 100);
   let move = C.MOVE_SPEED * (1 + metaPer(s, 'feed_speed')) * (1 + (g.move_pct || 0) / 100);
-  let eMax = C.ENERGY_MAX + 4 * h.verify + (g.energy || 0);
+  let eMax = C.ENERGY_MAX + (g.energy || 0);
   let eRegen = C.ENERGY_REGEN + (g.e_regen || 0);
-  let fMax = C.FOCUS_MAX + 8 * h.amplify;
-  let fRegen = C.FOCUS_REGEN + 0.08 * h.amplify;
+  let fMax = C.FOCUS_MAX;
+  let fRegen = C.FOCUS_REGEN;
   let skillMult = 1;
   let sprintDrain = C.SPRINT_DRAIN;
   let timeScale = 1;
@@ -501,7 +537,10 @@ function onKill(s, e) {
   const gb = gearBonuses(s.meta.gear);
   const eco = economyMult(s);
   const byteM =
-    (1 + metaPer(s, 'byte_gain')) * (1 + (gb.signal_pct || 0) / 100) * eco;
+    (1 + metaPer(s, 'byte_gain')) *
+    (1 + (gb.signal_pct || 0) / 100) *
+    eco *
+    buildYieldMultiplier(s);
   let typeByte = 1;
   let typeXp = 1;
   if (e.type === 'lag' || e.type === 'spoiler' || e.type === 'event') {
@@ -539,7 +578,10 @@ function onKill(s, e) {
   );
 
   const patchM =
-    (1 + metaPer(s, 'patch_gain')) * (1 + (gb.notes_pct || 0) / 100) * eco;
+    (1 + metaPer(s, 'patch_gain')) *
+    (1 + (gb.notes_pct || 0) / 100) *
+    eco *
+    buildYieldMultiplier(s);
   if (e.type === 'patch') {
     const p = C.PATCH_FROM_CHAMP * patchM;
     s.run.patches += p;
@@ -897,7 +939,12 @@ export function collectAlert(s, a) {
     );
     floater(s, a.x, a.y, '+ENERGY', '#10B981');
   } else {
-    const b = (4 + 0.6 * s.route.zone) * bonus * n * economyMult(s);
+    const b =
+      (4 + 0.6 * s.route.zone) *
+      bonus *
+      n *
+      economyMult(s) *
+      buildYieldMultiplier(s);
     s.run.bytes += b;
     floater(s, a.x, a.y, `+${b | 0} Signal`, '#6cb8ff');
   }
@@ -949,10 +996,6 @@ export function canLearn(s, id) {
   if (cur >= d.max) return false;
   const cost = skillSpCost(cur);
   if (s.run.hero.sp < cost) return false;
-  const h = s.run.hero;
-  if (d.req.scan && h.scan < d.req.scan) return false;
-  if (d.req.verify && h.verify < d.req.verify) return false;
-  if (d.req.amplify && h.amplify < d.req.amplify) return false;
   return true;
 }
 
@@ -961,16 +1004,16 @@ export function nextSkillCost(s, id) {
 }
 
 export function allocAttr(s, attr) {
-  if (s.run.hero.sp < 1) return false;
-  if (!['scan', 'verify', 'amplify'].includes(attr)) return false;
-  s.run.hero.sp -= 1;
-  s.run.hero[attr] += 1;
-  s.ui.panelDirty = true;
-  confetti(s, s.world.heroX, 200, ['#FC1243', '#e6b84d', '#5eb0ff', '#fff'], 14);
-  const lab = attr === 'scan' ? 'DAMAGE' : attr === 'verify' ? 'CRIT' : 'UTILITY';
-  floater(s, s.world.heroX, 140, `+${lab}`, '#e6b84d');
-  if (s.settings.sfx !== false) sfx('buy');
-  return true;
+  const tree = attr === 'relay' ? 'amplify' : attr;
+  if (!['scan', 'verify', 'amplify'].includes(tree)) return false;
+  const candidate = Object.values(SKILLS)
+    .filter((skill) => skill.tree === tree && skillLv(s, skill.id) < skill.max)
+    .sort((a, b) =>
+      nextSkillCost(s, a.id) - nextSkillCost(s, b.id) ||
+      skillLv(s, a.id) - skillLv(s, b.id) ||
+      a.id.localeCompare(b.id)
+    )[0];
+  return candidate ? allocSkill(s, candidate.id) : false;
 }
 
 export function allocSkill(s, id) {
@@ -980,6 +1023,7 @@ export function allocSkill(s, id) {
   s.run.hero.sp -= cost;
   s.run.hero.skills[id] = (s.run.hero.skills[id] || 0) + 1;
   if (id === 'live_tracker') s.run.hero.trackerOn = true;
+  syncLegacyMasteryFields(s);
   s.ui.panelDirty = true;
   confetti(s, s.world.heroX, 190, ['#FC1243', '#fff', '#3ecf8e'], 16);
   floater(s, s.world.heroX, 145, `${d.name} ·${cost}SP`, tone('sp'), true);
@@ -1354,7 +1398,7 @@ export function simulateOffline(s, seconds) {
   // overflow is banked — otherwise 8h AFK past a boundary would farm prestige fuel.
   const reachedBoundary = s.route.zone >= budget.boundary;
   if (overflowSeconds > 0 && !reachedBoundary) {
-    const idle = C.IDLE_EFF;
+    const idle = relayOfflineEfficiency(s);
     const db = Math.max(0, s.run.bytes - before.bytes);
     const dp = Math.max(0, s.run.patches - before.patches);
     const signalRate = db > 0 ? db / Math.max(sim, 1) : C.BYTE_BASE / 10;

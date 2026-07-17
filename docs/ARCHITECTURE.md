@@ -64,6 +64,8 @@ flowchart TB
 ### `formulas.js`
 
 - Export `C` (balance table) and pure functions.
+- Own named-ability SP costs, exact spent-SP reconstruction, Verify yield, and
+  Relay offline-efficiency formulas. Presentation never recreates these values.
 - No `document`, no `localStorage`, no randomness that depends on UI.
 - Safe in Node tests.
 
@@ -73,6 +75,9 @@ flowchart TB
 - Owns `s.world` (enemies, particles, sprint flag), `s.run`, `s.meta`, and Route
   state transitions. Combat reads world progress from `s.route`.
 - May import comedy / content; must still run under Node with stubbed optional SFX.
+- Build V2 exposes `branchMastery` / `buildMastery` as derived values. Scan uses
+  combat-throughput skills, Verify owns cycle-value yield, and Relay owns offline
+  continuity; the retired generic attributes are not combat inputs.
 
 ### `route.js`
 
@@ -116,8 +121,11 @@ flowchart TB
 
 ### `save.js`
 
-- Schema version `v: 2`; writes `apn_idle_save_v2` only.
-- Loads v2 first, then v1; v1 `run.zone` / `run.killsInZone` migrate to `s.route`.
+- Schema version `v: 3`; writes `apn_idle_save_v2` only and refuses to overwrite
+  a higher-version save.
+- Loads v3, then v2/v1. Build V2 is a second shape migration inside v3:
+  legacy attribute points plus reconstructible named-skill costs are refunded
+  exactly once, the old allocation is cleared, and `hero.buildVersion=2` marks it.
 - The v1 key remains rollback evidence until explicit New Game clears both keys.
 - Persist Route + run + meta + settings (including Gear sort/filter preferences);
   strip ephemeral animation fields.
@@ -135,14 +143,17 @@ s
 ├── route       zone, killsInZone, currentPackId, history, deck, seed, catalogVersion
 ├── run
 │   ├── bytes (Signal), patches (Notes)
-│   └── hero { level, xp, sp, scan, verify, amplify, scanner, skills, energy, focus, … }
+│   └── hero { level, xp, sp, scanner, skills, buildVersion, energy, focus, … }
 ├── world       enemies, alerts, floaters, particles, confetti, sprinting, scroll
 ├── ui          panel, toast, seasonDone, tips, chipPulse, fx
 ├── stats       dps, combo
 └── settings    reducedMotion, sfx, gearSort, gearFilter, lastTs
 ```
 
-Naming debt: internal `bytes` / `patches` / `authority` / `scan` map to UI Signal / Notes / Rep / Damage. Renames should be schema-migrated in `save.js` when done.
+Naming debt: internal `bytes` / `patches` / `authority` map to UI Signal / Notes /
+Rep. `scan` / `verify` / `amplify` remain temporary derived-read compatibility
+through PR-4b; they no longer store purchasable power. Renames must be migrated in
+`save.js`, never performed as a blind field swap.
 
 ## Fixed timestep
 

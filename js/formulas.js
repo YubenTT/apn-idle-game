@@ -54,6 +54,9 @@ export const C = {
   SHIP_RATE: 1,
   OFFLINE_CAP: 8 * 3600,
   IDLE_EFF: 0.88,
+  VERIFY_YIELD_PER_MASTERY: 0.012,
+  VERIFY_YIELD_CAP: 0.3,
+  RELAY_OFFLINE_PER_MASTERY: 0.01,
   ALERT_INTERVAL: 3.2,
   SP_PER_LEVEL: 3,
   SEASON_ZONES: 20,
@@ -71,6 +74,32 @@ export const easeOutCubic = (t) => 1 - (1 - t) ** 3;
 export const easeOutQuad = (t) => 1 - (1 - t) ** 2;
 export const lerp = (a, b, t) => a + (b - a) * t;
 export const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+
+/** SP cost to raise a named ability from current rank to the next rank. */
+export function skillSpCost(currentRank) {
+  return 1 + Math.floor(Math.max(0, Number(currentRank) || 0) / 5);
+}
+
+/** Exact reconstructible SP spend for a persisted named-ability rank. */
+export function spentSkillPoints(rank) {
+  const safeRank = Math.max(0, Math.floor(Number(rank) || 0));
+  const completeBands = Math.floor(safeRank / 5);
+  const remainder = safeRank % 5;
+  // Five ranks per cost band: 5×1, 5×2, …, then the partial next band.
+  return 5 * completeBands * (completeBands + 1) / 2 + remainder * (completeBands + 1);
+}
+
+/** Verify is the cycle-value axis. Numeric target tuning remains in PR-9. */
+export function verifyYieldMultiplier(mastery) {
+  const spent = Math.max(0, Number(mastery) || 0);
+  return 1 + Math.min(C.VERIFY_YIELD_CAP, spent * C.VERIFY_YIELD_PER_MASTERY);
+}
+
+/** Relay preserves more earned value while away, never exceeding active yield. */
+export function relayIdleEfficiency(mastery) {
+  const spent = Math.max(0, Number(mastery) || 0);
+  return Math.min(1, C.IDLE_EFF + spent * C.RELAY_OFFLINE_PER_MASTERY);
+}
 
 export function scannerCost(level) {
   return Math.floor(C.SCANNER_COST_BASE * C.SCANNER_COST_GROWTH ** level);
