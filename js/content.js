@@ -1,5 +1,7 @@
 /** APN Idle content — skills, permanent Boosts, tips */
 
+import { skillSpCost as buildSkillSpCost } from './formulas.js?v=free-mvp-r005';
+
 export const SEASON = {
   id: 'season_01',
   name: 'Launch Week Feed',
@@ -204,7 +206,7 @@ export const SKILLS = {
 
 /** SP cost to raise a skill from current level → next (scalable sink) */
 export function skillSpCost(currentLv) {
-  return 1 + Math.floor(Math.max(0, currentLv) / 5);
+  return buildSkillSpCost(currentLv);
 }
 
 /** Tree section order for Build UI */

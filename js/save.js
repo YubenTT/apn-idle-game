@@ -1,11 +1,41 @@
 import { normalizeGear, emptyGear, GEAR_SORTS, GEAR_FILTERS } from './loot.js?v=free-mvp-r005';
 import { normalizeRoute } from './route.js?v=free-mvp-r005';
-import { C } from './formulas.js?v=free-mvp-r005';
+import { C, spentSkillPoints } from './formulas.js?v=free-mvp-r005';
+import { SKILLS } from './content.js?v=free-mvp-r005';
 
 export const SAVE_KEY_V1 = 'apn_idle_save_v1';
 export const SAVE_KEY_V2 = 'apn_idle_save_v2';
 /** Current persisted save-schema version (Go Live checkpoint model, ADR-0008). */
 export const SAVE_VERSION = 3;
+
+function migrateBuildV2(hero, sourceBuildVersion) {
+  if (!hero || sourceBuildVersion === 2) return 0;
+  const legacySkills = { ...(hero.skills || {}) };
+  // These ranks were retired before Build V2; the audit explicitly accepts
+  // their historical loss, so they cannot mint new SP during this migration.
+  delete legacySkills.verified_mask;
+  delete legacySkills.editor_pick;
+  const attrRefund = ['scan', 'verify', 'amplify'].reduce(
+    (sum, key) => sum + Math.max(0, Math.floor(Number(hero[key]) || 0)),
+    0
+  );
+  const skillRefund = Object.keys(SKILLS).reduce(
+    (sum, id) =>
+      sum + spentSkillPoints(Math.min(SKILLS[id].max, Math.max(0, Number(legacySkills[id]) || 0))),
+    0
+  );
+  const refund = attrRefund + skillRefund;
+  hero.sp = Math.max(0, Math.floor(Number(hero.sp) || 0)) + refund;
+  hero.skills = {};
+  hero.scan = 0;
+  hero.verify = 0;
+  hero.amplify = 0;
+  hero.trackerOn = false;
+  hero.deepOn = false;
+  hero.trackerStacks = 0;
+  hero.buildVersion = 2;
+  return refund;
+}
 
 export function save(s) {
   const data = {
@@ -127,14 +157,6 @@ export function apply(s, d) {
   if (!Number.isFinite(s.meta.pendingGoLiveZone)) s.meta.pendingGoLiveZone = 0;
   if (!Number.isFinite(s.meta.lastGoLiveZone)) s.meta.lastGoLiveZone = 0;
   delete s.meta.season;
-  // strip legacy mask skills from save
-  if (s.run.hero) {
-    delete s.run.hero.mask;
-    if (s.run.hero.skills) {
-      delete s.run.hero.skills.verified_mask;
-      delete s.run.hero.skills.editor_pick;
-    }
-  }
   if (d.authority) {
     s.authority.amount = d.authority.amount || 0;
     s.authority.shippedThisSeason = d.authority.shippedThisSeason || 0;
@@ -149,6 +171,12 @@ export function apply(s, d) {
       delete hero.mana;
       Object.assign(s.run.hero, hero);
     }
+  }
+  // Second save-shape migration chained onto v3: refund every reconstructible
+  // legacy Build point once, then mark the new shape without a version bump.
+  if (s.run.hero) {
+    delete s.run.hero.mask;
+    migrateBuildV2(s.run.hero, d.run?.hero?.buildVersion);
   }
   if (d.ui) {
     s.ui.tips = d.ui.tips || {};

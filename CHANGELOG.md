@@ -62,6 +62,10 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Changed
 
+- Replaced the generic Damage/Crit/Utility Build tax in the domain with named
+  Scan/Verify/Relay axes and derived Mastery; legacy v3 allocations now receive
+  an exact, idempotent SP refund, and three deterministic builds reach Zone 200.
+
 - Rebuilt Run as one continuous mobile game surface: the combat Canvas now reaches
   both app edges; Zone/Rank/Live sit in a flat telemetry band; Energy and Focus
   expose live values; Sprint copy stays stable; the action dock uses a clear

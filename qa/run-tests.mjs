@@ -33,6 +33,10 @@ import {
   END_SEASON_CONTRACT,
   metaUpgradePreview,
   recommendedMetaId,
+  branchMastery,
+  buildMastery,
+  buildYieldMultiplier,
+  relayOfflineEfficiency,
 } from '../js/game.js';
 import {
   emptyGear,
@@ -49,7 +53,7 @@ import {
   queryGearBag,
   toggleJunk,
 } from '../js/loot.js';
-import { SKILLS, nextSkillUnlock } from '../js/content.js';
+import { SKILLS, nextSkillUnlock, skillSpCost } from '../js/content.js';
 import {
   hubOnKill,
   emptyHub,
@@ -408,6 +412,62 @@ applySave(mV2over, {
 ok(mV2over.meta.pendingGoLiveZone === 20, 'matrix v2 overshoot z27: pending=20 (not 40)');
 ok(canGoLive(mV2over) && mV2over.meta.goLiveCount === 2, 'matrix v2 overshoot: available now, count preserved');
 
+// Row 3b: second v3 shape migration refunds the legacy attribute tax and every
+// reconstructible named-skill rank exactly once. Retired mask skills remain the
+// explicitly accepted historical loss and are not refunded.
+const legacyBuild = createState();
+applySave(legacyBuild, {
+  v: 3,
+  ts: 1,
+  route: { zone: 12, killsInZone: 3 },
+  run: {
+    bytes: 7,
+    patches: 2,
+    hero: {
+      level: 8,
+      xp: 4,
+      sp: 2,
+      scan: 3,
+      verify: 2,
+      amplify: 1,
+      skills: { hotfix: 6, notify: 2, marathon: 1, verified_mask: 9 },
+    },
+  },
+});
+const hotfixRefund = Array.from({ length: 6 }, (_, rank) => skillSpCost(rank)).reduce((a, b) => a + b, 0);
+const notifyRefund = Array.from({ length: 2 }, (_, rank) => skillSpCost(rank)).reduce((a, b) => a + b, 0);
+const expectedBuildRefund = 2 + 3 + 2 + 1 + hotfixRefund + notifyRefund + 1;
+ok(legacyBuild.run.hero.sp === expectedBuildRefund, `v3 build refund exact (${expectedBuildRefund} SP)`);
+ok(legacyBuild.run.hero.buildVersion === 2, 'v3 build migration marker written');
+ok(Object.keys(legacyBuild.run.hero.skills).length === 0, 'v3 legacy build ranks reset for a clean respec');
+ok(legacyBuild.run.hero.scan === 0 && legacyBuild.run.hero.verify === 0 && legacyBuild.run.hero.amplify === 0, 'v3 generic attribute tax retired');
+
+const refundRoundTrip = JSON.parse(JSON.stringify({
+  v: 3,
+  ts: 2,
+  meta: legacyBuild.meta,
+  authority: legacyBuild.authority,
+  route: legacyBuild.route,
+  run: legacyBuild.run,
+  ui: legacyBuild.ui,
+  settings: legacyBuild.settings,
+}));
+const migratedAgain = createState();
+applySave(migratedAgain, refundRoundTrip);
+ok(migratedAgain.run.hero.sp === expectedBuildRefund, 'v3 build refund is idempotent on reload');
+
+const masteryState = createState();
+masteryState.run.hero.sp = 20;
+for (let i = 0; i < 6; i++) allocSkill(masteryState, 'scroll_speed');
+for (let i = 0; i < 2; i++) allocSkill(masteryState, 'notify');
+for (let i = 0; i < 3; i++) allocSkill(masteryState, 'marathon');
+ok(branchMastery(masteryState, 'scan') === 7, 'Scan Mastery derives from spent SP');
+ok(branchMastery(masteryState, 'verify') === 2, 'Verify Mastery derives from spent SP');
+ok(branchMastery(masteryState, 'relay') === 3, 'Relay Mastery derives from spent SP');
+ok(buildMastery(masteryState) === 12, 'Build Mastery sums branch spend');
+ok(buildYieldMultiplier(masteryState) > 1, 'Verify creates cycle-value yield');
+ok(relayOfflineEfficiency(masteryState) > C.IDLE_EFF, 'Relay improves offline continuity');
+
 // Row 4: 8h offline crossing the boundary banks only pre-boundary Notes (no 7.5h farm).
 const savedRandom = Math.random;
 installSeededRandom(0x41504e);
@@ -459,7 +519,7 @@ const s = createState();
 s.run.hero.scanner = 5;
 let sawAnchoredDamage = false;
 let sawSignalFlight = false;
-for (let i = 0; i < 60 * 8; i++) {
+for (let i = 0; i < 60 * 12; i++) {
   step(s, C.FIXED_DT);
   if (s.world.floaters.some((floater) => floater.anchorId)) sawAnchoredDamage = true;
   if (s.world.lootFlights?.some((flight) => flight.target === 'signal')) sawSignalFlight = true;
@@ -488,8 +548,7 @@ ok(castHotfix(s3) || s3.world.enemies.length === 0, 'hotfix cast');
 // —— Sharp eye unlock path ——
 const sSharp = createState();
 sSharp.run.hero.sp = 20;
-for (let i = 0; i < 5; i++) allocAttr(sSharp, 'verify');
-ok(allocSkill(sSharp, 'sharp_eye'), 'learn sharp eye at Crit 5');
+ok(allocSkill(sSharp, 'sharp_eye'), 'learn Source Lock directly without attribute tax');
 ok(skillLv(sSharp, 'sharp_eye') === 1, 'sharp eye rank 1');
 const crit0 = createState();
 const crit1 = createState();

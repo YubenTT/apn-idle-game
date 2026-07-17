@@ -1,5 +1,20 @@
 # APN Idle redesign V1 — QA report
 
+## PR-4a · Build V2 domain
+
+Issue #21 replaces the generic attribute tax at the domain/save layer. The v3
+shape migration reconstructs every supported skill-rank cost, adds the three
+legacy attribute spends plus unspent SP, clears the old allocation, and writes a
+`buildVersion` marker so reload cannot refund twice. Retired mask skills remain
+the explicitly accepted historical loss.
+
+Deterministic evidence:
+
+- exact fixture refund: 18 SP, unchanged after a second load;
+- Scan/Verify/Relay Mastery: 7/2/3 SP from named ranks, total 12;
+- seeded Zone-200 profiles: Scan 6.9 h, Verify 17.7 h, Relay 19.7 h;
+- `node qa/run-tests.mjs` → `ALL PASS`.
+
 - Build: `feat/R-005-free-mvp-economy` stacked on `release/apn-idle-redesign-v1`
 - Evidence date: 2026-07-15
 - Browser: direct Chrome Extension control, always `mute=1`

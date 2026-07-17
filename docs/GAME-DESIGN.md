@@ -30,6 +30,11 @@ and you get stronger the longer the feed stays live.
 
 ### Progression
 
+Build V2 removes the generic Damage/Crit/Utility attribute tax. SP buys named
+skills directly across **Scan** (cycle speed), **Verify** (cycle value), and
+**Relay** (offline continuity). Branch Mastery is derived from spent SP. Existing
+v3 saves receive one deterministic refund and a clean respec on first load.
+
 | Track | Unit | Cap |
 |-------|------|-----|
 | Route Zone | kills to clear | **Endless; survives End Season** |
