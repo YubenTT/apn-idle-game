@@ -378,6 +378,7 @@ export function bindUI(s) {
   $('chk-motion')?.addEventListener('change', (e) => {
     s.settings.reducedMotion = e.target.checked;
     applyMotionPreference(e.target.checked);
+    if (s.settings.sfx !== false) sfx('toggle');
     save(s);
   });
   $('chk-sfx')?.addEventListener('change', (e) => {
@@ -385,7 +386,7 @@ export function bindUI(s) {
     setMuted(!e.target.checked);
     if (e.target.checked) {
       unlockAudio();
-      sfx('click');
+      sfx('toggle');
     }
     save(s);
   });
@@ -1198,6 +1199,8 @@ export function renderHUD(s) {
     const eq = equippedCount(gear);
     bagBtn.classList.toggle('has-up', ups > 0);
     bagBtn.classList.toggle('active', s.ui.panel === 'gear');
+    // badge pop when a drop flies in (domain chipPulse.bag drives .pulse)
+    bagBtn.classList.toggle('pulse', !!(s.ui.chipPulse && s.ui.chipPulse.bag > 0));
     bagBtn.title =
       ups > 0
         ? `Gear · ${ups} better piece${ups > 1 ? 's' : ''} ready · ${eq}/4`

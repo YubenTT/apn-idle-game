@@ -9,6 +9,23 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Added
 
+- V2 Super Polish · Wave 3 juice & feel: kill hit stop (40–110ms timescale dip,
+  bigger on crit kills and boss breaks), tuned screen shake with smooth decay,
+  crit presentation (white-hot flash frame, big gold scale-pop number, radial
+  ring), token-colored death-burst shards with white-hot accents + shock rings
+  (boss: staggered multi-ring), stage-aware effect origins (bursts spawn at the
+  body via `world.groundY`, not the legacy sky line), slim combo decay meter
+  under the streak chip, milestone streak counters (10/25/50) center-stage,
+  zone-clear light sweep + "Zone N cleared" toast + confetti, wired hero
+  `levelT` / `lootT` / `defeatT` clip clocks (rank jump + golden halo ring,
+  gear reach-pull, boss-fail buckle), gear drops fly rarity-colored to the bag
+  FAB with a badge pop, and a Go Live mini-cinematic (screen flash → slow-mo
+  beat → confetti storm + Live Mult count-up). SFX enriched: layered hit/crit/
+  kill cues, loot chirp arpeggio, rank arpeggio, zone fanfare, Go Live resolve
+  chord, combo blip, toggle tick, deny buzz — one modest master bus, all under
+  the existing mute + reduced-motion gates. Hard particle/confetti caps now
+  enforced (PERF-BUDGET). Evidence: `qa/screenshots/v2-wave3/`.
+
 - V2 Super Polish · Wave 2 chrome overhaul: rAF count-up currency counters,
   glossy Scanner CTA with shine sweep and locked muted state, structured skill
   chips (name · cost/state · rank pips · Focus charge fill), spring sheet

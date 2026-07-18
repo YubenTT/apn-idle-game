@@ -45,7 +45,9 @@ a reason.
 ## Canvas 2D specifics (this engine)
 
 - **Max 1 living enemy** by design — keep the draw list tiny. Particle/floater caps
-  live in `game.js`; don't remove them.
+  live in `game.js`; don't remove them. Current hard caps (Wave 3): particles 260,
+  confetti 200, floaters 40, shock rings 14, loot flights 14 — all trimmed at
+  spawn, never in the sim.
 - Cache decoded images (`render.js` image cache); never decode per frame.
 - Prefer integer blit positions and pre-composited sprites over per-frame filters.
 - Respect **Reduced motion**: fewer particles, no confetti storms — same toggle

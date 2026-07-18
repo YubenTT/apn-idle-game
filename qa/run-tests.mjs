@@ -32,6 +32,7 @@ import {
   skillLv,
   claimHubObjective,
   normalizeGear,
+  confetti,
   END_SEASON_CONTRACT,
   metaUpgradePreview,
   recommendedMetaId,
@@ -601,15 +602,87 @@ const s = createState();
 s.run.hero.scanner = 5;
 let sawAnchoredDamage = false;
 let sawSignalFlight = false;
+let sawHitStop = false;
+let sawShockRing = false;
 for (let i = 0; i < 60 * 12; i++) {
   step(s, C.FIXED_DT);
   if (s.world.floaters.some((floater) => floater.anchorId)) sawAnchoredDamage = true;
   if (s.world.lootFlights?.some((flight) => flight.target === 'signal')) sawSignalFlight = true;
+  if (s.world.hitStopT > 0) sawHitStop = true;
+  if (s.world.shocks.length > 0) sawShockRing = true;
 }
 ok(s.meta.kills > 0, `kills occur (${s.meta.kills})`);
 ok(s.run.bytes > 0, `bytes drop (${s.run.bytes | 0})`);
 ok(sawAnchoredDamage, 'damage numbers anchor to target');
 ok(sawSignalFlight, 'Signal reward flies to resource strip');
+ok(sawHitStop, 'Wave 3: kill hit stop engages');
+ok(sawShockRing, 'Wave 3: death burst shock rings fire');
+
+// —— Wave 3 juice: cosmetic fields, gates, caps ——
+const juice = createState();
+juice.run.hero.scanner = 5;
+step(juice, 1);
+ok(juice.world.hitStopT >= 0 && juice.world.slowMoT === 0, 'Wave 3: fresh run has no slow-mo');
+
+// Deterministic rank-up: scanner 40 one-shots early feed noise, XP accrues fast.
+const rankJuice = createState();
+rankJuice.run.hero.scanner = 40;
+let sawLevelClock = false;
+for (let i = 0; i < 60 * 6 && !sawLevelClock; i++) {
+  step(rankJuice, C.FIXED_DT);
+  if (rankJuice.run.hero.levelT > 0) sawLevelClock = true;
+}
+ok(sawLevelClock, 'Wave 3: rank-up hero levelT clock runs');
+
+// Deterministic zone clear: park one kill below the zone target.
+const sweepJuice = createState();
+sweepJuice.run.hero.scanner = 40;
+sweepJuice.route.killsInZone = killsNeeded(0) - 1;
+let sawZoneSweep = false;
+for (let i = 0; i < 60 * 6 && !sawZoneSweep; i++) {
+  step(sweepJuice, C.FIXED_DT);
+  if (sweepJuice.ui.fx?.kind === 'sweep') sawZoneSweep = true;
+}
+ok(sawZoneSweep, 'Wave 3: zone-clear light sweep fires');
+ok(sweepJuice.route.zone === 1, 'Wave 3: the zone actually advanced');
+
+const glJuice = createState();
+glJuice.route.zone = 10;
+glJuice.meta.pendingGoLiveZone = 10;
+glJuice.authority.shippedThisSeason = 300;
+const glJuiceRec = goLive(glJuice);
+ok(glJuiceRec && glJuice.ui.fx?.kind === 'golive', 'Wave 3: Go Live fires its cinematic fx');
+ok(glJuice.ui.fx.from < glJuice.ui.fx.to, 'Wave 3: Go Live count-up runs from old to new Live Mult');
+ok(glJuice.world.slowMoT > 0, 'Wave 3: Go Live slow-mo beat engages');
+
+// Reduced motion gates every motion-juice channel.
+const calm = createState();
+calm.settings.reducedMotion = true;
+calm.run.hero.scanner = 40; // one-shot kills so the gate check is deterministic
+for (let i = 0; i < 60 * 6; i++) step(calm, C.FIXED_DT);
+ok(calm.meta.kills > 0, 'Wave 3 calm: kills still occur under reduced motion');
+ok(calm.world.hitStopT === 0, 'Wave 3 calm: reduced motion gates hit stop');
+ok(calm.world.shake === 0, 'Wave 3 calm: reduced motion gates screen shake');
+ok(calm.world.shocks.length === 0, 'Wave 3 calm: reduced motion gates shock rings');
+ok(calm.world.particles.length === 0 && calm.world.confetti.length === 0, 'Wave 3 calm: reduced motion gates particles + confetti');
+ok(calm.run.hero.levelT === 0, 'Wave 3 calm: reduced motion gates the rank jump clock');
+ok(calm.ui.fx?.kind !== 'sweep' && calm.ui.fx?.kind !== 'golive', 'Wave 3 calm: reduced motion gates sweep fx');
+
+const calmGo = createState();
+calmGo.settings.reducedMotion = true;
+calmGo.route.zone = 10;
+calmGo.meta.pendingGoLiveZone = 10;
+goLive(calmGo);
+ok(calmGo.world.slowMoT === 0, 'Wave 3 calm: reduced motion gates Go Live slow-mo');
+ok(calmGo.ui.fx?.kind === 'golive', 'Wave 3 calm: Go Live still shows its (static) count-up');
+
+// Perf caps hold under spam.
+const capState = createState();
+for (let i = 0; i < 30; i++) confetti(capState, 100, 100, ['#fff'], 22);
+ok(capState.world.confetti.length <= 200, 'Wave 3: confetti storm respects the perf cap');
+for (const cue of ['golive', 'zone', 'combo', 'deny', 'toggle']) {
+  ok(hapticPattern(cue).length > 0, `Wave 3: ${cue} owns a deterministic haptic cue`);
+}
 
 // —— No masks in catalog ——
 ok(!SKILLS.verified_mask, 'no crit mask skill');

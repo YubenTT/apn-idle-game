@@ -910,6 +910,27 @@ canvas {
   z-index: 8;
 }
 
+/* drop arrival pop — domain chipPulse.bag drives .pulse (transform only) */
+.bag-fab.pulse {
+  animation: fab-drop-pop var(--dur-pop) var(--ease-spring);
+}
+
+.bag-fab.pulse .bag-fab-badge {
+  animation: fab-badge-pop var(--dur-pop) var(--ease-spring);
+}
+
+@keyframes fab-drop-pop {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.14); }
+  100% { transform: scale(1); }
+}
+
+@keyframes fab-badge-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.45); }
+  100% { transform: scale(1); }
+}
+
 /* ---- NAV (44–48px targets, clear active) — 5 tabs, Gear is left bag ---- */
 .hud-nav {
   flex: 0 0 auto;

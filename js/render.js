@@ -12,6 +12,7 @@ export const CANVAS_TONE_TOKENS = Object.freeze({
   signal: '--c-signal',
   notes: '--c-notes',
   sp: '--c-sp',
+  zone: '--c-zone',
 });
 const canvasToneColors = new Map();
 
@@ -75,7 +76,10 @@ export function draw(ctx, w, h, s, assetStore = null) {
 
   // enemies (living + dying)
   const show = s.world.enemies.filter((e) => e.hp > 0 || (e.deathT && e.deathT > 0));
-  show.forEach((e) => drawEnemy(ctx, e, gy, t, packAssets, s.settings.reducedMotion, stageFit));
+  show.forEach((e) => {
+    drawEnemy(ctx, e, gy, t, packAssets, s.settings.reducedMotion, stageFit);
+    if (e.critFlash > 0) drawCritFlash(ctx, e, gy, stageFit);
+  });
 
   // hero
   drawHero(ctx, s.world.heroDisplayX, gy, s, t, stageFit);
@@ -83,8 +87,11 @@ export function draw(ctx, w, h, s, assetStore = null) {
   // particles
   for (const p of s.world.particles) drawParticle(ctx, p);
 
+  // shock rings (crit pops, death bursts, rank halo)
+  for (const sh of s.world.shocks || []) drawShock(ctx, sh);
+
   // Currency reward travels from the defeated target to its owning HUD chip.
-  for (const flight of s.world.lootFlights || []) drawLootFlight(ctx, flight, s, w, gy);
+  for (const flight of s.world.lootFlights || []) drawLootFlight(ctx, flight, s, w, h, gy);
 
   // confetti
   for (const c of s.world.confetti || []) drawConfettiBit(ctx, c);
@@ -102,14 +109,17 @@ export function draw(ctx, w, h, s, assetStore = null) {
     const life = f.life || 1;
     const u = clamp(f.t / life, 0, 1);
     const a = easeOutCubic(u);
-    const pop = f.big ? 1 + (1 - u) * 0.4 : 1 + (1 - u) * 0.2;
+    const pop = f.huge ? 1 + (1 - u) * 0.75 : f.big ? 1 + (1 - u) * 0.4 : 1 + (1 - u) * 0.2;
+    // Centered milestone counters live at stage center, not at the kill point.
+    const fx = f.center ? w / 2 : f.x;
+    const fy = f.center ? h * 0.3 : f.y;
     ctx.save();
     ctx.globalAlpha = a;
-    ctx.translate(f.x, f.y);
+    ctx.translate(fx, fy);
     ctx.scale(pop, pop);
-    const size = f.big ? 17 : 13;
+    const size = f.huge ? 24 : f.big ? 17 : 13;
     ctx.font = `900 ${size}px system-ui, -apple-system, sans-serif`;
-    ctx.lineWidth = 3.5;
+    ctx.lineWidth = f.huge ? 5 : 3.5;
     ctx.strokeStyle = 'rgba(6,8,10,0.9)';
     ctx.lineJoin = 'round';
     ctx.strokeText(f.text, 0, 0);
@@ -119,11 +129,19 @@ export function draw(ctx, w, h, s, assetStore = null) {
   }
   ctx.globalAlpha = 1;
 
-  // rank flash overlay
-  if (s.ui.fx && s.ui.fx.kind === 'rank') {
-    const a = clamp(s.ui.fx.t / 0.55, 0, 1);
-    ctx.fillStyle = `rgba(62,207,142,${0.12 * a})`;
-    ctx.fillRect(0, 0, w, h);
+  // celebration overlays (rank flash / zone-clear sweep / Go Live cinematic)
+  if (s.ui.fx) {
+    const fx = s.ui.fx;
+    const fxLife = fx.life || 0.55;
+    if (fx.kind === 'rank') {
+      const a = clamp(fx.t / fxLife, 0, 1);
+      ctx.fillStyle = `rgba(62,207,142,${0.12 * a})`;
+      ctx.fillRect(0, 0, w, h);
+    } else if (fx.kind === 'sweep') {
+      drawZoneSweep(ctx, w, h, fx);
+    } else if (fx.kind === 'golive') {
+      drawGoLiveFx(ctx, w, h, fx, s.settings.reducedMotion);
+    }
   }
 
   // vignette
@@ -235,6 +253,9 @@ function drawHero(ctx, x, gy, s, t, fit = 1) {
     energy: h.energy,
     reducedMotion: s.settings.reducedMotion,
     pose: hostPose,
+    levelT: h.levelT || 0,
+    defeatT: h.defeatT || 0,
+    lootT: h.lootT || 0,
   });
 
   // Overdrive crown flare above head (readable status)
@@ -266,6 +287,16 @@ function drawHero(ctx, x, gy, s, t, fit = 1) {
     ctx.font = '800 11px system-ui,sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText(`${s.stats.combo}×`, x, footY - cyOff + 11);
+    // slim time-to-decay meter under the chip (informational, like an HP bar)
+    const frac = clamp((s.stats.comboT || 0) / 2.4, 0, 1);
+    ctx.fillStyle = 'rgba(12,16,20,0.7)';
+    roundRect(ctx, x - 19, footY - cyOff + 18, 38, 4, 2);
+    ctx.fill();
+    if (frac > 0.02) {
+      ctx.fillStyle = frac > 0.35 ? '#fc1243' : '#e6b84d';
+      roundRect(ctx, x - 19, footY - cyOff + 18, Math.max(3, 38 * frac), 4, 2);
+      ctx.fill();
+    }
   }
 }
 
@@ -369,19 +400,39 @@ function drawEnemy(ctx, e, gy, t, packAssets = null, reducedMotion = false, fit 
   }
 }
 
-function drawLootFlight(ctx, flight, s, w, gy) {
+function drawLootFlight(ctx, flight, s, w, h, gy) {
   const anchor = s.world.enemies.find((enemy) => enemy.id === flight.enemyId);
   if (flight.y == null) flight.y = gy - (anchor ? enemyRenderSize(anchor) * 0.55 : 70);
   if (anchor) flight.x = anchor.displayX;
   const u = easeOutCubic(1 - clamp(flight.t / flight.life, 0, 1));
-  const targetX = flight.target === 'notes' ? w * 0.62 : w * 0.11;
-  const x = flight.x + (targetX - flight.x) * u;
-  const y = flight.y + (-56 - flight.y) * u - Math.sin(u * Math.PI) * 34;
+  // Gear drops dive to the in-stage bag FAB (bottom-left); currency to the top chips.
+  const isGear = flight.target === 'gear';
+  const targetX = isGear ? 34 : flight.target === 'notes' ? w * 0.62 : w * 0.11;
+  const targetY = isGear ? h - 38 : -56;
+  const posAt = (uu) => ({
+    x: flight.x + (targetX - flight.x) * uu,
+    y: flight.y + (targetY - flight.y) * uu - Math.sin(uu * Math.PI) * 34,
+  });
+  const { x, y } = posAt(u);
+  const paint = flight.color || { tone: flight.target === 'notes' ? 'notes' : 'signal' };
   ctx.save();
+  // tiny rarity-colored trail behind a gear drop
+  if (isGear) {
+    for (let i = 1; i <= 4; i++) {
+      const tu = clamp(u - i * 0.045, 0, 1);
+      if (tu <= 0) break;
+      const tp = posAt(tu);
+      ctx.globalAlpha = Math.min(1, flight.t / 0.16) * (1 - i / 5.5) * 0.65;
+      ctx.fillStyle = resolveCanvasPaint(paint);
+      ctx.beginPath();
+      ctx.arc(tp.x, tp.y, Math.max(1.2, 3.4 - i * 0.55), 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
   ctx.globalAlpha = Math.min(1, flight.t / 0.16);
   ctx.translate(x, y);
   ctx.rotate(u * Math.PI * 1.5);
-  ctx.fillStyle = resolveCanvasPaint({ tone: flight.target === 'notes' ? 'notes' : 'signal' });
+  ctx.fillStyle = resolveCanvasPaint(paint);
   ctx.beginPath();
   ctx.moveTo(0, -6);
   ctx.lineTo(5, 0);
@@ -389,6 +440,107 @@ function drawLootFlight(ctx, flight, s, w, gy) {
   ctx.lineTo(-5, 0);
   ctx.closePath();
   ctx.fill();
+  ctx.restore();
+}
+
+/** Expanding shock ring (crit pop / death burst / rank halo). */
+function drawShock(ctx, sh) {
+  if (sh.delay > 0) return;
+  const u = 1 - clamp(sh.t / (sh.life || 0.34), 0, 1);
+  const r = 6 + easeOutCubic(u) * ((sh.r1 || 46) - 6);
+  ctx.save();
+  ctx.globalAlpha = (1 - u) * 0.85;
+  ctx.strokeStyle = resolveCanvasPaint(sh.c);
+  ctx.lineWidth = Math.max(1, (sh.w || 3) * (1 - u * 0.6));
+  ctx.beginPath();
+  ctx.arc(sh.x, sh.y, r, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+/** White-hot crit frame on the target — brief additive flash + spark ticks. */
+function drawCritFlash(ctx, e, gy, fit) {
+  const u = clamp(e.critFlash / 0.16, 0, 1);
+  const size = enemyRenderSize(e) * fit;
+  const x = e.displayX;
+  const y = gy - 2 - size * 0.48;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  const rg = ctx.createRadialGradient(x, y, 1, x, y, size * 0.66);
+  rg.addColorStop(0, `rgba(255,255,255,${0.95 * u})`);
+  rg.addColorStop(0.4, `rgba(255,244,220,${0.5 * u})`);
+  rg.addColorStop(1, 'rgba(255,220,120,0)');
+  ctx.fillStyle = rg;
+  ctx.beginPath();
+  ctx.arc(x, y, size * 0.66, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = `rgba(255,255,255,${0.85 * u})`;
+  ctx.lineWidth = 2;
+  for (let i = 0; i < 6; i++) {
+    const a = i * (Math.PI / 3) + 0.4;
+    ctx.beginPath();
+    ctx.moveTo(x + Math.cos(a) * size * 0.18 * u, y + Math.sin(a) * size * 0.18 * u);
+    ctx.lineTo(x + Math.cos(a) * size * (0.42 + 0.22 * u), y + Math.sin(a) * size * (0.42 + 0.22 * u));
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+/** Zone-clear: quick full-width light sweep across the stage. */
+function drawZoneSweep(ctx, w, h, fx) {
+  const u = 1 - clamp(fx.t / (fx.life || 0.55), 0, 1);
+  const band = w * 0.34;
+  const x = -band + (w + band * 2) * easeOutCubic(u);
+  const a = Math.sin(clamp(u, 0, 1) * Math.PI) * 0.32;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  const g = ctx.createLinearGradient(x - band, 0, x + band, 0);
+  g.addColorStop(0, 'rgba(63,208,216,0)');
+  g.addColorStop(0.5, `rgba(228,246,255,${a})`);
+  g.addColorStop(1, 'rgba(63,208,216,0)');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.moveTo(x - band, 0);
+  ctx.lineTo(x + band * 0.4, 0);
+  ctx.lineTo(x + band, h);
+  ctx.lineTo(x - band * 0.4, h);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+/** Go Live mini-cinematic: screen flash, then a Live Mult count-up center-stage. */
+function drawGoLiveFx(ctx, w, h, fx, reduced) {
+  const life = fx.life || 1.5;
+  const u = 1 - clamp(fx.t / life, 0, 1); // 0 → 1 over the beat
+  // 1) screen flash on the first beat (motion juice — skipped when reduced)
+  if (!reduced && u < 0.18) {
+    ctx.fillStyle = `rgba(255,244,220,${0.5 * (1 - u / 0.18)})`;
+    ctx.fillRect(0, 0, w, h);
+  }
+  // 2) centered Live Mult count-up (static final value under reduced motion)
+  const cu = reduced ? 1 : easeOutCubic(clamp((u - 0.12) / 0.55, 0, 1));
+  const val = (fx.from ?? 1) + ((fx.to ?? 1) - (fx.from ?? 1)) * cu;
+  const a = Math.min(clamp(u / 0.1, 0, 1), clamp(fx.t / 0.3, 0, 1));
+  const pop = reduced ? 1 : 1 + Math.max(0, 1 - u / 0.25) * 0.5;
+  ctx.save();
+  ctx.globalAlpha = a;
+  ctx.translate(w / 2, h * 0.34);
+  ctx.scale(pop, pop);
+  ctx.textAlign = 'center';
+  ctx.lineJoin = 'round';
+  ctx.font = '800 13px system-ui, -apple-system, sans-serif';
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = 'rgba(6,8,10,0.9)';
+  ctx.strokeText('GO LIVE!', 0, -34);
+  ctx.fillStyle = '#FC1243';
+  ctx.fillText('GO LIVE!', 0, -34);
+  ctx.font = '900 30px system-ui, -apple-system, sans-serif';
+  ctx.lineWidth = 5;
+  const label = `LIVE ×${val.toFixed(2)}`;
+  ctx.strokeText(label, 0, 0);
+  ctx.fillStyle = '#e6b84d';
+  ctx.fillText(label, 0, 0);
   ctx.restore();
 }
 
@@ -413,6 +565,19 @@ function drawParticle(ctx, p) {
     ctx.beginPath();
     ctx.arc(-r * 0.2, -r * 0.2, r * 0.25, 0, Math.PI * 2);
     ctx.fill();
+  } else if (p.kind === 'shard') {
+    // token-colored death shard (rotated quad)
+    ctx.fillStyle = resolveCanvasPaint(p.c);
+    const r = p.r || 3;
+    ctx.beginPath();
+    ctx.moveTo(-r, -r * 0.55);
+    ctx.lineTo(r * 0.8, -r * 0.3);
+    ctx.lineTo(r, r * 0.55);
+    ctx.lineTo(-r * 0.7, r * 0.4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.fillRect(-r * 0.45, -r * 0.4, r * 0.5, r * 0.28);
   } else {
     ctx.fillStyle = p.c;
     ctx.beginPath();

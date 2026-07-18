@@ -163,7 +163,8 @@ s
 ├── run
 │   ├── bytes (Signal), patches (Notes)
 │   └── hero { level, xp, sp, scanner, skills, buildVersion, energy, focus, … }
-├── world       enemies, alerts, floaters, particles, confetti, sprinting, scroll
+├── world       enemies, alerts, floaters, particles, confetti, shocks, sprinting, scroll
+│               (+ cosmetic feel clocks: shake, hitStopT, slowMoT)
 ├── ui          panel, toast, seasonDone, tips, chipPulse, fx
 ├── stats       dps, combo
 └── settings    reducedMotion, sfx, gearSort, gearFilter, lastTs

@@ -123,6 +123,10 @@ export function createState() {
         trackerStacks: 0,
         attackAnim: 0,
         hitRecoil: 0,
+        /** Cosmetic clip clocks (Wave 3 juice) — read by hero-v2, never by combat math. */
+        levelT: 0,
+        defeatT: 0,
+        lootT: 0,
       },
     },
     world: {
@@ -146,6 +150,10 @@ export function createState() {
       time: 0,
       groundY: 0,
       shake: 0,
+      /** Cosmetic timescale dips (Wave 3): consumed by the frame loop in main.js.
+       *  hitStopT = kill freeze, slowMoT = Go Live beat. Never read by combat math. */
+      hitStopT: 0,
+      slowMoT: 0,
     },
     ui: {
       panel: null,
@@ -361,27 +369,33 @@ function tip(s, id) {
 // Domain events carry a semantic visual role; render.js owns the CSS token value.
 const tone = (role) => ({ tone: role });
 
-function floater(s, x, y, text, color, big = false, anchorId = null) {
+function floater(s, x, y, text, color, big = false, anchorId = null, opts = null) {
+  const huge = !!opts?.huge;
+  if (s.world.floaters.length > 40) s.world.floaters.shift(); // perf cap (PERF-BUDGET)
   s.world.floaters.push({
     x: x + (Math.random() - 0.5) * 18,
     y,
     text,
     color,
-    t: big ? 1.25 : 1.0,
-    life: big ? 1.25 : 1.0,
-    vy: big ? -78 : -56,
+    t: huge ? 1.5 : big ? 1.25 : 1.0,
+    life: huge ? 1.5 : big ? 1.25 : 1.0,
+    vy: huge ? -30 : big ? -78 : -56,
     big,
+    huge,
+    center: !!opts?.center,
     anchorId,
   });
 }
 
-function lootFlight(s, enemy, target) {
+function lootFlight(s, enemy, target, color = null) {
   if (s.settings.reducedMotion) return;
+  if (s.world.lootFlights.length > 14) return; // perf cap
   s.world.lootFlights.push({
     x: enemy.displayX,
     y: null,
     enemyId: enemy.id,
     target,
+    color,
     t: 0.72,
     life: 0.72,
   });
@@ -389,30 +403,74 @@ function lootFlight(s, enemy, target) {
 
 function particles(s, x, y, color, n = 10, kind = 'spark') {
   if (s.settings.reducedMotion) return;
+  // hard perf cap (PERF-BUDGET): trim the batch, never the sim
+  if (s.world.particles.length + n > 260) n = Math.max(0, 260 - s.world.particles.length);
+  if (!n) return;
   for (let i = 0; i < n; i++) {
     const a = Math.random() * Math.PI * 2;
     const sp =
-      kind === 'coin' ? 50 + Math.random() * 90 : 40 + Math.random() * 120;
-    const life = kind === 'coin' ? 0.7 + Math.random() * 0.35 : 0.35 + Math.random() * 0.4;
+      kind === 'shard'
+        ? 90 + Math.random() * 170
+        : kind === 'coin'
+          ? 50 + Math.random() * 90
+          : 40 + Math.random() * 120;
+    const life =
+      kind === 'shard'
+        ? 0.4 + Math.random() * 0.4
+        : kind === 'coin'
+          ? 0.7 + Math.random() * 0.35
+          : 0.35 + Math.random() * 0.4;
     s.world.particles.push({
       x,
       y,
       vx: Math.cos(a) * sp,
-      vy: Math.sin(a) * sp - (kind === 'coin' ? 80 : 40),
+      vy: Math.sin(a) * sp - (kind === 'coin' ? 80 : kind === 'shard' ? 60 : 40),
       t: life,
       life,
       c: color,
-      r: kind === 'coin' ? 3.5 + Math.random() * 2.5 : 2 + Math.random() * 3.5,
+      r: kind === 'coin' ? 3.5 + Math.random() * 2.5 : kind === 'shard' ? 3 + Math.random() * 3.5 : 2 + Math.random() * 3.5,
       kind,
       rot: Math.random() * Math.PI * 2,
-      spin: (Math.random() - 0.5) * 12,
+      spin: (Math.random() - 0.5) * (kind === 'shard' ? 18 : 12),
     });
+  }
+}
+
+/** Expanding shock ring — crit pops, death bursts, rank halo. Cosmetic only. */
+function shockRing(s, x, y, color, { r1 = 46, life = 0.34, delay = 0, width = 3 } = {}) {
+  if (s.settings.reducedMotion) return;
+  if (s.world.shocks.length > 14) s.world.shocks.shift(); // perf cap
+  s.world.shocks.push({ x, y, c: color, r1, t: life, life, delay, w: width });
+}
+
+/** Stage-aware effect origin: render.js stamps world.groundY every frame; the
+ *  headless fallback only matters where no pixel ever renders. */
+function stageY(s, lift = 0) {
+  return (s.world.groundY || 522) - lift;
+}
+
+/** Token-colored shard spray + ring on kill; boss gets a slower multi-ring burst. */
+function deathBurst(s, e) {
+  const boss = e.type === 'boss';
+  const ey = stageY(s, boss ? 68 : 46); // burst from the body, not the sky
+  const n = boss ? 22 : 8 + Math.floor(Math.random() * 7); // 8–14 shards
+  particles(s, e.displayX, ey, e.color, n, 'shard');
+  // white-hot accents so even gray feed-noise pops against the dark stage
+  particles(s, e.displayX, ey - 4, '#F5F6F8', boss ? 8 : 4, 'shard');
+  shockRing(s, e.displayX, ey, e.color, boss ? { r1: 92, life: 0.5, width: 4 } : { r1: 46, life: 0.32, width: 3.5 });
+  shockRing(s, e.displayX, ey, '#F5F6F8', { r1: boss ? 48 : 30, life: 0.24, width: 2 });
+  if (boss) {
+    shockRing(s, e.displayX, ey, '#FC1243', { r1: 66, life: 0.45, delay: 0.05, width: 2.5 });
+    shockRing(s, e.displayX, ey, '#e6b84d', { r1: 124, life: 0.64, delay: 0.12, width: 3 });
   }
 }
 
 /** Confetti burst — rank up, patch kill, shop spend */
 export function confetti(s, x, y, colors, n = 22) {
   if (s.settings.reducedMotion) return;
+  // hard perf cap (PERF-BUDGET)
+  if (s.world.confetti.length + n > 200) n = Math.max(0, 200 - s.world.confetti.length);
+  if (!n) return;
   const cols = colors || ['#FC1243', '#6cb8ff', '#3ecf8e', '#e6b84d', '#c084fc', '#fff'];
   for (let i = 0; i < n; i++) {
     const a = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 1.3;
@@ -508,6 +566,8 @@ function grantXp(s, amount) {
     floater(s, s.world.heroX + 20, 175, `+${C.SP_PER_LEVEL} SP`, tone('sp'), true);
     toast(s, pick(LEVEL_LINES) + ` (+${C.SP_PER_LEVEL} SP)`, 2.6, 'rank');
     tip(s, 'level');
+    if (!s.settings.reducedMotion) h.levelT = 1; // hero-v2 jump + golden halo clock
+    shockRing(s, s.world.heroX, stageY(s, 60), '#e6b84d', { r1: 58, life: 0.42, width: 3 });
     particles(s, s.world.heroX, 200, '#FC1243', 18);
     confetti(s, s.world.heroX, 180, ['#FC1243', '#10B981', '#e6b84d', '#fff'], 28);
     s.ui.fx = { kind: 'rank', t: 0.55 };
@@ -525,7 +585,13 @@ function onKill(s, e) {
   s.stats.comboT = 2.4;
   if (s.stats.combo > s.stats.bestCombo) s.stats.bestCombo = s.stats.combo;
   const comboMult = 1 + Math.min(0.5, (s.stats.combo - 1) * 0.04);
-  if (s.stats.combo >= 5 && s.stats.combo % 5 === 0) {
+  if (s.stats.combo === 10 || s.stats.combo === 25 || s.stats.combo === 50) {
+    // Milestone pop — big, centered, brief (canvas floater, not DOM).
+    floater(s, 0, 0, `${s.stats.combo}× STREAK`, '#FC1243', true, null, { huge: true, center: true });
+    shockRing(s, s.world.heroX, stageY(s, 60), '#FC1243', { r1: 74, life: 0.42, width: 3.5 });
+    tip(s, 'combo');
+    if (s.settings.sfx !== false) sfx('combo');
+  } else if (s.stats.combo >= 5 && s.stats.combo % 5 === 0) {
     floater(s, s.world.heroX, 120, `${s.stats.combo}x FEED STREAK`, '#FC1243', true);
     tip(s, 'combo');
   }
@@ -623,6 +689,11 @@ function onKill(s, e) {
     }
     const res = offerItem(s.meta.gear, item);
     hubOnGear(s);
+    // Hero reach-pull + rarity fly-to-FAB + badge pop (all cosmetic).
+    if (!s.settings.reducedMotion) s.run.hero.lootT = 1;
+    lootFlight(s, e, 'gear', rarityColor(item.rarity));
+    s.ui.chipPulse = s.ui.chipPulse || {};
+    s.ui.chipPulse.bag = 0.55;
     // Center loot card only — never float item names top/side
     s.ui.lootDrop = {
       item,
@@ -640,7 +711,7 @@ function onKill(s, e) {
     if (s.settings.sfx !== false) sfx('loot');
   }
 
-  particles(s, e.displayX, 210, e.color, e.type === 'boss' ? 26 : 14);
+  deathBurst(s, e);
   if (s.settings.sfx !== false) sfx('kill');
   tip(s, 'kill');
   s.ui.panelDirty = true;
@@ -666,6 +737,9 @@ function onKill(s, e) {
     }
     if (s.settings.sfx !== false) sfx('zone');
     hubOnZone(s);
+    // Zone clear celebration: full-width light sweep + small confetti (cosmetic).
+    if (!s.settings.reducedMotion) s.ui.fx = { kind: 'sweep', t: 0.55, life: 0.55 };
+    confetti(s, s.world.heroX + 40, 160, [tone('zone'), '#FC1243', '#fff'], 16);
 
     // Go Live checkpoint (ADR-0008): mint a pending checkpoint at the boundary
     // and keep it until claimed, so an overshoot never forfeits the checkpoint.
@@ -677,7 +751,7 @@ function onKill(s, e) {
       toast(s, `Zone ${s.route.zone} checkpoint! Go Live to bank Notes and grow your Live Mult.`, 2.6, 'live');
       tip(s, 'season');
     } else {
-      toast(s, `Zone ${s.route.zone + 1}`, 1.4, 'zone');
+      toast(s, `Zone ${s.route.zone} cleared — on to Zone ${s.route.zone + 1}`, 1.8, 'zone');
     }
     if (isBossZone(s.route.zone)) tip(s, 'boss');
   }
@@ -691,18 +765,23 @@ function dealDamage(s, e, amount, isCrit) {
   s.run.hero.attackAnim = 1;
   s.run.hero.hitRecoil = 1;
   s.stats.dpsAcc += amount;
-  if (!s.settings.reducedMotion) s.world.shake = isCrit ? 4 : 2;
+  if (!s.settings.reducedMotion) {
+    s.world.shake = Math.max(s.world.shake, isCrit ? 4 : 2);
+    if (isCrit) e.critFlash = 0.16; // white-hot flash frame on the target
+  }
 
   floater(
     s,
     e.displayX,
     155 + Math.random() * 20,
     `${isCrit ? 'CRIT ' : ''}${Math.round(amount)}`,
-    isCrit ? '#FF2F4B' : '#F5F6F8',
+    isCrit ? '#e6b84d' : '#F5F6F8',
     isCrit,
-    e.id
+    e.id,
+    isCrit ? { huge: true } : null
   );
   particles(s, e.displayX, 200, isCrit ? '#FC1243' : '#F5F6F8', isCrit ? 8 : 4);
+  if (isCrit) shockRing(s, e.displayX, stageY(s, 46), '#e6b84d', { r1: 36, life: 0.26, width: 2.5 });
   if (s.settings.sfx !== false) sfx(isCrit ? 'crit' : 'hit');
 
   if (e.hp <= 0 && !e.killed) {
@@ -711,6 +790,12 @@ function dealDamage(s, e, amount, isCrit) {
     // death hold for squash / card-flip satisfaction
     e.deathT = e.type === 'patch' ? 0.7 : e.type === 'boss' ? 0.85 : 0.48;
     e.deathMax = e.deathT;
+    // Hit stop + kill shake (cosmetic): 40–70ms on kill, 80–110ms on crit kill
+    // / boss break. Consumed as a timescale dip by the frame loop in main.js.
+    if (!s.settings.reducedMotion) {
+      s.world.hitStopT = e.type === 'boss' ? 0.105 : isCrit ? 0.09 : 0.055;
+      s.world.shake = Math.max(s.world.shake, e.type === 'boss' ? 11 : isCrit ? 7.5 : 6);
+    }
     onKill(s, e);
   }
 }
@@ -728,7 +813,7 @@ export function step(s, dt) {
     s.ui.lootDrop.t -= dt;
     if (s.ui.lootDrop.t <= 0) s.ui.lootDrop = null;
   }
-  if (s.world.shake > 0) s.world.shake = Math.max(0, s.world.shake - dt * 18);
+  if (s.world.shake > 0) s.world.shake = Math.max(0, s.world.shake - dt * (6 + s.world.shake * 7));
 
   // combo decay
   if (s.stats.comboT > 0) {
@@ -746,6 +831,10 @@ export function step(s, dt) {
   h.focus = clamp(h.focus + st.fRegen * dt, 0, st.fMax);
   h.attackAnim = Math.max(0, h.attackAnim - dt * 4);
   h.hitRecoil = Math.max(0, h.hitRecoil - dt * 5);
+  // cosmetic clip clocks (Wave 3): rank jump, defeat buckle, loot reach-pull
+  h.levelT = Math.max(0, (h.levelT || 0) - dt * 1.6);
+  h.defeatT = Math.max(0, (h.defeatT || 0) - dt * 1.4);
+  h.lootT = Math.max(0, (h.lootT || 0) - dt * 1.7);
 
   // tracker ramp
   if (h.trackerOn && st.tracker > 0) {
@@ -810,6 +899,9 @@ export function step(s, dt) {
         // The timer is pressure/telemetry, never a permanent idle wall. Damage
         // carries into the next cycle so every attack remains meaningful.
         toast(s, pick(BOSS_FAIL));
+        // rare defeat beat: knees buckle + visor dims, then a quick recover
+        if (!s.settings.reducedMotion) s.run.hero.defeatT = 1;
+        if (s.settings.sfx !== false) sfx('deny');
       }
       s.world.bossTimer = C.BOSS_TIMER;
     }
@@ -820,6 +912,7 @@ export function step(s, dt) {
   for (const e of s.world.enemies) {
     if (e.hp <= 0) continue;
     if (e.hitFlash > 0) e.hitFlash -= dt;
+    if (e.critFlash > 0) e.critFlash -= dt;
     if (e.hurt > 0) e.hurt -= dt;
     const stop = hx + C.MELEE_RANGE - 8;
     if (e.x > stop) {
@@ -885,6 +978,14 @@ export function step(s, dt) {
   s.world.lootFlights = (s.world.lootFlights || []).filter((flight) => {
     flight.t -= dt;
     return flight.t > 0;
+  });
+  s.world.shocks = (s.world.shocks || []).filter((sh) => {
+    if (sh.delay > 0) {
+      sh.delay -= dt;
+      return true;
+    }
+    sh.t -= dt;
+    return sh.t > 0;
   });
   if (!s.world.confetti) s.world.confetti = [];
   s.world.confetti = s.world.confetti.filter((c) => {
@@ -1214,6 +1315,7 @@ export function goLive(s, checkpointId = null, opts = {}) {
     ? opts.legacyContribution
     : s.authority.shippedThisSeason;
   const gain = liveGain(cycleContribution);
+  const liveBefore = s.meta.live;
   s.meta.live += gain;
   s.meta.goLiveCount += 1;
 
@@ -1267,9 +1369,24 @@ export function goLive(s, checkpointId = null, opts = {}) {
 
   toast(s, `Go Live #${s.meta.goLiveCount}! Live ×${s.meta.live.toFixed(2)} (+${gain.toFixed(3)}). Route kept.`);
   s.ui.panelDirty = true;
-  s.ui.fx = { kind: 'rank', t: 0.4 };
-  confetti(s, s.world.heroX, 180, ['#e6b84d', '#FC1243', '#fff', '#3ecf8e'], 36);
-  if (s.settings.sfx !== false) sfx('rank');
+  if (Number.isFinite(opts.migratedFrom)) {
+    // Migration minting stays quiet — the cinematic is for the live player moment.
+    s.ui.fx = { kind: 'rank', t: 0.4 };
+    confetti(s, s.world.heroX, 180, ['#e6b84d', '#FC1243', '#fff', '#3ecf8e'], 36);
+    if (s.settings.sfx !== false) sfx('rank');
+  } else {
+    // Go Live mini-cinematic (all cosmetic): white flash → slow-mo beat →
+    // confetti storm + Live Mult count-up (drawn by render.js from this fx).
+    s.ui.fx = { kind: 'golive', t: 1.5, life: 1.5, from: liveBefore, to: s.meta.live };
+    if (!s.settings.reducedMotion) {
+      s.world.slowMoT = 0.85;
+      shockRing(s, s.world.heroX, stageY(s, 60), '#e6b84d', { r1: 130, life: 0.7, width: 4 });
+    }
+    confetti(s, s.world.heroX - 60, 140, ['#e6b84d', '#FC1243', '#fff', '#3ecf8e'], 40);
+    confetti(s, s.world.heroX + 130, 120, ['#FC1243', '#e6b84d', '#6cb8ff', '#fff'], 40);
+    confetti(s, s.world.heroX + 40, 200, ['#fff', '#e6b84d', '#FC1243'], 36);
+    if (s.settings.sfx !== false) sfx('golive');
+  }
   return receipt;
 }
 

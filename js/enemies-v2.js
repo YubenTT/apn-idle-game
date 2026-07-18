@@ -59,7 +59,8 @@ export function drawTarget(ctx, e, opts) {
   const x = e.displayX;
   const dying = e.deathT > 0 && e.killed;
   const deathU = dying ? 1 - clamp(e.deathT / (e.deathMax || 0.5), 0, 1) : 0;
-  const flashU = e.hitFlash > 0 && !dying ? clamp(e.hitFlash / 0.12, 0, 1) : 0;
+  const critU = e.critFlash > 0 && !dying ? clamp(e.critFlash / 0.16, 0, 1) : 0;
+  const flashU = Math.max(e.hitFlash > 0 && !dying ? clamp(e.hitFlash / 0.12, 0, 1) : 0, critU);
   const hurtOff = !dying && e.hurt > 0 ? Math.sin(t * 40) * 1.5 : 0;
   const isBoss = e.type === 'boss';
   const isPatch = e.type === 'patch';
@@ -138,6 +139,18 @@ export function drawTarget(ctx, e, opts) {
     ctx.fillStyle = rg;
     ctx.beginPath();
     ctx.arc(0, -size * 0.48, size * 0.52, 0, TAU);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // crit white-hot core (brighter, tighter than the normal bloom)
+  if (critU > 0) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = 0.85 * critU * alpha;
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(0, -size * 0.48, size * 0.3 * critU, 0, TAU);
     ctx.fill();
     ctx.restore();
   }

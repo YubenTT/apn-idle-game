@@ -249,9 +249,15 @@ let qaFrameWindowStart = performance.now();
 function frame(now) {
   let dt = Math.min(0.05, (now - last) / 1000);
   last = now;
+  // Wave 3 juice: hit stop + Go Live slow-mo are cosmetic timescale dips on the
+  // accumulator only — combat math, rewards, and kill timing in sim-time are
+  // untouched. Both clocks are set exclusively under reduced-motion guards.
+  if (s.world.hitStopT > 0) s.world.hitStopT = Math.max(0, s.world.hitStopT - dt);
+  if (s.world.slowMoT > 0) s.world.slowMoT = Math.max(0, s.world.slowMoT - dt);
+  const feelScale = s.world.hitStopT > 0 ? 0.08 : s.world.slowMoT > 0 ? 0.35 : 1;
   // Sprint multiplies sim speed — whole game (combat, spawn, regen) runs faster
   const sprintScale = isSprinting(s) ? C.SPRINT_TIME : 1;
-  acc += dt * sprintScale;
+  acc += dt * sprintScale * feelScale;
   // Cap catch-up so a long tab-hide doesn't explode
   let steps = 0;
   while (acc >= C.FIXED_DT && steps < 8) {
