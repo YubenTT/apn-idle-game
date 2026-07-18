@@ -25,7 +25,7 @@ export const C = {
   XP_GROWTH: 1.26,
   BYTE_BASE: 3,
 
-  // Weapon (run-only — resets on End Season)
+  // Weapon (run-only — resets on Go Live)
   SCANNER_COST_BASE: 14,
   SCANNER_COST_GROWTH: 1.22, // steep sink → always something to buy
   SCANNER_DMG_GROWTH: 1.085, // soft so zone HP stays multi-hit
@@ -54,9 +54,14 @@ export const C = {
   SHIP_RATE: 1,
   OFFLINE_CAP: 8 * 3600,
   IDLE_EFF: 0.88,
+  VERIFY_YIELD_PER_MASTERY: 0.012,
+  VERIFY_YIELD_CAP: 0.3,
+  RELAY_OFFLINE_PER_MASTERY: 0.01,
   ALERT_INTERVAL: 3.2,
   SP_PER_LEVEL: 3,
   SEASON_ZONES: 20,
+  /** First Go Live checkpoint lands early (tutorial prestige), then every SEASON_ZONES. */
+  FIRST_GO_LIVE_ZONE: 10,
   /** Stop distance from hero center — keep enemies clearly separate (not “worn”) */
   MELEE_RANGE: 86,
   HIT_FLASH: 0.12,
@@ -69,6 +74,32 @@ export const easeOutCubic = (t) => 1 - (1 - t) ** 3;
 export const easeOutQuad = (t) => 1 - (1 - t) ** 2;
 export const lerp = (a, b, t) => a + (b - a) * t;
 export const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+
+/** SP cost to raise a named ability from current rank to the next rank. */
+export function skillSpCost(currentRank) {
+  return 1 + Math.floor(Math.max(0, Number(currentRank) || 0) / 5);
+}
+
+/** Exact reconstructible SP spend for a persisted named-ability rank. */
+export function spentSkillPoints(rank) {
+  const safeRank = Math.max(0, Math.floor(Number(rank) || 0));
+  const completeBands = Math.floor(safeRank / 5);
+  const remainder = safeRank % 5;
+  // Five ranks per cost band: 5×1, 5×2, …, then the partial next band.
+  return 5 * completeBands * (completeBands + 1) / 2 + remainder * (completeBands + 1);
+}
+
+/** Verify is the cycle-value axis. Numeric target tuning remains in PR-9. */
+export function verifyYieldMultiplier(mastery) {
+  const spent = Math.max(0, Number(mastery) || 0);
+  return 1 + Math.min(C.VERIFY_YIELD_CAP, spent * C.VERIFY_YIELD_PER_MASTERY);
+}
+
+/** Relay preserves more earned value while away, never exceeding active yield. */
+export function relayIdleEfficiency(mastery) {
+  const spent = Math.max(0, Number(mastery) || 0);
+  return Math.min(1, C.IDLE_EFF + spent * C.RELAY_OFFLINE_PER_MASTERY);
+}
 
 export function scannerCost(level) {
   return Math.floor(C.SCANNER_COST_BASE * C.SCANNER_COST_GROWTH ** level);
@@ -169,6 +200,29 @@ export function seasonFromZone(zone) {
 
 export function isSeasonCheckpoint(zoneAfterAdvance) {
   return zoneAfterAdvance > 0 && zoneAfterAdvance % C.SEASON_ZONES === 0;
+}
+
+/**
+ * Go Live checkpoint boundaries (ADR-0008): first at FIRST_GO_LIVE_ZONE (10),
+ * then every SEASON_ZONES (20) → 10, 30, 50, 70, …
+ */
+export function isGoLiveBoundary(zone) {
+  const z = zone | 0;
+  return z >= C.FIRST_GO_LIVE_ZONE && (z - C.FIRST_GO_LIVE_ZONE) % C.SEASON_ZONES === 0;
+}
+
+/** Most recent Go Live boundary at or below `zone` (0 when none reached yet). */
+export function goLiveBoundaryAtOrBelow(zone) {
+  const z = zone | 0;
+  if (z < C.FIRST_GO_LIVE_ZONE) return 0;
+  return C.FIRST_GO_LIVE_ZONE + Math.floor((z - C.FIRST_GO_LIVE_ZONE) / C.SEASON_ZONES) * C.SEASON_ZONES;
+}
+
+/** Next Go Live boundary strictly above `zone`. */
+export function nextGoLiveBoundary(zone) {
+  const z = zone | 0;
+  if (z < C.FIRST_GO_LIVE_ZONE) return C.FIRST_GO_LIVE_ZONE;
+  return goLiveBoundaryAtOrBelow(z) + C.SEASON_ZONES;
 }
 
 export function typeHpMult(type) {

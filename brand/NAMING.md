@@ -12,7 +12,7 @@ what it *upgrades*, never by the currency it *costs*.
 |---------|---------|-----|
 | "Upgrade Signal" | **"Upgrade Weapon"** (shipped) / "Upgrade Scanner" (thematic) | Signal is the *cost*, not the thing improving. "Upgrade Signal" makes the player ask "am I upgrading my money?" |
 | "Buy Notes" | "Ship Notes → Rep" | Names the action + outcome. |
-| "SP button" | "Burst · +1 tap dmg · 3 SP" | Object · effect · cost. |
+| "SP button" | "Hotfix · stronger hit · 3 SP" | Object · effect · cost. |
 
 The shipped CTA is already **"Upgrade Weapon"** — keep it. `Scanner` is an approved
 thematic alias if a screen wants the scan metaphor; both are legal, "Upgrade
@@ -31,7 +31,8 @@ Signal" is not.
 
 ## Mobile-safe copy
 
-- Button labels ≤ ~18 chars; they must not wrap on a 428pt-wide canvas.
+- Button labels must remain single-line on the 375pt baseline; compact Run labels
+  may use the canonical short name while Build owns the full explanation.
 - Show a **delta**, not just a state: `Lv 14 → 15`, `+12`, `12.1K/16.3K`.
 - No **debug/diagnostic** strings in player UI. Banned examples from the current
   build: `Damage 3·Crit 0·Utility 1` (Menu), `Tap a slot · hover for stats` (Gear).
@@ -42,7 +43,7 @@ Signal" is not.
 | Thing | Rule | Example |
 |-------|------|---------|
 | Currencies | Title case, singular as a label | Signal, Notes, Rep, SP |
-| Sheet titles | Title case, one word where possible | Build, Gear, Ship, Hub, Boosts, Menu |
+| Sheet titles | Title case, one word where possible | Build, Gear, Go Live, Route, Boosts, Menu |
 | Numbers | Abbreviate ≥ 1000, `tabular-nums` | 1.1K, 12.1K/16.3K, ×1.06 |
 | Tags | ALL CAPS, ≤ 5 letters | PATCH, NEWS, GUIDE, EVENT, VIDEO, LIVE, PRO |
 | Multipliers | `×` glyph, 2 decimals when < 10 | ×1.06, ×1.85, 37× |

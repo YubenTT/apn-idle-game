@@ -1,12 +1,45 @@
-import { normalizeGear, emptyGear, GEAR_SORTS, GEAR_FILTERS } from './loot.js?v=free-mvp-r005';
-import { normalizeRoute } from './route.js?v=free-mvp-r005';
+import { normalizeGear, emptyGear, GEAR_SORTS, GEAR_FILTERS } from './loot.js?v=golive-pr5';
+import { normalizeRoute } from './route.js?v=golive-pr5';
+import { C, spentSkillPoints } from './formulas.js?v=golive-pr5';
+import { SKILLS } from './content.js?v=golive-pr5';
 
 export const SAVE_KEY_V1 = 'apn_idle_save_v1';
 export const SAVE_KEY_V2 = 'apn_idle_save_v2';
+/** Current persisted save-schema version (Go Live checkpoint model, ADR-0008). */
+export const SAVE_VERSION = 3;
+
+function migrateBuildV2(hero, sourceBuildVersion) {
+  if (!hero || sourceBuildVersion === 2) return 0;
+  const legacySkills = { ...(hero.skills || {}) };
+  // These ranks were retired before Build V2; the audit explicitly accepts
+  // their historical loss, so they cannot mint new SP during this migration.
+  delete legacySkills.verified_mask;
+  delete legacySkills.editor_pick;
+  const attrRefund = ['scan', 'verify', 'amplify'].reduce(
+    (sum, key) => sum + Math.max(0, Math.floor(Number(hero[key]) || 0)),
+    0
+  );
+  const skillRefund = Object.keys(SKILLS).reduce(
+    (sum, id) =>
+      sum + spentSkillPoints(Math.min(SKILLS[id].max, Math.max(0, Number(legacySkills[id]) || 0))),
+    0
+  );
+  const refund = attrRefund + skillRefund;
+  hero.sp = Math.max(0, Math.floor(Number(hero.sp) || 0)) + refund;
+  hero.skills = {};
+  hero.scan = 0;
+  hero.verify = 0;
+  hero.amplify = 0;
+  hero.trackerOn = false;
+  hero.deepOn = false;
+  hero.trackerStacks = 0;
+  hero.buildVersion = 2;
+  return refund;
+}
 
 export function save(s) {
   const data = {
-    v: 2,
+    v: SAVE_VERSION,
     ts: Date.now(),
     meta: {
       ...s.meta,
@@ -19,6 +52,9 @@ export function save(s) {
         warpCdUntil: 0,
       },
       hub: s.meta.hub || null,
+      // The last receipt is a session/UI artifact — cross-reload idempotency
+      // rides on lastGoLiveZone, so keep it out of the persisted blob.
+      lastGoLive: undefined,
     },
     authority: s.authority,
     route: normalizeRoute(s.route),
@@ -35,6 +71,20 @@ export function save(s) {
       gearFilter: GEAR_FILTERS.includes(s.settings.gearFilter) ? s.settings.gearFilter : 'all',
     },
   };
+  // Write-guard: never let an older client clobber a newer save shape. A stale
+  // CDN client (v2 code) loading null would otherwise overwrite a v3 save within
+  // one autosave tick — refuse when the on-disk version is higher than ours.
+  try {
+    const existingRaw = localStorage.getItem(SAVE_KEY_V2);
+    if (existingRaw) {
+      const existing = JSON.parse(existingRaw);
+      if (Number.isFinite(existing?.v) && existing.v > data.v) {
+        return false;
+      }
+    }
+  } catch {
+    // Corrupt/unreadable existing save → let the write proceed and heal it.
+  }
   try {
     localStorage.setItem(SAVE_KEY_V2, JSON.stringify(data));
     s.settings.lastTs = data.ts;
@@ -55,13 +105,17 @@ export function load() {
       return null;
     }
   };
-  return readVersion(SAVE_KEY_V2, 2) || readVersion(SAVE_KEY_V1, 1);
+  return (
+    readVersion(SAVE_KEY_V2, 3) ||
+    readVersion(SAVE_KEY_V2, 2) ||
+    readVersion(SAVE_KEY_V1, 1)
+  );
 }
 
 export function apply(s, d) {
   if (!d) return 0;
-  s.v = 2;
-  s.route = normalizeRoute(d.v === 2 ? d.route : null, d.v === 1 ? d.run : null);
+  s.v = SAVE_VERSION;
+  s.route = normalizeRoute(d.v === 2 || d.v === 3 ? d.route : null, d.v === 1 ? d.run : null);
   Object.assign(s.meta, d.meta || {});
   // Migrate gear and preserve the retired demo-store bucket as inert data.
   s.meta.gear = normalizeGear(d.meta?.gear || s.meta.gear || emptyGear());
@@ -85,14 +139,24 @@ export function apply(s, d) {
     };
   }
   if (d.meta?.hub) s.meta.hub = d.meta.hub;
-  // strip legacy mask skills from save
-  if (s.run.hero) {
-    delete s.run.hero.mask;
-    if (s.run.hero.skills) {
-      delete s.run.hero.skills.verified_mask;
-      delete s.run.hero.skills.editor_pick;
+  // —— Go Live migration (ADR-0008): season model → checkpoint model ——
+  // The Object.assign above may have resurrected a legacy `meta.season`; fold it
+  // into goLiveCount, derive the checkpoint fields, then delete `season` so it
+  // can never linger as a shadow counter that drifts from goLiveCount.
+  if (d.v !== 3) {
+    s.meta.goLiveCount = Number.isFinite(d.meta?.season) ? d.meta.season : 0;
+    s.meta.pendingGoLiveZone = 0;
+    s.meta.lastGoLiveZone = 0;
+    // A v2 `seasonDone` = a crossed-but-unspent 20-grid checkpoint. Honor it so
+    // Go Live is available now (e.g. zone 27 → pending 20), not only at zone 40.
+    if (d.ui?.seasonDone && s.route.zone > 0) {
+      s.meta.pendingGoLiveZone = Math.floor(s.route.zone / C.SEASON_ZONES) * C.SEASON_ZONES;
     }
   }
+  if (!Number.isFinite(s.meta.goLiveCount)) s.meta.goLiveCount = 0;
+  if (!Number.isFinite(s.meta.pendingGoLiveZone)) s.meta.pendingGoLiveZone = 0;
+  if (!Number.isFinite(s.meta.lastGoLiveZone)) s.meta.lastGoLiveZone = 0;
+  delete s.meta.season;
   if (d.authority) {
     s.authority.amount = d.authority.amount || 0;
     s.authority.shippedThisSeason = d.authority.shippedThisSeason || 0;
@@ -107,6 +171,12 @@ export function apply(s, d) {
       delete hero.mana;
       Object.assign(s.run.hero, hero);
     }
+  }
+  // Second save-shape migration chained onto v3: refund every reconstructible
+  // legacy Build point once, then mark the new shape without a version bump.
+  if (s.run.hero) {
+    delete s.run.hero.mask;
+    migrateBuildV2(s.run.hero, d.run?.hero?.buildVersion);
   }
   if (d.ui) {
     s.ui.tips = d.ui.tips || {};

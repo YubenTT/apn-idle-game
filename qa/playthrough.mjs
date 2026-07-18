@@ -56,10 +56,10 @@ if (s.meta.kills < 1) {
   process.exit(1);
 }
 
-// Spend SP into Damage path + Burst
+// Spend SP directly into the Scan branch.
 while (s.run.hero.sp > 0 && s.run.hero.scan < 3) allocAttr(s, 'scan');
 if (s.run.hero.scan >= 1) allocSkill(s, 'hotfix');
-note(`Build: Damage ${s.run.hero.scan} · Burst ${s.run.hero.skills.hotfix || 0}`);
+note(`Build: Scan Mastery ${s.run.hero.scan} · Hotfix ${s.run.hero.skills.hotfix || 0}`);
 
 // Play to zone 5–10
 for (let t = 0; t < 40; t++) {

@@ -1,3 +1,6 @@
+<!-- go-live-v2-superseded -->
+> **⚠ Superseded on the prestige model (go-live v2).** This document still describes the retired **Ship Notes + End Season** model. The current design is **Go Live** — a single atomic prestige checkpoint (first at zone 10, then every 20; see [ADR-0008](decisions/ADR-0008-go-live-sole-checkpoint.md)). Read it through **plan v2** (`docs/superpowers/plans/2026-07-16-infinite-patchline-go-live-v2.md`) and **`docs/product/RECONCILIATION.md`**; where they disagree, they win. Non-prestige content here may still be accurate.
+
 # Roadmap
 
 Living plan — not a commitment calendar.
@@ -30,6 +33,16 @@ Living plan — not a commitment calendar.
       violet across DOM + Canvas roles, with contrast and semantic-role QA
 
 ## Near term
+
+- [x] Build V2 domain: named Scan/Verify/Relay axes, derived Mastery, exact v3
+      SP refund, and three seeded Zone-200 profiles (PR-4a / issue #21)
+- [x] Build V2 presentation + Priority Tag behavior (PR-4b / issue #22)
+- [x] Run hierarchy + placeholder Host presentation + single code-side clip
+      vocabulary (PR-5 checkpoint / issue #23); muted Chrome matrix complete
+- [ ] Full-body Host identity + deterministic pose derivation + real-pixel asset
+      gate (remainder of issue #23): first candidate rejected and purged; existing
+      canonical GLB/placeholder atlas remain shipped until a new owner-approved
+      four-angle identity proof exists
 
 - [x] Persistent global Route + dual-key save v2 migration; End Season keeps world progress
 - [x] Deterministic 20-pack manifest catalog + seeded least-recent scheduler

@@ -7,21 +7,18 @@
     <meta name="color-scheme" content="dark" />
     <title>APN Idle</title>
     <link rel="icon" href="./assets/apn-logo.svg?v=round-v1" />
-    <link rel="stylesheet" href="./css/game.css?v=run-surface-r006" />
+    <link rel="stylesheet" href="./css/game.css?v=golive-pr5" />
   </head>
   <body>
     <div id="app">
       <header class="hud-top">
         <div class="hud-res" role="status" aria-label="Run resources">
-          <div class="chip signal" title="Signal — Upgrade Weapon">
+          <div class="chip signal" title="Signal — Upgrade Scanner">
             <small>Signal</small><strong id="v-bytes">0</strong>
           </div>
           <span class="resource-cutout" aria-hidden="true"></span>
-          <div class="chip notes" title="Notes — Ship for Rep">
+          <div class="chip notes" title="Notes — Go Live for Rep">
             <small>Notes</small><strong id="v-patches">0</strong>
-          </div>
-          <div class="chip sp" title="SP — spend in Build">
-            <small>SP</small><strong id="v-sp">0</strong>
           </div>
         </div>
       </header>
@@ -35,10 +32,17 @@
       </div>
 
       <main class="hud-stage">
+        <div class="stage-context" aria-label="Route progress">
+          <span class="stage-context-chip"><small>Route</small><strong id="v-zone">1</strong></span>
+          <span class="stage-context-chip pack"><small>Pack</small><strong id="v-pack-progress">1/10</strong><span class="stage-context-track"><i id="bar-pack"></i></span></span>
+          <span class="patch-echo-chip" id="patch-echo-chip" hidden>
+            <small>Patch Echo</small><strong id="v-echo-progress">0/0</strong>
+          </span>
+        </div>
         <div class="stage-hud" aria-hidden="false">
-          <div class="stage-stat zone">
+          <div class="stage-stat clear">
             <div class="stage-stat-top">
-              <span class="stage-stat-lab">ZONE <em id="v-zone">1</em></span>
+              <span class="stage-stat-lab">CLEAR</span>
               <span class="stage-stat-val" id="v-kills">0/5</span>
             </div>
             <div class="stage-stat-track"><i id="bar-zone" class="zone"></i></div>
@@ -80,7 +84,7 @@
             <div class="bar-lab"><span>Energy</span><span id="v-energy-lab">100%</span></div>
             <div class="bar-bg"><div id="bar-energy" class="bar-fg en"></div></div>
           </div>
-          <div class="bar">
+          <div class="bar" id="bar-focus-wrap" hidden>
             <div class="bar-lab"><span>Focus</span><span id="v-focus-lab">100%</span></div>
             <div class="bar-bg"><div id="bar-focus" class="bar-fg mn"></div></div>
           </div>
@@ -101,17 +105,17 @@
               <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 11h12l-2-2 2-2 6 5-6 5-2-2 2-2H3z" />
             </svg>
             <span class="cta-weapon-copy">
-              <span class="btn-primary-title">Upgrade Weapon</span>
+              <span class="btn-primary-title">Upgrade Scanner</span>
               <span class="btn-primary-sub"><span id="v-scan-delta">+8%</span> Damage · Lv <span id="v-scanner">0</span>→<span id="v-scanner-next">1</span></span>
             </span>
             <span class="cost-chip"><strong id="v-cost">14</strong><small>Signal</small></span>
           </button>
         </div>
         <div class="btn-skills" id="skill-shortcuts">
-          <button type="button" id="btn-hotfix" class="btn-chip" hidden>Burst</button>
-          <button type="button" id="btn-summary" class="btn-chip" hidden>Area</button>
-          <button type="button" id="btn-tracker" class="btn-chip" hidden>Ramp</button>
-          <button type="button" id="btn-deep" class="btn-chip" hidden>Overdrive</button>
+          <button type="button" id="btn-hotfix" class="btn-chip" hidden>Hotfix</button>
+          <button type="button" id="btn-summary" class="btn-chip" aria-label="Priority Tag" hidden>Priority</button>
+          <button type="button" id="btn-tracker" class="btn-chip" aria-label="Live Tracker" hidden>Tracker</button>
+          <button type="button" id="btn-deep" class="btn-chip" hidden>Overclock</button>
         </div>
       </section>
 
@@ -129,7 +133,7 @@
           <svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"
             ><path fill="currentColor" d="M4 18h16v2H4v-2zm2-4l4-8 2 4 4-6 4 10H6z"
           /></svg>
-          <span>Ship</span>
+          <span>Go Live</span>
         </button>
         <button type="button" data-panel="hub" class="nav-btn" aria-controls="sheet-root" aria-expanded="false">
           <svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"
@@ -138,7 +142,7 @@
               d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 5v5l4 2-.8 1.6L11 13V7h2z"
             /></svg
           >
-          <span>Hub</span>
+          <span>Route</span>
         </button>
         <button type="button" data-panel="meta" class="nav-btn" aria-controls="sheet-root" aria-expanded="false">
           <svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"
@@ -173,20 +177,8 @@
             <div id="skills-body"></div>
           </section>
           <section id="panel-ship" hidden>
-            <div id="ship-info" class="ship-stats" role="status"></div>
-            <button type="button" id="btn-ship" class="btn-primary">
-              <span class="btn-primary-title">Ship Notes → Rep</span>
-              <span class="btn-primary-sub" id="ship-cta-sub">Permanent Rep</span>
-            </button>
-            <button type="button" id="btn-leave" class="btn-ghost" hidden>End Season…</button>
-            <div id="season-confirm" class="season-confirm" hidden role="alertdialog" aria-labelledby="season-confirm-title">
-              <strong id="season-confirm-title">End this season?</strong>
-              <p>This applies the reset list above. Route progress and permanent growth stay.</p>
-              <div class="season-confirm-actions">
-                <button type="button" id="btn-leave-cancel" class="btn-ghost">Keep Playing</button>
-                <button type="button" id="btn-leave-confirm" class="btn-danger">End Season</button>
-              </div>
-            </div>
+            <!-- Single Go Live sheet: preview → inline confirm → receipt, rendered by fillGoLive(). -->
+            <div id="ship-info" class="ship-stats" role="status" aria-live="polite"></div>
           </section>
           <section id="panel-gear" hidden>
             <div id="gear-body"></div>
@@ -261,6 +253,6 @@
       </div>
     </div>
 
-    <script type="module" src="./js/main.js?v=free-mvp-r005"></script>
+    <script type="module" src="./js/main.js?v=golive-pr5"></script>
   </body>
 </html>

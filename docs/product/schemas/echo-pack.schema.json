@@ -1,0 +1,902 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://allpatchnotes.com/schemas/apn-idle/echo-pack.schema.json",
+  "title": "APN Idle Echo Pack",
+  "description": "Versioned contract for an endlessly schedulable APN-original runtime Pack with optional factual editorial context.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "id",
+    "catalogVersion",
+    "status",
+    "enabled",
+    "editorial",
+    "runtime",
+    "rights",
+    "route",
+    "mechanics",
+    "palette",
+    "targets",
+    "boss",
+    "easterEggs",
+    "assets",
+    "fallback",
+    "provenance"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "id": {
+      "$ref": "#/$defs/id"
+    },
+    "catalogVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "status": {
+      "enum": [
+        "concept",
+        "production",
+        "retired"
+      ]
+    },
+    "enabled": {
+      "type": "boolean"
+    },
+    "editorial": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "displayName",
+        "contentType",
+        "feedCopy",
+        "sources",
+        "nonEndorsement"
+      ],
+      "properties": {
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "contentType": {
+          "enum": [
+            "PATCH",
+            "NEWS",
+            "GUIDE",
+            "EVENT",
+            "VIDEO",
+            "NONE"
+          ]
+        },
+        "feedCopy": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "apnUrl": {
+          "type": "string",
+          "format": "uri"
+        },
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 12,
+          "items": {
+            "$ref": "#/$defs/source"
+          }
+        },
+        "nonEndorsement": {
+          "const": true
+        }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "subtitle",
+        "fantasy",
+        "genre",
+        "artBriefId"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 32
+        },
+        "subtitle": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64
+        },
+        "fantasy": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 220
+        },
+        "genre": {
+          "$ref": "#/$defs/id"
+        },
+        "artBriefId": {
+          "$ref": "#/$defs/id"
+        }
+      }
+    },
+    "rights": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "reviewStatus",
+        "reviewedAt",
+        "reviewedBy",
+        "killSwitch",
+        "forbiddenMotifs",
+        "editorialReference"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "apn-original",
+            "homage-only",
+            "editorial-text-original-art",
+            "licensed-spotlight",
+            "blocked",
+            "pending-review"
+          ],
+          "description": "Canonical rights posture (plan v2 §PR-7 / ADR-0009); supersedes the V3-original 3-mode enum."
+        },
+        "reviewStatus": {
+          "enum": [
+            "needs-legal-review",
+            "approved-original-echo",
+            "licensed",
+            "rejected"
+          ]
+        },
+        "reviewedAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "killSwitch": {
+          "$ref": "#/$defs/id"
+        },
+        "licenseRecord": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "required": [
+            "recordId",
+            "territories",
+            "expiresAt",
+            "allowedUses"
+          ],
+          "properties": {
+            "recordId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            },
+            "territories": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 64
+              }
+            },
+            "expiresAt": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time"
+            },
+            "allowedUses": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 240
+              }
+            }
+          }
+        },
+        "forbiddenMotifs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 40,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 120
+          }
+        },
+        "reviewedBy": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 120
+        },
+        "editorialReference": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "Real game title — feed-ticker editorial reference only, never a runtime display name."
+        }
+      }
+    },
+    "route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "zones",
+        "primaryGenre",
+        "difficultyBand",
+        "minimumDropIndex"
+      ],
+      "properties": {
+        "zones": {
+          "const": 10
+        },
+        "primaryGenre": {
+          "$ref": "#/$defs/id"
+        },
+        "secondaryGenres": {
+          "type": "array",
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "difficultyBand": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        },
+        "minimumDropIndex": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "mechanics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "signature",
+        "modifier",
+        "parameters",
+        "fallbackBehavior"
+      ],
+      "properties": {
+        "signature": {
+          "$ref": "#/$defs/mechanic"
+        },
+        "modifier": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/mechanic"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "parameters": {
+          "type": "object",
+          "maxProperties": 20,
+          "additionalProperties": {
+            "type": [
+              "number",
+              "integer",
+              "boolean",
+              "string"
+            ]
+          }
+        },
+        "fallbackBehavior": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 240
+        }
+      }
+    },
+    "palette": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "accent",
+        "secondary",
+        "surface",
+        "ink",
+        "semanticRoles"
+      ],
+      "properties": {
+        "accent": {
+          "$ref": "#/$defs/hexColor"
+        },
+        "secondary": {
+          "$ref": "#/$defs/hexColor"
+        },
+        "surface": {
+          "$ref": "#/$defs/hexColor"
+        },
+        "ink": {
+          "$ref": "#/$defs/hexColor"
+        },
+        "semanticRoles": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "positive",
+            "warning",
+            "focus"
+          ],
+          "properties": {
+            "positive": {
+              "$ref": "#/$defs/hexColor"
+            },
+            "warning": {
+              "$ref": "#/$defs/hexColor"
+            },
+            "focus": {
+              "$ref": "#/$defs/hexColor"
+            }
+          }
+        }
+      }
+    },
+    "targets": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "$ref": "#/$defs/target"
+      }
+    },
+    "boss": {
+      "$ref": "#/$defs/boss"
+    },
+    "easterEggs": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/easterEgg"
+      }
+    },
+    "assets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "environment",
+        "targets",
+        "targetData",
+        "boss",
+        "fx",
+        "fallback",
+        "budgetBytes"
+      ],
+      "properties": {
+        "environment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "far",
+            "mid",
+            "ground"
+          ],
+          "properties": {
+            "far": {
+              "$ref": "#/$defs/assetPath"
+            },
+            "mid": {
+              "$ref": "#/$defs/assetPath"
+            },
+            "ground": {
+              "$ref": "#/$defs/assetPath"
+            }
+          }
+        },
+        "targets": {
+          "$ref": "#/$defs/assetPath"
+        },
+        "targetData": {
+          "$ref": "#/$defs/jsonPath"
+        },
+        "boss": {
+          "$ref": "#/$defs/assetPath"
+        },
+        "fx": {
+          "$ref": "#/$defs/assetPath"
+        },
+        "fallback": {
+          "$ref": "#/$defs/assetPath"
+        },
+        "corruptionMask": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/assetPath"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "budgetBytes": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "environment",
+            "targets",
+            "bossAndFx",
+            "props",
+            "metadata",
+            "total"
+          ],
+          "properties": {
+            "environment": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 160000
+            },
+            "targets": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 140000
+            },
+            "bossAndFx": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100000
+            },
+            "props": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 50000
+            },
+            "metadata": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 25000
+            },
+            "total": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 475000
+            }
+          }
+        }
+      }
+    },
+    "fallback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "packId",
+        "reasonCopy",
+        "preserveRewards"
+      ],
+      "properties": {
+        "packId": {
+          "$ref": "#/$defs/id"
+        },
+        "reasonCopy": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 140
+        },
+        "preserveRewards": {
+          "const": true
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "sourceBoard",
+        "originalityBrief",
+        "visualPromptContainsThirdPartyMarks",
+        "records",
+        "reviewers"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "planned",
+            "in-review",
+            "approved"
+          ]
+        },
+        "sourceBoard": {
+          "$ref": "#/$defs/markdownPath"
+        },
+        "originalityBrief": {
+          "$ref": "#/$defs/markdownPath"
+        },
+        "visualPromptContainsThirdPartyMarks": {
+          "const": false
+        },
+        "records": {
+          "type": "array",
+          "maxItems": 200,
+          "items": {
+            "$ref": "#/$defs/provenanceRecord"
+          }
+        },
+        "reviewers": {
+          "type": "array",
+          "maxItems": 20,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "role",
+              "name",
+              "decision",
+              "reviewedAt"
+            ],
+            "properties": {
+              "role": {
+                "enum": [
+                  "art",
+                  "design",
+                  "engineering",
+                  "product",
+                  "rights",
+                  "accessibility"
+                ]
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120
+              },
+              "decision": {
+                "enum": [
+                  "approved",
+                  "changes-required",
+                  "rejected"
+                ]
+              },
+              "reviewedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        "contentCredentialsRef": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 500
+        }
+      }
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "minLength": 2,
+      "maxLength": 64
+    },
+    "hexColor": {
+      "type": "string",
+      "pattern": "^#[0-9A-Fa-f]{6}$"
+    },
+    "assetPath": {
+      "type": "string",
+      "pattern": "^assets/echo-packs/[a-z0-9-]+/[a-z0-9._/-]+\\.webp$"
+    },
+    "jsonPath": {
+      "type": "string",
+      "pattern": "^assets/echo-packs/[a-z0-9-]+/[a-z0-9._/-]+\\.json$"
+    },
+    "markdownPath": {
+      "type": "string",
+      "pattern": "^assets/echo-packs/[a-z0-9-]+/[a-z0-9._/-]+\\.md$"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "owner",
+        "title",
+        "url",
+        "accessedAt",
+        "use"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "accessedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "use": {
+          "enum": [
+            "factual-context",
+            "mechanic-observation",
+            "visual-do-not-copy",
+            "licensed-asset"
+          ]
+        }
+      }
+    },
+    "mechanic": {
+      "enum": [
+        "ordered_targets",
+        "shield_source",
+        "timing_window",
+        "lane_shift",
+        "tag_then_clear",
+        "resource_choice",
+        "pickup_path",
+        "armor_break",
+        "streak_guard",
+        "environment_pulse",
+        "duplicate_filter",
+        "style_chain"
+      ]
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "role",
+        "label",
+        "silhouette",
+        "behavior",
+        "frame",
+        "pivot"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "role": {
+          "enum": [
+            "common-a",
+            "common-b",
+            "common-c",
+            "elite",
+            "event"
+          ]
+        },
+        "label": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 28
+        },
+        "silhouette": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 160
+        },
+        "behavior": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 240
+        },
+        "frame": {
+          "$ref": "#/$defs/id"
+        },
+        "pivot": {
+          "$ref": "#/$defs/pivot"
+        }
+      }
+    },
+    "boss": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label",
+        "silhouette",
+        "behavior",
+        "frame",
+        "breakFrame",
+        "pivot"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 32
+        },
+        "silhouette": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 180
+        },
+        "behavior": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 300
+        },
+        "frame": {
+          "$ref": "#/$defs/id"
+        },
+        "breakFrame": {
+          "$ref": "#/$defs/id"
+        },
+        "pivot": {
+          "$ref": "#/$defs/pivot"
+        }
+      }
+    },
+    "pivot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "y": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "easterEgg": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "tier",
+        "description",
+        "originalityNote",
+        "trigger",
+        "killSwitch"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "tier": {
+          "enum": [
+            "read",
+            "wink",
+            "deep-cut"
+          ]
+        },
+        "description": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 220
+        },
+        "originalityNote": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 500
+        },
+        "trigger": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 180
+        },
+        "killSwitch": {
+          "$ref": "#/$defs/id"
+        }
+      }
+    },
+    "provenanceRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "assetId",
+        "status",
+        "tool",
+        "createdAt",
+        "edits"
+      ],
+      "properties": {
+        "assetId": {
+          "$ref": "#/$defs/id"
+        },
+        "status": {
+          "enum": [
+            "candidate",
+            "approved",
+            "rejected"
+          ]
+        },
+        "sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "tool": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "modelVersion": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 120
+        },
+        "promptSha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "negativePromptSha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "edits": {
+          "type": "array",
+          "maxItems": 30,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240
+          }
+        }
+      }
+    }
+  }
+}

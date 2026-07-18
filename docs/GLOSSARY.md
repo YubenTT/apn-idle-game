@@ -1,3 +1,6 @@
+<!-- go-live-v2-superseded -->
+> **⚠ Superseded on the prestige model (go-live v2).** This document still describes the retired **Ship Notes + End Season** model. The current design is **Go Live** — a single atomic prestige checkpoint (first at zone 10, then every 20; see [ADR-0008](decisions/ADR-0008-go-live-sole-checkpoint.md)). Read it through **plan v2** (`docs/superpowers/plans/2026-07-16-infinite-patchline-go-live-v2.md`) and **`docs/product/RECONCILIATION.md`**; where they disagree, they win. Non-prestige content here may still be accurate.
+
 # Glossary
 
 > One name per concept, across design, code, UI, and (future) localization. If two
@@ -16,12 +19,13 @@
 | **Route Zone** | Endless world-stage counter; kills-to-clear | `--c-zone` (cyan) | **Yes** |
 | **Rank** | XP track that grants SP | `--c-rep` context | soft-infinite |
 | **Boosts** | Permanent meta upgrades bought with Rep | `--c-rep` | **Yes** |
-| **Build** | Season skill/attribute allocation (Damage/Crit/Utility + skills) | — | No (reset) |
+| **Build** | Temporary Scan/Verify/Relay named-skill allocation | — | No (reset) |
 | **Ship** | Convert Notes → permanent Rep | — | action |
 | **End Season** | Optional prestige at a checkpoint → +Live Mult | `--apn-primary` | action |
 | **Gear** | Equippable items with rarity; loadout + inventory | rarity tokens | **Yes** (collection) |
 | **Host** | The APN mascot the player embodies | — | — |
 | **Focus** | Regenerating Run meter spent by active skills | `--c-signal` context | No (reset) |
+| **Priority Tag** | Verify active that marks one target for increased Signal and Notes rewards | `--c-signal` context | target lifetime |
 
 ## Enemy / target names (canonical)
 
@@ -47,7 +51,9 @@ is how you read the code.
 | `bytes` | **Signal** | rename target: `signal` |
 | `patches` | **Notes** | rename target: `notes` |
 | `authority` | **Rep** | rename target: `rep` |
-| `scan` / `verify` / `amplify` | Damage / Crit / Utility attrs | Build attributes |
+| `scan` / `verify` / `amplify` | derived Scan / Verify / Relay Mastery compatibility | retired as purchasable attrs; removed from UI in PR-4b |
+| `hero.buildVersion` | Build V2 migration marker | prevents duplicate SP refunds inside save v3 |
+| `summary_burst` | **Priority Tag** | legacy stable skill ID; behavior is single-target reward marking |
 | `scanner` | Weapon level | "Upgrade Weapon" object |
 | `mask` | (legacy skill grouping) | see `content.SKILLS` |
 | `hero.energy` / legacy `hero.mana` | Energy / **Focus** | legacy `mana` migrates on load |

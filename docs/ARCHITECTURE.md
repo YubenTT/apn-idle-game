@@ -1,3 +1,6 @@
+<!-- go-live-v2-superseded -->
+> **⚠ Superseded on the prestige model (go-live v2).** This document still describes the retired **Ship Notes + End Season** model. The current design is **Go Live** — a single atomic prestige checkpoint (first at zone 10, then every 20; see [ADR-0008](decisions/ADR-0008-go-live-sole-checkpoint.md)). Read it through **plan v2** (`docs/superpowers/plans/2026-07-16-infinite-patchline-go-live-v2.md`) and **`docs/product/RECONCILIATION.md`**; where they disagree, they win. Non-prestige content here may still be accurate.
+
 # Architecture
 
 ## Goals
@@ -45,12 +48,17 @@ flowchart TB
     TK[TICKER · TIPS]
   end
 
+  subgraph Host["host-contract.js"]
+    HC[source · render lock · clips · presentation]
+  end
+
   P --> Loop
   B --> AC
   FT --> Domain
   Domain --> Pure
   Domain --> Route
   Domain --> Data
+  DR --> HC
   DR --> ST
   HUD --> ST
   SV --> save.js
@@ -61,6 +69,8 @@ flowchart TB
 ### `formulas.js`
 
 - Export `C` (balance table) and pure functions.
+- Own named-ability SP costs, exact spent-SP reconstruction, Verify yield, and
+  Relay offline-efficiency formulas. Presentation never recreates these values.
 - No `document`, no `localStorage`, no randomness that depends on UI.
 - Safe in Node tests.
 
@@ -70,6 +80,12 @@ flowchart TB
 - Owns `s.world` (enemies, particles, sprint flag), `s.run`, `s.meta`, and Route
   state transitions. Combat reads world progress from `s.route`.
 - May import comedy / content; must still run under Node with stubbed optional SFX.
+- Build V2 exposes `branchMastery` / `buildMastery` as derived values. Scan uses
+  combat-throughput skills, Verify owns cycle-value yield, and Relay owns offline
+  continuity; the retired generic attributes are not combat inputs.
+- Priority Tag is a `game.js` target-state mechanic. It consumes Focus, records the
+  purchased rank on the current enemy, and multiplies only that enemy's Signal and
+  Notes reward. `render.js` reads the tag solely to draw its targeting brackets.
 
 ### `route.js`
 
@@ -87,9 +103,17 @@ flowchart TB
 ### `content.js`
 
 - Player-facing names and descriptions.
-- Skill graph requirements (`req: { scan, verify, amplify }`).
+- Direct Scan / Verify / Relay skill definitions and branch presentation metadata.
 - Ticker rows and tips.
 - Prefer **not** embedding damage numbers here — point at systems instead.
+
+### `host-contract.js`
+
+- Sole code owner for the canonical Host GLB path, camera/pivot render lock,
+  118–142px Run presentation gate, placeholder frames, and semantic clip names.
+- `render.js` and contract QA import this module. A future approved export path
+  must import it too rather than retyping a parallel Host vocabulary.
+- Contains presentation/asset metadata only. It never owns combat or economy.
 
 ### `render.js`
 
@@ -107,14 +131,20 @@ flowchart TB
 
 ### `ui.js`
 
-- DOM generation for Build / Publish / Boosts.
+- DOM generation for Build / Go Live / Boosts.
 - Binds clicks → domain actions → `save(s)`.
-- Afford states (`is-locked`, `can`, SP badge).
+- Afford states (`is-locked`, `can`); SP and Mastery remain inside Build.
+- Run HUD reads Route/Pack progress from Route state, keeps Focus hidden until a
+  Focus-spending skill exists, and shows Patch Echo only when real optional Route
+  progress is present.
 
 ### `save.js`
 
-- Schema version `v: 2`; writes `apn_idle_save_v2` only.
-- Loads v2 first, then v1; v1 `run.zone` / `run.killsInZone` migrate to `s.route`.
+- Schema version `v: 3`; writes `apn_idle_save_v2` only and refuses to overwrite
+  a higher-version save.
+- Loads v3, then v2/v1. Build V2 is a second shape migration inside v3:
+  legacy attribute points plus reconstructible named-skill costs are refunded
+  exactly once, the old allocation is cleared, and `hero.buildVersion=2` marks it.
 - The v1 key remains rollback evidence until explicit New Game clears both keys.
 - Persist Route + run + meta + settings (including Gear sort/filter preferences);
   strip ephemeral animation fields.
@@ -132,14 +162,17 @@ s
 ├── route       zone, killsInZone, currentPackId, history, deck, seed, catalogVersion
 ├── run
 │   ├── bytes (Signal), patches (Notes)
-│   └── hero { level, xp, sp, scan, verify, amplify, scanner, skills, energy, focus, … }
+│   └── hero { level, xp, sp, scanner, skills, buildVersion, energy, focus, … }
 ├── world       enemies, alerts, floaters, particles, confetti, sprinting, scroll
 ├── ui          panel, toast, seasonDone, tips, chipPulse, fx
 ├── stats       dps, combo
 └── settings    reducedMotion, sfx, gearSort, gearFilter, lastTs
 ```
 
-Naming debt: internal `bytes` / `patches` / `authority` / `scan` map to UI Signal / Notes / Rep / Damage. Renames should be schema-migrated in `save.js` when done.
+Naming debt: internal `bytes` / `patches` / `authority` map to UI Signal / Notes /
+Rep. `scan` / `verify` / `amplify` remain temporary derived-read compatibility
+through PR-4b; they no longer store purchasable power. Renames must be migrated in
+`save.js`, never performed as a blind field swap.
 
 ## Fixed timestep
 

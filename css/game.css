@@ -3547,6 +3547,7 @@ button[hidden] {
   color: var(--text-mid);
   font-size: var(--fs-label-s);
   line-height: var(--lh-label-s);
+  white-space: nowrap;
 }
 
 .sheet-root[data-panel="gear"] .inv-head {
@@ -3752,7 +3753,7 @@ button[hidden] {
 }
 
 .sheet-root[data-panel="gear"] .gd-actions {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--sp-2);
   margin-top: var(--sp-1);
 }
@@ -3832,7 +3833,7 @@ button[hidden] {
 .hud-res {
   min-height: var(--touch-min);
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: stretch;
   gap: var(--sp-1);
   margin: 0;
@@ -3882,11 +3883,10 @@ button[hidden] {
 
 .hud-res .chip.signal strong { color: var(--c-signal); }
 .hud-res .chip.notes strong { color: var(--c-notes); }
-.hud-res .chip.sp strong { color: var(--c-sp); }
 
 @media (orientation: landscape) {
   .hud-res {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -3900,6 +3900,10 @@ button[hidden] {
 
 .bar-row2 {
   gap: var(--sp-4);
+}
+
+.hud-bars:not(.has-focus) .bar-row2 {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .bar-lab {
@@ -4059,10 +4063,10 @@ button[hidden] {
   min-width: 0;
   min-height: calc(var(--sp-6) + var(--sp-1));
   display: inline-flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--sp-1);
+  gap: 0;
   padding: 0 var(--sp-2);
   border-radius: var(--r-chip);
   background: color-mix(in srgb, var(--ink-950) 88%, transparent);
@@ -4190,7 +4194,7 @@ button[hidden] {
 #panel-skills .sp-bank.compact {
   min-height: var(--touch-min);
   display: grid;
-  grid-template-columns: auto auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--sp-2);
   margin: 0;
@@ -4206,88 +4210,57 @@ button[hidden] {
 }
 
 #panel-skills .sp-bank-hint {
-  justify-self: end;
   color: var(--text-mid);
   font-size: var(--fs-label-s);
   line-height: var(--lh-label-s);
 }
 
-#panel-skills .attr-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--sp-2);
-}
-
-#panel-skills .build-attr-card {
-  min-width: 0;
-  min-height: calc(var(--touch-min) + var(--sp-4));
-  display: grid;
-  grid-template-columns: var(--sp-6) minmax(var(--sp-12), auto) minmax(0, 1fr) auto;
-  grid-template-rows: auto auto;
-  gap: 0 var(--sp-2);
+.build-mastery-badge {
+  min-height: var(--sp-6);
+  display: inline-flex;
   align-items: center;
-  padding: var(--sp-2) var(--sp-3);
+  justify-content: center;
+  padding: 0 var(--sp-2);
   border: var(--border-1);
-  border-radius: var(--r-card);
-  background: var(--surface-900);
-  color: var(--text-high);
-  text-align: left;
-  box-shadow: none;
+  border-radius: var(--r-pill);
+  color: var(--c-sp);
+  background: color-mix(in srgb, var(--c-sp) 8%, var(--surface-900));
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+  font-weight: 800;
+  white-space: nowrap;
 }
 
-#panel-skills .build-attr-card.can {
-  border-color: var(--compat-line-strong);
-  box-shadow: inset 0 calc(var(--border-accent) * -1) 0 var(--c-positive);
+#panel-skills .build-branch {
+  display: grid;
+  gap: var(--sp-2);
+  margin-top: var(--sp-4);
 }
 
-#panel-skills .build-attr-card.locked {
-  opacity: 1;
+#panel-skills .build-branch-head {
+  min-height: var(--touch-min);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
 }
 
-#panel-skills .attr-ico {
-  width: var(--sp-6);
-  height: var(--sp-6);
-  grid-row: 1 / span 2;
-  color: var(--text-mid);
+#panel-skills .build-branch-copy {
+  min-width: 0;
+  display: grid;
+  gap: var(--sp-1);
 }
 
-#panel-skills .attr-lab {
-  grid-column: 2;
-  grid-row: 1;
+#panel-skills .build-branch-copy strong {
   color: var(--text-high);
   font-size: var(--fs-label-m);
   line-height: var(--lh-label-m);
-  font-weight: 800;
 }
 
-#panel-skills .attr-delta {
-  grid-column: 2;
-  grid-row: 2;
-  display: flex;
-  gap: var(--sp-1);
+#panel-skills .build-branch-copy small {
   color: var(--text-mid);
   font-size: var(--fs-label-s);
   line-height: var(--lh-label-s);
-  font-variant-numeric: tabular-nums;
-}
-
-#panel-skills .attr-effect,
-#panel-skills .attr-unlock {
-  grid-column: 3;
-  color: var(--text-mid);
-  font-size: var(--fs-label-s);
-  line-height: var(--lh-label-s);
-}
-
-#panel-skills .attr-unlock {
-  grid-row: 2;
-  color: var(--c-positive);
-}
-
-#panel-skills .build-attr-card .sp-cost {
-  position: static;
-  grid-column: 4;
-  grid-row: 1 / span 2;
 }
 
 #sheet-close {
@@ -5353,6 +5326,7 @@ button[hidden] {
 }
 
 .stage-stat-track i.zone { background: var(--c-zone); }
+.stage-stat-track i.pack { background: var(--c-zone); }
 .stage-stat-track i.xp { background: var(--c-info); }
 
 .stage-live-meta {
@@ -5382,6 +5356,85 @@ button[hidden] {
 
 .stage-combo { color: var(--c-notes); }
 
+/* PR-5 · Route / Pack context sits above the uncluttered Clear / Rank / Live strip. */
+.stage-context {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 4;
+  min-height: var(--touch-min);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-4);
+  border-bottom: var(--border-1);
+  background: color-mix(in srgb, var(--surface-900) 94%, transparent);
+  pointer-events: none;
+}
+
+.stage-context-chip,
+.patch-echo-chip {
+  min-width: 0;
+  min-height: var(--sp-8);
+  display: inline-grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  gap: var(--sp-2);
+  padding-inline: var(--sp-3);
+  border: var(--border-1);
+  border-radius: var(--r-pill);
+  background: var(--surface-800);
+  color: var(--text-mid);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.stage-context-chip strong,
+.patch-echo-chip strong {
+  color: var(--text-high);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+.stage-context-chip.pack {
+  grid-template-columns: auto auto minmax(var(--sp-8), var(--sp-12));
+}
+
+.stage-context-track {
+  height: var(--sp-1);
+  overflow: hidden;
+  border-radius: var(--r-pill);
+  background: var(--border-700);
+}
+
+.stage-context-track i {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--c-zone);
+  transition: width var(--dur-fast) linear;
+}
+
+.patch-echo-chip strong {
+  color: var(--c-notes);
+}
+
+.patch-echo-chip[hidden] {
+  display: none;
+}
+
+.stage-hud {
+  top: var(--touch-min);
+  grid-template-columns: 1fr 1fr minmax(var(--size-inventory-slot), 0.72fr);
+}
+
+.stage-stat {
+  padding-inline: var(--sp-3);
+}
+
 /* I-013 · framed Patchline gameplay stage */
 .hud-stage {
   flex: 1 1 auto;
@@ -5399,7 +5452,7 @@ button[hidden] {
 }
 
 .hud-stage #toast {
-  top: calc(var(--touch-min) + var(--sp-4));
+  top: calc(var(--touch-min) + var(--touch-min) + var(--sp-6));
 }
 
 #app.is-sprinting .hud-stage {

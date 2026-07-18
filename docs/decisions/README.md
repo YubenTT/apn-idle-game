@@ -15,6 +15,10 @@
 | [0005](./ADR-0005-hybrid-host-render.md) | GLB-locked hybrid Host rendering | Accepted |
 | [0006](./ADR-0006-persistent-route-save-v2.md) | Persist global Route in dual-key save schema v2 | Accepted |
 | [0007](./ADR-0007-keep-five-navigation.md) | Keep five primary destinations plus the Gear FAB | Accepted |
+| [0008](./ADR-0008-go-live-sole-checkpoint.md) | Go Live is the sole prestige checkpoint (supersedes End Season) | Accepted |
+| [0009](./ADR-0009-rights-modes-required.md) | Every Game Pack declares a required, validated rights mode | Accepted |
+| [0010](./ADR-0010-extended-full-body-glb.md) | Extended full-body canonical GLB (extends ADR-0003/0005 scope) | Accepted |
+| [0011](./ADR-0011-transitional-rights-pending-review.md) | Transitional `pending-review` warns for wave packs, blocks for launch | Accepted |
 
 ## When to write one
 

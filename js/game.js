@@ -15,8 +15,14 @@ import {
   metaCost,
   lerp,
   isSeasonCheckpoint,
-} from './formulas.js?v=free-mvp-r005';
-import { SEASON, META, SKILLS, ENEMY_FLAVOR, skillSpCost } from './content.js?v=free-mvp-r005';
+  isGoLiveBoundary,
+  goLiveBoundaryAtOrBelow,
+  nextGoLiveBoundary,
+  spentSkillPoints,
+  verifyYieldMultiplier,
+  relayIdleEfficiency,
+} from './formulas.js?v=golive-pr5';
+import { SEASON, META, SKILLS, ENEMY_FLAVOR, skillSpCost } from './content.js?v=golive-pr5';
 import {
   ensureHub,
   hubOnKill,
@@ -32,7 +38,7 @@ import {
   applyReward,
   seasonLevel,
   SEASON_MILESTONES,
-} from './hub.js?v=free-mvp-r005';
+} from './hub.js?v=golive-pr5';
 import {
   killLine,
   pick,
@@ -42,8 +48,8 @@ import {
   LEVEL_LINES,
   SHIP_LINES,
   SCANNER_LINES,
-} from './comedy.js?v=free-mvp-r005';
-import { sfx } from './sfx.js?v=free-mvp-r005';
+} from './comedy.js?v=golive-pr5';
+import { sfx } from './sfx.js?v=golive-pr5';
 import {
   emptyGear,
   normalizeGear,
@@ -59,21 +65,26 @@ import {
   pickSlotForGear,
   SLOTS,
   BAG_CAP,
-} from './loot.js?v=free-mvp-r005';
-import { createRouteState, nextSeasonBoundary, packForRoute } from './route.js?v=free-mvp-r005';
-import { GAME_PACKS } from './generated/game-packs.js?v=free-mvp-r005';
+} from './loot.js?v=golive-pr5';
+import { createRouteState, nextSeasonBoundary, packForRoute } from './route.js?v=golive-pr5';
+import { GAME_PACKS } from './generated/game-packs.js?v=golive-pr5';
 
 export function createState() {
   return {
-    v: 2,
+    v: 3,
     meta: {
       live: 1,
-      season: 0,
+      /** Go Live prestige count (ADR-0008; supersedes the retired `season` counter). */
+      goLiveCount: 0,
+      /** Zone of an earned-but-unclaimed Go Live checkpoint (0 = none pending). */
+      pendingGoLiveZone: 0,
+      /** Highest boundary already claimed — monotonic idempotency guard. */
+      lastGoLiveZone: 0,
       kills: 0,
       ships: 0,
       bosses: 0,
       postsShippedTotal: 0,
-      /** Permanent loadout — survives End Season */
+      /** Permanent loadout — survives Go Live */
       gear: emptyGear(),
       /** Legacy demo-store data survives save round trips but is inert in the free MVP. */
       premium: {
@@ -105,10 +116,11 @@ export function createState() {
         focus: C.FOCUS_MAX,
         scanner: 0,
         skills: {},
+        /** Build V2 shape marker; save v3 is intentionally not bumped again. */
+        buildVersion: 2,
         trackerOn: false,
         deepOn: false,
         trackerStacks: 0,
-        summaryT: 0,
         attackAnim: 0,
         hitRecoil: 0,
       },
@@ -158,6 +170,38 @@ export function createState() {
 
 export function skillLv(s, id) {
   return s.run.hero.skills[id] || 0;
+}
+
+const BUILD_BRANCH_TREE = Object.freeze({ scan: 'scan', verify: 'verify', relay: 'amplify' });
+
+/** Branch Mastery is derived only from named-ability SP spend. */
+export function branchMastery(s, branch) {
+  const tree = BUILD_BRANCH_TREE[branch];
+  if (!tree) return 0;
+  return Object.values(SKILLS)
+    .filter((skill) => skill.tree === tree)
+    .reduce((sum, skill) => sum + spentSkillPoints(skillLv(s, skill.id)), 0);
+}
+
+export function buildMastery(s) {
+  return ['scan', 'verify', 'relay'].reduce((sum, branch) => sum + branchMastery(s, branch), 0);
+}
+
+export function buildYieldMultiplier(s) {
+  return verifyYieldMultiplier(branchMastery(s, 'verify'));
+}
+
+export function relayOfflineEfficiency(s) {
+  return relayIdleEfficiency(branchMastery(s, 'relay'));
+}
+
+function syncLegacyMasteryFields(s) {
+  const h = s.run.hero;
+  // Transitional read compatibility for PR-4a's old Build renderer. These are
+  // derived counters, not purchasable attributes, and combat never reads them.
+  h.scan = branchMastery(s, 'scan');
+  h.verify = branchMastery(s, 'verify');
+  h.amplify = branchMastery(s, 'relay');
 }
 
 export function metaLv(s, id) {
@@ -226,7 +270,6 @@ export function combatStats(s) {
   const g = gearBonuses(s.meta.gear);
   const flat = metaPer(s, 'cold_start') + (g.flat_dmg || 0);
   let dmg = scannerDamage(h.scanner, flat);
-  dmg *= 1 + 0.024 * h.scan;
   dmg *= 1 + metaPer(s, 'signal_power');
   dmg *= 1 + (g.dmg_pct || 0) / 100;
   dmg *= economyMult(s);
@@ -234,14 +277,14 @@ export function combatStats(s) {
   const sharp = skillLv(s, 'sharp_eye');
   let crit = Math.min(
     0.72,
-    0.012 * h.verify + (g.crit_pct || 0) / 100 + 0.015 * sharp
+    (g.crit_pct || 0) / 100 + 0.015 * sharp
   );
   let interval = C.ATTACK_INTERVAL / (1 + (g.atk_spd || 0) / 100);
   let move = C.MOVE_SPEED * (1 + metaPer(s, 'feed_speed')) * (1 + (g.move_pct || 0) / 100);
-  let eMax = C.ENERGY_MAX + 4 * h.verify + (g.energy || 0);
+  let eMax = C.ENERGY_MAX + (g.energy || 0);
   let eRegen = C.ENERGY_REGEN + (g.e_regen || 0);
-  let fMax = C.FOCUS_MAX + 8 * h.amplify;
-  let fRegen = C.FOCUS_REGEN + 0.08 * h.amplify;
+  let fMax = C.FOCUS_MAX;
+  let fRegen = C.FOCUS_REGEN;
   let skillMult = 1;
   let sprintDrain = C.SPRINT_DRAIN;
   let timeScale = 1;
@@ -299,7 +342,6 @@ export function combatStats(s) {
     deep,
     gear: g,
     economy: economyMult(s),
-    summary: skillLv(s, 'summary_burst'),
     hotfix: skillLv(s, 'hotfix'),
   };
 }
@@ -492,8 +534,13 @@ function onKill(s, e) {
   const maturityReward = Math.min(0.5, Math.floor(zone / C.SEASON_ZONES) * 0.05);
   const gb = gearBonuses(s.meta.gear);
   const eco = economyMult(s);
+  const priorityReward = priorityTagRewardMultiplier(e);
   const byteM =
-    (1 + metaPer(s, 'byte_gain')) * (1 + (gb.signal_pct || 0) / 100) * eco;
+    (1 + metaPer(s, 'byte_gain')) *
+    (1 + (gb.signal_pct || 0) / 100) *
+    eco *
+    buildYieldMultiplier(s) *
+    priorityReward;
   let typeByte = 1;
   let typeXp = 1;
   if (e.type === 'lag' || e.type === 'spoiler' || e.type === 'event') {
@@ -531,7 +578,11 @@ function onKill(s, e) {
   );
 
   const patchM =
-    (1 + metaPer(s, 'patch_gain')) * (1 + (gb.notes_pct || 0) / 100) * eco;
+    (1 + metaPer(s, 'patch_gain')) *
+    (1 + (gb.notes_pct || 0) / 100) *
+    eco *
+    buildYieldMultiplier(s) *
+    priorityReward;
   if (e.type === 'patch') {
     const p = C.PATCH_FROM_CHAMP * patchM;
     s.run.patches += p;
@@ -615,9 +666,14 @@ function onKill(s, e) {
     if (s.settings.sfx !== false) sfx('zone');
     hubOnZone(s);
 
+    // Go Live checkpoint (ADR-0008): mint a pending checkpoint at the boundary
+    // and keep it until claimed, so an overshoot never forfeits the checkpoint.
+    if (isGoLiveBoundary(s.route.zone) && s.route.zone > (s.meta.lastGoLiveZone || 0)) {
+      s.meta.pendingGoLiveZone = s.route.zone;
+    }
     if (isSeasonCheckpoint(s.route.zone)) {
       s.ui.seasonDone = true;
-      toast(s, `Zone ${s.route.zone} checkpoint! Ship Notes, then End Season for Live Mult.`);
+      toast(s, `Zone ${s.route.zone} checkpoint! Go Live to bank Notes and grow your Live Mult.`);
       tip(s, 'season');
     } else {
       toast(s, `Zone ${s.route.zone + 1}`, 1.4);
@@ -694,7 +750,6 @@ export function step(s, dt) {
   } else {
     h.trackerStacks = Math.max(0, h.trackerStacks - 0.12 * dt);
   }
-  if (h.summaryT > 0) h.summaryT -= dt;
 
   // sprint drain + empty feedback
   // Drain while sprint is active (hold OR auto-sprint via isSprinting)
@@ -770,27 +825,6 @@ export function step(s, dt) {
     }
     // smooth display
     e.displayX = lerp(e.displayX, e.x, 1 - Math.exp(-14 * dt));
-  }
-
-  // summary aoe
-  if (h.summaryT > 0 && st.summary > 0) {
-    const tick =
-      0.4 * st.dmg * (1 + 0.1 * st.summary) * st.skillMult * dt;
-    for (const e of s.world.enemies) {
-      if (e.hp <= 0) continue;
-      if (Math.abs(e.x - hx) < 300) {
-        e.hp -= tick;
-        e.hitFlash = Math.max(e.hitFlash, 0.05);
-        s.stats.dpsAcc += tick;
-        if (e.hp <= 0 && !e.killed) {
-          e.killed = true;
-          e.hp = 0;
-          e.deathT = e.type === 'patch' ? 0.7 : e.type === 'boss' ? 0.85 : 0.48;
-          e.deathMax = e.deathT;
-          onKill(s, e);
-        }
-      }
-    }
   }
 
   // AUTO ATTACK — the critical path
@@ -874,17 +908,20 @@ export function step(s, dt) {
 
 export function collectAlert(s, a) {
   const st = combatStats(s);
-  const bonus = s.run.hero.summaryT > 0 ? 1.3 : 1;
   const n = 1 + 0.08 * st.notify;
   if (a.kind === 'energy') {
     s.run.hero.energy = clamp(
-      s.run.hero.energy + (28 + 3 * st.notify) * bonus * n,
+      s.run.hero.energy + (28 + 3 * st.notify) * n,
       0,
       st.eMax
     );
     floater(s, a.x, a.y, '+ENERGY', '#10B981');
   } else {
-    const b = (4 + 0.6 * s.route.zone) * bonus * n * economyMult(s);
+    const b =
+      (4 + 0.6 * s.route.zone) *
+      n *
+      economyMult(s) *
+      buildYieldMultiplier(s);
     s.run.bytes += b;
     floater(s, a.x, a.y, `+${b | 0} Signal`, '#6cb8ff');
   }
@@ -900,7 +937,7 @@ export function castHotfix(s) {
   const st = combatStats(s);
   const cost = 10;
   if (s.run.hero.focus < cost) {
-    toast(s, `Burst Hit needs ${cost} Focus`);
+    toast(s, `Hotfix needs ${cost} Focus`);
     return false;
   }
   s.run.hero.focus -= cost;
@@ -915,19 +952,32 @@ export function castHotfix(s) {
   return true;
 }
 
-export function castSummary(s) {
+export function priorityTagRewardMultiplier(enemy) {
+  const rank = Math.max(0, Number(enemy?.priorityTagRank) || 0);
+  return rank > 0 ? 1.25 + Math.min(0.5, (rank - 1) * 0.05) : 1;
+}
+
+export function castPriorityTag(s) {
   const lv = skillLv(s, 'summary_burst');
   if (lv < 1) return false;
+  const target = s.world.enemies.find((enemy) => enemy.hp > 0);
+  if (!target) {
+    toast(s, 'Priority Tag ready — no target');
+    return false;
+  }
   if (s.run.hero.focus < 12) {
-    toast(s, 'Summary Burst needs 12 Focus');
+    toast(s, 'Priority Tag needs 12 Focus');
     return false;
   }
   s.run.hero.focus -= 12;
-  s.run.hero.summaryT = 3.2 + 0.25 * lv;
-  toast(s, 'Summary Burst!');
-  particles(s, s.world.heroX, 200, '#6cb8ff', 14);
+  target.priorityTagRank = lv;
+  toast(s, 'Priority target verified');
+  particles(s, target.displayX, 170, tone('signal'), 14);
   return true;
 }
+
+/** Transitional API alias for old saves/tests; player copy and behavior use Priority Tag. */
+export const castSummary = castPriorityTag;
 
 export function canLearn(s, id) {
   const d = SKILLS[id];
@@ -936,10 +986,6 @@ export function canLearn(s, id) {
   if (cur >= d.max) return false;
   const cost = skillSpCost(cur);
   if (s.run.hero.sp < cost) return false;
-  const h = s.run.hero;
-  if (d.req.scan && h.scan < d.req.scan) return false;
-  if (d.req.verify && h.verify < d.req.verify) return false;
-  if (d.req.amplify && h.amplify < d.req.amplify) return false;
   return true;
 }
 
@@ -948,16 +994,16 @@ export function nextSkillCost(s, id) {
 }
 
 export function allocAttr(s, attr) {
-  if (s.run.hero.sp < 1) return false;
-  if (!['scan', 'verify', 'amplify'].includes(attr)) return false;
-  s.run.hero.sp -= 1;
-  s.run.hero[attr] += 1;
-  s.ui.panelDirty = true;
-  confetti(s, s.world.heroX, 200, ['#FC1243', '#e6b84d', '#5eb0ff', '#fff'], 14);
-  const lab = attr === 'scan' ? 'DAMAGE' : attr === 'verify' ? 'CRIT' : 'UTILITY';
-  floater(s, s.world.heroX, 140, `+${lab}`, '#e6b84d');
-  if (s.settings.sfx !== false) sfx('buy');
-  return true;
+  const tree = attr === 'relay' ? 'amplify' : attr;
+  if (!['scan', 'verify', 'amplify'].includes(tree)) return false;
+  const candidate = Object.values(SKILLS)
+    .filter((skill) => skill.tree === tree && skillLv(s, skill.id) < skill.max)
+    .sort((a, b) =>
+      nextSkillCost(s, a.id) - nextSkillCost(s, b.id) ||
+      skillLv(s, a.id) - skillLv(s, b.id) ||
+      a.id.localeCompare(b.id)
+    )[0];
+  return candidate ? allocSkill(s, candidate.id) : false;
 }
 
 export function allocSkill(s, id) {
@@ -967,6 +1013,7 @@ export function allocSkill(s, id) {
   s.run.hero.sp -= cost;
   s.run.hero.skills[id] = (s.run.hero.skills[id] || 0) + 1;
   if (id === 'live_tracker') s.run.hero.trackerOn = true;
+  syncLegacyMasteryFields(s);
   s.ui.panelDirty = true;
   confetti(s, s.world.heroX, 190, ['#FC1243', '#fff', '#3ecf8e'], 16);
   floater(s, s.world.heroX, 145, `${d.name} ·${cost}SP`, tone('sp'), true);
@@ -982,7 +1029,7 @@ export function buyScanner(s) {
   toast(s, pick(SCANNER_LINES) + ` (Lv ${s.run.hero.scanner})`);
   particles(s, s.world.heroX, 200, '#FC1243', 16);
   confetti(s, s.world.heroX, 190, ['#FC1243', '#ff6b8a', '#fff'], 16);
-  floater(s, s.world.heroX, 150, `WEAPON Lv ${s.run.hero.scanner}`, '#FC1243', true);
+  floater(s, s.world.heroX, 150, `SCANNER Lv ${s.run.hero.scanner}`, '#FC1243', true);
   s.ui.chipPulse = s.ui.chipPulse || {};
   s.ui.chipPulse.bytes = 0.3;
   if (s.settings.sfx !== false) sfx('upgrade');
@@ -1038,14 +1085,14 @@ export function buyMeta(s, id) {
 }
 
 export const END_SEASON_CONTRACT = Object.freeze({
-  resets: Object.freeze(['Weapon level', 'Rank and SP', 'Build skills', 'Notes', '85% of Signal']),
+  resets: Object.freeze(['Scanner level', 'Rank and SP', 'Build skills', 'Notes', '85% of Signal']),
   keeps: Object.freeze(['Route Zone', 'Rep and Boosts', 'Gear', 'Live Mult']),
 });
 
-/** End Season (prestige). UI reads END_SEASON_CONTRACT before this mutation. */
+/** Legacy prestige path, superseded by goLive(). Retained for save back-compat + tests. */
 export function leaveSeason(s) {
   if (!s.ui.seasonDone && !isSeasonCheckpoint(s.route.zone)) {
-    toast(s, `Reach Zone ${nextSeasonBoundary(s.route.zone)} checkpoint to End Season`);
+    toast(s, `Reach Zone ${nextSeasonBoundary(s.route.zone)} checkpoint first`);
     return false;
   }
   if (!s.ui.seasonDone && isSeasonCheckpoint(s.route.zone)) {
@@ -1053,7 +1100,7 @@ export function leaveSeason(s) {
   }
   const gain = liveGain(s.authority.shippedThisSeason);
   s.meta.live += gain;
-  s.meta.season += 1;
+  s.meta.goLiveCount += 1;
   s.authority.shippedThisSeason = 0;
   // gear is on meta — intentionally untouched (normalize for multi-slot)
   s.meta.gear = normalizeGear(s.meta.gear);
@@ -1078,12 +1125,144 @@ export function leaveSeason(s) {
   s.ui.seasonDone = false;
   toast(
     s,
-    `New season! Live ×${s.meta.live.toFixed(2)} (+${gain.toFixed(3)}). Gear · Rep Boosts kept · Weapon Lv reset`
+    `New season! Live ×${s.meta.live.toFixed(2)} (+${gain.toFixed(3)}). Gear · Rep Boosts kept · Scanner Lv reset`
   );
   s.ui.panelDirty = true;
   confetti(s, s.world.heroX, 180, ['#e6b84d', '#FC1243', '#fff', '#3ecf8e'], 36);
   if (s.settings.sfx !== false) sfx('rank');
   return true;
+}
+
+/** What a Go Live keeps vs. resets — UI reads this before the mutation. */
+export const GO_LIVE_CONTRACT = Object.freeze({
+  banks: Object.freeze(['Unshipped Notes → Rep', 'Cycle Rep → Live Mult']),
+  keeps: Object.freeze(['Route Zone', 'Rep and Boosts', 'Gear', 'Live Mult']),
+  resets: Object.freeze(['Scanner level', 'Rank and SP', 'Build skills', '85% of Signal']),
+});
+
+/**
+ * The earned-but-unclaimed Go Live boundary for `s`, or 0 when none is available.
+ * A boundary counts only if it is above the last one already claimed, so a
+ * double-click (or a reload sitting on the boundary) can never prestige twice.
+ */
+export function goLiveAvailableZone(s) {
+  const claimed = s.meta.lastGoLiveZone || 0;
+  const pending = s.meta.pendingGoLiveZone || 0;
+  if (pending > claimed) return pending;
+  if (isGoLiveBoundary(s.route.zone) && s.route.zone > claimed) return s.route.zone;
+  return 0;
+}
+
+export function canGoLive(s) {
+  return goLiveAvailableZone(s) > 0;
+}
+
+/**
+ * Go Live (ADR-0008): the single atomic prestige checkpoint. Banks unshipped
+ * Notes → Rep, converts the cycle's banked Rep → Live Mult, resets temporary
+ * power, and KEEPS the global Route. Idempotent: passing a `checkpointId` (or
+ * re-calling on the same boundary) returns the prior receipt without a second
+ * mutation. Returns a schema-valid receipt object, or null when unavailable.
+ *
+ * `opts.legacyContribution` overrides the cycle contribution feeding liveGain
+ * (Rep-denominated by default — matches the live formula); used by migration.
+ * `opts.migratedFrom` stamps the §7.6 migration marker on the receipt.
+ */
+export function goLive(s, checkpointId = null, opts = {}) {
+  // Idempotency (explicit id): re-calling with a claimed checkpoint's id returns it.
+  if (checkpointId && s.meta.lastGoLive && s.meta.lastGoLive.checkpointId === checkpointId) {
+    return s.meta.lastGoLive;
+  }
+  const boundaryZone = goLiveAvailableZone(s);
+  if (boundaryZone <= 0) {
+    // Idempotency (double-click): still standing on the just-claimed boundary
+    // with nothing new earned → return the prior receipt, never a second prestige.
+    if (s.meta.lastGoLive && s.route.zone === (s.meta.lastGoLiveZone || 0)) {
+      return s.meta.lastGoLive;
+    }
+    toast(s, `Reach Zone ${nextGoLiveBoundary(s.route.zone)} to Go Live`);
+    return null;
+  }
+  const id = checkpointId || `gl-z${boundaryZone}`;
+  // Idempotency: the same checkpoint already produced a receipt → return it.
+  if (s.meta.lastGoLive && s.meta.lastGoLive.checkpointId === id) {
+    return s.meta.lastGoLive;
+  }
+
+  // 1) Bank unshipped Notes → Rep (fold the bank step into the atomic action).
+  const notesBanked = Math.max(0, Math.floor(s.run.patches));
+  const repGained = notesBanked >= 1 ? Math.floor(notesBanked * C.SHIP_RATE * economyMult(s)) : 0;
+  if (repGained > 0) {
+    s.run.patches = 0;
+    s.authority.amount += repGained;
+    s.authority.shippedThisSeason += repGained;
+    s.meta.ships += 1;
+    s.meta.postsShippedTotal += repGained;
+    hubOnShip(s, notesBanked);
+  }
+
+  // 2) Cycle Rep → Live Mult (Rep-denominated; migration may override).
+  const cycleContribution = Number.isFinite(opts.legacyContribution)
+    ? opts.legacyContribution
+    : s.authority.shippedThisSeason;
+  const gain = liveGain(cycleContribution);
+  s.meta.live += gain;
+  s.meta.goLiveCount += 1;
+
+  // 3) Reset temporary power; KEEP Route / gear / Rep / boosts / Live Mult.
+  s.meta.gear = normalizeGear(s.meta.gear);
+  s.route.killsInZone = 0;
+  s.run.bytes = Math.floor(s.run.bytes * 0.15);
+  s.run.patches = 0;
+  const h = s.run.hero;
+  h.level = 1;
+  h.xp = 0;
+  h.sp = 0;
+  h.scan = h.verify = h.amplify = 0;
+  h.skills = {};
+  h.scanner = 0;
+  h.energy = C.ENERGY_MAX;
+  h.focus = C.FOCUS_MAX;
+  h.trackerOn = false;
+  h.deepOn = false;
+  h.trackerStacks = 0;
+  s.world.enemies = [];
+  s.world.bossActive = false;
+  s.world.attackCd = 0;
+
+  // 4) Clear the cycle: consume the pending checkpoint, advance the guard.
+  s.authority.shippedThisSeason = 0;
+  s.meta.pendingGoLiveZone = 0;
+  s.meta.lastGoLiveZone = boundaryZone;
+  s.ui.seasonDone = false;
+
+  const receipt = {
+    schema: 'apn.go-live-receipt',
+    version: 1,
+    checkpointId: id,
+    boundaryZone,
+    goLiveCount: s.meta.goLiveCount,
+    notesBanked,
+    repGained,
+    repTotal: Math.floor(s.authority.amount),
+    cycleContribution,
+    liveGain: gain,
+    liveMult: s.meta.live,
+    completedPackIds: [],
+    nextPackIds: [],
+    ts: Date.now(),
+  };
+  if (Number.isFinite(opts.migratedFrom)) {
+    receipt.migration = { fromVersion: opts.migratedFrom };
+  }
+  s.meta.lastGoLive = receipt;
+
+  toast(s, `Go Live #${s.meta.goLiveCount}! Live ×${s.meta.live.toFixed(2)} (+${gain.toFixed(3)}). Route kept.`);
+  s.ui.panelDirty = true;
+  s.ui.fx = { kind: 'rank', t: 0.4 };
+  confetti(s, s.world.heroX, 180, ['#e6b84d', '#FC1243', '#fff', '#3ecf8e'], 36);
+  if (s.settings.sfx !== false) sfx('rank');
+  return receipt;
 }
 
 export function equipGear(s, itemId) {
@@ -1204,8 +1383,12 @@ export function simulateOffline(s, seconds) {
   }
   const sim = steps * C.FIXED_DT;
   const overflowSeconds = Math.max(0, T - sim);
-  if (overflowSeconds > 0) {
-    const idle = C.IDLE_EFF;
+  // Offline→currency conversion is preserved but CAPPED at the checkpoint boundary
+  // (ADR-0008): if the sim halted because it hit the boundary, no post-boundary
+  // overflow is banked — otherwise 8h AFK past a boundary would farm prestige fuel.
+  const reachedBoundary = s.route.zone >= budget.boundary;
+  if (overflowSeconds > 0 && !reachedBoundary) {
+    const idle = relayOfflineEfficiency(s);
     const db = Math.max(0, s.run.bytes - before.bytes);
     const dp = Math.max(0, s.run.patches - before.patches);
     const signalRate = db > 0 ? db / Math.max(sim, 1) : C.BYTE_BASE / 10;

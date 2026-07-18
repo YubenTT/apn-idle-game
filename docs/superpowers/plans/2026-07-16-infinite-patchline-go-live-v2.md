@@ -124,6 +124,13 @@
 
 ### PR-5 · Run hierarchy + Host presentation + pose/clip contract
 
+> **Execution checkpoint (2026-07-18):** the Run hierarchy, placeholder scaling,
+> and single code-side clip vocabulary are safe to checkpoint independently. The
+> first extended-GLB identity candidate was owner-rejected and purged; it never
+> became canonical or entered the runtime atlas. Issue #23 remains open for a new
+> full-body identity approach, deterministic pose derivation, and the rewritten
+> real-pixel asset gate. Do not reuse the rejected arm/neck-as-leg construction.
+
 - **Objective:** V3 Run layout + Host at brand-hero scale, on a single code-defined pose contract with a rewritten asset gate.
 - **Scope (`js/render.js`, `js/ui.js`, `qa/check-assets.mjs`, `tools/mascot-render/`, `docs/decisions/`):** top strip = Signal + Notes only; Route + Pack progress chips; conditional Focus; Patch Echo chip `n/m`; Host stage 118–142 px, shared ground plane; **define ONE pose/clip contract code-side** (resolve the 4 conflicting contracts) and **rewrite `check-assets.mjs`** to it in the same PR; author **extended full-body canonical GLB** (legs added per V3 identity) blessed by ADR-0010; derive all poses **deterministically** via `tools/mascot-render` 3-band matte toon shader; **ships with scaled placeholder atlas** — full matte re-atlas is PR-8.
 - **Non-goals:** no image-gen as atlas source (gen = identity/style ref only per §7); no 3-layer parallax (single-layer launch); no per-pack art.

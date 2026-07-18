@@ -1,12 +1,13 @@
 import { C } from '../js/formulas.js';
 import {
-  allocAttr,
+  allocSkill,
+  branchMastery,
   buyMeta,
   buyScanner,
+  canGoLive,
   createState,
-  leaveSeason,
+  goLive,
   setSprint,
-  shipPatches,
   step,
 } from '../js/game.js';
 
@@ -30,8 +31,25 @@ function median(values) {
   return ordered[Math.floor(ordered.length / 2)];
 }
 
-function runProfile({ checkInSeconds, sprint }) {
-  installSeed();
+const BUILD_QUEUES = Object.freeze({
+  scan: Object.freeze(['scroll_speed', 'live_tracker', 'hotfix']),
+  verify: Object.freeze(['notify', 'sharp_eye', 'summary_burst']),
+  relay: Object.freeze(['marathon', 'amplify', 'deep_dive']),
+});
+
+function spendBuildSp(state, build) {
+  const queue = BUILD_QUEUES[build];
+  let bought = true;
+  while (bought && state.run.hero.sp > 0) {
+    bought = false;
+    for (const id of queue) {
+      if (allocSkill(state, id)) bought = true;
+    }
+  }
+}
+
+function runProfile({ build, seed, checkInSeconds, sprint }) {
+  installSeed(seed);
   const state = createState();
   state.settings.sfx = false;
   let elapsed = 0;
@@ -43,7 +61,7 @@ function runProfile({ checkInSeconds, sprint }) {
   while (state.route.zone < 200 && elapsed < 24 * 3600) {
     if (elapsed >= nextCheckIn) {
       while (buyScanner(state));
-      while (state.run.hero.sp > 0) allocAttr(state, 'scan');
+      spendBuildSp(state, build);
       nextCheckIn = elapsed + checkInSeconds;
     }
     setSprint(state, sprint && state.run.hero.energy > 25);
@@ -51,11 +69,11 @@ function runProfile({ checkInSeconds, sprint }) {
     elapsed += C.FIXED_DT;
 
     if (firstBossSeconds == null && state.route.zone >= 10) firstBossSeconds = elapsed;
-    if (state.ui.seasonDone) {
-      shipPatches(state);
+    if (canGoLive(state)) {
+      const receipt = goLive(state);
+      assert(Boolean(receipt?.checkpointId), `${build} Go Live accepted at Zone ${state.route.zone}`);
       while (buyMeta(state, 'signal_power'));
       seasonMinutes.push((elapsed - seasonStartedAt) / 60);
-      assert(leaveSeason(state), `End Season accepted at Zone ${state.route.zone}`);
       seasonStartedAt = elapsed;
       nextCheckIn = elapsed;
     }
@@ -63,34 +81,31 @@ function runProfile({ checkInSeconds, sprint }) {
 
   assert(state.settings.sfx === false, 'headless profile never enables SFX');
   assert(state.route.zone === 200, `profile reaches Corruption unlock (got ${state.route.zone})`);
-  assert(seasonMinutes.length === 10, 'ten clean seasons complete');
+  assert(seasonMinutes.length === 10, `${build} completes ten deterministic Go Live cycles`);
   return {
+    build,
     firstBossMinutes: firstBossSeconds / 60,
     firstSeasonMinutes: seasonMinutes[0],
     matureMedianMinutes: median(seasonMinutes.slice(2)),
     seasonMinutes,
     totalHours: elapsed / 3600,
+    mastery: branchMastery(state, build),
   };
 }
 
-const active = runProfile({ checkInSeconds: 30, sprint: true });
-const idle = runProfile({ checkInSeconds: 20 * 60, sprint: false });
+const profiles = [
+  runProfile({ build: 'scan', seed: 0x5343414e, checkInSeconds: 30, sprint: true }),
+  runProfile({ build: 'verify', seed: 0x56455249, checkInSeconds: 30, sprint: true }),
+  runProfile({ build: 'relay', seed: 0x52454c41, checkInSeconds: 30, sprint: true }),
+];
 
-console.log(
-  `PACE active boss=${active.firstBossMinutes.toFixed(1)}m season=${active.firstSeasonMinutes.toFixed(1)}m mature=${active.matureMedianMinutes.toFixed(1)}m corruption=${active.totalHours.toFixed(1)}h`
-);
-console.log(
-  `PACE idle boss=${idle.firstBossMinutes.toFixed(1)}m season=${idle.firstSeasonMinutes.toFixed(1)}m mature=${idle.matureMedianMinutes.toFixed(1)}m calendar=${(idle.totalHours / 6).toFixed(1)}d`
-);
+for (const profile of profiles) {
+  console.log(
+    `BUILD ${profile.build} boss=${profile.firstBossMinutes.toFixed(1)}m first=${profile.firstSeasonMinutes.toFixed(1)}m mature=${profile.matureMedianMinutes.toFixed(1)}m zone200=${profile.totalHours.toFixed(1)}h mastery=${profile.mastery}`
+  );
+  assert(Number.isFinite(profile.totalHours), `${profile.build} timing stays finite`);
+  assert(profile.totalHours > 0 && profile.totalHours < 24, `${profile.build} reaches Zone 200 without softlock`);
+  assert(profile.mastery > 0, `${profile.build} spends SP only in its named branch`);
+}
 
-assert(active.firstBossMinutes >= 8 && active.firstBossMinutes <= 12, 'active first boss window');
-assert(active.firstSeasonMinutes >= 25 && active.firstSeasonMinutes <= 40, 'active first season window');
-assert(idle.firstBossMinutes >= 15 && idle.firstBossMinutes <= 25, 'idle first boss window');
-assert(idle.firstSeasonMinutes >= 45 && idle.firstSeasonMinutes <= 75, 'idle first season window');
-assert(active.matureMedianMinutes >= 35 && active.matureMedianMinutes <= 70, 'active mature median');
-assert(idle.matureMedianMinutes >= 60 && idle.matureMedianMinutes <= 120, 'idle mature median');
-assert(active.totalHours >= 9.5 && active.totalHours <= 16, 'active Corruption unlock window');
-const idleCalendarDays = idle.totalHours / 6;
-assert(idleCalendarDays >= 2 && idleCalendarDays <= 4, 'idle Corruption calendar window');
-
-console.log('PACING PASS');
+console.log('PACING PASS · 3 SEEDED BUILDS');

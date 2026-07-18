@@ -5,6 +5,8 @@ import {
   isBossZone,
   killsNeeded,
   expectedHits,
+  isGoLiveBoundary,
+  nextGoLiveBoundary,
 } from '../js/formulas.js';
 import {
   createState,
@@ -13,9 +15,15 @@ import {
   allocSkill,
   buyScanner,
   castHotfix,
+  castPriorityTag,
+  priorityTagRewardMultiplier,
   shipPatches,
   combatStats,
   leaveSeason,
+  goLive,
+  canGoLive,
+  goLiveAvailableZone,
+  simulateOffline,
   setSprint,
   isSprinting,
   equipGear,
@@ -27,6 +35,10 @@ import {
   END_SEASON_CONTRACT,
   metaUpgradePreview,
   recommendedMetaId,
+  branchMastery,
+  buildMastery,
+  buildYieldMultiplier,
+  relayOfflineEfficiency,
 } from '../js/game.js';
 import {
   emptyGear,
@@ -43,7 +55,7 @@ import {
   queryGearBag,
   toggleJunk,
 } from '../js/loot.js';
-import { SKILLS, nextSkillUnlock } from '../js/content.js';
+import { SKILLS, SKILL_TREES, skillSpCost } from '../js/content.js';
 import {
   hubOnKill,
   emptyHub,
@@ -60,6 +72,15 @@ import {
   packZoneDisplay,
   nextSeasonBoundary,
 } from '../js/route.js';
+import { ANALYTICS_EVENTS, ANALYTICS_EVENT_NAMES } from '../js/analytics.js';
+import {
+  HOST_CLIP_NAMES,
+  HOST_CLIPS,
+  HOST_PLACEHOLDER_FRAMES,
+  HOST_PRESENTATION,
+  HOST_RENDER_LOCK,
+  resolveHostClip,
+} from '../js/host-contract.js';
 import {
   apply as applySave,
   save as saveState,
@@ -67,6 +88,7 @@ import {
   clear as clearSave,
   SAVE_KEY_V1,
   SAVE_KEY_V2,
+  SAVE_VERSION,
 } from '../js/save.js';
 import { checkCssTokenContract } from './check-css-tokens.mjs';
 import { checkEconomyColorContract } from './check-economy-colors.mjs';
@@ -120,6 +142,11 @@ process.stdout.write(
     encoding: 'utf8',
   })
 );
+process.stdout.write(
+  execFileSync(process.execPath, [fileURLToPath(new URL('./check-go-live.mjs', import.meta.url))], {
+    encoding: 'utf8',
+  })
+);
 
 let fails = 0;
 const ok = (c, m) => {
@@ -141,11 +168,61 @@ for (const check of checkMobileGestureContract()) {
 }
 for (const message of checkRouteContract()) ok(true, `route ${message}`);
 
+// —— PR-5 single Host contract ——
+ok(Object.isFrozen(HOST_CLIPS), 'Host clip contract is immutable');
+ok(HOST_CLIP_NAMES.length === 12, 'Host exposes twelve semantic clips from one code contract');
+ok(
+  HOST_CLIP_NAMES.join('|') === 'idle|run|scan_start|scan_fire|scan_recover|hotfix|priority_tag|tracker_loop|overclock_loop|sprint|gear_pull|drop_ship',
+  'Host clip vocabulary matches the V3 production contract',
+);
+ok(
+  HOST_CLIP_NAMES.every((name) => HOST_PLACEHOLDER_FRAMES.includes(HOST_CLIPS[name].placeholderFrame)),
+  'Every semantic clip resolves to a shipped placeholder frame',
+);
+ok(
+  HOST_PRESENTATION.min === 118 && HOST_PRESENTATION.target === 130 && HOST_PRESENTATION.max === 142,
+  'Run Host presentation is locked to the 118–142 CSS px gate',
+);
+ok(
+  HOST_RENDER_LOCK.cameraY === 18 && HOST_RENDER_LOCK.cameraX === 9 && HOST_RENDER_LOCK.pivot === 'foot-center',
+  'Host render lock is defined once in code',
+);
+ok(resolveHostClip({ hitRecoil: 0.6 }) === 'damage', 'Host resolver prioritizes damage reaction');
+ok(resolveHostClip({ attack: 0.9 }) === 'crit', 'Host resolver maps peak attack to crit placeholder');
+ok(resolveHostClip({ attack: 0.4 }) === 'scan', 'Host resolver maps attack to scan placeholder');
+ok(resolveHostClip({ overdrive: true }) === 'overdrive', 'Host resolver maps Overclock to overdrive placeholder');
+ok(resolveHostClip({ sprinting: true }) === 'sprint', 'Host resolver maps Sprint to sprint placeholder');
+ok(resolveHostClip({}) === 'run', 'Host resolver defaults to run placeholder');
+
+// —— Dormant analytics event-name contract (PR-3, IDLE-DESIGN-CONTEXT §6) ——
+// Names only: reserved, frozen, snake_case, unique. There is no telemetry runtime to
+// assert because none exists yet — this guards the vocabulary, not any firing.
+ok(Object.isFrozen(ANALYTICS_EVENTS), 'analytics event map is frozen');
+ok(ANALYTICS_EVENT_NAMES.length >= 12, 'analytics reserves the §6 + progression events');
+ok(
+  ANALYTICS_EVENT_NAMES.every((n) => /^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$/.test(n)),
+  'every analytics name is snake_case',
+);
+ok(new Set(ANALYTICS_EVENT_NAMES).size === ANALYTICS_EVENT_NAMES.length, 'analytics names are unique');
+ok(
+  ['go_live', 'panel_open', 'offline_return', 'route_claim'].every((n) => ANALYTICS_EVENT_NAMES.includes(n)),
+  'analytics anchors Go Live + the §6 metrics',
+);
+ok(
+  !ANALYTICS_EVENT_NAMES.some((n) => /ship|weapon|satisfied_return/.test(n)),
+  'analytics uses current vocabulary (no retired ship/weapon, no struck metric)',
+);
+
 // —— Build decision previews ——
-ok(nextSkillUnlock('scan', 0)?.id === 'hotfix', 'Damage next unlock starts at Burst');
-ok(nextSkillUnlock('scan', 1)?.id === 'scroll_speed', 'Damage next unlock advances to Speed');
-ok(nextSkillUnlock('scan', 5) === null, 'Damage reports all skills open');
-ok(END_SEASON_CONTRACT.resets.includes('Weapon level'), 'End Season contract names Weapon reset');
+ok(
+  SKILL_TREES.map((tree) => tree.label).join('|') === 'Scan|Verify|Relay',
+  'Build presents the three named branches',
+);
+ok(
+  SKILL_TREES.every((tree) => Object.values(SKILLS).filter((skill) => skill.tree === tree.id).length === 3),
+  'Build gives each named branch exactly three focused decisions',
+);
+ok(END_SEASON_CONTRACT.resets.includes('Scanner level'), 'End Season contract names Scanner reset');
 ok(END_SEASON_CONTRACT.keeps.includes('Route Zone'), 'End Season contract keeps Route Zone');
 const hubStateFixture = emptyHub();
 ok(hubObjectiveState(hubStateFixture, DAILY_DEFS[0], 'daily') === 'locked', 'Hub objective starts locked');
@@ -167,10 +244,18 @@ ok(/\.hud-stage\s*\{[^}]*margin:\s*0;[^}]*border:\s*0;[^}]*border-radius:\s*0;/s
 ok(/#app\.is-sprinting \.hud-stage\s*\{[^}]*box-shadow:\s*none/s.test(cssSource), 'Sprint never restores a stage frame');
 ok(/#app\.is-overdrive \.hud-stage::after\s*\{[^}]*display:\s*none/s.test(cssSource), 'Overdrive never restores a stage frame');
 ok(shellMarkup.includes('id="v-energy-lab"') && shellMarkup.includes('id="v-focus-lab"'), 'Run meters expose live values');
+ok(
+  ['v-zone', 'v-pack-progress', 'v-level', 'v-live'].every((id) => shellMarkup.includes(`id="${id}"`)),
+  'Run stage exposes Route, Pack, Rank, and Live hierarchy',
+);
+ok(shellMarkup.includes('id="patch-echo-chip"') && shellMarkup.includes('id="v-echo-progress"'), 'Run reserves one data-bound Patch Echo chip');
+ok(uiSource.includes("skillLv(s, 'hotfix') > 0 || skillLv(s, 'summary_burst') > 0"), 'Focus appears only after a Focus-spending skill is learned');
+ok(uiSource.includes("echoProgressByPack?.[pack?.id]"), 'Patch Echo chip reads optional Route domain state without inventing progress');
+ok(/const mh = HOST_PRESENTATION\.target;/.test(readFileSync(new URL('../js/render.js', import.meta.url), 'utf8')), 'Canvas uses the canonical 130px Host target');
 ok(uiSource.includes("spBtn.disabled = h.energy < 1"), 'Sprint empty state uses native disabled semantics');
 ok(/\.btn-chip\s*\{[^}]*min-height:\s*calc\(var\(--touch-min\) \+ var\(--sp-1\)\)/s.test(cssSource), 'Run skills preserve touch targets');
 ok((shellMarkup.match(/class="nav-btn"/g) || []).length === 5, 'Navigation keeps exactly five tabs');
-for (const label of ['Build', 'Ship', 'Hub', 'Boosts', 'Menu']) {
+for (const label of ['Build', 'Go Live', 'Route', 'Boosts', 'Menu']) {
   ok(shellMarkup.includes(`<span>${label}</span>`), `Navigation keeps ${label}`);
 }
 ok(shellMarkup.includes('id="btn-bag"') && shellMarkup.includes('data-panel="gear"'), 'Gear remains a separate FAB');
@@ -182,6 +267,8 @@ for (const section of ['Accessibility', 'Audio', 'Account', 'Reset']) {
 ok(!shellMarkup.includes('menu-section-title">Purchases'), 'Free MVP Menu has no Purchases section');
 ok(!shellMarkup.includes('premium-body') && !shellMarkup.includes('Demo store'), 'Free MVP shell has no demo store');
 ok(!shellMarkup.includes('id="v-pro"'), 'Free MVP HUD has no Pro badge');
+ok(!shellMarkup.includes('id="v-sp"'), 'SP is shown only inside Build');
+ok(!shellMarkup.includes('>Area<'), 'Run has no retired Area action');
 ok(!uiSource.includes('data-premium'), 'Free MVP UI has no purchase actions');
 ok(!contentSource.includes('export const PREMIUM'), 'Free MVP has no premium product catalog');
 ok(!contentSource.includes('Live & Pro'), 'Free MVP Boost copy has no retired Pro claim');
@@ -209,6 +296,37 @@ const damageBoostPreview = metaUpgradePreview(boostFixture, 'signal_power');
 ok(damageBoostPreview.current === '+0%' && damageBoostPreview.next === '+5%', 'Boost preview exposes exact current to next effect');
 ok(damageBoostPreview.affordable === true && damageBoostPreview.cost === 8, 'Boost preview exposes exact affordability and Rep cost');
 ok(typeof recommendedMetaId(boostFixture) === 'string', 'Boosts expose one domain recommendation');
+
+const priorityFixture = createState();
+priorityFixture.run.hero.skills.summary_burst = 2;
+priorityFixture.run.hero.focus = 60;
+step(priorityFixture, 1);
+const priorityTarget = priorityFixture.world.enemies.find((enemy) => enemy.hp > 0);
+ok(Boolean(priorityTarget), 'Priority Tag fixture has one live target');
+const focusBeforePriority = priorityFixture.run.hero.focus;
+ok(castPriorityTag(priorityFixture), 'Priority Tag can mark the current target');
+ok(priorityTarget?.priorityTagRank === 2, 'Priority Tag persists its purchased rank on the target');
+ok(priorityFixture.run.hero.focus === focusBeforePriority - 12, 'Priority Tag spends exactly 12 Focus');
+ok(priorityTagRewardMultiplier(priorityTarget) > 1, 'Priority Tag grants a real single-target reward multiplier');
+
+function priorityKillReward(tagged) {
+  installSeededRandom(0x5052494f);
+  const state = createState();
+  state.run.hero.skills.hotfix = 1;
+  state.run.hero.skills.summary_burst = 1;
+  state.run.hero.focus = 60;
+  step(state, 1);
+  const target = state.world.enemies.find((enemy) => enemy.hp > 0);
+  target.type = 'stale';
+  target.hp = 1;
+  if (tagged) castPriorityTag(state);
+  installSeededRandom(0x544147);
+  castHotfix(state);
+  return state.run.bytes;
+}
+const untaggedReward = priorityKillReward(false);
+const taggedReward = priorityKillReward(true);
+ok(taggedReward > untaggedReward * 1.24, 'Priority Tag increases the marked target actual kill reward');
 ok(itemArtKey({ slot: 'weapon', name: 'Mod Stick', rarity: 'green' }) === 'mod-stick', 'Gear maps Mod Stick to authored art');
 ok(itemArtKey({ slot: 'chest', name: 'Patch Mail', rarity: 'green' }) === 'patch-mail', 'Gear maps Patch Mail to authored art');
 ok(itemArtKey({ slot: 'legs', name: 'Sprint Leggings', rarity: 'green' }) === 'route-leggings', 'Gear maps Sprint Leggings to authored art');
@@ -223,7 +341,9 @@ for (const cue of ['hit', 'crit', 'loot', 'rank', 'sheet', 'afford']) {
 
 // —— Persistent global Route + save v2 migration ——
 const freshRoute = createState();
-ok(freshRoute.v === 2, 'fresh state schema v2');
+ok(freshRoute.v === 3, 'fresh state schema v3');
+ok(freshRoute.meta.goLiveCount === 0 && freshRoute.meta.pendingGoLiveZone === 0, 'fresh Go Live counters zeroed');
+ok(!('season' in freshRoute.meta), 'retired season counter absent from fresh state');
 ok(freshRoute.route.zone === 0, 'fresh global route');
 ok(freshRoute.route.currentPackId === 'valorant', 'fresh first pack');
 ok(!('zone' in freshRoute.run), 'fresh run zone retired');
@@ -282,7 +402,7 @@ saveState(migratedRoute);
 ok(saveMemory.has(SAVE_KEY_V2), 'save writes v2 key');
 ok(!saveMemory.has(SAVE_KEY_V1), 'save does not write legacy key');
 const roundTrip = loadState();
-ok(roundTrip?.v === 2 && roundTrip.route?.zone === 1905, 'v2 save round trip');
+ok(roundTrip?.v === 3 && roundTrip.route?.zone === 1905, 'v3 save round trip');
 const appliedRoundTrip = createState();
 applySave(appliedRoundTrip, roundTrip);
 ok(appliedRoundTrip.settings.gearSort === 'rarity' && appliedRoundTrip.settings.gearFilter === 'junk', 'gear view preferences persist');
@@ -296,12 +416,192 @@ ok(loadState()?.v === 1, 'corrupt v2 falls back to valid legacy save');
 clearSave();
 ok(!saveMemory.has(SAVE_KEY_V1) && !saveMemory.has(SAVE_KEY_V2), 'New Game clears both save keys');
 
+// —— Go Live: additivity, boundaries, idempotency (PR-1 / ADR-0008) ——
+ok(SAVE_VERSION === 3, 'save schema version is 3');
+// Boundary formula: first at 10, then every 20 (10, 30, 50, …).
+ok(isGoLiveBoundary(10) && !isGoLiveBoundary(20) && isGoLiveBoundary(30) && !isGoLiveBoundary(40), 'Go Live boundaries land at 10, 30, 50');
+ok(nextGoLiveBoundary(0) === 10 && nextGoLiveBoundary(10) === 30 && nextGoLiveBoundary(15) === 30, 'next Go Live boundary is correct');
+
+// Back-compat: the legacy ship + prestige domain paths stay callable (save migration + tests);
+// PR-2 removed only their UI, routing the player through goLive() alone.
+const additive = createState();
+additive.route.zone = 20;
+additive.run.patches = 30;
+ok(shipPatches(additive), 'legacy ship path still callable');
+additive.ui.seasonDone = true;
+const seasonBefore = additive.meta.goLiveCount;
+ok(leaveSeason(additive), 'legacy prestige path still callable');
+ok(additive.meta.goLiveCount === seasonBefore + 1, 'legacy prestige increments goLiveCount');
+
+// goLive at the first boundary (zone 10): Route kept, temp power reset, idempotent.
+const glState = createState();
+glState.route.zone = 10;
+glState.meta.pendingGoLiveZone = 10;
+glState.run.hero.level = 30;
+glState.authority.shippedThisSeason = 300;
+ok(canGoLive(glState) && goLiveAvailableZone(glState) === 10, 'Go Live available at zone 10');
+const rec1 = goLive(glState);
+ok(rec1 && rec1.goLiveCount === 1 && rec1.boundaryZone === 10, 'goLive #1 mints a receipt at zone 10');
+ok(glState.route.zone === 10, 'goLive keeps the global Route zone');
+ok(glState.run.hero.level === 1 && glState.meta.live > 1, 'goLive resets temp power and grows Live Mult');
+const rec2 = goLive(glState);
+ok(rec2 && rec2.checkpointId === rec1.checkpointId && glState.meta.goLiveCount === 1, 'goLive double-click is idempotent (no second prestige)');
+
+// Zero-notes contract: a Go Live with nothing banked is a clean no-bank.
+const zeroNotes = createState();
+zeroNotes.route.zone = 10;
+zeroNotes.meta.pendingGoLiveZone = 10;
+const recZero = goLive(zeroNotes);
+ok(recZero && recZero.notesBanked === 0 && recZero.repGained === 0, 'goLive with zero Notes banks nothing (no crash)');
+
+// Zone-1000 contract: a Go Live at a deep boundary stays finite.
+const deep = createState();
+deep.route.zone = 1010; // (1010-10) % 20 === 0 → a boundary
+deep.meta.pendingGoLiveZone = 1010;
+const recDeep = goLive(deep);
+ok(recDeep && recDeep.boundaryZone === 1010 && Number.isFinite(recDeep.liveMult), 'goLive at Zone 1010 boundary is finite');
+
+// —— PR-1 save-v3 migration matrix ——
+// Row 1: v1 save → v3 direct (no crash; goLiveCount 0; season retired).
+const mV1 = createState();
+applySave(mV1, { v: 1, ts: 1, run: { zone: 40, killsInZone: 0, bytes: 5, patches: 2, hero: { scan: 3, verify: 2, amplify: 1 } } });
+ok(mV1.v === 3, 'matrix v1→v3: schema upgraded to 3');
+ok(mV1.meta.goLiveCount === 0 && mV1.meta.pendingGoLiveZone === 0, 'matrix v1→v3: goLiveCount=0, none pending');
+ok(!('season' in mV1.meta) && mV1.route.zone === 40, 'matrix v1→v3: season retired, no crash');
+
+// Row 2: v2 clean boundary (zone 20) → v3 (goLiveCount === old season; available).
+const mV2clean = createState();
+applySave(mV2clean, {
+  v: 2, ts: 1,
+  meta: { season: 4, live: 1.5 },
+  route: { zone: 20, killsInZone: 0 },
+  authority: { amount: 500, shippedThisSeason: 120 },
+  ui: { seasonDone: true },
+});
+ok(mV2clean.meta.goLiveCount === 4, 'matrix v2 clean: goLiveCount === old meta.season');
+ok(mV2clean.meta.pendingGoLiveZone === 20 && canGoLive(mV2clean), 'matrix v2 clean: Go Live available at 20');
+ok(!('season' in mV2clean.meta), 'matrix v2 clean: season deleted (Object.assign cannot resurrect)');
+
+// Row 3: v2 overshoot (zone 27, seasonDone) → v3 (pending=20, available now, not 40).
+const mV2over = createState();
+applySave(mV2over, {
+  v: 2, ts: 1,
+  meta: { season: 2 },
+  route: { zone: 27, killsInZone: 0 },
+  authority: { shippedThisSeason: 80 },
+  ui: { seasonDone: true },
+});
+ok(mV2over.meta.pendingGoLiveZone === 20, 'matrix v2 overshoot z27: pending=20 (not 40)');
+ok(canGoLive(mV2over) && mV2over.meta.goLiveCount === 2, 'matrix v2 overshoot: available now, count preserved');
+
+// Row 3b: second v3 shape migration refunds the legacy attribute tax and every
+// reconstructible named-skill rank exactly once. Retired mask skills remain the
+// explicitly accepted historical loss and are not refunded.
+const legacyBuild = createState();
+applySave(legacyBuild, {
+  v: 3,
+  ts: 1,
+  route: { zone: 12, killsInZone: 3 },
+  run: {
+    bytes: 7,
+    patches: 2,
+    hero: {
+      level: 8,
+      xp: 4,
+      sp: 2,
+      scan: 3,
+      verify: 2,
+      amplify: 1,
+      skills: { hotfix: 6, notify: 2, marathon: 1, verified_mask: 9 },
+    },
+  },
+});
+const hotfixRefund = Array.from({ length: 6 }, (_, rank) => skillSpCost(rank)).reduce((a, b) => a + b, 0);
+const notifyRefund = Array.from({ length: 2 }, (_, rank) => skillSpCost(rank)).reduce((a, b) => a + b, 0);
+const expectedBuildRefund = 2 + 3 + 2 + 1 + hotfixRefund + notifyRefund + 1;
+ok(legacyBuild.run.hero.sp === expectedBuildRefund, `v3 build refund exact (${expectedBuildRefund} SP)`);
+ok(legacyBuild.run.hero.buildVersion === 2, 'v3 build migration marker written');
+ok(Object.keys(legacyBuild.run.hero.skills).length === 0, 'v3 legacy build ranks reset for a clean respec');
+ok(legacyBuild.run.hero.scan === 0 && legacyBuild.run.hero.verify === 0 && legacyBuild.run.hero.amplify === 0, 'v3 generic attribute tax retired');
+
+const refundRoundTrip = JSON.parse(JSON.stringify({
+  v: 3,
+  ts: 2,
+  meta: legacyBuild.meta,
+  authority: legacyBuild.authority,
+  route: legacyBuild.route,
+  run: legacyBuild.run,
+  ui: legacyBuild.ui,
+  settings: legacyBuild.settings,
+}));
+const migratedAgain = createState();
+applySave(migratedAgain, refundRoundTrip);
+ok(migratedAgain.run.hero.sp === expectedBuildRefund, 'v3 build refund is idempotent on reload');
+
+const masteryState = createState();
+masteryState.run.hero.sp = 20;
+for (let i = 0; i < 6; i++) allocSkill(masteryState, 'scroll_speed');
+for (let i = 0; i < 2; i++) allocSkill(masteryState, 'notify');
+for (let i = 0; i < 3; i++) allocSkill(masteryState, 'marathon');
+ok(branchMastery(masteryState, 'scan') === 7, 'Scan Mastery derives from spent SP');
+ok(branchMastery(masteryState, 'verify') === 2, 'Verify Mastery derives from spent SP');
+ok(branchMastery(masteryState, 'relay') === 3, 'Relay Mastery derives from spent SP');
+ok(buildMastery(masteryState) === 12, 'Build Mastery sums branch spend');
+ok(buildYieldMultiplier(masteryState) > 1, 'Verify creates cycle-value yield');
+ok(relayOfflineEfficiency(masteryState) > C.IDLE_EFF, 'Relay improves offline continuity');
+
+// Row 4: 8h offline crossing the boundary banks only pre-boundary Notes (no 7.5h farm).
+const savedRandom = Math.random;
+installSeededRandom(0x41504e);
+const offCross = createState();
+offCross.route.zone = 18; // boundary 20, reached early in the window
+offCross.run.hero.scanner = 40;
+const crossSummary = simulateOffline(offCross, 8 * 3600);
+installSeededRandom(0x41504e);
+const offRef = createState();
+offRef.route.zone = 18;
+offRef.run.hero.scanner = 40;
+const refSummary = simulateOffline(offRef, crossSummary.simulatedSeconds);
+Math.random = savedRandom; // restore the main deterministic stream for later tests
+ok(crossSummary && crossSummary.stoppedAtSeasonBoundary === true, 'matrix offline: halts at the checkpoint boundary');
+ok(crossSummary.overflowSeconds > 6 * 3600, 'matrix offline: leaves >6h unspent past the boundary');
+ok(crossSummary.notes === refSummary.notes, 'matrix offline: banks only pre-boundary Notes, never 7.5h post-boundary');
+
+// Row 5: write-guard refuses to overwrite a higher-version save on disk.
+saveMemory.clear();
+const futureSave = { v: SAVE_VERSION + 1, ts: 999, meta: { goLiveCount: 9 }, route: { zone: 5 } };
+saveMemory.set(SAVE_KEY_V2, JSON.stringify(futureSave));
+const guardState = createState();
+guardState.route.zone = 3;
+ok(saveState(guardState) === false, 'matrix write-guard: refuses to overwrite a higher-version save');
+ok(JSON.parse(saveMemory.get(SAVE_KEY_V2)).v === SAVE_VERSION + 1, 'matrix write-guard: higher-version save left intact');
+saveMemory.set(SAVE_KEY_V2, JSON.stringify({ ...futureSave, v: SAVE_VERSION }));
+ok(saveState(guardState) === true, 'matrix write-guard: same-version overwrite still allowed');
+clearSave();
+
+// meta.hub is on the persist manifest (its dailies/weeklies were orphaned pre-PR-1).
+const hubState = createState();
+hubState.meta.hub.seasonXp = 42;
+hubState.meta.hub.daily.ships = 3;
+hubState.meta.hub.weekly.notes = 88;
+saveMemory.clear();
+saveState(hubState);
+const hubReloaded = createState();
+applySave(hubReloaded, loadState());
+ok(
+  hubReloaded.meta.hub?.seasonXp === 42 &&
+    hubReloaded.meta.hub?.daily?.ships === 3 &&
+    hubReloaded.meta.hub?.weekly?.notes === 88,
+  'meta.hub persists across a v3 save round trip',
+);
+clearSave();
+
 // —— Basic combat ——
 const s = createState();
 s.run.hero.scanner = 5;
 let sawAnchoredDamage = false;
 let sawSignalFlight = false;
-for (let i = 0; i < 60 * 8; i++) {
+for (let i = 0; i < 60 * 12; i++) {
   step(s, C.FIXED_DT);
   if (s.world.floaters.some((floater) => floater.anchorId)) sawAnchoredDamage = true;
   if (s.world.lootFlights?.some((flight) => flight.target === 'signal')) sawSignalFlight = true;
@@ -330,8 +630,7 @@ ok(castHotfix(s3) || s3.world.enemies.length === 0, 'hotfix cast');
 // —— Sharp eye unlock path ——
 const sSharp = createState();
 sSharp.run.hero.sp = 20;
-for (let i = 0; i < 5; i++) allocAttr(sSharp, 'verify');
-ok(allocSkill(sSharp, 'sharp_eye'), 'learn sharp eye at Crit 5');
+ok(allocSkill(sSharp, 'sharp_eye'), 'learn Source Lock directly without attribute tax');
 ok(skillLv(sSharp, 'sharp_eye') === 1, 'sharp eye rank 1');
 const crit0 = createState();
 const crit1 = createState();
@@ -390,7 +689,7 @@ for (let i = 0; i < 60 * 60; i++) {
 }
 ok(s6.route.zone >= 20, `past Z20 zone=${s6.route.zone}`);
 
-// —— Brand 4-slot gear (Weapon · Chest · Legs · Visor) ——
+// —— Brand 4-slot gear (Scanner · Chest · Legs · Visor) ——
 installSeededRandom(0x47454152); // "GEAR" — isolates loot assertions from prior RNG use.
 ok(SLOTS.length === 4, '4 brand gear slots');
 ok(SLOTS.includes('chest') && SLOTS.includes('legs') && SLOTS.includes('visor'), 'brand armor slots');

@@ -1,3 +1,6 @@
+<!-- go-live-v2-superseded -->
+> **⚠ Superseded on the prestige model (go-live v2).** This document still describes the retired **Ship Notes + End Season** model. The current design is **Go Live** — a single atomic prestige checkpoint (first at zone 10, then every 20; see [ADR-0008](decisions/ADR-0008-go-live-sole-checkpoint.md)). Read it through **plan v2** (`docs/superpowers/plans/2026-07-16-infinite-patchline-go-live-v2.md`) and **`docs/product/RECONCILIATION.md`**; where they disagree, they win. Non-prestige content here may still be accurate.
+
 # Game design
 
 ## Fantasy one-liner
@@ -26,6 +29,11 @@ and you get stronger the longer the feed stays live.
 - Boss every 10 zones (**Version Gate**) with timer heal-on-fail.
 
 ### Progression
+
+Build V2 removes the generic Damage/Crit/Utility attribute tax. SP buys named
+skills directly across **Scan** (cycle speed), **Verify** (cycle value), and
+**Relay** (offline continuity). Branch Mastery is derived from spent SP. Existing
+v3 saves receive one deterministic refund and a clean respec on first load.
 
 | Track | Unit | Cap |
 |-------|------|-----|

@@ -1,11 +1,11 @@
 /** APN Idle bootstrap */
 
-import { C } from './formulas.js?v=free-mvp-r005';
-import { createState, step, collectAlert, simulateOffline, setSprint, isSprinting } from './game.js?v=free-mvp-r005';
-import { sizeCanvas, draw } from './render.js?v=free-mvp-r005';
-import { createAssetStore, preloadRouteAssets, packWindowForRoute } from './assets.js?v=free-mvp-r005';
-import { bindUI, renderHUD } from './ui.js?v=free-mvp-r005';
-import { save, load, apply } from './save.js?v=free-mvp-r005';
+import { C } from './formulas.js?v=golive-pr5';
+import { createState, step, collectAlert, simulateOffline, setSprint, isSprinting, goLive, canGoLive, goLiveAvailableZone } from './game.js?v=golive-pr5';
+import { sizeCanvas, draw } from './render.js?v=golive-pr5';
+import { createAssetStore, preloadRouteAssets, packWindowForRoute } from './assets.js?v=golive-pr5';
+import { bindUI, renderHUD } from './ui.js?v=golive-pr5';
+import { save, load, apply } from './save.js?v=golive-pr5';
 
 const canvas = document.getElementById('game');
 const s = createState();
@@ -13,8 +13,16 @@ const assetStore = createAssetStore();
 const qaParams = new URLSearchParams(location.search);
 const qaMetricsEnabled = qaParams.has('qa_metrics');
 if (qaParams.has('chrome-smoke')) {
-  // Read-only route/render evidence for the direct Chrome CDP gate.
-  window.__APN_QA__ = { state: s, assets: assetStore };
+  // Route/render evidence + a thin action surface for the direct Chrome CDP gates.
+  window.__APN_QA__ = {
+    state: s,
+    assets: assetStore,
+    actions: {
+      goLive: (id = null, opts = {}) => goLive(s, id, opts),
+      canGoLive: () => canGoLive(s),
+      goLiveAvailableZone: () => goLiveAvailableZone(s),
+    },
+  };
 }
 
 const saved = load();

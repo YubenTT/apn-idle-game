@@ -1,3 +1,6 @@
+<!-- go-live-v2-superseded -->
+> **⚠ Superseded on the prestige model (go-live v2).** This document still describes the retired **Ship Notes + End Season** model. The current design is **Go Live** — a single atomic prestige checkpoint (first at zone 10, then every 20; see [ADR-0008](decisions/ADR-0008-go-live-sole-checkpoint.md)). Read it through **plan v2** (`docs/superpowers/plans/2026-07-16-infinite-patchline-go-live-v2.md`) and **`docs/product/RECONCILIATION.md`**; where they disagree, they win. Non-prestige content here may still be accurate.
+
 # Balance
 
 All knobs live in `js/formulas.js` → `C`.
@@ -36,6 +39,19 @@ Hold Sprint (button / stage / Space):
 - Extra attack speed + march + shorter spawn gaps
 - Drains Energy (grab green orbs)
 
+## Build V2 axes
+
+- **Scan** spends SP on named throughput skills; no generic Damage tax remains.
+- **Verify** spends SP on named value skills. Its derived Mastery applies the
+  bounded yield formula owned by `formulas.js`.
+- **Relay** spends SP on continuity skills. Its derived Mastery raises capped
+  offline efficiency toward active yield, never above it.
+- **Mastery** is the exact SP already spent in a branch; it is derived from skill
+  ranks with `skillSpCost`, not stored as a second upgrade currency.
+
+PR-4a establishes distinct, finite axes only. The comparative targets and final
+curve tuning remain deliberately deferred to PR-9.
+
 ## Key constants
 
 | Key | Role |
@@ -71,14 +87,15 @@ its telemetry cycle; it never restores full HP or creates an unattended hard wal
 Run `node qa/pacing-profiles.mjs` for the deterministic evidence. The locked seed
 currently measures:
 
-| Profile | First boss | First season | Mature median | Corruption unlock |
+| Profile | First Gate | Mature median | Zone 200 |
 |---|---:|---:|---:|---:|
-| Active-assisted, 30s decisions | 10.9 min | 30.0 min | 67.6 min | 10.2 h |
-| Mostly idle, 20 min check-ins | 23.8 min | 55.1 min | 99.0 min | 2.4 calendar days at 6 credited h/day |
+| Scan (seed `SCAN`) | 7.3 min | 44.3 min | 6.9 h |
+| Verify (seed `VERI`) | 14.0 min | 112.0 min | 17.7 h |
+| Relay (seed `RELA`) | 15.7 min | 129.2 min | 19.7 h |
 
 Offline combat simulates at most three real hours per return, never plays SFX,
-stops at the next End Season boundary, and converts remaining capped time into
-bounded Signal/Notes at the measured pre-boundary rate.
+stops at the next Go Live boundary, and converts remaining capped time into
+bounded Signal/Notes at the measured pre-boundary rate using Relay efficiency.
 
 ## Tuning checklist
 

@@ -1,25 +1,14 @@
 /** APN Idle content — skills, permanent Boosts, tips */
 
+import { skillSpCost as buildSkillSpCost } from './formulas.js?v=golive-pr5';
+
 export const SEASON = {
   id: 'season_01',
   name: 'Launch Week Feed',
   zones: 20,
 };
 
-/** Attributes (SP bank) */
-export const ATTR_LABEL = {
-  scan: 'Damage',
-  verify: 'Crit',
-  amplify: 'Utility',
-};
-
-export const ATTR_META = {
-  scan: { label: 'Damage', sub: 'Raises weapon power' },
-  verify: { label: 'Crit', sub: 'Raises crit chance' },
-  amplify: { label: 'Utility', sub: 'Raises skill resources' },
-};
-
-/** Permanent Rep boosts — survive End Season */
+/** Permanent Rep boosts — survive Go Live */
 export const META = {
   xp_posts: {
     id: 'xp_posts',
@@ -74,7 +63,7 @@ export const META = {
     per: 0.05,
     category: 'Economy',
     unit: 'percent',
-    valueCue: 'More Weapon upgrades',
+    valueCue: 'More Scanner upgrades',
   },
   patch_gain: {
     id: 'patch_gain',
@@ -85,7 +74,7 @@ export const META = {
     per: 0.07,
     category: 'Economy',
     unit: 'percent',
-    valueCue: 'More Notes to ship',
+    valueCue: 'More Notes to bank',
   },
   cold_start: {
     id: 'cold_start',
@@ -102,8 +91,7 @@ export const META = {
 
 /**
  * Skills — no masks, no exclusive slots.
- * Three clear trees matching attributes. All stackable.
- * Unlock by putting SP into the matching attribute first.
+ * Three clear branches. All stackable and bought directly with SP.
  */
 /**
  * Skills — stackable, no masks.
@@ -113,90 +101,93 @@ export const SKILLS = {
   hotfix: {
     id: 'hotfix',
     tree: 'scan',
-    name: 'Burst Hit',
-    short: 'Burst',
+    name: 'Hotfix',
+    short: 'Hotfix',
     max: 20,
-    req: { scan: 1 },
+    req: {},
     type: 'active',
     desc: 'Heavy hit on the nearest target. Costs 10 Focus.',
   },
   scroll_speed: {
     id: 'scroll_speed',
     tree: 'scan',
-    name: 'Attack Speed',
-    short: 'Speed',
+    name: 'Quick Scan',
+    short: 'Quick Scan',
     max: 20,
-    req: { scan: 3 },
+    req: {},
     type: 'passive',
     desc: 'Faster auto-attacks and cheaper Sprint.',
   },
   live_tracker: {
     id: 'live_tracker',
     tree: 'scan',
-    name: 'Damage Ramp',
-    short: 'Ramp',
+    name: 'Live Tracker',
+    short: 'Live Tracker',
+    hud: 'Tracker',
     max: 25,
-    req: { scan: 5 },
+    req: {},
     type: 'toggle',
     desc: 'Damage ramps while you keep fighting. Strong on bosses.',
   },
   notify: {
     id: 'notify',
     tree: 'verify',
-    name: 'Extra Orbs',
-    short: 'Orbs',
+    name: 'Signal Ping',
+    short: 'Signal Ping',
     max: 15,
-    req: { verify: 1 },
+    req: {},
     type: 'passive',
     desc: 'More energy/Signal orbs, better pickups.',
   },
   summary_burst: {
     id: 'summary_burst',
     tree: 'verify',
-    name: 'Area Blast',
-    short: 'Area',
+    name: 'Priority Tag',
+    short: 'Priority Tag',
+    hud: 'Priority',
     max: 15,
-    req: { verify: 3 },
+    req: {},
     type: 'active',
-    desc: 'Brief AoE damage + better orb rewards.',
+    desc: 'Mark the current target for increased Signal and Notes rewards. Costs 12 Focus.',
   },
   sharp_eye: {
     id: 'sharp_eye',
     tree: 'verify',
-    name: 'Sharp Eye',
-    short: 'Crit+',
+    name: 'Source Lock',
+    short: 'Source Lock',
     max: 20,
-    req: { verify: 5 },
+    req: {},
     type: 'passive',
-    desc: '+1.5% crit chance per rank (stacks with Crit attr).',
+    desc: '+1.5% critical chance per rank.',
   },
   deep_dive: {
     id: 'deep_dive',
     tree: 'amplify',
-    name: 'Overdrive',
-    short: 'Overdrive',
+    name: 'Overclock',
+    short: 'Overclock',
+    hud: 'Overclock',
     max: 20,
-    req: { amplify: 1 },
+    req: {},
     type: 'toggle',
     desc: 'Big damage boost while active. Drains energy — grab orbs.',
   },
   amplify: {
     id: 'amplify',
     tree: 'amplify',
-    name: 'Skill Power',
-    short: 'Power',
+    name: 'Relay Power',
+    short: 'Relay Power',
     max: 20,
-    req: { amplify: 3 },
+    req: {},
     type: 'passive',
-    desc: 'Actives, Ramp, and Overdrive hit harder.',
+    desc: 'Hotfix, Priority Tag, Live Tracker, and Overclock hit harder.',
   },
   marathon: {
     id: 'marathon',
     tree: 'amplify',
-    name: 'Marathon',
-    short: 'Stamina',
+    name: 'Always Live',
+    short: 'Always Live',
     max: 15,
-    req: { amplify: 5 },
+    req: {},
     type: 'passive',
     desc: '+energy regen and lower Sprint drain.',
   },
@@ -204,23 +195,15 @@ export const SKILLS = {
 
 /** SP cost to raise a skill from current level → next (scalable sink) */
 export function skillSpCost(currentLv) {
-  return 1 + Math.floor(Math.max(0, currentLv) / 5);
+  return buildSkillSpCost(currentLv);
 }
 
 /** Tree section order for Build UI */
 export const SKILL_TREES = [
-  { id: 'scan', label: 'Damage skills', attr: 'scan' },
-  { id: 'verify', label: 'Crit skills', attr: 'verify' },
-  { id: 'amplify', label: 'Utility skills', attr: 'amplify' },
+  { id: 'scan', mastery: 'scan', label: 'Scan', promise: 'Faster attacks and stronger pressure' },
+  { id: 'verify', mastery: 'verify', label: 'Verify', promise: 'Critical hits and richer confirmed rewards' },
+  { id: 'amplify', mastery: 'relay', label: 'Relay', promise: 'Stronger skills and longer idle continuity' },
 ];
-
-/** Next skill gate for an attribute; presentation reads the same source as unlock rules. */
-export function nextSkillUnlock(attr, currentLevel) {
-  const level = Math.max(0, Number(currentLevel) || 0);
-  return Object.values(SKILLS)
-    .filter((skill) => skill.tree === attr && Number(skill.req?.[attr] || 0) > level)
-    .sort((a, b) => Number(a.req?.[attr] || 0) - Number(b.req?.[attr] || 0))[0] || null;
-}
 
 export const ENEMY_FLAVOR = {
   stale: { label: 'Broken Link', color: '#697384', kind: 'normal' },
@@ -234,17 +217,17 @@ export const ENEMY_FLAVOR = {
 
 export const TIPS = {
   start:
-    'Clear noise → Signal funds Weapon upgrades. Build spends SP. Ship Notes for permanent Rep.',
-  kill: 'Upgrade Weapon each season. Put SP into Damage / Crit / Utility, then unlock skills.',
-  level: 'Rank up! Open Build — attributes first, then skills in that tree.',
-  patch: 'Notes banked. Ship → permanent Rep → Boosts.',
+    'Clear noise → Signal funds Scanner upgrades. Build spends SP. Go Live to bank Notes for permanent Rep.',
+  kill: 'Upgrade Scanner each run. Spend SP directly in Scan, Verify, or Relay.',
+  level: 'Rank up! Open Build and strengthen one focused branch.',
+  patch: 'Notes banked. Go Live → permanent Rep → Boosts.',
   alert: 'Collect orbs for Energy and Signal. Sprint spends Energy.',
   boss: 'Version Gate drops gear. Kill before the timer.',
-  ship: 'Ship Notes for Rep. Stuck? Improve Boosts, Gear, or Weapon.',
+  ship: 'Go Live to bank Notes for Rep. Stuck? Improve Boosts, Gear, or Scanner.',
   combo: 'Feed streak! Bonus Signal while it holds.',
   season:
-    'Checkpoint! Ship Notes, End Season: +Live Mult · Gear and Rep Boosts stay · Weapon Lv resets.',
-  gear: 'Loadout: Weapon · Chest · Legs · Visor. Tap an item to compare, equip, mark, or scrap.',
+    'Checkpoint! Go Live banks Notes → Rep and grows your Live Mult. Gear and Rep Boosts stay · run power resets.',
+  gear: 'Loadout: Scanner · Chest · Legs · Visor. Tap an item to compare, equip, mark, or scrap.',
 };
 
 export const FEED_COPY = {

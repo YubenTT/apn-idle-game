@@ -66,14 +66,6 @@ export function checkEconomyColorContract() {
       pass: /\.rw-chip\.k-notes\s*\{[^}]*var\(\s*--c-notes\b/s.test(gameCss),
     },
     {
-      name: 'HUD SP value',
-      pass: /\.meta-pill\.sp\s*\{[^}]*var\(\s*--c-sp\b/s.test(gameCss),
-    },
-    {
-      name: 'HUD SP label',
-      pass: /\.meta-pill\.sp\s+\.meta-k\s*\{[^}]*var\(\s*--c-sp\b/s.test(gameCss),
-    },
-    {
       name: 'SP bank tint',
       pass: /\.sp-bank\.has-sp\s*\{[^}]*var\(\s*--c-sp\b/s.test(gameCss),
     },
@@ -86,23 +78,9 @@ export function checkEconomyColorContract() {
       pass: /\.rw-chip\.k-sp\s*\{[^}]*var\(\s*--c-sp\b/s.test(gameCss),
     },
     {
-      name: 'Build SP badge contrast',
-      pass:
-        /\.nav-btn\[data-panel=['"]skills['"]\]\.has-badge::after\s*\{(?=[^}]*background:\s*var\(\s*--c-sp\b)(?=[^}]*color:\s*var\(\s*--compat-ink\b)[^}]*\}/s.test(
-          gameCss,
-        ),
-    },
-    {
       name: 'Build SP cost contrast',
       pass:
         /\.skill-card:not\(\[data-meta\]\)\.can\s+\.sk-cta\s*\{(?=[^}]*background:\s*var\(\s*--c-sp\b)(?=[^}]*color:\s*var\(\s*--compat-ink\b)[^}]*\}/s.test(
-          gameCss,
-        ),
-    },
-    {
-      name: 'Attribute SP affordance contrast',
-      pass:
-        /\.attr-card\.can\s+\.attr-plus\s*\{(?=[^}]*background:\s*var\(\s*--c-sp\b)(?=[^}]*color:\s*var\(\s*--compat-ink\b)[^}]*\}/s.test(
           gameCss,
         ),
     },

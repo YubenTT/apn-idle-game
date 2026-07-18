@@ -33,7 +33,7 @@ export const BOSS_OPEN = [
 export const BOSS_WIN = [
   'Gate cleared. Changelog: you won.',
   'Version bumped. Ego patched.',
-  'Ship it. Ship everything.',
+  'Go live. Go live on everything.',
   'That Gate is now a footnote.',
 ];
 
@@ -52,14 +52,14 @@ export const LEVEL_LINES = [
 ];
 
 export const SHIP_LINES = [
-  'Notes shipped. Rep permanent.',
+  'Notes banked. Rep permanent.',
   'Banked. Boosts desk is smiling.',
   'Rep secured. No refunds, no take-backs.',
-  'Shipped to the feed. Ego +1.',
+  'Live on the feed. Ego +1.',
 ];
 
 export const SCANNER_LINES = [
-  'Weapon upgraded. Noise has left the chat.',
+  'Scanner upgraded. Noise has left the chat.',
   'More laser. Less patience.',
   'Firmware: slightly unhinged.',
   'Damage up. Feed’s in trouble.',
@@ -68,11 +68,11 @@ export const SCANNER_LINES = [
 export const SPRINT_HINTS = [
   'Hold Sprint — whole game runs ×1.85. Energy is coffee.',
   'Tap orbs for energy and Signal.',
-  'Red Patch Notes → Ship for permanent Rep → Boosts.',
+  'Red Patch Notes → Go Live for permanent Rep → Boosts.',
 ];
 
 export const TITLE_TAGLINES = [
-  'Crush noise. Ship patches. Stay unreasonably live.',
+  'Crush noise. Go live. Stay unreasonably live.',
   'The only idle game where spoiler bots deserve it.',
   'Waiting for patch notes? Become the patch notes.',
   'All Patch Notes presents: workplace violence (for content).',

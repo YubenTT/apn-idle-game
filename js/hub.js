@@ -34,8 +34,8 @@ export const DAILY_DEFS = [
   },
   {
     id: 'd_ship',
-    label: 'Ship Notes',
-    desc: 'Ship Notes once',
+    label: 'Go Live',
+    desc: 'Go Live once',
     target: 1,
     metric: 'ships',
     reward: { rep: 3 },

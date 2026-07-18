@@ -1,5 +1,67 @@
 # APN Idle redesign V1 — QA report
 
+## PR-5 checkpoint · Run hierarchy + placeholder Host contract
+
+Run now separates Route and ten-zone Pack context from Clear / Rank / Live
+telemetry, omits Focus until a Focus-spending skill is learned, and refuses to
+display Patch Echo progress until that optional Route domain data actually
+exists. The Host uses a code-owned 118–142px presentation range and the existing
+canonical placeholder atlas.
+
+Fresh checkpoint evidence on 2026-07-18:
+
+- direct installed Google Chrome CDP, always `mute=1`, passed 10 Route scenarios
+  across 375×812, 428×926, and 844×390, including zones 1/10/11/20/200/201;
+- every scenario recorded 0px horizontal overflow, no console warning/error,
+  decoded at most current + next packs, and targets approaching from the right;
+- Focus is hidden before Hotfix and revealed after a real learned-skill mutation;
+  Patch Echo stays absent before its domain exists;
+- boss tips remain at least 8px below stage telemetry in portrait and landscape;
+- Run evidence is stored in `qa/screenshots/pr5-run/`;
+- the existing asset suite remains authoritative and must finish `ALL PASS`.
+
+The first full-body GLB identity candidate failed the owner gate. It and its
+experimental proof/measurement tooling were removed before integration, so this
+checkpoint makes no full-body or new-atlas quality claim. Issue #23 remains open
+for a different full-body identity approach.
+
+## PR-4b · Build V2 UI + Priority Tag
+
+Issue #22 removes SP from the Run strip and makes Build its sole owning surface.
+The sheet presents Scan, Verify, and Relay as three direct three-skill branches,
+with total and branch Mastery derived from actual SP spend. Priority Tag replaces
+the retired multi-target action with a current-target Focus decision: its rank is
+stored on the target, multiplies only that target's Signal/Notes rewards, and is
+rendered as a signal-colored targeting bracket.
+
+Fresh evidence on 2026-07-18:
+
+- `node qa/run-tests.mjs` → `ALL PASS`, including the tag target/rank/Focus/reward contract;
+- `node qa/pacing-profiles.mjs` → `PACING PASS · 3 SEEDED BUILDS`;
+- `node qa/playthrough.mjs` → `PLAYTHROUGH PASS`;
+- `node qa/long-run.mjs` → `LONG RUN PASS`;
+- direct installed Google Chrome CDP, always `mute=1`, at 375×812, 428×926,
+  and 844×390: Scan/Verify/Relay visible, nine skill decisions, four Mastery
+  badges, SP absent outside Build, 44px minimum touch, 0px overflow, and zero
+  console warning/error entries.
+
+Chrome evidence is stored in `qa/screenshots/pr4b-build/`.
+
+## PR-4a · Build V2 domain
+
+Issue #21 replaces the generic attribute tax at the domain/save layer. The v3
+shape migration reconstructs every supported skill-rank cost, adds the three
+legacy attribute spends plus unspent SP, clears the old allocation, and writes a
+`buildVersion` marker so reload cannot refund twice. Retired mask skills remain
+the explicitly accepted historical loss.
+
+Deterministic evidence:
+
+- exact fixture refund: 18 SP, unchanged after a second load;
+- Scan/Verify/Relay Mastery: 7/2/3 SP from named ranks, total 12;
+- seeded Zone-200 profiles: Scan 6.9 h, Verify 17.7 h, Relay 19.7 h;
+- `node qa/run-tests.mjs` → `ALL PASS`.
+
 - Build: `feat/R-005-free-mvp-economy` stacked on `release/apn-idle-redesign-v1`
 - Evidence date: 2026-07-15
 - Browser: direct Chrome Extension control, always `mute=1`
