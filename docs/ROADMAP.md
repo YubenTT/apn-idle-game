@@ -36,7 +36,7 @@ Living plan — not a commitment calendar.
 
 - [x] Build V2 domain: named Scan/Verify/Relay axes, derived Mastery, exact v3
       SP refund, and three seeded Zone-200 profiles (PR-4a / issue #21)
-- [ ] Build V2 presentation + Priority Tag behavior (PR-4b / issue #22)
+- [x] Build V2 presentation + Priority Tag behavior (PR-4b / issue #22)
 
 - [x] Persistent global Route + dual-key save v2 migration; End Season keeps world progress
 - [x] Deterministic 20-pack manifest catalog + seeded least-recent scheduler

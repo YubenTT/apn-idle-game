@@ -25,6 +25,7 @@
 | **Gear** | Equippable items with rarity; loadout + inventory | rarity tokens | **Yes** (collection) |
 | **Host** | The APN mascot the player embodies | — | — |
 | **Focus** | Regenerating Run meter spent by active skills | `--c-signal` context | No (reset) |
+| **Priority Tag** | Verify active that marks one target for increased Signal and Notes rewards | `--c-signal` context | target lifetime |
 
 ## Enemy / target names (canonical)
 
@@ -52,6 +53,7 @@ is how you read the code.
 | `authority` | **Rep** | rename target: `rep` |
 | `scan` / `verify` / `amplify` | derived Scan / Verify / Relay Mastery compatibility | retired as purchasable attrs; removed from UI in PR-4b |
 | `hero.buildVersion` | Build V2 migration marker | prevents duplicate SP refunds inside save v3 |
+| `summary_burst` | **Priority Tag** | legacy stable skill ID; behavior is single-target reward marking |
 | `scanner` | Weapon level | "Upgrade Weapon" object |
 | `mask` | (legacy skill grouping) | see `content.SKILLS` |
 | `hero.energy` / legacy `hero.mana` | Energy / **Focus** | legacy `mana` migrates on load |

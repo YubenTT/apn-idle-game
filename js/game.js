@@ -21,8 +21,8 @@ import {
   spentSkillPoints,
   verifyYieldMultiplier,
   relayIdleEfficiency,
-} from './formulas.js?v=free-mvp-r005';
-import { SEASON, META, SKILLS, ENEMY_FLAVOR, skillSpCost } from './content.js?v=free-mvp-r005';
+} from './formulas.js?v=golive-pr4b';
+import { SEASON, META, SKILLS, ENEMY_FLAVOR, skillSpCost } from './content.js?v=golive-pr4b';
 import {
   ensureHub,
   hubOnKill,
@@ -38,7 +38,7 @@ import {
   applyReward,
   seasonLevel,
   SEASON_MILESTONES,
-} from './hub.js?v=free-mvp-r005';
+} from './hub.js?v=golive-pr4b';
 import {
   killLine,
   pick,
@@ -48,8 +48,8 @@ import {
   LEVEL_LINES,
   SHIP_LINES,
   SCANNER_LINES,
-} from './comedy.js?v=free-mvp-r005';
-import { sfx } from './sfx.js?v=free-mvp-r005';
+} from './comedy.js?v=golive-pr4b';
+import { sfx } from './sfx.js?v=golive-pr4b';
 import {
   emptyGear,
   normalizeGear,
@@ -65,9 +65,9 @@ import {
   pickSlotForGear,
   SLOTS,
   BAG_CAP,
-} from './loot.js?v=free-mvp-r005';
-import { createRouteState, nextSeasonBoundary, packForRoute } from './route.js?v=free-mvp-r005';
-import { GAME_PACKS } from './generated/game-packs.js?v=free-mvp-r005';
+} from './loot.js?v=golive-pr4b';
+import { createRouteState, nextSeasonBoundary, packForRoute } from './route.js?v=golive-pr4b';
+import { GAME_PACKS } from './generated/game-packs.js?v=golive-pr4b';
 
 export function createState() {
   return {
@@ -121,7 +121,6 @@ export function createState() {
         trackerOn: false,
         deepOn: false,
         trackerStacks: 0,
-        summaryT: 0,
         attackAnim: 0,
         hitRecoil: 0,
       },
@@ -343,7 +342,6 @@ export function combatStats(s) {
     deep,
     gear: g,
     economy: economyMult(s),
-    summary: skillLv(s, 'summary_burst'),
     hotfix: skillLv(s, 'hotfix'),
   };
 }
@@ -536,11 +534,13 @@ function onKill(s, e) {
   const maturityReward = Math.min(0.5, Math.floor(zone / C.SEASON_ZONES) * 0.05);
   const gb = gearBonuses(s.meta.gear);
   const eco = economyMult(s);
+  const priorityReward = priorityTagRewardMultiplier(e);
   const byteM =
     (1 + metaPer(s, 'byte_gain')) *
     (1 + (gb.signal_pct || 0) / 100) *
     eco *
-    buildYieldMultiplier(s);
+    buildYieldMultiplier(s) *
+    priorityReward;
   let typeByte = 1;
   let typeXp = 1;
   if (e.type === 'lag' || e.type === 'spoiler' || e.type === 'event') {
@@ -581,7 +581,8 @@ function onKill(s, e) {
     (1 + metaPer(s, 'patch_gain')) *
     (1 + (gb.notes_pct || 0) / 100) *
     eco *
-    buildYieldMultiplier(s);
+    buildYieldMultiplier(s) *
+    priorityReward;
   if (e.type === 'patch') {
     const p = C.PATCH_FROM_CHAMP * patchM;
     s.run.patches += p;
@@ -749,7 +750,6 @@ export function step(s, dt) {
   } else {
     h.trackerStacks = Math.max(0, h.trackerStacks - 0.12 * dt);
   }
-  if (h.summaryT > 0) h.summaryT -= dt;
 
   // sprint drain + empty feedback
   // Drain while sprint is active (hold OR auto-sprint via isSprinting)
@@ -825,27 +825,6 @@ export function step(s, dt) {
     }
     // smooth display
     e.displayX = lerp(e.displayX, e.x, 1 - Math.exp(-14 * dt));
-  }
-
-  // summary aoe
-  if (h.summaryT > 0 && st.summary > 0) {
-    const tick =
-      0.4 * st.dmg * (1 + 0.1 * st.summary) * st.skillMult * dt;
-    for (const e of s.world.enemies) {
-      if (e.hp <= 0) continue;
-      if (Math.abs(e.x - hx) < 300) {
-        e.hp -= tick;
-        e.hitFlash = Math.max(e.hitFlash, 0.05);
-        s.stats.dpsAcc += tick;
-        if (e.hp <= 0 && !e.killed) {
-          e.killed = true;
-          e.hp = 0;
-          e.deathT = e.type === 'patch' ? 0.7 : e.type === 'boss' ? 0.85 : 0.48;
-          e.deathMax = e.deathT;
-          onKill(s, e);
-        }
-      }
-    }
   }
 
   // AUTO ATTACK — the critical path
@@ -929,11 +908,10 @@ export function step(s, dt) {
 
 export function collectAlert(s, a) {
   const st = combatStats(s);
-  const bonus = s.run.hero.summaryT > 0 ? 1.3 : 1;
   const n = 1 + 0.08 * st.notify;
   if (a.kind === 'energy') {
     s.run.hero.energy = clamp(
-      s.run.hero.energy + (28 + 3 * st.notify) * bonus * n,
+      s.run.hero.energy + (28 + 3 * st.notify) * n,
       0,
       st.eMax
     );
@@ -941,7 +919,6 @@ export function collectAlert(s, a) {
   } else {
     const b =
       (4 + 0.6 * s.route.zone) *
-      bonus *
       n *
       economyMult(s) *
       buildYieldMultiplier(s);
@@ -960,7 +937,7 @@ export function castHotfix(s) {
   const st = combatStats(s);
   const cost = 10;
   if (s.run.hero.focus < cost) {
-    toast(s, `Burst Hit needs ${cost} Focus`);
+    toast(s, `Hotfix needs ${cost} Focus`);
     return false;
   }
   s.run.hero.focus -= cost;
@@ -975,19 +952,32 @@ export function castHotfix(s) {
   return true;
 }
 
-export function castSummary(s) {
+export function priorityTagRewardMultiplier(enemy) {
+  const rank = Math.max(0, Number(enemy?.priorityTagRank) || 0);
+  return rank > 0 ? 1.25 + Math.min(0.5, (rank - 1) * 0.05) : 1;
+}
+
+export function castPriorityTag(s) {
   const lv = skillLv(s, 'summary_burst');
   if (lv < 1) return false;
+  const target = s.world.enemies.find((enemy) => enemy.hp > 0);
+  if (!target) {
+    toast(s, 'Priority Tag ready — no target');
+    return false;
+  }
   if (s.run.hero.focus < 12) {
-    toast(s, 'Summary Burst needs 12 Focus');
+    toast(s, 'Priority Tag needs 12 Focus');
     return false;
   }
   s.run.hero.focus -= 12;
-  s.run.hero.summaryT = 3.2 + 0.25 * lv;
-  toast(s, 'Summary Burst!');
-  particles(s, s.world.heroX, 200, '#6cb8ff', 14);
+  target.priorityTagRank = lv;
+  toast(s, 'Priority target verified');
+  particles(s, target.displayX, 170, tone('signal'), 14);
   return true;
 }
+
+/** Transitional API alias for old saves/tests; player copy and behavior use Priority Tag. */
+export const castSummary = castPriorityTag;
 
 export function canLearn(s, id) {
   const d = SKILLS[id];

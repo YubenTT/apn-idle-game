@@ -15,6 +15,8 @@ import {
   allocSkill,
   buyScanner,
   castHotfix,
+  castPriorityTag,
+  priorityTagRewardMultiplier,
   shipPatches,
   combatStats,
   leaveSeason,
@@ -53,7 +55,7 @@ import {
   queryGearBag,
   toggleJunk,
 } from '../js/loot.js';
-import { SKILLS, nextSkillUnlock, skillSpCost } from '../js/content.js';
+import { SKILLS, SKILL_TREES, skillSpCost } from '../js/content.js';
 import {
   hubOnKill,
   emptyHub,
@@ -178,9 +180,14 @@ ok(
 );
 
 // —— Build decision previews ——
-ok(nextSkillUnlock('scan', 0)?.id === 'hotfix', 'Damage next unlock starts at Burst');
-ok(nextSkillUnlock('scan', 1)?.id === 'scroll_speed', 'Damage next unlock advances to Speed');
-ok(nextSkillUnlock('scan', 5) === null, 'Damage reports all skills open');
+ok(
+  SKILL_TREES.map((tree) => tree.label).join('|') === 'Scan|Verify|Relay',
+  'Build presents the three named branches',
+);
+ok(
+  SKILL_TREES.every((tree) => Object.values(SKILLS).filter((skill) => skill.tree === tree.id).length === 3),
+  'Build gives each named branch exactly three focused decisions',
+);
 ok(END_SEASON_CONTRACT.resets.includes('Scanner level'), 'End Season contract names Scanner reset');
 ok(END_SEASON_CONTRACT.keeps.includes('Route Zone'), 'End Season contract keeps Route Zone');
 const hubStateFixture = emptyHub();
@@ -218,6 +225,8 @@ for (const section of ['Accessibility', 'Audio', 'Account', 'Reset']) {
 ok(!shellMarkup.includes('menu-section-title">Purchases'), 'Free MVP Menu has no Purchases section');
 ok(!shellMarkup.includes('premium-body') && !shellMarkup.includes('Demo store'), 'Free MVP shell has no demo store');
 ok(!shellMarkup.includes('id="v-pro"'), 'Free MVP HUD has no Pro badge');
+ok(!shellMarkup.includes('id="v-sp"'), 'SP is shown only inside Build');
+ok(!shellMarkup.includes('>Area<'), 'Run has no retired Area action');
 ok(!uiSource.includes('data-premium'), 'Free MVP UI has no purchase actions');
 ok(!contentSource.includes('export const PREMIUM'), 'Free MVP has no premium product catalog');
 ok(!contentSource.includes('Live & Pro'), 'Free MVP Boost copy has no retired Pro claim');
@@ -245,6 +254,37 @@ const damageBoostPreview = metaUpgradePreview(boostFixture, 'signal_power');
 ok(damageBoostPreview.current === '+0%' && damageBoostPreview.next === '+5%', 'Boost preview exposes exact current to next effect');
 ok(damageBoostPreview.affordable === true && damageBoostPreview.cost === 8, 'Boost preview exposes exact affordability and Rep cost');
 ok(typeof recommendedMetaId(boostFixture) === 'string', 'Boosts expose one domain recommendation');
+
+const priorityFixture = createState();
+priorityFixture.run.hero.skills.summary_burst = 2;
+priorityFixture.run.hero.focus = 60;
+step(priorityFixture, 1);
+const priorityTarget = priorityFixture.world.enemies.find((enemy) => enemy.hp > 0);
+ok(Boolean(priorityTarget), 'Priority Tag fixture has one live target');
+const focusBeforePriority = priorityFixture.run.hero.focus;
+ok(castPriorityTag(priorityFixture), 'Priority Tag can mark the current target');
+ok(priorityTarget?.priorityTagRank === 2, 'Priority Tag persists its purchased rank on the target');
+ok(priorityFixture.run.hero.focus === focusBeforePriority - 12, 'Priority Tag spends exactly 12 Focus');
+ok(priorityTagRewardMultiplier(priorityTarget) > 1, 'Priority Tag grants a real single-target reward multiplier');
+
+function priorityKillReward(tagged) {
+  installSeededRandom(0x5052494f);
+  const state = createState();
+  state.run.hero.skills.hotfix = 1;
+  state.run.hero.skills.summary_burst = 1;
+  state.run.hero.focus = 60;
+  step(state, 1);
+  const target = state.world.enemies.find((enemy) => enemy.hp > 0);
+  target.type = 'stale';
+  target.hp = 1;
+  if (tagged) castPriorityTag(state);
+  installSeededRandom(0x544147);
+  castHotfix(state);
+  return state.run.bytes;
+}
+const untaggedReward = priorityKillReward(false);
+const taggedReward = priorityKillReward(true);
+ok(taggedReward > untaggedReward * 1.24, 'Priority Tag increases the marked target actual kill reward');
 ok(itemArtKey({ slot: 'weapon', name: 'Mod Stick', rarity: 'green' }) === 'mod-stick', 'Gear maps Mod Stick to authored art');
 ok(itemArtKey({ slot: 'chest', name: 'Patch Mail', rarity: 'green' }) === 'patch-mail', 'Gear maps Patch Mail to authored art');
 ok(itemArtKey({ slot: 'legs', name: 'Sprint Leggings', rarity: 'green' }) === 'route-leggings', 'Gear maps Sprint Leggings to authored art');

@@ -1,7 +1,7 @@
 /** APN Idle canvas — biomes, death juice, confetti, Host + enemies */
 
-import { C, clamp, easeOutCubic, easeOutQuad } from './formulas.js?v=free-mvp-r005';
-import { getCurrentPackAssets } from './assets.js?v=free-mvp-r005';
+import { C, clamp, easeOutCubic, easeOutQuad } from './formulas.js?v=golive-pr4b';
+import { getCurrentPackAssets } from './assets.js?v=golive-pr4b';
 
 const V = 'v8';
 let hostAtlas = null;
@@ -590,17 +590,6 @@ function drawHero(ctx, x, gy, s, t) {
     ctx.arc(hx, cy, 40 + pulse * 8, 0, Math.PI * 2);
     ctx.stroke();
   }
-  if (h.summaryT > 0) {
-    const a = Math.min(1, h.summaryT / 1.2) * 0.12;
-    const rg = ctx.createRadialGradient(hx, cy, 20, hx, cy, 88);
-    rg.addColorStop(0, `rgba(94,176,255,${a})`);
-    rg.addColorStop(1, 'rgba(94,176,255,0)');
-    ctx.fillStyle = rg;
-    ctx.beginPath();
-    ctx.arc(hx, cy, 88, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
   ctx.fillStyle = 'rgba(0,0,0,0.5)';
   ctx.beginPath();
   ctx.ellipse(hx, gy + 3, 20, 5, 0, 0, Math.PI * 2);
@@ -827,6 +816,33 @@ function drawEnemy(ctx, e, gy, t, packAssets = null) {
   ctx.globalAlpha = 1;
 
   if (dying) return; // no HP bar while dying
+
+  if (e.priorityTagRank > 0) {
+    const tagColor = resolveCanvasPaint({ tone: 'signal' });
+    const half = size * 0.43;
+    const top = footY - size * 0.88;
+    const bottom = footY - size * 0.08;
+    const arm = Math.max(7, size * 0.12);
+    ctx.save();
+    ctx.strokeStyle = tagColor;
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = 0.72 + Math.sin(t * 6) * 0.16;
+    ctx.beginPath();
+    ctx.moveTo(x - half + arm, top);
+    ctx.lineTo(x - half, top);
+    ctx.lineTo(x - half, top + arm);
+    ctx.moveTo(x + half - arm, top);
+    ctx.lineTo(x + half, top);
+    ctx.lineTo(x + half, top + arm);
+    ctx.moveTo(x - half, bottom - arm);
+    ctx.lineTo(x - half, bottom);
+    ctx.lineTo(x - half + arm, bottom);
+    ctx.moveTo(x + half, bottom - arm);
+    ctx.lineTo(x + half, bottom);
+    ctx.lineTo(x + half - arm, bottom);
+    ctx.stroke();
+    ctx.restore();
+  }
 
   const barW = isBoss ? 148 : 112;
   const bannerH = isBoss ? 62 : 54;

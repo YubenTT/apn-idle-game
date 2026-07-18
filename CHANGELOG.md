@@ -62,6 +62,11 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Changed
 
+- Rebuilt Build as three direct Scan/Verify/Relay branches with per-branch and
+  total Mastery, removed the retired generic attribute cards, and kept SP solely
+  on its owning sheet. Replaced the misleading multi-target action with Priority
+  Tag: a real single-target Focus decision that increases that target's Signal
+  and Notes rewards and renders an explicit target lock.
 - Replaced the generic Damage/Crit/Utility Build tax in the domain with named
   Scan/Verify/Relay axes and derived Mastery; legacy v3 allocations now receive
   an exact, idempotent SP refund, and three deterministic builds reach Zone 200.

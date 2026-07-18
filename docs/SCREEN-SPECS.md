@@ -26,7 +26,7 @@ Portrait is primary. Landscape sheets open **full-screen**, not right-rail.
 | Band | Height | Contents |
 |------|-------:|----------|
 | Safe top | 59 pt | notch / Dynamic Island |
-| Resource strip | 44 pt | Signal · Notes · SP in three balanced safe-area columns |
+| Resource strip | 44 pt | Signal · Notes in two balanced safe-area columns |
 | Feed rail | 40 pt | single-line live APN feed |
 | Gameplay surface | ~434 pt | flat stage telemetry + edge-to-edge viewport |
 | Action dock | 56 pt | primary CTA + one mod control |
@@ -60,8 +60,9 @@ fill, not a full crimson slab.
 
 Fixes over the shipped run screen:
 
-1. **Resource strip below the safe top** carries **Signal / Notes / SP** only —
-   the three the player acts on, distributed evenly without a fake fixed cutout.
+1. **Resource strip below the safe top** carries **Signal / Notes** only —
+   the two immediate Run resources, distributed evenly without a fake fixed cutout.
+   SP belongs exclusively to the Build sheet, where it can be acted on.
    Drop the "APN Idle" wordmark from the running HUD
    (brand trust comes from component discipline; logomark lives on splash/menu per
    APN press-kit restraint). Move **Rep** and **DPS** out of the run HUD into their
@@ -79,7 +80,7 @@ Fixes over the shipped run screen:
 5. **Action dock = 1 primary CTA + 1 mod + 3–4 skill buttons**, weighted:
    - Primary CTA (56pt, crimson): **Upgrade Weapon** · `+8 scan · Lv 37→38` · cost chip.
    - Mod control (Sprint): a *behavior toggle*, visually lighter than the CTA.
-   - Skill buttons (48pt): equal, secondary. Overdrive is a toggle, not a CTA-weight button.
+   - Skill buttons (48pt): equal, secondary. Overclock is a toggle, not a CTA-weight button.
    - **Never** title the CTA "Upgrade Signal" ([NAMING](../brand/NAMING.md)).
 6. **Run surface is continuous:** resource strip, feed, telemetry, canvas, meters,
    action dock, and navigation share one vertical rhythm. The combat viewport has
@@ -93,13 +94,16 @@ content padding 16, radius-top 24. One decision each; no spreadsheets.
 
 ### BUILD
 
-Decision: "where do I spend SP?" Replace the value-dump with **skill cards** that
-show a delta:
+Decision: "which branch do I strengthen?" Build exposes **Scan / Verify / Relay**
+as three named branches, each with its own derived Mastery and three direct skill
+cards that show a delta:
 
 `icon · name · ROLE-tag (TAP/PASSIVE/TOGGLE) · current → next · SP cost · unlock/ROI`.
 
-- SP badge shows affordability. Attribute cards (Damage/Crit/Utility) show what the
-  next point *opens*, not just `+`.
+- SP and total Mastery appear in the Build header only. Branch headers show their
+  own Mastery; there is no generic attribute tax between SP and a named skill.
+- Priority Tag is Verify's active decision: it marks the current single target and
+  increases that target's Signal and Notes reward instead of implying multi-target combat.
 - **Kill the red-outline-everything.** Crimson marks *primary progression* only;
   most rows are neutral with a positive-green "affordable" cue.
 
