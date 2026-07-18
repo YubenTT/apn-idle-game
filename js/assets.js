@@ -1,5 +1,5 @@
-import { GAME_PACKS } from './generated/game-packs.js?v=free-mvp-r005';
-import { packForRoute } from './route.js?v=free-mvp-r005';
+import { GAME_PACKS } from './generated/game-packs.js?v=golive-pr4b';
+import { packForRoute } from './route.js?v=golive-pr4b';
 
 const browserImage = (src) => new Promise((resolve, reject) => {
   const image = new Image();

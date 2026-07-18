@@ -1,5 +1,27 @@
 # APN Idle redesign V1 — QA report
 
+## PR-4b · Build V2 UI + Priority Tag
+
+Issue #22 removes SP from the Run strip and makes Build its sole owning surface.
+The sheet presents Scan, Verify, and Relay as three direct three-skill branches,
+with total and branch Mastery derived from actual SP spend. Priority Tag replaces
+the retired multi-target action with a current-target Focus decision: its rank is
+stored on the target, multiplies only that target's Signal/Notes rewards, and is
+rendered as a signal-colored targeting bracket.
+
+Fresh evidence on 2026-07-18:
+
+- `node qa/run-tests.mjs` → `ALL PASS`, including the tag target/rank/Focus/reward contract;
+- `node qa/pacing-profiles.mjs` → `PACING PASS · 3 SEEDED BUILDS`;
+- `node qa/playthrough.mjs` → `PLAYTHROUGH PASS`;
+- `node qa/long-run.mjs` → `LONG RUN PASS`;
+- direct installed Google Chrome CDP, always `mute=1`, at 375×812, 428×926,
+  and 844×390: Scan/Verify/Relay visible, nine skill decisions, four Mastery
+  badges, SP absent outside Build, 44px minimum touch, 0px overflow, and zero
+  console warning/error entries.
+
+Chrome evidence is stored in `qa/screenshots/pr4b-build/`.
+
 ## PR-4a · Build V2 domain
 
 Issue #21 replaces the generic attribute tax at the domain/save layer. The v3

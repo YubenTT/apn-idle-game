@@ -78,6 +78,9 @@ flowchart TB
 - Build V2 exposes `branchMastery` / `buildMastery` as derived values. Scan uses
   combat-throughput skills, Verify owns cycle-value yield, and Relay owns offline
   continuity; the retired generic attributes are not combat inputs.
+- Priority Tag is a `game.js` target-state mechanic. It consumes Focus, records the
+  purchased rank on the current enemy, and multiplies only that enemy's Signal and
+  Notes reward. `render.js` reads the tag solely to draw its targeting brackets.
 
 ### `route.js`
 
@@ -95,7 +98,7 @@ flowchart TB
 ### `content.js`
 
 - Player-facing names and descriptions.
-- Skill graph requirements (`req: { scan, verify, amplify }`).
+- Direct Scan / Verify / Relay skill definitions and branch presentation metadata.
 - Ticker rows and tips.
 - Prefer **not** embedding damage numbers here — point at systems instead.
 
@@ -115,9 +118,9 @@ flowchart TB
 
 ### `ui.js`
 
-- DOM generation for Build / Publish / Boosts.
+- DOM generation for Build / Go Live / Boosts.
 - Binds clicks → domain actions → `save(s)`.
-- Afford states (`is-locked`, `can`, SP badge).
+- Afford states (`is-locked`, `can`); SP and Mastery remain inside Build.
 
 ### `save.js`
 

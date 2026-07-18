@@ -9,23 +9,19 @@ import {
   clamp,
   killsNeeded,
   nextGoLiveBoundary,
-} from './formulas.js?v=free-mvp-r005';
+} from './formulas.js?v=golive-pr4b';
 import {
   META,
   SKILLS,
   SKILL_TREES,
   TIPS,
-  ATTR_LABEL,
-  ATTR_META,
-  nextSkillUnlock,
   FEED_COPY,
   skillSpCost,
-} from './content.js?v=free-mvp-r005';
-import { packForRoute } from './route.js?v=free-mvp-r005';
-import { GAME_PACKS } from './generated/game-packs.js?v=free-mvp-r005';
+} from './content.js?v=golive-pr4b';
+import { packForRoute } from './route.js?v=golive-pr4b';
+import { GAME_PACKS } from './generated/game-packs.js?v=golive-pr4b';
 import {
   combatStats,
-  allocAttr,
   allocSkill,
   canLearn,
   skillLv,
@@ -35,7 +31,9 @@ import {
   canGoLive,
   GO_LIVE_CONTRACT,
   castHotfix,
-  castSummary,
+  castPriorityTag,
+  branchMastery,
+  buildMastery,
   metaUpgradePreview,
   recommendedMetaId,
   isSprinting,
@@ -49,7 +47,7 @@ import {
   claimSeasonMilestone,
   ensureHub,
   normalizeGear,
-} from './game.js?v=free-mvp-r005';
+} from './game.js?v=golive-pr4b';
 import {
   formatAffix,
   sellValue,
@@ -63,7 +61,7 @@ import {
   primaryStat,
   queryGearBag,
   toggleJunk,
-} from './loot.js?v=free-mvp-r005';
+} from './loot.js?v=golive-pr4b';
 import {
   DAILY_DEFS,
   WEEKLY_DEFS,
@@ -74,10 +72,10 @@ import {
   seasonLevel,
   SEASON_MILESTONES,
   formatReward,
-} from './hub.js?v=free-mvp-r005';
-import { skillIco, attrIco, metaIco, hubIco, gearIcon } from './icons.js?v=free-mvp-r005';
-import { save, clear } from './save.js?v=free-mvp-r005';
-import { sfx, unlockAudio, setMuted, setReducedMotion } from './sfx.js?v=free-mvp-r005';
+} from './hub.js?v=golive-pr4b';
+import { skillIco, metaIco, hubIco, gearIcon } from './icons.js?v=golive-pr4b';
+import { save, clear } from './save.js?v=golive-pr4b';
+import { sfx, unlockAudio, setMuted, setReducedMotion } from './sfx.js?v=golive-pr4b';
 
 const PANEL_TITLES = {
   skills: 'Build',
@@ -145,7 +143,7 @@ export function bindUI(s) {
   });
   $('btn-summary')?.addEventListener('click', () => {
     unlockAudio();
-    castSummary(s);
+    castPriorityTag(s);
   });
   // Single Go Live sheet — one CTA arms an inline confirm; confirm banks Notes and
   // prestiges atomically via goLive(), then swaps the sheet to the receipt. Delegated so
@@ -238,9 +236,7 @@ export function bindUI(s) {
   $('panel-skills')?.addEventListener('click', (e) => {
     const t = e.target.closest('[data-alloc]');
     if (!t) return;
-    let ok = false;
-    if (t.dataset.alloc === 'attr') ok = allocAttr(s, t.dataset.id);
-    else if (t.dataset.alloc === 'skill') ok = allocSkill(s, t.dataset.id);
+    const ok = t.dataset.alloc === 'skill' && allocSkill(s, t.dataset.id);
     if (ok) {
       save(s);
       popSpend(t);
@@ -547,16 +543,6 @@ function row(k, v, cls = '', tone = '') {
   return `<div class="${classes.join(' ')}"><span class="k">${k}</span><span class="v ${cls}">${v}</span></div>`;
 }
 
-function reqBadges(req, h) {
-  return Object.entries(req)
-    .map(([k, v]) => {
-      const met = (h[k] || 0) >= v;
-      const label = ATTR_LABEL[k] || k;
-      return `<span class="req-badge ${met ? 'met' : 'miss'}">${label} ${v}</span>`;
-    })
-    .join('');
-}
-
 function typeTag(type) {
   const map = {
     active: 'TAP',
@@ -582,7 +568,6 @@ function skillCard(s, sk) {
   if (maxed) cta = 'Max';
   else cta = `${cost} SP`;
 
-  const reqs = Object.keys(sk.req || {}).length ? reqBadges(sk.req, h) : '';
   const afford = !maxed && h.sp >= cost && ok;
   const nextLevel = Math.min(sk.max, lv + 1);
   const actionLabel = maxed ? `${sk.name} is at maximum rank` : `Raise ${sk.name} from rank ${lv} to ${nextLevel} for ${cost} SP`;
@@ -597,7 +582,6 @@ function skillCard(s, sk) {
         <span class="sk-type t-${sk.type}">${typeTag(sk.type)}</span>
       </div>
       <span class="sk-desc inline">${sk.desc}</span>
-      ${reqs ? `<div class="sk-reqs">${reqs}</div>` : ''}
     </div>
     <div class="sk-side">
       <span class="sk-delta">${lv}<span aria-hidden="true">→</span>${nextLevel}</span>
@@ -614,44 +598,29 @@ function renderSkills(s) {
 
   let html = `
   <div class="sp-bank compact ${hasSp ? 'has-sp' : ''}">
-    <span class="sp-bank-label">SP</span>
-    <strong class="sp-bank-val">${h.sp}</strong>
-    <span class="sp-bank-hint">${hasSp ? 'Ready to invest' : 'Earn SP by ranking up'}</span>
-  </div>
-
-  <div class="section-lab">Attributes</div>
-  <div class="attr-row">`;
-
-  for (const id of ['scan', 'verify', 'amplify']) {
-    const m = ATTR_META[id];
-    const val = h[id] || 0;
-    const unlock = nextSkillUnlock(id, val);
-    const gate = Number(unlock?.req?.[id] || 0);
-    const unlockCopy = !unlock
-      ? 'All skills open'
-      : gate === val + 1
-        ? `Unlocks ${unlock.short || unlock.name}`
-        : `Next: ${unlock.short || unlock.name} at ${gate}`;
-    html += `
-    <button type="button" class="attr-card build-attr-card ${hasSp ? 'can' : 'locked'}" data-alloc="attr" data-id="${id}" aria-label="Raise ${m.label} from ${val} to ${val + 1} for 1 SP. ${unlockCopy}">
-      <span class="attr-ico" aria-hidden="true">${attrIco(id)}</span>
-      <span class="attr-lab">${m.label}</span>
-      <span class="attr-delta">${val}<span aria-hidden="true">→</span>${val + 1}</span>
-      <span class="attr-effect">${m.sub}</span>
-      <span class="attr-unlock">${unlockCopy}</span>
-      <span class="sp-cost ${hasSp ? 'afford' : ''}">1 SP</span>
-    </button>`;
-  }
-
-  html += `</div>`;
+    <span class="sp-bank-left">
+      <span class="sp-bank-label">SP</span>
+      <strong class="sp-bank-val">${h.sp}</strong>
+      <span class="sp-bank-hint">${hasSp ? 'Choose one branch to strengthen' : 'Earn SP by ranking up'}</span>
+    </span>
+    <span class="build-mastery-badge">Mastery ${buildMastery(s)}</span>
+  </div>`;
 
   for (const tree of SKILL_TREES) {
-    html += `<div class="section-lab">${tree.label}</div><div class="skill-grid">`;
+    html += `<section class="build-branch" aria-labelledby="build-${tree.mastery}">
+      <div class="build-branch-head">
+        <span class="build-branch-copy">
+          <strong id="build-${tree.mastery}">${tree.label}</strong>
+          <small>${tree.promise}</small>
+        </span>
+        <span class="build-mastery-badge">Mastery ${branchMastery(s, tree.mastery)}</span>
+      </div>
+      <div class="skill-grid">`;
     for (const sk of Object.values(SKILLS)) {
       if (sk.tree !== tree.id) continue;
       html += skillCard(s, sk);
     }
-    html += `</div>`;
+    html += `</div></section>`;
   }
   root.innerHTML = html;
 }
@@ -992,17 +961,11 @@ export function renderHUD(s) {
   const chips = document.querySelectorAll('.hud-res .chip');
   if (chips[0]) chips[0].classList.toggle('pulse', !!(s.ui.chipPulse && s.ui.chipPulse.bytes > 0));
   if (chips[1]) chips[1].classList.toggle('pulse', !!(s.ui.chipPulse && s.ui.chipPulse.patches > 0));
-  // Build nav badge when unspent SP
-  document.querySelectorAll('.nav-btn[data-panel="skills"]').forEach((b) => {
-    b.classList.toggle('has-badge', s.run.hero.sp > 0);
-    b.dataset.badge = s.run.hero.sp > 0 ? String(s.run.hero.sp) : '';
-  });
   set($('v-zone'), String(s.route.zone + 1));
   // Live Mult is the launch economy multiplier.
   const eco = economyMult(s);
   set($('v-live'), eco.toFixed(2));
   set($('v-level'), String(h.level));
-  set($('v-sp'), String(h.sp));
   const livePill = document.querySelector('.stage-stat.live');
   if (livePill) {
     livePill.title = `Live Mult ×${eco.toFixed(2)}`;
@@ -1133,15 +1096,15 @@ export function renderHUD(s) {
     el.classList.toggle('on', !!on);
     el.setAttribute('aria-pressed', on ? 'true' : 'false');
     const def = SKILLS[sk];
-    // Keep short labels stable; Overdrive shows live state
+    // Keep short labels stable; toggles expose their live state.
     if (sk === 'deep_dive') {
-      const lab = on ? 'Overdrive · ON' : def?.short || 'Overdrive';
+      const lab = on ? 'Overclock · ON' : def?.hud || def?.short || 'Overclock';
       if (el.textContent !== lab) el.textContent = lab;
     } else if (sk === 'live_tracker') {
-      const lab = on ? 'Ramp · ON' : def?.short || 'Ramp';
+      const lab = on ? 'Tracker · ON' : def?.hud || def?.short || 'Tracker';
       if (el.textContent !== lab) el.textContent = lab;
-    } else if (def?.short && el.textContent !== def.short) {
-      el.textContent = def.short;
+    } else if ((def?.hud || def?.short) && el.textContent !== (def.hud || def.short)) {
+      el.textContent = def.hud || def.short;
     }
   }
   document.getElementById('app')?.classList.toggle('is-overdrive', !!h.deepOn);

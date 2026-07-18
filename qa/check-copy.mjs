@@ -22,6 +22,7 @@ const banned = [
   // reads ("Weapon", "WEAPON Lv", "Ship Notes") — never the lowercase code forms.
   ['retired Weapon label', /\bWeapon\b|\bWEAPON\b/],
   ['retired Ship label', /\bShip\b|\bSHIP\b/],
+  ['retired Area action', /\bArea\b/i],
 ];
 
 let failures = 0;
