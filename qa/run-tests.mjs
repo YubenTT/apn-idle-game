@@ -74,6 +74,14 @@ import {
 } from '../js/route.js';
 import { ANALYTICS_EVENTS, ANALYTICS_EVENT_NAMES } from '../js/analytics.js';
 import {
+  HOST_CLIP_NAMES,
+  HOST_CLIPS,
+  HOST_PLACEHOLDER_FRAMES,
+  HOST_PRESENTATION,
+  HOST_RENDER_LOCK,
+  resolveHostClip,
+} from '../js/host-contract.js';
+import {
   apply as applySave,
   save as saveState,
   load as loadState,
@@ -160,6 +168,32 @@ for (const check of checkMobileGestureContract()) {
 }
 for (const message of checkRouteContract()) ok(true, `route ${message}`);
 
+// —— PR-5 single Host contract ——
+ok(Object.isFrozen(HOST_CLIPS), 'Host clip contract is immutable');
+ok(HOST_CLIP_NAMES.length === 12, 'Host exposes twelve semantic clips from one code contract');
+ok(
+  HOST_CLIP_NAMES.join('|') === 'idle|run|scan_start|scan_fire|scan_recover|hotfix|priority_tag|tracker_loop|overclock_loop|sprint|gear_pull|drop_ship',
+  'Host clip vocabulary matches the V3 production contract',
+);
+ok(
+  HOST_CLIP_NAMES.every((name) => HOST_PLACEHOLDER_FRAMES.includes(HOST_CLIPS[name].placeholderFrame)),
+  'Every semantic clip resolves to a shipped placeholder frame',
+);
+ok(
+  HOST_PRESENTATION.min === 118 && HOST_PRESENTATION.target === 130 && HOST_PRESENTATION.max === 142,
+  'Run Host presentation is locked to the 118–142 CSS px gate',
+);
+ok(
+  HOST_RENDER_LOCK.cameraY === 18 && HOST_RENDER_LOCK.cameraX === 9 && HOST_RENDER_LOCK.pivot === 'foot-center',
+  'Host render lock is defined once in code',
+);
+ok(resolveHostClip({ hitRecoil: 0.6 }) === 'damage', 'Host resolver prioritizes damage reaction');
+ok(resolveHostClip({ attack: 0.9 }) === 'crit', 'Host resolver maps peak attack to crit placeholder');
+ok(resolveHostClip({ attack: 0.4 }) === 'scan', 'Host resolver maps attack to scan placeholder');
+ok(resolveHostClip({ overdrive: true }) === 'overdrive', 'Host resolver maps Overclock to overdrive placeholder');
+ok(resolveHostClip({ sprinting: true }) === 'sprint', 'Host resolver maps Sprint to sprint placeholder');
+ok(resolveHostClip({}) === 'run', 'Host resolver defaults to run placeholder');
+
 // —— Dormant analytics event-name contract (PR-3, IDLE-DESIGN-CONTEXT §6) ——
 // Names only: reserved, frozen, snake_case, unique. There is no telemetry runtime to
 // assert because none exists yet — this guards the vocabulary, not any firing.
@@ -210,6 +244,14 @@ ok(/\.hud-stage\s*\{[^}]*margin:\s*0;[^}]*border:\s*0;[^}]*border-radius:\s*0;/s
 ok(/#app\.is-sprinting \.hud-stage\s*\{[^}]*box-shadow:\s*none/s.test(cssSource), 'Sprint never restores a stage frame');
 ok(/#app\.is-overdrive \.hud-stage::after\s*\{[^}]*display:\s*none/s.test(cssSource), 'Overdrive never restores a stage frame');
 ok(shellMarkup.includes('id="v-energy-lab"') && shellMarkup.includes('id="v-focus-lab"'), 'Run meters expose live values');
+ok(
+  ['v-zone', 'v-pack-progress', 'v-level', 'v-live'].every((id) => shellMarkup.includes(`id="${id}"`)),
+  'Run stage exposes Route, Pack, Rank, and Live hierarchy',
+);
+ok(shellMarkup.includes('id="patch-echo-chip"') && shellMarkup.includes('id="v-echo-progress"'), 'Run reserves one data-bound Patch Echo chip');
+ok(uiSource.includes("skillLv(s, 'hotfix') > 0 || skillLv(s, 'summary_burst') > 0"), 'Focus appears only after a Focus-spending skill is learned');
+ok(uiSource.includes("echoProgressByPack?.[pack?.id]"), 'Patch Echo chip reads optional Route domain state without inventing progress');
+ok(/const mh = HOST_PRESENTATION\.target;/.test(readFileSync(new URL('../js/render.js', import.meta.url), 'utf8')), 'Canvas uses the canonical 130px Host target');
 ok(uiSource.includes("spBtn.disabled = h.energy < 1"), 'Sprint empty state uses native disabled semantics');
 ok(/\.btn-chip\s*\{[^}]*min-height:\s*calc\(var\(--touch-min\) \+ var\(--sp-1\)\)/s.test(cssSource), 'Run skills preserve touch targets');
 ok((shellMarkup.match(/class="nav-btn"/g) || []).length === 5, 'Navigation keeps exactly five tabs');

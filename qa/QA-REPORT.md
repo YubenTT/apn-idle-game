@@ -1,5 +1,30 @@
 # APN Idle redesign V1 — QA report
 
+## PR-5 checkpoint · Run hierarchy + placeholder Host contract
+
+Run now separates Route and ten-zone Pack context from Clear / Rank / Live
+telemetry, omits Focus until a Focus-spending skill is learned, and refuses to
+display Patch Echo progress until that optional Route domain data actually
+exists. The Host uses a code-owned 118–142px presentation range and the existing
+canonical placeholder atlas.
+
+Fresh checkpoint evidence on 2026-07-18:
+
+- direct installed Google Chrome CDP, always `mute=1`, passed 10 Route scenarios
+  across 375×812, 428×926, and 844×390, including zones 1/10/11/20/200/201;
+- every scenario recorded 0px horizontal overflow, no console warning/error,
+  decoded at most current + next packs, and targets approaching from the right;
+- Focus is hidden before Hotfix and revealed after a real learned-skill mutation;
+  Patch Echo stays absent before its domain exists;
+- boss tips remain at least 8px below stage telemetry in portrait and landscape;
+- Run evidence is stored in `qa/screenshots/pr5-run/`;
+- the existing asset suite remains authoritative and must finish `ALL PASS`.
+
+The first full-body GLB identity candidate failed the owner gate. It and its
+experimental proof/measurement tooling were removed before integration, so this
+checkpoint makes no full-body or new-atlas quality claim. Issue #23 remains open
+for a different full-body identity approach.
+
 ## PR-4b · Build V2 UI + Priority Tag
 
 Issue #22 removes SP from the Run strip and makes Build its sole owning surface.

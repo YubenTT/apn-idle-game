@@ -7,7 +7,7 @@
     <meta name="color-scheme" content="dark" />
     <title>APN Idle</title>
     <link rel="icon" href="./assets/apn-logo.svg?v=round-v1" />
-    <link rel="stylesheet" href="./css/game.css?v=golive-pr4b" />
+    <link rel="stylesheet" href="./css/game.css?v=golive-pr5" />
   </head>
   <body>
     <div id="app">
@@ -32,10 +32,17 @@
       </div>
 
       <main class="hud-stage">
+        <div class="stage-context" aria-label="Route progress">
+          <span class="stage-context-chip"><small>Route</small><strong id="v-zone">1</strong></span>
+          <span class="stage-context-chip pack"><small>Pack</small><strong id="v-pack-progress">1/10</strong><span class="stage-context-track"><i id="bar-pack"></i></span></span>
+          <span class="patch-echo-chip" id="patch-echo-chip" hidden>
+            <small>Patch Echo</small><strong id="v-echo-progress">0/0</strong>
+          </span>
+        </div>
         <div class="stage-hud" aria-hidden="false">
-          <div class="stage-stat zone">
+          <div class="stage-stat clear">
             <div class="stage-stat-top">
-              <span class="stage-stat-lab">ZONE <em id="v-zone">1</em></span>
+              <span class="stage-stat-lab">CLEAR</span>
               <span class="stage-stat-val" id="v-kills">0/5</span>
             </div>
             <div class="stage-stat-track"><i id="bar-zone" class="zone"></i></div>
@@ -77,7 +84,7 @@
             <div class="bar-lab"><span>Energy</span><span id="v-energy-lab">100%</span></div>
             <div class="bar-bg"><div id="bar-energy" class="bar-fg en"></div></div>
           </div>
-          <div class="bar">
+          <div class="bar" id="bar-focus-wrap" hidden>
             <div class="bar-lab"><span>Focus</span><span id="v-focus-lab">100%</span></div>
             <div class="bar-bg"><div id="bar-focus" class="bar-fg mn"></div></div>
           </div>
@@ -246,6 +253,6 @@
       </div>
     </div>
 
-    <script type="module" src="./js/main.js?v=golive-pr4b"></script>
+    <script type="module" src="./js/main.js?v=golive-pr5"></script>
   </body>
 </html>

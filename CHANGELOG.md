@@ -21,9 +21,9 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 - Added a 12-piece APN techwear item atlas covering matte polymer, laminated
   paper, and anodized metal families, with deterministic slot/name mapping,
   transparent runtime sprites, and asset-budget QA.
-- Added the canonical Host WebGL2 render-lock and ten-pose runtime atlas, derived
-  directly from the existing GLB with fixed camera, flat three-band shading, and
-  one-pixel pivot/ratio/visor QA.
+- Added one code-owned twelve-clip Host vocabulary while retaining the existing
+  canonical GLB and ten-pose runtime atlas as the shipped placeholder. The first
+  full-body identity candidate was rejected and removed before integration.
 - Added a deterministic zero-npm asset pipeline for atlas layout, pivot/trim
   metadata, fixed WebP profiles, SHA-256 manifests, hot-pack ownership, and hard
   first-playable/per-pack size gates.
@@ -61,6 +61,11 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
   semantic Canvas tones, contrast floors, and retained primary-crimson roles.
 
 ### Changed
+
+- Reorganized Run into a two-tier Route/Pack then Clear/Rank/Live hierarchy,
+  hid Focus until a Focus-spending skill exists, kept Patch Echo absent without
+  real domain progress, scaled the Host to its 118–142px hero range, and moved
+  transient tips below telemetry at every tested viewport.
 
 - Rebuilt Build as three direct Scan/Verify/Relay branches with per-branch and
   total Mastery, removed the retired generic attribute cards, and kept SP solely
@@ -150,6 +155,11 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
   token reads are cached, and small filled violet controls use dark ink.
 
 ### Tests
+
+- Added PR-5 Host presentation/clip contracts and a muted 10-scenario
+  direct-Chrome Route matrix covering pack/boss boundaries, Zone 200/201, Focus
+  reveal, right-entry targets, tip clearance, zero overflow, and console
+  cleanliness.
 
 - Added negative free-MVP contracts proving that no purchase catalog/action or
   coin reward ships, legacy paid flags cannot alter damage/economy/Sprint, and

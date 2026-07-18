@@ -21,8 +21,8 @@ import {
   spentSkillPoints,
   verifyYieldMultiplier,
   relayIdleEfficiency,
-} from './formulas.js?v=golive-pr4b';
-import { SEASON, META, SKILLS, ENEMY_FLAVOR, skillSpCost } from './content.js?v=golive-pr4b';
+} from './formulas.js?v=golive-pr5';
+import { SEASON, META, SKILLS, ENEMY_FLAVOR, skillSpCost } from './content.js?v=golive-pr5';
 import {
   ensureHub,
   hubOnKill,
@@ -38,7 +38,7 @@ import {
   applyReward,
   seasonLevel,
   SEASON_MILESTONES,
-} from './hub.js?v=golive-pr4b';
+} from './hub.js?v=golive-pr5';
 import {
   killLine,
   pick,
@@ -48,8 +48,8 @@ import {
   LEVEL_LINES,
   SHIP_LINES,
   SCANNER_LINES,
-} from './comedy.js?v=golive-pr4b';
-import { sfx } from './sfx.js?v=golive-pr4b';
+} from './comedy.js?v=golive-pr5';
+import { sfx } from './sfx.js?v=golive-pr5';
 import {
   emptyGear,
   normalizeGear,
@@ -65,9 +65,9 @@ import {
   pickSlotForGear,
   SLOTS,
   BAG_CAP,
-} from './loot.js?v=golive-pr4b';
-import { createRouteState, nextSeasonBoundary, packForRoute } from './route.js?v=golive-pr4b';
-import { GAME_PACKS } from './generated/game-packs.js?v=golive-pr4b';
+} from './loot.js?v=golive-pr5';
+import { createRouteState, nextSeasonBoundary, packForRoute } from './route.js?v=golive-pr5';
+import { GAME_PACKS } from './generated/game-packs.js?v=golive-pr5';
 
 export function createState() {
   return {

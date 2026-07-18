@@ -56,3 +56,21 @@ Original prompt: Complete the APN Idle redesign autonomously, including QA, revi
   PR against the release branch.
 - Next user gate: approve the Host V2 motion proof. No creature/item/runtime Host
   asset replacement proceeds before that approval.
+
+## Go Live v2 · PR-5 checkpoint (2026-07-18)
+
+- Run hierarchy is implemented: Route + Pack context, Clear / Rank / Live,
+  conditional Focus, and a Patch Echo chip that renders only real optional data.
+- Direct Chrome (`mute=1`) covers 10 scenarios at 375×812, 428×926, and 844×390
+  with zero overflow, clean console, target-right entry, Focus reveal, and
+  boss-tip clearance. Compact evidence lives under `qa/screenshots/pr5-run/`.
+- `js/host-contract.js` is the sole placeholder presentation/clip vocabulary.
+- Owner rejected the first ADR-0010 full-body GLB identity candidate. The GLB,
+  proof renderer, proof image, and experimental asset checks were purged before
+  commit; they never entered the runtime atlas. Do not recreate its
+  arm/neck-as-leg construction.
+- The existing canonical GLB and placeholder atlas remain shipped. Issue #23
+  stays open for a different owner-approved four-angle full-body identity,
+  deterministic pose derivation, and real-pixel asset gate.
+- This checkpoint is intended to merge through `release/go-live-v3` into `main`
+  only after `node qa/run-tests.mjs` and muted Chrome verification are green.

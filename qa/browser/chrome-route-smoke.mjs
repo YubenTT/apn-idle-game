@@ -128,6 +128,17 @@ async function scenario(displayZone, viewport) {
   const evaluation = await cdp.send('Runtime.evaluate', {
     expression: `JSON.stringify({
       zone: document.querySelector('#v-zone')?.textContent,
+      packProgress: document.querySelector('#v-pack-progress')?.textContent,
+      stageLabels: [...document.querySelectorAll('.stage-stat-lab')].map((node) => node.childNodes[0]?.textContent.trim()),
+      focusHidden: document.querySelector('#bar-focus-wrap')?.hidden,
+      echoHidden: document.querySelector('#patch-echo-chip')?.hidden,
+      toast: (() => {
+        const toast = document.querySelector('#toast');
+        const hud = document.querySelector('.stage-hud');
+        const tr = toast?.getBoundingClientRect();
+        const hr = hud?.getBoundingClientRect();
+        return tr && hr && { visible: !toast.hidden, top: tr.top, hudBottom: hr.bottom };
+      })(),
       sound: document.querySelector('#chk-sfx')?.checked,
       canvas: (() => { const r = document.querySelector('#game')?.getBoundingClientRect(); return r && { width:r.width,height:r.height }; })(),
       overflow: document.documentElement.scrollWidth - innerWidth,
@@ -147,6 +158,16 @@ async function scenario(displayZone, viewport) {
     (event.method === 'Log.entryAdded' && ['error', 'warning'].includes(event.params?.entry?.level))
   );
   assert(result.zone === String(displayZone), `${tag} HUD matches Route`);
+  assert(result.packProgress === `${((displayZone - 1) % 10) + 1}/10`, `${tag} HUD matches Pack progress`);
+  assert(result.stageLabels.join('|') === 'CLEAR|RANK|LIVE', `${tag} keeps Clear / Rank / Live hierarchy uncluttered`);
+  assert(result.focusHidden === true, `${tag} hides Focus before a Focus skill is learned`);
+  assert(result.echoHidden === true, `${tag} never invents Patch Echo progress before its domain exists`);
+  if (result.toast?.visible) {
+    assert(
+      result.toast.top >= result.toast.hudBottom + 8,
+      `${tag} tip never covers the stage telemetry (${result.toast.top}px ≥ ${result.toast.hudBottom + 8}px)`,
+    );
+  }
   assert(result.sound === false, `${tag} SFX is off`);
   // Proportional so a short landscape viewport still asserts a filled canvas.
   const minW = Math.min(300, viewport.width * 0.6);
@@ -157,6 +178,23 @@ async function scenario(displayZone, viewport) {
   assert(result.currentPack && result.decodedPacks.includes(result.currentPack), `${tag} current pack is decoded (${result.currentPack})`);
   assert(result.decodedPacks.length > 0 && result.decodedPacks.length <= 2, `${tag} retains at most current + next packs (${result.decodedPacks.join(',')})`);
   assert(result.targetX == null || result.targetX > result.heroX, `${tag} target approaches from the right`);
+  if (displayZone === 1) {
+    await cdp.send('Runtime.evaluate', {
+      expression: `window.__APN_QA__.state.run.hero.skills.hotfix = 1`,
+      returnByValue: true,
+    });
+    await delay(150);
+    const focusLearned = await cdp.send('Runtime.evaluate', {
+      expression: `document.querySelector('#bar-focus-wrap')?.hidden === false && document.querySelector('.hud-bars')?.classList.contains('has-focus')`,
+      returnByValue: true,
+    });
+    assert(focusLearned.result.value === true, `${tag} reveals Focus after Hotfix is learned`);
+    await cdp.send('Runtime.evaluate', {
+      expression: `window.__APN_QA__.state.run.hero.skills.hotfix = 0`,
+      returnByValue: true,
+    });
+    await delay(150);
+  }
   console.log(`INFO ${tag} viewport overflow ${result.overflow}px`);
   const shot = await cdp.send('Page.captureScreenshot', { format: 'png', fromSurface: true });
   fs.writeFileSync(path.join(output, `${viewport.label}-zone-${String(displayZone).padStart(3, '0')}.png`), Buffer.from(shot.data, 'base64'));
