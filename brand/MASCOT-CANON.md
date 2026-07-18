@@ -5,6 +5,23 @@
 > *family* of similar red figures instead of one hero). This doc exists to make
 > that impossible. See [ADR-0003](../docs/decisions/ADR-0003-mascot-single-source.md).
 
+## Runtime source (2026-07-18, V2)
+
+**The shipped runtime Host is the procedural Canvas character in
+[`js/hero-v2.js`](../js/hero-v2.js)** — see
+[ADR-0012](../docs/decisions/ADR-0012-procedural-host-v2.md). The **silhouette
+DNA below is unchanged and still binds**: oversized spherical head, integrated
+black visor, slim torso, short arms, minimal oval shadow. The procedural rig
+adds what the placeholder atlas never had: run cycle, breathe, blink, visor
+scan sweep, attack/crit anticipation, damage flinch, sprint lean, overdrive
+hover, and level/loot/defeat clips — all reduced-motion gated.
+
+The GLB files and the `tools/mascot-render` export pipeline are **superseded as
+runtime inputs** (ADR-0012): they remain in repo history as reference geometry,
+but no runtime code loads GLB-derived Host frames. Future pose and animation
+work is code in `hero-v2.js`, not new renders. Everything below this section is
+the historical GLB canon, kept for provenance.
+
 ## The one rule
 
 **The GLB is the geometry source of truth.** No new mesh and no invented

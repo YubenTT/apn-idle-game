@@ -9,6 +9,33 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Added
 
+- V2 Super Polish · Wave 4 QA & ship-readiness: full headless gate re-verified
+  (`run-tests.mjs` ALL PASS, playthrough, pacing profiles, Zone-1000 long-run)
+  plus the complete fresh Chrome matrix — route smoke (3 viewports × zones
+  1/10/11/20/200/201), Build/Gear/Go Live sheet smokes, and Wave 2/3 capture
+  sets — all zero console errors, zero document overflow. Legacy combat text
+  re-anchored to stage-aware origins so floaters/currency/quips rise from the
+  combat cast instead of colliding with the Wave 2 toast banner (canvas y
+  ≈112–162 on every viewport); kill-cluster particles/confetti burst at the
+  body, centered streak milestones sit below the toast band, and zone-clear
+  wipes fall back to body-height text. Docs: ADR-0012 (procedural Host V2 is
+  the shipped runtime character), MASCOT-CANON V2 section, ARCHITECTURE module
+  map. Evidence: `qa/screenshots/v2-final/` (route + sheets), `…/wave2/` (24
+  captures), `…/wave3/` (6 captures). V2 waves 1–4 complete on
+  `v2/super-polish`; pre-V2 state restorable via tag
+  `backup/pre-v2-super-polish`.
+
+- V2 Super Polish · Wave 1 art core: procedural Canvas Host V2 (`js/hero-v2.js`)
+  — one animated character with the canonical silhouette DNA (run cycle,
+  breathe, blink, visor scan sweep, attack/crit anticipation, sprint lean,
+  overdrive hover, damage flinch); procedural feed-noise enemy family with a
+  unified presentation layer for pack targets (`js/enemies-v2.js`: spawn pop,
+  hit squash, death burst, ground shadow); layered editorial scenery with
+  per-zone seeded moods and pack plates as dimmed far layers
+  (`js/scenery-v2.js`); stage-fit scaling keeps cast + HP plates uncropped on
+  short landscape stages (`js/render.js`). Spec:
+  `docs/superpowers/specs/2026-07-18-v2-super-polish.md`.
+
 - V2 Super Polish · Wave 3 juice & feel: kill hit stop (40–110ms timescale dip,
   bigger on crit kills and boss breaks), tuned screen shake with smooth decay,
   crit presentation (white-hot flash frame, big gold scale-pop number, radial

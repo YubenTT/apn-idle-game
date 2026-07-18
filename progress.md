@@ -74,3 +74,35 @@ Original prompt: Complete the APN Idle redesign autonomously, including QA, revi
   deterministic pose derivation, and real-pixel asset gate.
 - This checkpoint is intended to merge through `release/go-live-v3` into `main`
   only after `node qa/run-tests.mjs` and muted Chrome verification are green.
+
+## V2 Super Polish · ship-readiness checkpoint (2026-07-18)
+
+- Branch `v2/super-polish`; pre-V2 state restorable via tag
+  `backup/pre-v2-super-polish`. Master spec:
+  `docs/superpowers/specs/2026-07-18-v2-super-polish.md`.
+- Wave 1 art core (`3b24b2c`): procedural Host V2 (`js/hero-v2.js`), procedural
+  feed-noise enemy family + target presentation (`js/enemies-v2.js`), layered
+  per-zone editorial scenery (`js/scenery-v2.js`).
+- Wave 2 chrome (`c365714`): animated counters, press physics, sheet springs,
+  live Gear Host, toast banner, nav pill, coach hint.
+- Wave 3 juice (`2004092`): hit stop, shake tuning, crit flash, death bursts,
+  combo meter, zone/rank/Go Live cinematics, enriched WebAudio SFX.
+- Wave 4 QA & ship-readiness: headless gate ALL PASS (`run-tests.mjs`,
+  `playthrough.mjs`, `pacing-profiles.mjs`, `long-run.mjs` incl. finite
+  Zone-1000 profile); fresh Chrome matrix at `qa/screenshots/v2-final/` (route
+  smoke 3 viewports × zones 1/10/11/20/200/201; Build/Gear/Go Live smokes;
+  `wave2/` 24 captures; `wave3/` 6 captures) — zero console errors, zero
+  document overflow. Fixed this wave: legacy floaters/currency/quips re-anchored
+  to stage-aware origins (toast band is canvas y ≈112–162 on every viewport),
+  kill-cluster particles/confetti burst at the body, zone-clear wipe fallback
+  no longer strands text in the toast band; `chrome-build-smoke.mjs` repointed
+  to the standard 8791 evidence server.
+- ADR-0012 records the owner-mandated switch: the procedural Canvas Host is the
+  shipped runtime character; GLB files stay in repo history; `tools/mascot-render`
+  is retired from the runtime path. `brand/MASCOT-CANON.md` carries the dated
+  V2 section; `docs/ARCHITECTURE.md` maps the V2 modules.
+- Open leftovers: pack target atlases are still the original art (procedural
+  presentation layer wraps them; full procedural replacement is future work);
+  scenery mood crossfade between zones is a hard cut today; the damage vignette
+  from the Wave 3 scope was dropped as N/A (hit stop + shake + crit flash carry
+  the hurt read); no V2 perf probe beyond the existing PERF-BUDGET caps yet.
