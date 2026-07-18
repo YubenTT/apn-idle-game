@@ -346,9 +346,10 @@ export function combatStats(s) {
   };
 }
 
-function toast(s, msg, dur = 2.6) {
+function toast(s, msg, dur = 2.6, tone = 'info') {
   s.ui.toast = msg;
   s.ui.toastT = dur;
+  s.ui.toastTone = tone;
 }
 
 function tip(s, id) {
@@ -505,7 +506,7 @@ function grantXp(s, amount) {
     h.sp += C.SP_PER_LEVEL;
     floater(s, s.world.heroX, 150, `RANK ${h.level}`, '#10B981', true);
     floater(s, s.world.heroX + 20, 175, `+${C.SP_PER_LEVEL} SP`, tone('sp'), true);
-    toast(s, pick(LEVEL_LINES) + ` (+${C.SP_PER_LEVEL} SP)`);
+    toast(s, pick(LEVEL_LINES) + ` (+${C.SP_PER_LEVEL} SP)`, 2.6, 'rank');
     tip(s, 'level');
     particles(s, s.world.heroX, 200, '#FC1243', 18);
     confetti(s, s.world.heroX, 180, ['#FC1243', '#10B981', '#e6b84d', '#fff'], 28);
@@ -599,7 +600,7 @@ function onKill(s, e) {
     s.meta.bosses += 1;
     s.world.bossActive = false;
     s.world.bossTimer = 0;
-    toast(s, pick(BOSS_WIN));
+    toast(s, pick(BOSS_WIN), 2.6, 'win');
     floater(s, e.displayX, 115, 'GATE CLEARED', '#FF2F4B', true);
     confetti(s, e.displayX, 170, ['#FC1243', '#FF2F4B', '#e6b84d', '#fff'], 40);
     s.ui.chipPulse.patches = 0.5;
@@ -673,10 +674,10 @@ function onKill(s, e) {
     }
     if (isSeasonCheckpoint(s.route.zone)) {
       s.ui.seasonDone = true;
-      toast(s, `Zone ${s.route.zone} checkpoint! Go Live to bank Notes and grow your Live Mult.`);
+      toast(s, `Zone ${s.route.zone} checkpoint! Go Live to bank Notes and grow your Live Mult.`, 2.6, 'live');
       tip(s, 'season');
     } else {
-      toast(s, `Zone ${s.route.zone + 1}`, 1.4);
+      toast(s, `Zone ${s.route.zone + 1}`, 1.4, 'zone');
     }
     if (isBossZone(s.route.zone)) tip(s, 'boss');
   }
@@ -718,7 +719,10 @@ export function step(s, dt) {
   s.world.time += dt;
   if (s.ui.toastT > 0) {
     s.ui.toastT -= dt;
-    if (s.ui.toastT <= 0) s.ui.toast = null;
+    if (s.ui.toastT <= 0) {
+      s.ui.toast = null;
+      s.ui.toastTone = null;
+    }
   }
   if (s.ui.lootDrop) {
     s.ui.lootDrop.t -= dt;
@@ -931,11 +935,15 @@ export function collectAlert(s, a) {
   s.world.alerts = s.world.alerts.filter((x) => x.id !== a.id);
 }
 
+/** Focus costs for the two tap-cast skills — single source for game + HUD chips. */
+export const HOTFIX_FOCUS_COST = 10;
+export const PRIORITY_FOCUS_COST = 12;
+
 export function castHotfix(s) {
   const lv = skillLv(s, 'hotfix');
   if (lv < 1) return false;
   const st = combatStats(s);
-  const cost = 10;
+  const cost = HOTFIX_FOCUS_COST;
   if (s.run.hero.focus < cost) {
     toast(s, `Hotfix needs ${cost} Focus`);
     return false;
@@ -965,11 +973,11 @@ export function castPriorityTag(s) {
     toast(s, 'Priority Tag ready — no target');
     return false;
   }
-  if (s.run.hero.focus < 12) {
-    toast(s, 'Priority Tag needs 12 Focus');
+  if (s.run.hero.focus < PRIORITY_FOCUS_COST) {
+    toast(s, `Priority Tag needs ${PRIORITY_FOCUS_COST} Focus`);
     return false;
   }
-  s.run.hero.focus -= 12;
+  s.run.hero.focus -= PRIORITY_FOCUS_COST;
   target.priorityTagRank = lv;
   toast(s, 'Priority target verified');
   particles(s, target.displayX, 170, tone('signal'), 14);

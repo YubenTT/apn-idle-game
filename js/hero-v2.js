@@ -88,12 +88,17 @@ export function drawHeroV2(ctx, x, footY, opts = {}) {
   const vigor = 0.82 + 0.18 * clamp(energy / 40, 0, 1); // tired = softer bounce
 
   // —— clip clocks ————————————————————————————————————————
-  const freq = (sprint ? 15 : 10.5) * (0.9 + 0.1 * vigor);
+  // 'idle' pose: no locomotion — legs planted, weight rests on the breathe
+  // cycle (visor sweep + blink keep the character alive). Used by the Gear niche.
+  const idle = o.pose === 'idle';
+  const freq = idle ? 0 : (sprint ? 15 : 10.5) * (0.9 + 0.1 * vigor);
   const ph = t * freq;
-  const stride = (sprint ? 11 : 8) * k;
-  const lift = (sprint ? 7.5 : 5) * k * motion * vigor;
-  const bounce = Math.abs(Math.sin(ph)) * (sprint ? 4.2 : 2.6) * k * motion * vigor;
-  const breathe = Math.sin(t * 2.1) * 0.014 * motion;
+  const stride = (idle ? 0 : sprint ? 11 : 8) * k;
+  const lift = (idle ? 0 : sprint ? 7.5 : 5) * k * motion * vigor;
+  const bounce = idle
+    ? (0.5 + Math.sin(t * 2.1) * 0.5) * 0.9 * k * motion // slow breathing sway
+    : Math.abs(Math.sin(ph)) * (sprint ? 4.2 : 2.6) * k * motion * vigor;
+  const breathe = Math.sin(t * 2.1) * (idle ? 0.022 : 0.014) * motion;
   const thrust = attack; // 1 at impact, decays to 0
   const lunge = (crit ? 16 : 10.5) * k * thrust;
   const hover = over ? (2.4 + Math.sin(t * 6.5) * 1.4 * motion) * k : 0;
@@ -125,7 +130,7 @@ export function drawHeroV2(ctx, x, footY, opts = {}) {
   }
 
   // body group: bounce + lean + squash & stretch (foot pivot preserved)
-  const lean = (sprint ? 0.15 : 0.05) + thrust * (crit ? 0.26 : 0.15) - recoil * 0.24;
+  const lean = (idle ? 0.02 : sprint ? 0.15 : 0.05) + thrust * (crit ? 0.26 : 0.15) - recoil * 0.24;
   ctx.translate(lunge * 0.35, -bounce * 0.5);
   ctx.rotate(lean * 0.4 - buckle * 0.5);
   ctx.scale(
@@ -140,7 +145,7 @@ export function drawHeroV2(ctx, x, footY, opts = {}) {
   const headR = 33 * k;
 
   // —— scarf (behind body, follow-through lag) ————————————————
-  drawScarf(ctx, k, t, freq, motion, sprint, recoil, defeatT);
+  drawScarf(ctx, k, t, idle ? 1.2 : freq, motion, sprint, recoil, defeatT);
 
   // —— far arm (darker, behind torso) —————————————————————————
   const farSwing = Math.sin(ph + Math.PI) * 0.5 * motion * vigor;

@@ -128,8 +128,14 @@ border and a green "affordable" CTA are never adjacent in the same decision.
 - **Elevation:** flat editorial. `--elev-card` is a hairline + soft drop; **no
   outer neon glow** on cards/stage (a research anti-pattern). Sheets use
   `--elev-sheet`.
-- **Motion:** `--dur-fast/base/slow` with `--ease-out`. Collapses to 0ms under
-  `prefers-reduced-motion` **and** the in-app Reduced-motion toggle.
+- **Motion:** `--dur-fast/base/slow` with `--ease-out`. Chrome polish adds
+  `--dur-pop` (420ms) / `--dur-glide` (560ms) with `--ease-spring` (entrances,
+  pill travel) and `--ease-press` (button press physics). All durations collapse
+  to 0ms under `prefers-reduced-motion` **and** the in-app Reduced-motion toggle.
+- **Chrome alphas & gloss:** derived alphas of existing tokens only —
+  `--apn-primary-a30/-a55`, `--apn-primary-hi-a35`, per-currency `-a14` washes and
+  `-a40/-a45` glows, `--gloss-strong/-soft`, `--ink-shade-a35`. They exist for
+  gradients, washes, and inset depth. No new hues; one color keeps one job.
 
 ## Accessibility floors (hard requirements)
 

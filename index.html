@@ -112,14 +112,39 @@
           </button>
         </div>
         <div class="btn-skills" id="skill-shortcuts">
-          <button type="button" id="btn-hotfix" class="btn-chip" hidden>Hotfix</button>
-          <button type="button" id="btn-summary" class="btn-chip" aria-label="Priority Tag" hidden>Priority</button>
-          <button type="button" id="btn-tracker" class="btn-chip" aria-label="Live Tracker" hidden>Tracker</button>
-          <button type="button" id="btn-deep" class="btn-chip" hidden>Overclock</button>
+          <button type="button" id="btn-hotfix" class="btn-chip" hidden>
+            <span class="chip-lab">Hotfix</span>
+            <span class="chip-sub"></span>
+            <span class="chip-pips" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+            <span class="chip-fill" aria-hidden="true"></span>
+          </button>
+          <button type="button" id="btn-summary" class="btn-chip" aria-label="Priority Tag" hidden>
+            <span class="chip-lab">Priority</span>
+            <span class="chip-sub"></span>
+            <span class="chip-pips" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+            <span class="chip-fill" aria-hidden="true"></span>
+          </button>
+          <button type="button" id="btn-tracker" class="btn-chip" aria-label="Live Tracker" hidden>
+            <span class="chip-lab">Tracker</span>
+            <span class="chip-sub"></span>
+            <span class="chip-pips" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+            <span class="chip-fill" aria-hidden="true"></span>
+          </button>
+          <button type="button" id="btn-deep" class="btn-chip" hidden>
+            <span class="chip-lab">Overclock</span>
+            <span class="chip-sub"></span>
+            <span class="chip-pips" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+            <span class="chip-fill" aria-hidden="true"></span>
+          </button>
+        </div>
+        <div id="coach-hint" class="coach-hint" role="status" hidden>
+          <strong>Tap to upgrade</strong>
+          <span>Spend Signal on your Scanner</span>
         </div>
       </section>
 
       <nav class="hud-nav" aria-label="Main">
+        <span class="nav-pill" aria-hidden="true"></span>
         <button type="button" data-panel="skills" class="nav-btn" aria-controls="sheet-root" aria-expanded="false">
           <svg class="nav-ico" viewBox="0 0 24 24" aria-hidden="true"
             ><path

@@ -9,6 +9,20 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Added
 
+- V2 Super Polish · Wave 2 chrome overhaul: rAF count-up currency counters,
+  glossy Scanner CTA with shine sweep and locked muted state, structured skill
+  chips (name · cost/state · rank pips · Focus charge fill), spring sheet
+  entrances with staggered card rise, sliding nav pill, toned toast banner
+  (info/rank/zone/win/live), live procedural Host in the Gear empty niche, and a
+  first-run coach hint dismissed on the first Scanner upgrade. Landscape docks
+  rebalance 60/40 and hide pips so chip labels never clip. Sheet primaries share
+  the CTA depth language; charged chips use the sheet "can" inset underline.
+  All new motion collapses under reduced motion; new chrome uses derived alpha /
+  gloss / motion tokens only (`--dur-pop`, `--dur-glide`, `--ease-spring`,
+  `--ease-press`, `--apn-primary-a30/-a55`, `--gloss-*`, `--ink-shade-a35`,
+  per-currency `-a14/-a40/-a45`). Evidence: `qa/screenshots/v2-wave2/` (24
+  captures, 3 viewports, zero console errors).
+
 - Added the final five-viewport, seven-screen regression pack (35 accepted
   captures), exact-dimension baseline QA, opt-in browser performance probes, and
   an integrated release report with zero open Blocker/Critical defects.
