@@ -5505,7 +5505,7 @@ button[hidden] {
   }
 
   .hud-stage {
-    min-height: calc(var(--size-inventory-slot) + var(--sp-12));
+    min-height: calc(var(--size-inventory-slot) * 3);
   }
 
   .hud-bars {
