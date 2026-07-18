@@ -384,6 +384,7 @@ function floater(s, x, y, text, color, big = false, anchorId = null, opts = null
     huge,
     center: !!opts?.center,
     anchorId,
+    anchorLift: opts?.lift || 0, // stacked lines above an anchored target
   });
 }
 
@@ -447,6 +448,13 @@ function shockRing(s, x, y, color, { r1 = 46, life = 0.34, delay = 0, width = 3 
  *  headless fallback only matters where no pixel ever renders. */
 function stageY(s, lift = 0) {
   return (s.world.groundY || 522) - lift;
+}
+
+/** Stage-aware floater origin just above the Host's head (render.js stamps
+ *  world.stageFit with world.groundY). Floaters must never spawn inside the
+ *  toast band (canvas y ≈112–162 on every viewport). */
+function heroFloatY(s, extra = 0) {
+  return stageY(s, 130 * (s.world.stageFit || 1) + 24 + extra);
 }
 
 /** Token-colored shard spray + ring on kill; boss gets a slower multi-ring burst. */
@@ -562,8 +570,8 @@ function grantXp(s, amount) {
     h.xp -= xpToNext(h.level);
     h.level += 1;
     h.sp += C.SP_PER_LEVEL;
-    floater(s, s.world.heroX, 150, `RANK ${h.level}`, '#10B981', true);
-    floater(s, s.world.heroX + 20, 175, `+${C.SP_PER_LEVEL} SP`, tone('sp'), true);
+    floater(s, s.world.heroX, heroFloatY(s, 18), `RANK ${h.level}`, '#10B981', true);
+    floater(s, s.world.heroX + 20, heroFloatY(s), `+${C.SP_PER_LEVEL} SP`, tone('sp'), true);
     toast(s, pick(LEVEL_LINES) + ` (+${C.SP_PER_LEVEL} SP)`, 2.6, 'rank');
     tip(s, 'level');
     if (!s.settings.reducedMotion) h.levelT = 1; // hero-v2 jump + golden halo clock
@@ -592,7 +600,7 @@ function onKill(s, e) {
     tip(s, 'combo');
     if (s.settings.sfx !== false) sfx('combo');
   } else if (s.stats.combo >= 5 && s.stats.combo % 5 === 0) {
-    floater(s, s.world.heroX, 120, `${s.stats.combo}x FEED STREAK`, '#FC1243', true);
+    floater(s, s.world.heroX, heroFloatY(s, 18), `${s.stats.combo}x FEED STREAK`, '#FC1243', true);
     tip(s, 'combo');
   }
 
@@ -631,9 +639,9 @@ function onKill(s, e) {
     comboMult *
     (0.9 + Math.random() * 0.2);
   s.run.bytes += bytes;
-  floater(s, e.displayX, 170, `+${bytes | 0} Signal`, '#6cb8ff');
+  floater(s, e.displayX, stageY(s, 64), `+${bytes | 0} Signal`, '#6cb8ff', false, e.id, { lift: 18 });
   lootFlight(s, e, 'signal');
-  particles(s, e.displayX, 190, '#6cb8ff', 10 + Math.min(14, s.stats.combo), 'coin');
+  particles(s, e.displayX, stageY(s, 46), '#6cb8ff', 10 + Math.min(14, s.stats.combo), 'coin');
   s.ui.chipPulse = s.ui.chipPulse || {};
   s.ui.chipPulse.bytes = 0.35;
   if (s.settings.sfx !== false) sfx(e.type === 'patch' ? 'notes' : 'coin');
@@ -653,10 +661,10 @@ function onKill(s, e) {
   if (e.type === 'patch') {
     const p = C.PATCH_FROM_CHAMP * patchM;
     s.run.patches += p;
-    floater(s, e.displayX, 135, `+${p | 0} Notes`, tone('notes'), true);
+    floater(s, e.displayX, stageY(s, 82), `+${p | 0} Notes`, tone('notes'), true, e.id, { lift: 36 });
     lootFlight(s, e, 'notes');
-    particles(s, e.displayX, 150, tone('notes'), 20, 'coin');
-    confetti(s, e.displayX, 180, [tone('notes'), '#fff', '#e6b84d'], 24);
+    particles(s, e.displayX, stageY(s, 46), tone('notes'), 20, 'coin');
+    confetti(s, e.displayX, stageY(s, 60), [tone('notes'), '#fff', '#e6b84d'], 24);
     tip(s, 'patch');
     s.ui.chipPulse.patches = 0.45;
   }
@@ -667,11 +675,11 @@ function onKill(s, e) {
     s.world.bossActive = false;
     s.world.bossTimer = 0;
     toast(s, pick(BOSS_WIN), 2.6, 'win');
-    floater(s, e.displayX, 115, 'GATE CLEARED', '#FF2F4B', true);
-    confetti(s, e.displayX, 170, ['#FC1243', '#FF2F4B', '#e6b84d', '#fff'], 40);
+    floater(s, e.displayX, stageY(s, 100), 'GATE CLEARED', '#FF2F4B', true, e.id, { lift: 54 });
+    confetti(s, e.displayX, stageY(s, 60), ['#FC1243', '#FF2F4B', '#e6b84d', '#fff'], 40);
     s.ui.chipPulse.patches = 0.5;
   } else if (Math.random() < 0.35 || s.stats.combo <= 2) {
-    floater(s, e.displayX, 125, killLine(e.type), '#F5F6F8');
+    floater(s, e.displayX, stageY(s, 32), killLine(e.type), '#F5F6F8', false, e.id, { lift: -14 });
   }
 
   // Gear drops — bosses guaranteed, elites/patch rare (all 6 slots)
@@ -701,7 +709,7 @@ function onKill(s, e) {
       t: 2.55,
       life: 2.55,
     };
-    confetti(s, e.displayX, 160, [rarityColor(item.rarity), '#fff', '#FC1243'], e.type === 'boss' ? 28 : 14);
+    confetti(s, e.displayX, stageY(s, 60), [rarityColor(item.rarity), '#fff', '#FC1243'], e.type === 'boss' ? 28 : 14);
     // Soft tip once; no item-name toast spam
     if (!s.ui.seenGearTip) {
       s.ui.seenGearTip = true;
@@ -739,7 +747,7 @@ function onKill(s, e) {
     hubOnZone(s);
     // Zone clear celebration: full-width light sweep + small confetti (cosmetic).
     if (!s.settings.reducedMotion) s.ui.fx = { kind: 'sweep', t: 0.55, life: 0.55 };
-    confetti(s, s.world.heroX + 40, 160, [tone('zone'), '#FC1243', '#fff'], 16);
+    confetti(s, s.world.heroX + 40, stageY(s, 96), [tone('zone'), '#FC1243', '#fff'], 16);
 
     // Go Live checkpoint (ADR-0008): mint a pending checkpoint at the boundary
     // and keep it until claimed, so an overshoot never forfeits the checkpoint.
@@ -773,14 +781,14 @@ function dealDamage(s, e, amount, isCrit) {
   floater(
     s,
     e.displayX,
-    155 + Math.random() * 20,
+    stageY(s, 46 + Math.random() * 10), // fallback if the anchor is gone (zone-clear wipe)
     `${isCrit ? 'CRIT ' : ''}${Math.round(amount)}`,
     isCrit ? '#e6b84d' : '#F5F6F8',
     isCrit,
     e.id,
     isCrit ? { huge: true } : null
   );
-  particles(s, e.displayX, 200, isCrit ? '#FC1243' : '#F5F6F8', isCrit ? 8 : 4);
+  particles(s, e.displayX, stageY(s, 46), isCrit ? '#FC1243' : '#F5F6F8', isCrit ? 8 : 4);
   if (isCrit) shockRing(s, e.displayX, stageY(s, 46), '#e6b84d', { r1: 36, life: 0.26, width: 2.5 });
   if (s.settings.sfx !== false) sfx(isCrit ? 'crit' : 'hit');
 
@@ -1125,7 +1133,7 @@ export function allocSkill(s, id) {
   syncLegacyMasteryFields(s);
   s.ui.panelDirty = true;
   confetti(s, s.world.heroX, 190, ['#FC1243', '#fff', '#3ecf8e'], 16);
-  floater(s, s.world.heroX, 145, `${d.name} ·${cost}SP`, tone('sp'), true);
+  floater(s, s.world.heroX, heroFloatY(s), `${d.name} ·${cost}SP`, tone('sp'), true);
   if (s.settings.sfx !== false) sfx('buy');
   return true;
 }
@@ -1138,7 +1146,7 @@ export function buyScanner(s) {
   toast(s, pick(SCANNER_LINES) + ` (Lv ${s.run.hero.scanner})`);
   particles(s, s.world.heroX, 200, '#FC1243', 16);
   confetti(s, s.world.heroX, 190, ['#FC1243', '#ff6b8a', '#fff'], 16);
-  floater(s, s.world.heroX, 150, `SCANNER Lv ${s.run.hero.scanner}`, '#FC1243', true);
+  floater(s, s.world.heroX, heroFloatY(s), `SCANNER Lv ${s.run.hero.scanner}`, '#FC1243', true);
   s.ui.chipPulse = s.ui.chipPulse || {};
   s.ui.chipPulse.bytes = 0.3;
   if (s.settings.sfx !== false) sfx('upgrade');
@@ -1166,7 +1174,7 @@ export function shipPatches(s) {
   tip(s, 'ship');
   s.ui.panelDirty = true;
   confetti(s, s.world.heroX, 180, ['#e6b84d', '#FC1243', '#fff', '#3ecf8e'], 32);
-  floater(s, s.world.heroX, 140, `+${gained} REP`, '#e6b84d', true);
+  floater(s, s.world.heroX, heroFloatY(s), `+${gained} REP`, '#e6b84d', true);
   s.ui.chipPulse = s.ui.chipPulse || {};
   s.ui.chipPulse.auth = 0.5;
   s.ui.fx = { kind: 'rank', t: 0.4 };
@@ -1188,7 +1196,7 @@ export function buyMeta(s, id) {
   toast(s, `${d.name} → Lv ${lv + 1}`);
   s.ui.panelDirty = true;
   confetti(s, s.world.heroX, 190, ['#e6b84d', '#fff', '#3ecf8e'], 16);
-  floater(s, s.world.heroX, 150, d.name, '#e6b84d', true);
+  floater(s, s.world.heroX, heroFloatY(s), d.name, '#e6b84d', true);
   if (s.settings.sfx !== false) sfx('upgrade');
   return true;
 }
@@ -1439,7 +1447,7 @@ export function claimHubObjective(s, period, id) {
   applyReward(s, def.reward);
   toast(s, `Claimed · ${def.label}`);
   confetti(s, s.world.heroX, 180, ['#FC1243', '#e6b84d', '#fff'], 22);
-  floater(s, s.world.heroX, 140, 'QUEST!', '#e6b84d', true);
+  floater(s, s.world.heroX, heroFloatY(s), 'QUEST!', '#e6b84d', true);
   s.ui.panelDirty = true;
   if (s.settings.sfx !== false) sfx('rank');
   return true;

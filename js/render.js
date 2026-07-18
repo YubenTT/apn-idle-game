@@ -57,6 +57,7 @@ export function draw(ctx, w, h, s, assetStore = null) {
   // Fit combat cast + HP banners into short stages (landscape): scale the cast,
   // never crop feet or heads. 78 = banner (62) + gap (10) + margin (6); 136 = boss.
   const stageFit = clamp((gy - 78) / 136, 0.5, 1);
+  s.world.stageFit = stageFit; // game.js anchors hero floaters above the Host's head
 
   ctx.save();
   ctx.translate(shakeX, shakeY);
@@ -103,7 +104,11 @@ export function draw(ctx, w, h, s, assetStore = null) {
       const anchor = s.world.enemies.find((enemy) => enemy.id === f.anchorId);
       if (anchor) {
         f.x = anchor.displayX;
-        f.y = gy - enemyRenderSize(anchor) * 0.82 * stageFit;
+        // Above the target's head, stacked by anchorLift — but never inside the
+        // toast band (canvas y ≈112–162): short stages push text just under it.
+        const headY = gy - enemyRenderSize(anchor) * 0.82 * stageFit;
+        const base = Math.max(headY, Math.min(170, gy - 32));
+        f.y = base - (f.anchorLift || 0);
       }
     }
     const life = f.life || 1;
@@ -112,7 +117,7 @@ export function draw(ctx, w, h, s, assetStore = null) {
     const pop = f.huge ? 1 + (1 - u) * 0.75 : f.big ? 1 + (1 - u) * 0.4 : 1 + (1 - u) * 0.2;
     // Centered milestone counters live at stage center, not at the kill point.
     const fx = f.center ? w / 2 : f.x;
-    const fy = f.center ? h * 0.3 : f.y;
+    const fy = f.center ? h * 0.42 : f.y;
     ctx.save();
     ctx.globalAlpha = a;
     ctx.translate(fx, fy);
