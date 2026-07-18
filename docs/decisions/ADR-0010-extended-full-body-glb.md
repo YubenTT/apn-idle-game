@@ -48,6 +48,15 @@ the same PR.
 - PR-8a builds the real measurement suite; the Host atlas ships as a scaled
   placeholder in PR-5 and is re-atlased in PR-8.
 
+### Implementation checkpoint — 2026-07-18
+
+The first full-body extension candidate was rejected at the required owner gate
+and purged before integration. Reusing the legless GLB's arm/neck meshes for
+legs/boots produced unacceptable identity and proportion drift. This is a failed
+implementation, not an approval of new geometry and not a supersession of this
+ADR. The existing GLB plus placeholder atlas therefore remain canonical until a
+new neutral four-angle candidate clears the same owner gate.
+
 ## Revisit when
 
 The Host identity itself changes, or a rigged/animated pipeline replaces the

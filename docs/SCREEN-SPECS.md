@@ -35,7 +35,7 @@ Portrait is primary. Landscape sheets open **full-screen**, not right-rail.
 
 ## Navigation
 
-**Shipped:** bottom nav = **Build · Ship · Hub · Boosts · Menu**; Gear is an
+**Shipped:** bottom nav = **Build · Go Live · Route · Boosts · Menu**; Gear is an
 in-stage **bag FAB** (left rail).
 
 **Research proposal:** Run · Build · Gear · Hub · More (Ship + Boosts become
@@ -47,7 +47,7 @@ during the nav pass — do not do both:
 
 | Option | Nav | Trade-off |
 |--------|-----|-----------|
-| **A — keep shipped** | Build · Ship · Hub · Boosts · Menu + Gear FAB | Zero churn; Gear stays a discoverable FAB. Ship stays 1 tap. |
+| **A — keep shipped** | Build · Go Live · Route · Boosts · Menu + Gear FAB | Zero churn; Gear stays a discoverable FAB. Go Live stays 1 tap. |
 | **B — research-aligned** | Run · Build · Gear · Hub · More | Gear promoted to first-class (it's the collection hook); Ship + Boosts nest under Run/More. More churn. |
 
 Either way: **only one primary crimson element per screen** — the active tab fill
@@ -70,15 +70,16 @@ Fixes over the shipped run screen:
 2. **Feed rail**, not a website header: one line, source mark 16 · game name 15 ·
    type pill 20–22. It carries *run context* (what's live now), never a scrolling
    news marquee. Good truncation, one cell readable at a glance.
-3. **Stage header** absorbs Zone / Rank / Live into a compact flat strip attached
-   to the gameplay viewport — Rank reads as an in-run growth metric, not a top-HUD
-   analytics row.
+3. **Stage hierarchy** uses two tiers attached to the gameplay viewport: Route +
+   ten-zone Pack progress first, then Clear / Rank / Live telemetry. A Patch Echo
+   chip is absent until real per-Pack domain progress exists; the UI never invents
+   `0/n` placeholder state.
 4. **Patchline stage** must read as gameplay: camera framing so mascot + target
    are both legible; enemy HP as a clear banner over the target; hit anchor so
    damage numbers attach to the target, not float loose; loot flies to the HUD;
    APN environment (billboards, signal rails, skyline) instead of generic neon.
 5. **Action dock = 1 primary CTA + 1 mod + 3–4 skill buttons**, weighted:
-   - Primary CTA (56pt, crimson): **Upgrade Weapon** · `+8 scan · Lv 37→38` · cost chip.
+   - Primary CTA (56pt, crimson): **Upgrade Scanner** · `+8 Damage · Lv 37→38` · cost chip.
    - Mod control (Sprint): a *behavior toggle*, visually lighter than the CTA.
    - Skill buttons (48pt): equal, secondary. Overclock is a toggle, not a CTA-weight button.
    - **Never** title the CTA "Upgrade Signal" ([NAMING](../brand/NAMING.md)).
@@ -86,6 +87,8 @@ Fixes over the shipped run screen:
    action dock, and navigation share one vertical rhythm. The combat viewport has
    no outer margin, border, radius, or card shadow. Energy/Focus expose live values;
    Sprint keeps stable helper copy instead of substituting low-energy warnings.
+   Focus is omitted until Hotfix or another Focus-spending skill is learned, so a
+   dead meter never competes with the first-session decision.
 
 ## Sheets (bottom-sheet pattern)
 

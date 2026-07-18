@@ -9,7 +9,7 @@ import {
   clamp,
   killsNeeded,
   nextGoLiveBoundary,
-} from './formulas.js?v=golive-pr4b';
+} from './formulas.js?v=golive-pr5';
 import {
   META,
   SKILLS,
@@ -17,9 +17,9 @@ import {
   TIPS,
   FEED_COPY,
   skillSpCost,
-} from './content.js?v=golive-pr4b';
-import { packForRoute } from './route.js?v=golive-pr4b';
-import { GAME_PACKS } from './generated/game-packs.js?v=golive-pr4b';
+} from './content.js?v=golive-pr5';
+import { packForRoute, packZoneDisplay } from './route.js?v=golive-pr5';
+import { GAME_PACKS } from './generated/game-packs.js?v=golive-pr5';
 import {
   combatStats,
   allocSkill,
@@ -47,7 +47,7 @@ import {
   claimSeasonMilestone,
   ensureHub,
   normalizeGear,
-} from './game.js?v=golive-pr4b';
+} from './game.js?v=golive-pr5';
 import {
   formatAffix,
   sellValue,
@@ -61,7 +61,7 @@ import {
   primaryStat,
   queryGearBag,
   toggleJunk,
-} from './loot.js?v=golive-pr4b';
+} from './loot.js?v=golive-pr5';
 import {
   DAILY_DEFS,
   WEEKLY_DEFS,
@@ -72,10 +72,10 @@ import {
   seasonLevel,
   SEASON_MILESTONES,
   formatReward,
-} from './hub.js?v=golive-pr4b';
-import { skillIco, metaIco, hubIco, gearIcon } from './icons.js?v=golive-pr4b';
-import { save, clear } from './save.js?v=golive-pr4b';
-import { sfx, unlockAudio, setMuted, setReducedMotion } from './sfx.js?v=golive-pr4b';
+} from './hub.js?v=golive-pr5';
+import { skillIco, metaIco, hubIco, gearIcon } from './icons.js?v=golive-pr5';
+import { save, clear } from './save.js?v=golive-pr5';
+import { sfx, unlockAudio, setMuted, setReducedMotion } from './sfx.js?v=golive-pr5';
 
 const PANEL_TITLES = {
   skills: 'Build',
@@ -951,6 +951,7 @@ export function renderHUD(s) {
   const st = combatStats(s);
   const h = s.run.hero;
   const pack = packForRoute(s.route, GAME_PACKS);
+  const packZone = packZoneDisplay(s.route);
   set($('feed-game'), pack?.title || 'Patchline');
   set($('feed-copy'), FEED_COPY[pack?.genre] || 'Update notes live');
 
@@ -962,6 +963,7 @@ export function renderHUD(s) {
   if (chips[0]) chips[0].classList.toggle('pulse', !!(s.ui.chipPulse && s.ui.chipPulse.bytes > 0));
   if (chips[1]) chips[1].classList.toggle('pulse', !!(s.ui.chipPulse && s.ui.chipPulse.patches > 0));
   set($('v-zone'), String(s.route.zone + 1));
+  set($('v-pack-progress'), `${packZone}/10`);
   // Live Mult is the launch economy multiplier.
   const eco = economyMult(s);
   set($('v-live'), eco.toFixed(2));
@@ -991,6 +993,15 @@ export function renderHUD(s) {
   const needXp = xpToNext(h.level);
   set($('v-kills'), `${s.route.killsInZone}/${need}`);
   set($('v-xp-lab'), `${formatNum(h.xp | 0)}/${formatNum(needXp)}`);
+
+  const echoState = s.route.echoProgressByPack?.[pack?.id];
+  const echoFound = Math.max(0, Number(echoState?.found) || 0);
+  const echoTotal = Math.max(0, Number(echoState?.total) || 0);
+  const echoChip = $('patch-echo-chip');
+  if (echoChip) {
+    echoChip.hidden = echoTotal === 0;
+    set($('v-echo-progress'), `${Math.min(echoFound, echoTotal)}/${echoTotal}`);
+  }
 
   // Left bag FAB badge: upgrades (green) or bag count
   const bagBtn = $('btn-bag');
@@ -1030,8 +1041,14 @@ export function renderHUD(s) {
 
   bar($('bar-xp'), (h.xp / needXp) * 100);
   bar($('bar-zone'), (s.route.killsInZone / Math.max(1, need)) * 100);
+  bar($('bar-pack'), (((packZone - 1) + s.route.killsInZone / Math.max(1, need)) / 10) * 100);
   bar($('bar-energy'), (h.energy / st.eMax) * 100);
   bar($('bar-focus'), (h.focus / st.fMax) * 100);
+
+  const focusActive = skillLv(s, 'hotfix') > 0 || skillLv(s, 'summary_burst') > 0;
+  const focusWrap = $('bar-focus-wrap');
+  if (focusWrap) focusWrap.hidden = !focusActive;
+  document.querySelector('.hud-bars')?.classList.toggle('has-focus', focusActive);
 
   // Sprint feedback on energy bar + button
   const sprinting = isSprinting(s);

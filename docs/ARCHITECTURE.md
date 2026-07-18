@@ -48,12 +48,17 @@ flowchart TB
     TK[TICKER · TIPS]
   end
 
+  subgraph Host["host-contract.js"]
+    HC[source · render lock · clips · presentation]
+  end
+
   P --> Loop
   B --> AC
   FT --> Domain
   Domain --> Pure
   Domain --> Route
   Domain --> Data
+  DR --> HC
   DR --> ST
   HUD --> ST
   SV --> save.js
@@ -102,6 +107,14 @@ flowchart TB
 - Ticker rows and tips.
 - Prefer **not** embedding damage numbers here — point at systems instead.
 
+### `host-contract.js`
+
+- Sole code owner for the canonical Host GLB path, camera/pivot render lock,
+  118–142px Run presentation gate, placeholder frames, and semantic clip names.
+- `render.js` and contract QA import this module. A future approved export path
+  must import it too rather than retyping a parallel Host vocabulary.
+- Contains presentation/asset metadata only. It never owns combat or economy.
+
 ### `render.js`
 
 - Stateless draw from `s` plus an explicit decoded asset store.
@@ -121,6 +134,9 @@ flowchart TB
 - DOM generation for Build / Go Live / Boosts.
 - Binds clicks → domain actions → `save(s)`.
 - Afford states (`is-locked`, `can`); SP and Mastery remain inside Build.
+- Run HUD reads Route/Pack progress from Route state, keeps Focus hidden until a
+  Focus-spending skill exists, and shows Patch Echo only when real optional Route
+  progress is present.
 
 ### `save.js`
 

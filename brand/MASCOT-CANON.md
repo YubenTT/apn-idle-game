@@ -23,6 +23,20 @@ Canonical source files (already in repo):
 If a 2D sprite disagrees with the GLB silhouette, the **GLB wins** and the sprite
 is re-exported ([ART-PIPELINE](../docs/ART-PIPELINE.md)).
 
+### Current production checkpoint (2026-07-18)
+
+The repository still ships the existing canonical GLB and its existing
+GLB-derived placeholder atlas. A first full-body extension candidate
+(`d15bba39…`) was rejected at the owner identity gate and removed before commit:
+its overall proportions and limb integration did not preserve the Host's
+character. It is **not canonical** and must not be reconstructed from cached
+proofs or by reusing the existing arm/neck meshes as legs and boots.
+
+ADR-0010 remains the intended full-body direction, but no replacement GLB may
+enter runtime assets until a new four-angle neutral identity proof is explicitly
+approved. Run UI and the code-side clip vocabulary may evolve against the
+placeholder atlas without implying art approval.
+
 ## Silhouette DNA (must never drift)
 
 Large spherical head · slim body · integrated black visor · short cylindrical arms

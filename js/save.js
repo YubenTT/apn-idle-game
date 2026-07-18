@@ -1,7 +1,7 @@
-import { normalizeGear, emptyGear, GEAR_SORTS, GEAR_FILTERS } from './loot.js?v=golive-pr4b';
-import { normalizeRoute } from './route.js?v=golive-pr4b';
-import { C, spentSkillPoints } from './formulas.js?v=golive-pr4b';
-import { SKILLS } from './content.js?v=golive-pr4b';
+import { normalizeGear, emptyGear, GEAR_SORTS, GEAR_FILTERS } from './loot.js?v=golive-pr5';
+import { normalizeRoute } from './route.js?v=golive-pr5';
+import { C, spentSkillPoints } from './formulas.js?v=golive-pr5';
+import { SKILLS } from './content.js?v=golive-pr5';
 
 export const SAVE_KEY_V1 = 'apn_idle_save_v1';
 export const SAVE_KEY_V2 = 'apn_idle_save_v2';

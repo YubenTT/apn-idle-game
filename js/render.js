@@ -1,7 +1,8 @@
 /** APN Idle canvas — biomes, death juice, confetti, Host + enemies */
 
-import { C, clamp, easeOutCubic, easeOutQuad } from './formulas.js?v=golive-pr4b';
-import { getCurrentPackAssets } from './assets.js?v=golive-pr4b';
+import { C, clamp, easeOutCubic, easeOutQuad } from './formulas.js?v=golive-pr5';
+import { getCurrentPackAssets } from './assets.js?v=golive-pr5';
+import { HOST_PRESENTATION, resolveHostClip } from './host-contract.js?v=golive-pr5';
 
 const V = 'v8';
 let hostAtlas = null;
@@ -539,20 +540,20 @@ function drawHero(ctx, x, gy, s, t) {
   const sprinting = s.world.sprinting && h.energy > 0.5;
   const img = ready(sprites.mascot) ? sprites.mascot : null;
   const footY = gy - FOOT_PAD + bob;
-  const mh = 76;
-  const mw = 76;
+  const mh = HOST_PRESENTATION.target;
+  const mw = HOST_PRESENTATION.target;
   const hx = x - recoil;
   // Visor / eye height on Host mascot (facing right after flip)
-  const eyeX = hx + 12;
+  const eyeX = hx + mh * 0.16;
   const eyeY = footY - mh * 0.64;
   const overdrive = !!h.deepOn;
-  const hostPose = h.hitRecoil > 0.45
-    ? 'damage'
-    : attack > 0.18
-      ? (attack > 0.78 ? 'crit' : 'scan')
-      : sprinting
-        ? 'sprint'
-        : 'run';
+  const hostPose = resolveHostClip({
+    hitRecoil: h.hitRecoil,
+    attack,
+    overdrive,
+    sprinting,
+    tracker: h.trackerOn && h.trackerStacks > 0.04,
+  });
 
   // Soft skill auras UNDER the character (no hard ring lines)
   const cy = footY - mh * 0.42;
@@ -592,7 +593,7 @@ function drawHero(ctx, x, gy, s, t) {
   }
   ctx.fillStyle = 'rgba(0,0,0,0.5)';
   ctx.beginPath();
-  ctx.ellipse(hx, gy + 3, 20, 5, 0, 0, Math.PI * 2);
+  ctx.ellipse(hx, gy + 3, mh * 0.27, mh * 0.065, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Subtle sprint dust (no SPRINT billboard)

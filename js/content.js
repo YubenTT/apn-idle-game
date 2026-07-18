@@ -1,6 +1,6 @@
 /** APN Idle content — skills, permanent Boosts, tips */
 
-import { skillSpCost as buildSkillSpCost } from './formulas.js?v=golive-pr4b';
+import { skillSpCost as buildSkillSpCost } from './formulas.js?v=golive-pr5';
 
 export const SEASON = {
   id: 'season_01',

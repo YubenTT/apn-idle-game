@@ -1,11 +1,11 @@
 /** APN Idle bootstrap */
 
-import { C } from './formulas.js?v=golive-pr4b';
-import { createState, step, collectAlert, simulateOffline, setSprint, isSprinting, goLive, canGoLive, goLiveAvailableZone } from './game.js?v=golive-pr4b';
-import { sizeCanvas, draw } from './render.js?v=golive-pr4b';
-import { createAssetStore, preloadRouteAssets, packWindowForRoute } from './assets.js?v=golive-pr4b';
-import { bindUI, renderHUD } from './ui.js?v=golive-pr4b';
-import { save, load, apply } from './save.js?v=golive-pr4b';
+import { C } from './formulas.js?v=golive-pr5';
+import { createState, step, collectAlert, simulateOffline, setSprint, isSprinting, goLive, canGoLive, goLiveAvailableZone } from './game.js?v=golive-pr5';
+import { sizeCanvas, draw } from './render.js?v=golive-pr5';
+import { createAssetStore, preloadRouteAssets, packWindowForRoute } from './assets.js?v=golive-pr5';
+import { bindUI, renderHUD } from './ui.js?v=golive-pr5';
+import { save, load, apply } from './save.js?v=golive-pr5';
 
 const canvas = document.getElementById('game');
 const s = createState();
