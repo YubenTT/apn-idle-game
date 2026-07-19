@@ -1,11 +1,13 @@
 /** APN Idle canvas — V2 scenery/targets/Host + combat juice overlays */
 
-import { C, clamp, easeOutCubic } from './formulas.js?v=golive-pr5';
+import { C, clamp, easeOutCubic, easeOutQuad } from './formulas.js?v=golive-pr5';
 import { getCurrentPackAssets } from './assets.js?v=golive-pr5';
 import { HOST_PRESENTATION, resolveHostClip } from './host-contract.js?v=golive-pr5';
 import { drawHeroV2 } from './hero-v2.js?v=golive-pr5';
 import { drawTarget } from './enemies-v2.js?v=golive-pr5';
 import { drawScenery } from './scenery-v2.js?v=golive-pr5';
+import { CREATURES, creatureKindFor } from './content.js?v=golive-pr5';
+import { creatureClipReady, drawCreature } from './creatures.js?v=golive-pr5';
 
 const enemyRenderSize = (enemy) => enemy.type === 'boss' ? 136 : enemy.type === 'patch' ? 100 : 96;
 export const CANVAS_TONE_TOKENS = Object.freeze({
@@ -75,10 +77,18 @@ export function draw(ctx, w, h, s, assetStore = null) {
   // alerts
   for (const a of s.world.alerts) drawAlert(ctx, a, t);
 
-  // enemies (living + dying)
+  // enemies (living + dying) — env mirrors game.js melee targeting so V3
+  // creature clips (advance / attack / hit / death / broken) track the domain
+  const heroX = s.world.heroX;
+  const enemyEnv = {
+    zone: s.route?.zone ?? 0,
+    meleeStop: heroX + C.MELEE_RANGE - 8,
+    engagedId:
+      s.world.enemies.find((e) => e.hp > 0 && e.x <= heroX + C.MELEE_RANGE)?.id || null,
+  };
   const show = s.world.enemies.filter((e) => e.hp > 0 || (e.deathT && e.deathT > 0));
   show.forEach((e) => {
-    drawEnemy(ctx, e, gy, t, packAssets, s.settings.reducedMotion, stageFit);
+    drawEnemy(ctx, e, gy, t, packAssets, s.settings.reducedMotion, stageFit, enemyEnv);
     if (e.critFlash > 0) drawCritFlash(ctx, e, gy, stageFit);
   });
 
@@ -174,7 +184,11 @@ export function draw(ctx, w, h, s, assetStore = null) {
     ctx.fillStyle = 'rgba(245,246,248,0.85)';
     ctx.font = '700 10px system-ui,sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('VERSION GATE', w / 2, by + 22);
+    // Zone-boss variant: the banner names whichever boss is actually on stage
+    const activeBoss = s.world.enemies.find((e) => e.type === 'boss' && e.hp > 0);
+    const bossKind = activeBoss ? creatureKindFor(activeBoss, s.route?.zone ?? 0) : null;
+    const bossBanner = bossKind ? CREATURES[bossKind].label.toUpperCase() : 'VERSION GATE';
+    ctx.fillText(bossBanner, w / 2, by + 22);
   }
 
   ctx.restore();
@@ -305,7 +319,7 @@ function drawHero(ctx, x, gy, s, t, fit = 1) {
   }
 }
 
-function drawEnemy(ctx, e, gy, t, packAssets = null, reducedMotion = false, fit = 1) {
+function drawEnemy(ctx, e, gy, t, packAssets = null, reducedMotion = false, fit = 1, env = null) {
   const x = e.displayX;
   const dying = e.deathT > 0 && e.killed;
   const isBoss = e.type === 'boss';
@@ -315,14 +329,22 @@ function drawEnemy(ctx, e, gy, t, packAssets = null, reducedMotion = false, fit 
   const frame = packAssets?.targetData?.frames?.[frameName];
   const footY = gy - 2;
 
-  drawTarget(ctx, e, {
-    t,
-    gy,
-    size,
-    atlas: atlas && frame?.rect ? atlas : null,
-    frame: atlas && frame?.rect ? frame : null,
-    reducedMotion,
-  });
+  // V3 vinyl creatures take the stage when their atlases are decoded; any gap
+  // falls straight back to the procedural feed-noise family.
+  const kind = env ? creatureKindFor(e, env.zone) : null;
+  const onStage =
+    kind &&
+    drawCreatureTarget(ctx, e, kind, { t, gy, size, reducedMotion, meleeStop: env.meleeStop, engagedId: env.engagedId });
+  if (!onStage) {
+    drawTarget(ctx, e, {
+      t,
+      gy,
+      size,
+      atlas: atlas && frame?.rect ? atlas : null,
+      frame: atlas && frame?.rect ? frame : null,
+      reducedMotion,
+    });
+  }
 
   if (dying) return; // no HP bar while dying
 
@@ -367,7 +389,11 @@ function drawEnemy(ctx, e, gy, t, packAssets = null, reducedMotion = false, fit 
   ctx.fillStyle = '#f3f7fb';
   ctx.font = `800 ${isBoss ? 11 : 10}px system-ui,sans-serif`;
   ctx.textAlign = 'center';
-  const label = e.label.length > (isBoss ? 18 : 14) ? `${e.label.slice(0, isBoss ? 17 : 13)}…` : e.label;
+  const labelSource = kind && CREATURES[kind] ? CREATURES[kind].label : e.label;
+  const label =
+    labelSource.length > (isBoss ? 18 : 14)
+      ? `${labelSource.slice(0, isBoss ? 17 : 13)}…`
+      : labelSource;
   if (compact) {
     // Short stages: the DOM stage-hud owns the sky, so the nameplate docks
     // under the target's feet — name + slim bar, always clear of overlays.
@@ -403,6 +429,160 @@ function drawEnemy(ctx, e, gy, t, packAssets = null, reducedMotion = false, fit 
     roundRect(ctx, x - barW / 2 + 9, barY + bannerH - 14, Math.max(4, (barW - 18) * ratio), 8, 4);
     ctx.fill();
   }
+}
+
+/* —— V3 vinyl creature stage ————————————————————————————————————————
+ * Same juice contract as enemies-v2.drawTarget (ground shadow, spawn pop-in,
+ * idle bob, hit squash + white bloom, crit core, death burst transforms) but
+ * the body comes from the generated clip atlases via drawCreature. Domain
+ * death timing/particles stay in game.js; this only paints. */
+
+const TAU2 = Math.PI * 2;
+const creatureFirstSeen = new WeakMap();
+
+function creaturePhase(id) {
+  let h = 0;
+  const s = String(id || 'e');
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+  return ((h >>> 0) % 628) / 100;
+}
+
+function creatureSpawnScale(e, t) {
+  let t0 = creatureFirstSeen.get(e);
+  if (t0 == null) {
+    t0 = t;
+    creatureFirstSeen.set(e, t0);
+  }
+  const u = clamp((t - t0) / 0.32, 0, 1);
+  if (u >= 1) return 1;
+  const c1 = 1.70158;
+  const c3 = c1 + 1;
+  return 1 + c3 * (u - 1) ** 3 + c1 * (u - 1) ** 2; // easeOutBack
+}
+
+/**
+ * Draw one V3 creature with the unified target juice. Returns false when no
+ * usable clip atlas is decoded yet — caller then paints the procedural family.
+ * Clip state machine: death on kill (progress) → hit on recoil (progress) →
+ * Curator broken phase below 34% HP (loop, mirrors the Version Gate contract)
+ * → advance while approaching (loop) → attack while engaged in melee (loop) →
+ * idle otherwise (loop).
+ */
+function drawCreatureTarget(ctx, e, kind, o) {
+  const { t, gy, size, reducedMotion, meleeStop, engagedId } = o;
+  const x = e.displayX;
+  const dying = e.deathT > 0 && e.killed;
+  const deathU = dying ? 1 - clamp(e.deathT / (e.deathMax || 0.5), 0, 1) : 0;
+  const critU = e.critFlash > 0 && !dying ? clamp(e.critFlash / 0.16, 0, 1) : 0;
+  const flashU = Math.max(e.hitFlash > 0 && !dying ? clamp(e.hitFlash / 0.12, 0, 1) : 0, critU);
+  const hurtOff = !dying && e.hurt > 0 ? Math.sin(t * 40) * 1.5 : 0;
+  const isBoss = e.type === 'boss';
+  const footY = gy - 2;
+  const phase = creaturePhase(e.id);
+  // Broken phase swap — the exact Version Gate threshold (render + enemies-v2
+  // both use hp/hpMax < 0.34); hit/death still outrank it, like the classic boss.
+  const breaking = kind === 'curator' && !dying && e.hp / e.hpMax < 0.34;
+
+  let clip;
+  let clipT;
+  if (dying) {
+    clip = 'death';
+    clipT = deathU;
+  } else if (e.hurt > 0) {
+    clip = 'hit';
+    clipT = 1 - clamp(e.hurt / 0.2, 0, 1);
+  } else if (breaking) {
+    clip = 'broken';
+    clipT = t + phase;
+  } else if (e.x > meleeStop + 0.5) {
+    clip = 'advance';
+    clipT = t + phase;
+  } else if (engagedId === e.id) {
+    clip = 'attack';
+    clipT = t + phase;
+  } else {
+    clip = 'idle';
+    clipT = t + phase;
+  }
+  // Missing atlas? Step down to a loop clip that exists, else bail out.
+  if (!creatureClipReady(kind, clip)) {
+    const fallback = ['idle', 'advance'].find((name) => creatureClipReady(kind, name));
+    if (!fallback) return false;
+    clip = fallback;
+    clipT = t + phase;
+  }
+
+  // death transforms (ported 1:1 from the unified target draw)
+  let sx = 1;
+  let sy = 1;
+  let alpha = 1;
+  let dy = 0;
+  if (dying) {
+    const u = easeOutQuad(deathU);
+    if (isBoss) {
+      sx = 1 + u * 0.2;
+      sy = 1 - u * 0.55;
+      alpha = 1 - u;
+      dy = u * 10;
+    } else {
+      sx = 1 + u * 0.35;
+      sy = Math.max(0.05, 1 - u * 1.1);
+      alpha = 1 - u * 0.9;
+      dy = u * 8;
+    }
+  } else {
+    // spawn pop + idle bob + hit squash (living targets only)
+    const pop = creatureSpawnScale(e, t);
+    sx *= pop * (1 + flashU * 0.16);
+    sy *= pop * (1 - flashU * 0.12);
+    if (!reducedMotion) dy += Math.sin(t * 2.2 + phase) * 2;
+  }
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+
+  // shadow shrinks on death
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.beginPath();
+  ctx.ellipse(x + hurtOff, gy + 3, size * 0.26 * Math.abs(sx), 4.5 * Math.max(0.2, sy), 0, 0, TAU2);
+  ctx.fill();
+
+  ctx.translate(x + hurtOff, footY + dy);
+  ctx.scale(sx || 0.01, sy);
+
+  drawCreature(ctx, kind, clip, clipT, 0, 0, size);
+
+  // white hit bloom (same overlay the procedural family gets)
+  if (flashU > 0) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = 0.5 * flashU * alpha;
+    const rg = ctx.createRadialGradient(0, -size * 0.48, 2, 0, -size * 0.48, size * 0.52);
+    rg.addColorStop(0, 'rgba(255,255,255,0.95)');
+    rg.addColorStop(0.35, 'rgba(255,190,200,0.4)');
+    rg.addColorStop(1, 'rgba(255,80,100,0)');
+    ctx.fillStyle = rg;
+    ctx.beginPath();
+    ctx.arc(0, -size * 0.48, size * 0.52, 0, TAU2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // crit white-hot core
+  if (critU > 0) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = 0.85 * critU * alpha;
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(0, -size * 0.48, size * 0.3 * critU, 0, TAU2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  ctx.restore();
+  ctx.globalAlpha = 1;
+  return true;
 }
 
 function drawLootFlight(ctx, flight, s, w, h, gy) {
