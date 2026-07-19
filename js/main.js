@@ -7,6 +7,7 @@ import { createAssetStore, preloadRouteAssets, packWindowForRoute } from './asse
 import { bindUI, renderHUD } from './ui.js?v=golive-pr5';
 import { save, load, apply } from './save.js?v=golive-pr5';
 import { loadHeroV3 } from './hero-v3.js?v=golive-pr5';
+import { loadCreatures } from './creatures.js?v=golive-pr5';
 import { setHeroRig } from './hero-rig.js?v=golive-pr5';
 
 const canvas = document.getElementById('game');
@@ -75,6 +76,10 @@ loadHeroV3('assets/mascot/v3/')
     assetStore.loadJson('assets/mascot/v2/rig.json'),
   ]).then(([image, data]) => setHeroRig(image, data)))
   .catch(() => { /* procedural Host remains active */ });
+
+// V3 vinyl creatures (Curator boss / Recon / Hotshot) — soft-fail per clip;
+// the procedural feed-noise family stays as automatic fallback.
+loadCreatures().catch(() => { /* procedural enemies remain active */ });
 
 function pos(ev) {
   const r = canvas.getBoundingClientRect();
