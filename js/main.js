@@ -6,7 +6,7 @@ import { sizeCanvas, draw } from './render.js?v=golive-pr5';
 import { createAssetStore, preloadRouteAssets, packWindowForRoute } from './assets.js?v=golive-pr5';
 import { bindUI, renderHUD } from './ui.js?v=golive-pr5';
 import { save, load, apply } from './save.js?v=golive-pr5';
-import { setHeroSprites } from './hero-v2.js?v=golive-pr5';
+import { loadHeroV3 } from './hero-v3.js?v=golive-pr5';
 import { setHeroRig } from './hero-rig.js?v=golive-pr5';
 
 const canvas = document.getElementById('game');
@@ -66,21 +66,15 @@ function syncRouteAssets() {
 }
 syncRouteAssets();
 
-// Canon Host sprite atlas — optional enhancement; procedural Host V2 remains
-// as the fallback when the atlas cannot be loaded (tests, broken cache).
-Promise.all([
-  assetStore.loadImage('assets/mascot/v2/host.webp'),
-  assetStore.loadJson('assets/mascot/v2/host.json'),
-]).then(([image, data]) => setHeroSprites(image, data))
+// Canon Host V3 — GLB-rendered clip atlases are the primary hero body.
+// The V2 skeletal rig loads ONLY as a fallback when V3 fails; both fall
+// back silently to the procedural Host (tests, broken cache, offline).
+loadHeroV3('assets/mascot/v3/')
+  .catch(() => Promise.all([
+    assetStore.loadImage('assets/mascot/v2/rig.webp'),
+    assetStore.loadJson('assets/mascot/v2/rig.json'),
+  ]).then(([image, data]) => setHeroRig(image, data)))
   .catch(() => { /* procedural Host remains active */ });
-
-// Canon skeletal rig — generated A-pose parts, engine-animated. Outranks the
-// flipbook atlas; both fall back silently to the procedural Host.
-Promise.all([
-  assetStore.loadImage('assets/mascot/v2/rig.webp'),
-  assetStore.loadJson('assets/mascot/v2/rig.json'),
-]).then(([image, data]) => setHeroRig(image, data))
-  .catch(() => { /* flipbook/procedural Host remains active */ });
 
 function pos(ev) {
   const r = canvas.getBoundingClientRect();

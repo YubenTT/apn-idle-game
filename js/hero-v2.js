@@ -25,6 +25,7 @@
 
 import { clamp } from './formulas.js?v=golive-pr5';
 import { heroRigReady, drawRigBody } from './hero-rig.js?v=golive-pr5';
+import { heroV3Ready, pickV3, drawV3Frame } from './hero-v3.js?v=golive-pr5';
 
 const T = 130; // design height in px (HOST_PRESENTATION.target)
 
@@ -162,6 +163,99 @@ function drawSpriteBody(ctx, name, o, st) {
   }
 }
 
+/**
+ * V3 GLB-rendered body + the SAME procedural overlay stack as the flipbook
+ * path (overdrive glow, recoil blink, crit visor flash, fist spark) — only
+ * the anchor geometry is re-derived from the V3 content box: feet at the
+ * local origin, head sphere at the top of the box (canon: head ≈ 52% of
+ * height, visor band ≈ 36% down from the content top).
+ */
+function drawV3Body(ctx, o, st) {
+  const sel = pickV3({
+    t: st.t,
+    attack: st.attack,
+    crit: st.crit,
+    recoil: st.recoil,
+    overdrive: st.over,
+    sprint: !!o.sprinting,
+    pose: o.pose,
+    defeatT: o.defeatT || 0,
+    levelT: o.levelT || 0,
+    lootT: o.lootT || 0,
+  });
+  if (!sel) return;
+  const H = o.height || T;
+
+  // overdrive under-glow behind the body (identical to the flipbook path)
+  const dh0 = H;
+  if (st.over) {
+    const pulse = 0.5 + Math.sin(st.t * 7) * 0.5;
+    const gy = -dh0 * 0.45;
+    const rg = ctx.createRadialGradient(0, gy, 2, 0, gy, dh0 * 0.62);
+    rg.addColorStop(0, `rgba(252,18,67,${0.34 + pulse * 0.14})`);
+    rg.addColorStop(1, 'rgba(252,18,67,0)');
+    ctx.fillStyle = rg;
+    ctx.beginPath();
+    ctx.arc(0, gy, dh0 * 0.62, 0, TAU);
+    ctx.fill();
+  }
+
+  const r = drawV3Frame(ctx, sel.clip, sel.frame, H);
+  if (!r) return;
+  const { dx, dy, dw, dh } = r;
+
+  // head/visor zone on the rendered head sphere (top of the content box)
+  const headX = dx + dw * 0.5;
+  const headY = dy + dh * 0.36;
+  const headR = dh * 0.27;
+
+  // damage blink — white/red flicker across the visor zone
+  if (st.recoil > 0.3) {
+    const on = Math.sin(st.t * 60) > 0;
+    ctx.fillStyle = on
+      ? `rgba(255,235,240,${st.recoil * 0.5})`
+      : `rgba(252,18,67,${st.recoil * 0.28})`;
+    ctx.beginPath();
+    ctx.ellipse(headX, headY, headR * 0.85, headR * 0.42, 0, 0, TAU);
+    ctx.fill();
+  }
+  // crit visor flash
+  if (st.crit && st.attack > 0.5) {
+    ctx.fillStyle = `rgba(255,255,255,${(st.attack - 0.5) * 0.8})`;
+    ctx.beginPath();
+    ctx.ellipse(headX, headY, headR * 0.95, headR * 0.48, 0, 0, TAU);
+    ctx.fill();
+  }
+
+  // fist spark at impact (right of content center, mid-body — same offsets
+  // the flipbook path used relative to its frame)
+  const spark = clamp((st.attack - 0.45) / 0.5, 0, 1);
+  if (spark > 0) {
+    const hot = st.crit;
+    const hx = dx + dw * 0.62;
+    const hy = -0.52 * dh;
+    const k = H / T;
+    ctx.save();
+    ctx.translate(hx, hy);
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.fillStyle = hot ? `rgba(255,255,255,${0.9 * spark})` : `rgba(255,120,140,${0.75 * spark})`;
+    ctx.beginPath();
+    ctx.arc(0, 0, (2.2 + spark * 3.2) * k, 0, TAU);
+    ctx.fill();
+    ctx.strokeStyle = hot ? `rgba(255,240,245,${spark})` : `rgba(252,18,67,${0.8 * spark})`;
+    ctx.lineWidth = 1.4 * k;
+    for (let i = 0; i < 4; i++) {
+      const a = st.t * 24 + i * (Math.PI / 2);
+      const d = (4 + spark * 7) * k;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a) * 2 * k, Math.sin(a) * 2 * k);
+      ctx.lineTo(Math.cos(a) * d, Math.sin(a) * d);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+
 function rr(ctx, x, y, w, h, r) {
   const q = Math.min(r, w / 2, h / 2);
   ctx.beginPath();
@@ -209,18 +303,20 @@ export function drawHeroV2(ctx, x, footY, opts = {}) {
   // 'idle' pose: no locomotion — legs planted, weight rests on the breathe
   // cycle (visor sweep + blink keep the character alive). Used by the Gear niche.
   const idle = o.pose === 'idle';
-  // Sprite body decision comes FIRST: the skeletal rig (canon parts, engine
-  // animated) outranks the flipbook; the flipbook only serves when the rig
-  // cannot load. Flipbook frames also carry their own verticality, so the
-  // procedural run bounce is damped for flipbook but kept for rig/procedural.
-  const rigOn = heroRigReady();
-  const spriteFrame = !rigOn && SPR && pickFrame(o, attack, recoil, sprint, t);
+  // Sprite body decision comes FIRST: the V3 GLB-rendered clip player is the
+  // primary renderer; the skeletal rig (canon parts, engine animated) serves
+  // when V3 cannot load, and the flipbook only when neither can. Rendered
+  // frames (V3 or flipbook) carry their own verticality, so the procedural
+  // run bounce is damped for them but kept for rig/procedural.
+  const v3On = heroV3Ready();
+  const rigOn = !v3On && heroRigReady();
+  const spriteFrame = !v3On && !rigOn && SPR && pickFrame(o, attack, recoil, sprint, t);
   const freq = idle ? 0 : (sprint ? 15 : 10.5) * (0.9 + 0.1 * vigor);
   const ph = t * freq;
   const stride = (idle ? 0 : sprint ? 11 : 8) * k;
   const lift = (idle ? 0 : sprint ? 7.5 : 5) * k * motion * vigor;
   const idleSway = (0.5 + Math.sin(t * 2.1) * 0.5) * 0.9 * k * motion;
-  const bounce = spriteFrame
+  const bounce = (v3On || spriteFrame)
     ? (idle ? idleSway : 0)
     : (idle ? idleSway : Math.abs(Math.sin(ph)) * (sprint ? 4.2 : 2.6) * k * motion * vigor);
   const breathe = Math.sin(t * 2.1) * (idle ? 0.022 : 0.014) * motion;
@@ -269,11 +365,13 @@ export function drawHeroV2(ctx, x, footY, opts = {}) {
   const headCy = -88 * k;
   const headR = 33 * k;
 
-  // —— body: skeletal rig (canon parts) > flipbook fallback > procedural ————
-  // All three paths reuse the juice transforms above (shadow, squash, lunge,
+  // —— body: V3 GLB clips > skeletal rig > flipbook fallback > procedural ————
+  // All four paths reuse the juice transforms above (shadow, squash, lunge,
   // hover, flinch) and the halo below, so they feel identical.
   // (procedural fallback intentionally keeps flat indentation for a clean diff)
-  if (rigOn) {
+  if (v3On) {
+    drawV3Body(ctx, o, { t, attack, recoil, crit, over });
+  } else if (rigOn) {
     drawRigBody(ctx, o, { t, ph, idle, sprint, over, crit, motion, vigor, reduced, attack, thrust, recoil, levelT, defeatT, lootT });
   } else if (spriteFrame) {
     drawSpriteBody(ctx, spriteFrame, o, { t, attack, recoil, crit, over });

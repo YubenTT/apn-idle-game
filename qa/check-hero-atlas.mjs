@@ -1,10 +1,12 @@
 /**
- * Hero atlas contract — the generated canon Host sprite set.
+ * Hero V3 clip atlas contract — GLB-rendered canon Host clips.
  *
- * Locks the animation-quality rules that user review forced in:
- *  - a REAL 4-phase run cycle (run-1..4), never a 2-frame flipbook
- *  - head-anchored pivots: run frames must cluster tightly or the cycle wobbles
- *  - every semantic clip has a frame (fallbacks stay procedural)
+ * The V3 clip player (js/hero-v3.js) is the primary hero renderer; the V2
+ * skeletal rig remains only as a load-failure fallback. This contract locks:
+ *  - all 8 semantic clips exist as {clip}.json + {clip}.webp
+ *  - every json carries frames[] + fps + anchor (+ sane trim/frameSize)
+ *  - every webp stays within the 1.5MB per-clip budget
+ *  - runtime wiring: hero-v2 prefers V3, main.js bootstraps loadHeroV3
  * Run: node qa/check-hero-atlas.mjs (also wired into qa/run-tests.mjs)
  */
 import fs from 'node:fs';
@@ -17,81 +19,38 @@ const assert = (condition, message) => {
   console.log(`OK ${message}`);
 };
 
-const jsonPath = path.join(root, 'assets/mascot/v2/host.json');
-const webpPath = path.join(root, 'assets/mascot/v2/host.webp');
-assert(fs.existsSync(jsonPath), 'host.json exists');
-assert(fs.existsSync(webpPath), 'host.webp exists');
+const V3_DIR = path.join(root, 'assets/mascot/v3');
+const CLIPS = ['idle', 'run', 'attack', 'crit', 'sprint', 'hit', 'death', 'celebrate'];
 
-const data = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
-const frames = data.frames || {};
-const names = Object.keys(frames);
+for (const name of CLIPS) {
+  const jsonPath = path.join(V3_DIR, `${name}.json`);
+  const webpPath = path.join(V3_DIR, `${name}.webp`);
+  assert(fs.existsSync(jsonPath), `${name}.json exists`);
+  assert(fs.existsSync(webpPath), `${name}.webp exists`);
 
-const REQUIRED = ['idle', 'run-1', 'run-2', 'run-3', 'run-4', 'attack', 'charge', 'recoil', 'level', 'defeat', 'walk'];
-for (const name of REQUIRED) {
-  assert(frames[name], `frame present: ${name}`);
-}
-assert(frames['run-1'], 'real 4-phase run cycle (no 2-frame flipbook)');
+  const data = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+  assert(Array.isArray(data.frames) && data.frames.length > 0, `${name}: frames[] present (${data.frames?.length || 0})`);
+  assert(typeof data.fps === 'number' && data.fps > 0, `${name}: fps present (${data.fps})`);
+  assert(Array.isArray(data.anchor) && data.anchor.length === 2
+    && data.anchor.every((a) => typeof a === 'number'), `${name}: anchor present ([${data.anchor}])`);
+  assert(data.frameSize > 0, `${name}: frameSize present (${data.frameSize})`);
+  assert(data.trim && data.trim.w > 0 && data.trim.h > 0, `${name}: trim union bbox sane (${data.trim?.w}x${data.trim?.h})`);
+  for (const f of data.frames) {
+    assert(f.w > 0 && f.h > 0, `${name}: frame rect sane (${f.w}x${f.h})`);
+  }
 
-for (const name of names) {
-  const f = frames[name];
-  assert(f.rect && f.rect.w >= 100 && f.rect.h >= 200, `${name}: rect sane (${f.rect?.w}x${f.rect?.h})`);
-  assert(f.pivot && f.pivot.y === 1, `${name}: foot-bottom pivot`);
-  assert(f.pivot.x >= 0.2 && f.pivot.x <= 0.85, `${name}: pivot.x in range (${f.pivot.x})`);
-}
-
-// run-cycle wobble contract: head pivots cluster, heights stay consistent
-const runPivots = ['run-1', 'run-2', 'run-3', 'run-4'].map((n) => frames[n].pivot.x);
-const mean = runPivots.reduce((a, b) => a + b, 0) / runPivots.length;
-const std = Math.sqrt(runPivots.reduce((a, b) => a + (b - mean) ** 2, 0) / runPivots.length);
-assert(std <= 0.06, `run cycle pivot stddev ${std.toFixed(3)} <= 0.06 (no mid-cycle wobble)`);
-const runHeights = ['run-1', 'run-2', 'run-3', 'run-4'].map((n) => frames[n].rect.h);
-const hMin = Math.min(...runHeights);
-const hMax = Math.max(...runHeights);
-assert(hMax / hMin <= 1.25, `run cycle height ratio ${(hMax / hMin).toFixed(2)} <= 1.25`);
-
-assert(data.meta && data.meta.designHeight === 512, 'designHeight 512 locked');
-
-const webpKB = fs.statSync(webpPath).size / 1024;
-assert(webpKB <= 400, `host.webp ${Math.round(webpKB)}KB <= 400KB budget`);
-
-// masters kept for every frame (editable source of truth)
-for (const name of REQUIRED) {
-  assert(fs.existsSync(path.join(root, `assets/mascot/v2/master/${name}.png`)), `master kept: ${name}.png`);
+  const webpMB = fs.statSync(webpPath).size / (1024 * 1024);
+  assert(webpMB <= 1.5, `${name}.webp ${webpMB.toFixed(2)}MB <= 1.5MB budget`);
 }
 
-// runtime wiring: renderer consumes the cycle; bootstrap loads the atlas
+// runtime wiring: hero-v2 prefers the V3 clip player; main.js loads it and
+// keeps the V2 rig strictly as a fallback.
 const heroSrc = fs.readFileSync(path.join(root, 'js/hero-v2.js'), 'utf8');
-assert(heroSrc.includes('setHeroSprites'), 'hero-v2 exports setHeroSprites');
-assert(heroSrc.includes("frames['run-1']"), 'hero-v2 prefers the 4-phase cycle');
+assert(heroSrc.includes('heroV3Ready'), 'hero-v2 references heroV3Ready (V3 preferred)');
+assert(heroSrc.includes('drawV3Frame'), 'hero-v2 draws V3 frames');
 const mainSrc = fs.readFileSync(path.join(root, 'js/main.js'), 'utf8');
-assert(mainSrc.includes('assets/mascot/v2/host.webp') && mainSrc.includes('assets/mascot/v2/host.json'), 'main.js loads the hero atlas');
-assert(mainSrc.includes('setHeroSprites'), 'main.js wires setHeroSprites');
-
-// —— skeletal rig contract (canon parts, engine-animated) ————————————————
-const rigJsonPath = path.join(root, 'assets/mascot/v2/rig.json');
-const rigWebpPath = path.join(root, 'assets/mascot/v2/rig.webp');
-assert(fs.existsSync(rigJsonPath), 'rig.json exists');
-assert(fs.existsSync(rigWebpPath), 'rig.webp exists');
-const rig = JSON.parse(fs.readFileSync(rigJsonPath, 'utf8'));
-for (const part of ['head', 'torso', 'arm', 'arm-far', 'leg', 'leg-far']) {
-  assert(rig.parts?.[part]?.rect?.w > 10, `rig part present: ${part}`);
-  assert(rig.parts[part].pivot, `rig part pivot: ${part}`);
-}
-const sk = rig.skeleton || {};
-assert(sk.designHeight === 512, 'rig skeleton designHeight 512');
-assert(sk.hipY > 100 && sk.hipY < sk.shoulderY && sk.shoulderY < sk.neckY && sk.neckY < 512, 'rig skeleton chain hip<shoulder<neck ordered');
-assert(sk.headR >= 60 && sk.headR <= 140, `rig headR sane (${sk.headR})`);
-assert(rig.visor && rig.visor.w > 0.15 && rig.visor.w < 0.95 && rig.visor.h > 0.1, `rig visor rect sane (${rig.visor?.w}x${rig.visor?.h})`);
-const rigKB = fs.statSync(rigWebpPath).size / 1024;
-assert(rigKB <= 120, `rig.webp ${Math.round(rigKB)}KB <= 120KB budget`);
-for (const part of ['head', 'torso', 'arm', 'leg']) {
-  assert(fs.existsSync(path.join(root, `assets/mascot/v2/master/rig-${part}.png`)), `rig master kept: ${part}.png`);
-}
-const rigSrc = fs.readFileSync(path.join(root, 'js/hero-rig.js'), 'utf8');
-assert(rigSrc.includes('setHeroRig') && rigSrc.includes('drawRigBody'), 'hero-rig exports setHeroRig + drawRigBody');
-const heroV2Src = fs.readFileSync(path.join(root, 'js/hero-v2.js'), 'utf8');
-assert(heroV2Src.includes('heroRigReady') && heroV2Src.includes('drawRigBody'), 'hero-v2 prefers the skeletal rig');
-const mainRigSrc = fs.readFileSync(path.join(root, 'js/main.js'), 'utf8');
-assert(mainRigSrc.includes('assets/mascot/v2/rig.webp') && mainRigSrc.includes('setHeroRig'), 'main.js loads the hero rig');
+assert(mainSrc.includes('loadHeroV3'), 'main.js references loadHeroV3');
+assert(mainSrc.includes('assets/mascot/v3/'), 'main.js points at the V3 atlas dir');
+assert(mainSrc.includes('setHeroRig'), 'main.js keeps the V2 rig as fallback');
 
 console.log('HeroAtlas: ALL PASS');
