@@ -1,27 +1,392 @@
 {
   "name": "hotshot-advance",
-  "source": { "type": "scene", "module": "./models/hotshot.js" },
-  "camera": { "pos": [1.81, 1.32, 2.16], "lookAt": [0, 0.62, 0], "fov": 32 },
+  "source": {
+    "type": "scene",
+    "module": "./models/hotshot.js"
+  },
+  "camera": {
+    "pos": [
+      1.81,
+      1.32,
+      2.16
+    ],
+    "lookAt": [
+      0,
+      0.62,
+      0
+    ],
+    "fov": 32
+  },
   "view": "three-quarter-front-right",
-  "clip": { "fps": 16, "frames": 16 },
+  "clip": {
+    "fps": 16,
+    "frames": 16
+  },
   "loop": true,
   "tracks": [
-    { "node": "leg_l", "prop": "rotation.x", "keys": [[0, 0.5], [8, -0.5], [16, 0.5]], "ease": "sine", "comment": "stubby steps, opposite phase" },
-    { "node": "leg_r", "prop": "rotation.x", "keys": [[0, -0.5], [8, 0.5], [16, -0.5]], "ease": "sine" },
-    { "node": "torso", "prop": "rotation.z", "keys": [[0, 0.08], [8, -0.08], [16, 0.08]], "ease": "sine", "comment": "swagger roll" },
-    { "node": "torso", "prop": "position.y", "keys": [[0, 0], [4, -0.045], [8, 0], [12, -0.045], [16, 0]], "ease": "sine", "comment": "2 bobs per stride" },
-    { "node": "jacket", "prop": "rotation.z", "keys": [[0, 0.07], [8, -0.07], [16, 0.07]], "ease": "sine" },
-    { "node": "jacket", "prop": "position.y", "keys": [[0, 0], [4, -0.045], [8, 0], [12, -0.045], [16, 0]], "ease": "sine" },
-    { "node": "collar", "prop": "rotation.z", "keys": [[0, 0.06], [8, -0.06], [16, 0.06]], "ease": "sine" },
-    { "node": "collar", "prop": "position.y", "keys": [[0, 0], [4, -0.04], [8, 0], [12, -0.04], [16, 0]], "ease": "sine" },
-    { "node": "head", "prop": "rotation.z", "keys": [[0, -0.06], [8, 0.06], [16, -0.06]], "ease": "sine", "comment": "counter-roll keeps the smirk level" },
-    { "node": "head", "prop": "position.y", "keys": [[0, 0], [4, -0.04], [8, 0], [12, -0.04], [16, 0]], "ease": "sine" },
-    { "node": "arm_l", "prop": "rotation.x", "keys": [[0, -0.45], [8, 0.45], [16, -0.45]], "ease": "sine", "comment": "free arm swings opposite the left leg" },
-    { "node": "arm_r", "prop": "rotation.x", "keys": [[0, 0.15], [8, -0.15], [16, 0.15]], "ease": "sine", "comment": "orb arm stays raised, small sway" },
-    { "node": "arm_r", "prop": "rotation.z", "keys": [[0, 0], [8, 0.1], [16, 0]], "ease": "sine" },
-    { "node": "palm_r", "prop": "position.y", "keys": [[0, 0], [4, -0.04], [8, 0], [12, -0.04], [16, 0]], "ease": "sine" },
-    { "node": "orb", "prop": "position.y", "keys": [[0, 0.03], [4, -0.04], [8, 0.03], [12, -0.04], [16, 0.03]], "ease": "sine", "comment": "hover lag behind the palm" },
-    { "node": "orb", "prop": "scale", "keys": [[0, 0.05], [8, -0.05], [16, 0.05]], "ease": "sine", "comment": "soft flame breathing while walking" }
+    {
+      "node": "leg_l",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0.5
+        ],
+        [
+          8,
+          -0.5
+        ],
+        [
+          16,
+          0.5
+        ]
+      ],
+      "ease": "sine",
+      "comment": "stubby steps, opposite phase"
+    },
+    {
+      "node": "leg_r",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          -0.5
+        ],
+        [
+          8,
+          0.5
+        ],
+        [
+          16,
+          -0.5
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "torso",
+      "prop": "rotation.z",
+      "keys": [
+        [
+          0,
+          0.08
+        ],
+        [
+          8,
+          -0.08
+        ],
+        [
+          16,
+          0.08
+        ]
+      ],
+      "ease": "sine",
+      "comment": "swagger roll"
+    },
+    {
+      "node": "torso",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          4,
+          -0.045
+        ],
+        [
+          8,
+          0
+        ],
+        [
+          12,
+          -0.045
+        ],
+        [
+          16,
+          0
+        ]
+      ],
+      "ease": "sine",
+      "comment": "2 bobs per stride"
+    },
+    {
+      "node": "jacket",
+      "prop": "rotation.z",
+      "keys": [
+        [
+          0,
+          0.07
+        ],
+        [
+          8,
+          -0.07
+        ],
+        [
+          16,
+          0.07
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "jacket",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          4,
+          -0.045
+        ],
+        [
+          8,
+          0
+        ],
+        [
+          12,
+          -0.045
+        ],
+        [
+          16,
+          0
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "collar",
+      "prop": "rotation.z",
+      "keys": [
+        [
+          0,
+          0.06
+        ],
+        [
+          8,
+          -0.06
+        ],
+        [
+          16,
+          0.06
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "collar",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          4,
+          -0.04
+        ],
+        [
+          8,
+          0
+        ],
+        [
+          12,
+          -0.04
+        ],
+        [
+          16,
+          0
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "head",
+      "prop": "rotation.z",
+      "keys": [
+        [
+          0,
+          -0.06
+        ],
+        [
+          8,
+          0.06
+        ],
+        [
+          16,
+          -0.06
+        ]
+      ],
+      "ease": "sine",
+      "comment": "counter-roll keeps the smirk level"
+    },
+    {
+      "node": "head",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          4,
+          -0.04
+        ],
+        [
+          8,
+          0
+        ],
+        [
+          12,
+          -0.04
+        ],
+        [
+          16,
+          0
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "arm_l",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          -0.45
+        ],
+        [
+          8,
+          0.45
+        ],
+        [
+          16,
+          -0.45
+        ]
+      ],
+      "ease": "sine",
+      "comment": "free arm swings opposite the left leg"
+    },
+    {
+      "node": "arm_r",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0.15
+        ],
+        [
+          8,
+          -0.15
+        ],
+        [
+          16,
+          0.15
+        ]
+      ],
+      "ease": "sine",
+      "comment": "orb arm stays raised, small sway"
+    },
+    {
+      "node": "arm_r",
+      "prop": "rotation.z",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          8,
+          0.1
+        ],
+        [
+          16,
+          0
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "palm_r",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          4,
+          -0.04
+        ],
+        [
+          8,
+          0
+        ],
+        [
+          12,
+          -0.04
+        ],
+        [
+          16,
+          0
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "orb",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0.03
+        ],
+        [
+          4,
+          -0.04
+        ],
+        [
+          8,
+          0.03
+        ],
+        [
+          12,
+          -0.04
+        ],
+        [
+          16,
+          0.03
+        ]
+      ],
+      "ease": "sine",
+      "comment": "hover lag behind the palm"
+    },
+    {
+      "node": "orb",
+      "prop": "scale",
+      "keys": [
+        [
+          0,
+          0.05
+        ],
+        [
+          8,
+          -0.05
+        ],
+        [
+          16,
+          0.05
+        ]
+      ],
+      "ease": "sine",
+      "comment": "soft flame breathing while walking"
+    }
   ],
-  "output": { "frame": 256 }
+  "output": {
+    "frame": 256
+  },
+  "kind": "locomotion"
 }

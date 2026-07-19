@@ -35,6 +35,9 @@ if (!specPath || !outDir) {
 }
 const spec = JSON.parse(fs.readFileSync(specPath, 'utf8'));
 const name = spec.name || path.basename(specPath, '.json');
+// evidence (raw/strip PNGs) is named after the spec FILE so clips that share
+// spec.name across characters (attack, death, ...) never overwrite each other
+const evName = path.basename(specPath, '.json');
 const refsDir = path.resolve(arg('--refs', path.join(ENGINE_DIR, '..', '..', 'refs', 'gen', 'v3')));
 fs.mkdirSync(outDir, { recursive: true });
 fs.mkdirSync(refsDir, { recursive: true });
@@ -78,7 +81,7 @@ const port = await freePort();
 const server = await startServer(port);
 const relSpec = '/' + path.relative(repoRoot, specPath).split(path.sep).join('/');
 const url = `http://127.0.0.1:${port}/tools/glb-sprite-engine/render.html?spec=${encodeURIComponent(relSpec)}`;
-const rawPng = path.join(refsDir, `${name}-raw.png`);
+const rawPng = path.join(refsDir, `${evName}-raw.png`);
 
 try {
   let ready = false;
@@ -113,7 +116,7 @@ try {
   }
 
   // --- pack: crop, union-bbox trim, webp atlas + atlas.json + contact strip ---
-  const contactPng = path.join(refsDir, `${name}-strip.png`);
+  const contactPng = path.join(refsDir, `${evName}-strip.png`);
   const pack = spawnSync('python3', [
     path.join(ENGINE_DIR, 'pack.py'),
     '--strip', rawPng,

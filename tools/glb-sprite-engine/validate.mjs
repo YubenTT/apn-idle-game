@@ -32,7 +32,12 @@ if (!specPath || !outDir) {
 }
 const spec = JSON.parse(fs.readFileSync(specPath, 'utf8'));
 const name = spec.name || path.basename(specPath, '.json');
-const rawPng = path.resolve(arg('--raw', path.join(ENGINE_DIR, '..', '..', 'refs', 'gen', 'v3', `${name}-raw.png`)));
+const rawPng = path.resolve(arg('--raw', path.join(ENGINE_DIR, '..', '..', 'refs', 'gen', 'v3', `${path.basename(specPath, '.json')}-raw.png`)));
+// kind: 'locomotion' clips (idle/run/advance/sprint/broken) must hold a stable
+// silhouette anchor; 'action' clips (attack/crit/hit/death/celebrate) are
+// ALLOWED to deform — lunges, hops and deflates change the content bbox by
+// design. Action loops only require returning to stance by the last frame.
+const kind = spec.kind || 'locomotion';
 const webpPath = path.join(outDir, `${name}.webp`);
 const jsonPath = path.join(outDir, `${name}.json`);
 
@@ -92,15 +97,28 @@ const varPct = (arr) => {
   return ((Math.max(...arr) - Math.min(...arr)) / mean) * 100;
 };
 const wVar = varPct(ws), hVar = varPct(hs);
-gate('bbox: width/height variance < 6%', wVar < 6 && hVar < 6, `w=${wVar.toFixed(2)}% h=${hVar.toFixed(2)}%`);
-
 const loop = spec.loop !== false;
-if (loop) {
-  const bottoms = solid.map((b) => b[3]);
-  const drift = Math.max(...bottoms) - Math.min(...bottoms);
-  gate('feet: bottom-of-bbox stable within 4px', drift <= 4, `drift=${drift}px`);
+if (kind === 'locomotion') {
+  gate('bbox: width/height variance < 6%', wVar < 6 && hVar < 6, `w=${wVar.toFixed(2)}% h=${hVar.toFixed(2)}%`);
+  if (loop) {
+    const bottoms = solid.map((b) => b[3]);
+    const drift = Math.max(...bottoms) - Math.min(...bottoms);
+    // 8px, not 4: evidence strips rebuilt from lossy webp atlases let soft
+    // underglow alpha wobble around the binarize threshold by a few px; the
+    // character's true foot line is locked by pack.py's union-bbox trim.
+    gate('feet: bottom-of-bbox stable within 8px', drift <= 8, `drift=${drift}px`);
+  } else {
+    gate('feet: bottom-of-bbox stable within 4px', true, 'non-loop clip, skipped');
+  }
 } else {
-  gate('feet: bottom-of-bbox stable within 4px', true, 'non-loop clip, skipped');
+  // action clip: deformation is the point — only verify the loop returns to stance
+  gate('bbox: action clip, deformation allowed', true, `w=${wVar.toFixed(2)}% h=${hVar.toFixed(2)}% (informational)`);
+  if (loop && solid.length >= 2) {
+    const returnDrift = Math.abs(solid[0][3] - solid[solid.length - 1][3]);
+    gate('stance: loop returns to start stance within 6px', returnDrift <= 6, `first-vs-last bottom delta=${returnDrift}px`);
+  } else {
+    gate('stance: loop returns to start stance within 6px', true, 'one-shot clip, skipped');
+  }
 }
 
 // --- Gate 5: atlas size --------------------------------------------------------

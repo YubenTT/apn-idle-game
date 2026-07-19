@@ -398,5 +398,6 @@
   ],
   "output": {
     "frame": 256
-  }
+  },
+  "kind": "locomotion"
 }

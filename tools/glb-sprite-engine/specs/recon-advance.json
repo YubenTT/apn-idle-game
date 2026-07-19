@@ -1,21 +1,280 @@
 {
   "name": "advance",
-  "source": { "type": "scene", "module": "./models/recon.js" },
-  "camera": { "pos": [1.9, 1.0, 2.5], "lookAt": [0, 0.6, 0], "fov": 34 },
+  "source": {
+    "type": "scene",
+    "module": "./models/recon.js"
+  },
+  "camera": {
+    "pos": [
+      1.9,
+      1.0,
+      2.5
+    ],
+    "lookAt": [
+      0,
+      0.6,
+      0
+    ],
+    "fov": 34
+  },
   "view": "three-quarter-front-right",
-  "clip": { "fps": 16, "frames": 16 },
+  "clip": {
+    "fps": 16,
+    "frames": 16
+  },
   "loop": true,
   "tracks": [
-    { "node": "recon", "prop": "rotation.x", "keys": [[0, 0.08], [16, 0.08]], "comment": "prowl lean, constant" },
-    { "node": "torso", "prop": "position.y", "keys": [[0, 0], [4, 0.07], [8, 0], [12, 0.07], [16, 0]], "ease": "sine", "comment": "prowl bob 2 cycles" },
-    { "node": "head", "prop": "position.y", "keys": [[0, 0.01], [4, 0.06], [8, 0.01], [12, 0.06], [16, 0.01]], "ease": "sine" },
-    { "node": "hood", "prop": "position.y", "keys": [[0, 0.01], [4, 0.06], [8, 0.01], [12, 0.06], [16, 0.01]], "ease": "sine" },
-    { "node": "cape", "prop": "rotation.x", "keys": [[0, 0.05], [4, 0.14], [8, 0.05], [12, 0.14], [16, 0.05]], "ease": "sine", "comment": "cape trails the stride" },
-    { "node": "bow", "prop": "position.y", "keys": [[0, 0], [4, 0.05], [8, 0], [12, 0.05], [16, 0]], "ease": "sine" },
-    { "node": "arm_l", "prop": "rotation.x", "keys": [[0, -0.06], [4, 0.06], [8, -0.06], [12, 0.06], [16, -0.06]], "ease": "sine" },
-    { "node": "arm_r", "prop": "rotation.x", "keys": [[0, 0.06], [4, -0.06], [8, 0.06], [12, -0.06], [16, 0.06]], "ease": "sine" },
-    { "node": "drone", "prop": "position.y", "keys": [[0, 0.02], [4, -0.02], [8, 0.02], [12, -0.02], [16, 0.02]], "ease": "sine", "comment": "drone lags the bob" },
-    { "node": "drone", "prop": "rotation.y", "keys": [[0, 0], [16, 6.2832]] }
+    {
+      "node": "recon",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0.08
+        ],
+        [
+          16,
+          0.08
+        ]
+      ],
+      "comment": "prowl lean, constant"
+    },
+    {
+      "node": "torso",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          4,
+          0.07
+        ],
+        [
+          8,
+          0
+        ],
+        [
+          12,
+          0.07
+        ],
+        [
+          16,
+          0
+        ]
+      ],
+      "ease": "sine",
+      "comment": "prowl bob 2 cycles"
+    },
+    {
+      "node": "head",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0.01
+        ],
+        [
+          4,
+          0.06
+        ],
+        [
+          8,
+          0.01
+        ],
+        [
+          12,
+          0.06
+        ],
+        [
+          16,
+          0.01
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "hood",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0.01
+        ],
+        [
+          4,
+          0.06
+        ],
+        [
+          8,
+          0.01
+        ],
+        [
+          12,
+          0.06
+        ],
+        [
+          16,
+          0.01
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "cape",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0.05
+        ],
+        [
+          4,
+          0.14
+        ],
+        [
+          8,
+          0.05
+        ],
+        [
+          12,
+          0.14
+        ],
+        [
+          16,
+          0.05
+        ]
+      ],
+      "ease": "sine",
+      "comment": "cape trails the stride"
+    },
+    {
+      "node": "bow",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          4,
+          0.05
+        ],
+        [
+          8,
+          0
+        ],
+        [
+          12,
+          0.05
+        ],
+        [
+          16,
+          0
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "arm_l",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          -0.06
+        ],
+        [
+          4,
+          0.06
+        ],
+        [
+          8,
+          -0.06
+        ],
+        [
+          12,
+          0.06
+        ],
+        [
+          16,
+          -0.06
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "arm_r",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0.06
+        ],
+        [
+          4,
+          -0.06
+        ],
+        [
+          8,
+          0.06
+        ],
+        [
+          12,
+          -0.06
+        ],
+        [
+          16,
+          0.06
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "drone",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0.02
+        ],
+        [
+          4,
+          -0.02
+        ],
+        [
+          8,
+          0.02
+        ],
+        [
+          12,
+          -0.02
+        ],
+        [
+          16,
+          0.02
+        ]
+      ],
+      "ease": "sine",
+      "comment": "drone lags the bob"
+    },
+    {
+      "node": "drone",
+      "prop": "rotation.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          16,
+          6.2832
+        ]
+      ]
+    }
   ],
-  "output": { "frame": 256 }
+  "output": {
+    "frame": 256
+  },
+  "kind": "locomotion"
 }

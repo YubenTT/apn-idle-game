@@ -1,23 +1,405 @@
 {
   "name": "run",
-  "source": { "type": "glb", "path": "../../assets/apn-mascot-glb-host.glb" },
-  "camera": { "pos": [2.3, 0.8, 4.9], "lookAt": [0, -0.15, 0], "fov": 35 },
+  "source": {
+    "type": "glb",
+    "path": "../../assets/apn-mascot-glb-host.glb"
+  },
+  "camera": {
+    "pos": [
+      2.3,
+      0.8,
+      4.9
+    ],
+    "lookAt": [
+      0,
+      -0.15,
+      0
+    ],
+    "fov": 35
+  },
   "view": "three-quarter-front-right",
-  "clip": { "fps": 16, "frames": 16 },
+  "clip": {
+    "fps": 16,
+    "frames": 16
+  },
   "loop": true,
   "tracks": [
-    { "node": "red_underglow_stage", "prop": "rotation.x", "keys": [[0, -1.5708], [16, -1.5708]], "comment": "lay authored glow disc flat as ground underglow (constant)" },
-    { "node": "red_underglow_stage", "prop": "position.y", "keys": [[0, -0.35], [16, -0.35]], "comment": "glow floor below lowest bob point: bbox bottom locked" },
-    { "node": "red_underglow_stage", "prop": "scale.x", "keys": [[0, 0], [2, 0.04], [4, 0], [6, 0.02], [8, 0], [10, 0.04], [12, 0], [14, 0.02], [16, 0]], "ease": "sine", "comment": "underglow pulse, 2 cycles per loop" },
-    { "node": "red_underglow_stage", "prop": "scale.z", "keys": [[0, 0], [2, 0.04], [4, 0], [6, 0.02], [8, 0], [10, 0.04], [12, 0], [14, 0.02], [16, 0]], "ease": "sine" },
-    { "node": "apn_glb_host", "prop": "rotation.x", "keys": [[0, 0.10], [16, 0.10]], "comment": "slight forward lean, constant" },
-    { "node": "host_soft_torso", "prop": "position.y", "keys": [[0, 0], [2, 0.09], [4, 0], [6, -0.02], [8, 0], [10, 0.09], [12, 0], [14, -0.02], [16, 0]], "ease": "sine", "comment": "hover bob, 2 cycles" },
-    { "node": "host_short_neck", "prop": "position.y", "keys": [[0, 0], [2, 0.075], [4, 0], [6, -0.015], [8, 0], [10, 0.075], [12, 0], [14, -0.015], [16, 0]], "ease": "sine" },
-    { "node": "APN_Logo_Head", "prop": "position.y", "keys": [[0, 0.02], [2, 0.085], [4, 0.01], [6, -0.02], [8, 0.02], [10, 0.085], [12, 0.01], [14, -0.02], [16, 0.02]], "ease": "sine", "comment": "head follows bob" },
-    { "node": "host_left_arm", "prop": "rotation.z", "keys": [[0, 0.3], [4, -0.1], [8, 0.3], [12, -0.1], [16, 0.3]], "ease": "sine", "comment": "arm swing, alternating phase" },
-    { "node": "host_right_arm", "prop": "rotation.z", "keys": [[0, -0.1], [4, 0.3], [8, -0.1], [12, 0.3], [16, -0.1]], "ease": "sine" },
-    { "node": "host_left_arm", "prop": "rotation.x", "keys": [[0, -0.25], [4, 0.25], [8, -0.25], [12, 0.25], [16, -0.25]], "ease": "sine", "comment": "arm pump forward/back" },
-    { "node": "host_right_arm", "prop": "rotation.x", "keys": [[0, 0.25], [4, -0.25], [8, 0.25], [12, -0.25], [16, 0.25]], "ease": "sine" }
+    {
+      "node": "red_underglow_stage",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          -1.5708
+        ],
+        [
+          16,
+          -1.5708
+        ]
+      ],
+      "comment": "lay authored glow disc flat as ground underglow (constant)"
+    },
+    {
+      "node": "red_underglow_stage",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          -0.35
+        ],
+        [
+          16,
+          -0.35
+        ]
+      ],
+      "comment": "glow floor below lowest bob point: bbox bottom locked"
+    },
+    {
+      "node": "red_underglow_stage",
+      "prop": "scale.x",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          2,
+          0.04
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          6,
+          0.02
+        ],
+        [
+          8,
+          0
+        ],
+        [
+          10,
+          0.04
+        ],
+        [
+          12,
+          0
+        ],
+        [
+          14,
+          0.02
+        ],
+        [
+          16,
+          0
+        ]
+      ],
+      "ease": "sine",
+      "comment": "underglow pulse, 2 cycles per loop"
+    },
+    {
+      "node": "red_underglow_stage",
+      "prop": "scale.z",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          2,
+          0.04
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          6,
+          0.02
+        ],
+        [
+          8,
+          0
+        ],
+        [
+          10,
+          0.04
+        ],
+        [
+          12,
+          0
+        ],
+        [
+          14,
+          0.02
+        ],
+        [
+          16,
+          0
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "apn_glb_host",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0.1
+        ],
+        [
+          16,
+          0.1
+        ]
+      ],
+      "comment": "slight forward lean, constant"
+    },
+    {
+      "node": "host_soft_torso",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          2,
+          0.09
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          6,
+          -0.02
+        ],
+        [
+          8,
+          0
+        ],
+        [
+          10,
+          0.09
+        ],
+        [
+          12,
+          0
+        ],
+        [
+          14,
+          -0.02
+        ],
+        [
+          16,
+          0
+        ]
+      ],
+      "ease": "sine",
+      "comment": "hover bob, 2 cycles"
+    },
+    {
+      "node": "host_short_neck",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          2,
+          0.075
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          6,
+          -0.015
+        ],
+        [
+          8,
+          0
+        ],
+        [
+          10,
+          0.075
+        ],
+        [
+          12,
+          0
+        ],
+        [
+          14,
+          -0.015
+        ],
+        [
+          16,
+          0
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "APN_Logo_Head",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0.02
+        ],
+        [
+          2,
+          0.085
+        ],
+        [
+          4,
+          0.01
+        ],
+        [
+          6,
+          -0.02
+        ],
+        [
+          8,
+          0.02
+        ],
+        [
+          10,
+          0.085
+        ],
+        [
+          12,
+          0.01
+        ],
+        [
+          14,
+          -0.02
+        ],
+        [
+          16,
+          0.02
+        ]
+      ],
+      "ease": "sine",
+      "comment": "head follows bob"
+    },
+    {
+      "node": "host_left_arm",
+      "prop": "rotation.z",
+      "keys": [
+        [
+          0,
+          0.3
+        ],
+        [
+          4,
+          -0.1
+        ],
+        [
+          8,
+          0.3
+        ],
+        [
+          12,
+          -0.1
+        ],
+        [
+          16,
+          0.3
+        ]
+      ],
+      "ease": "sine",
+      "comment": "arm swing, alternating phase"
+    },
+    {
+      "node": "host_right_arm",
+      "prop": "rotation.z",
+      "keys": [
+        [
+          0,
+          -0.1
+        ],
+        [
+          4,
+          0.3
+        ],
+        [
+          8,
+          -0.1
+        ],
+        [
+          12,
+          0.3
+        ],
+        [
+          16,
+          -0.1
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "host_left_arm",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          -0.25
+        ],
+        [
+          4,
+          0.25
+        ],
+        [
+          8,
+          -0.25
+        ],
+        [
+          12,
+          0.25
+        ],
+        [
+          16,
+          -0.25
+        ]
+      ],
+      "ease": "sine",
+      "comment": "arm pump forward/back"
+    },
+    {
+      "node": "host_right_arm",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0.25
+        ],
+        [
+          4,
+          -0.25
+        ],
+        [
+          8,
+          0.25
+        ],
+        [
+          12,
+          -0.25
+        ],
+        [
+          16,
+          0.25
+        ]
+      ],
+      "ease": "sine"
+    }
   ],
-  "output": { "frame": 256 }
+  "output": {
+    "frame": 256
+  },
+  "kind": "locomotion"
 }

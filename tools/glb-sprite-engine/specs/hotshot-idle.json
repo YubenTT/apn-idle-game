@@ -1,22 +1,262 @@
 {
   "name": "hotshot-idle",
-  "source": { "type": "scene", "module": "./models/hotshot.js" },
-  "camera": { "pos": [1.81, 1.32, 2.16], "lookAt": [0, 0.62, 0], "fov": 32 },
+  "source": {
+    "type": "scene",
+    "module": "./models/hotshot.js"
+  },
+  "camera": {
+    "pos": [
+      1.81,
+      1.32,
+      2.16
+    ],
+    "lookAt": [
+      0,
+      0.62,
+      0
+    ],
+    "fov": 32
+  },
   "view": "three-quarter-front-right",
-  "clip": { "fps": 12, "frames": 12 },
+  "clip": {
+    "fps": 12,
+    "frames": 12
+  },
   "loop": true,
   "tracks": [
-    { "node": "torso", "prop": "position.y", "keys": [[0, 0], [6, -0.05], [12, 0]], "ease": "sine", "comment": "lean-back breathing settle" },
-    { "node": "jacket", "prop": "position.y", "keys": [[0, 0], [6, -0.05], [12, 0]], "ease": "sine" },
-    { "node": "collar", "prop": "position.y", "keys": [[0, 0], [6, -0.04], [12, 0]], "ease": "sine" },
-    { "node": "head", "prop": "position.y", "keys": [[0, 0], [6, -0.045], [12, 0]], "ease": "sine" },
-    { "node": "head", "prop": "rotation.x", "keys": [[0, 0], [6, -0.04], [12, 0]], "ease": "sine", "comment": "small confident nod" },
-    { "node": "head", "prop": "rotation.y", "keys": [[0, 0], [3, 0.05], [6, 0], [9, -0.05], [12, 0]], "ease": "sine", "comment": "cocky scan" },
-    { "node": "arm_l", "prop": "rotation.x", "keys": [[0, 0], [6, 0.08], [12, 0]], "ease": "sine" },
-    { "node": "arm_r", "prop": "rotation.x", "keys": [[0, 0], [6, -0.06], [12, 0]], "ease": "sine" },
-    { "node": "palm_r", "prop": "position.y", "keys": [[0, 0], [6, -0.04], [12, 0]], "ease": "sine" },
-    { "node": "orb", "prop": "position.y", "keys": [[0, 0], [6, 0.09], [12, 0]], "ease": "sine", "comment": "hover lag: orb floats up as the body settles" },
-    { "node": "orb", "prop": "scale", "keys": [[0, 0], [3, 0.12], [6, 0], [9, 0.12], [12, 0]], "ease": "sine", "comment": "fire pulse, 2 cycles per loop" }
+    {
+      "node": "torso",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          6,
+          -0.05
+        ],
+        [
+          12,
+          0
+        ]
+      ],
+      "ease": "sine",
+      "comment": "lean-back breathing settle"
+    },
+    {
+      "node": "jacket",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          6,
+          -0.05
+        ],
+        [
+          12,
+          0
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "collar",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          6,
+          -0.04
+        ],
+        [
+          12,
+          0
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "head",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          6,
+          -0.045
+        ],
+        [
+          12,
+          0
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "head",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          6,
+          -0.04
+        ],
+        [
+          12,
+          0
+        ]
+      ],
+      "ease": "sine",
+      "comment": "small confident nod"
+    },
+    {
+      "node": "head",
+      "prop": "rotation.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          3,
+          0.05
+        ],
+        [
+          6,
+          0
+        ],
+        [
+          9,
+          -0.05
+        ],
+        [
+          12,
+          0
+        ]
+      ],
+      "ease": "sine",
+      "comment": "cocky scan"
+    },
+    {
+      "node": "arm_l",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          6,
+          0.08
+        ],
+        [
+          12,
+          0
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "arm_r",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          6,
+          -0.06
+        ],
+        [
+          12,
+          0
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "palm_r",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          6,
+          -0.04
+        ],
+        [
+          12,
+          0
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "orb",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          6,
+          0.09
+        ],
+        [
+          12,
+          0
+        ]
+      ],
+      "ease": "sine",
+      "comment": "hover lag: orb floats up as the body settles"
+    },
+    {
+      "node": "orb",
+      "prop": "scale",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          3,
+          0.12
+        ],
+        [
+          6,
+          0
+        ],
+        [
+          9,
+          0.12
+        ],
+        [
+          12,
+          0
+        ]
+      ],
+      "ease": "sine",
+      "comment": "fire pulse, 2 cycles per loop"
+    }
   ],
-  "output": { "frame": 256 }
+  "output": {
+    "frame": 256
+  },
+  "kind": "locomotion"
 }

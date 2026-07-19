@@ -534,5 +534,6 @@
   ],
   "output": {
     "frame": 256
-  }
+  },
+  "kind": "action"
 }
