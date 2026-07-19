@@ -24,6 +24,7 @@
  */
 
 import { clamp } from './formulas.js?v=golive-pr5';
+import { heroRigReady, drawRigBody } from './hero-rig.js?v=golive-pr5';
 
 const T = 130; // design height in px (HOST_PRESENTATION.target)
 
@@ -208,11 +209,12 @@ export function drawHeroV2(ctx, x, footY, opts = {}) {
   // 'idle' pose: no locomotion — legs planted, weight rests on the breathe
   // cycle (visor sweep + blink keep the character alive). Used by the Gear niche.
   const idle = o.pose === 'idle';
-  // Sprite body decision comes FIRST: the generated 4-phase run cycle carries
-  // its own vertical motion — procedural run bounce on top of it reads as a
-  // nervous hop (user review), so sprite frames kill the bounce and keep only
-  // the idle breathing sway.
-  const spriteFrame = SPR && pickFrame(o, attack, recoil, sprint, t);
+  // Sprite body decision comes FIRST: the skeletal rig (canon parts, engine
+  // animated) outranks the flipbook; the flipbook only serves when the rig
+  // cannot load. Flipbook frames also carry their own verticality, so the
+  // procedural run bounce is damped for flipbook but kept for rig/procedural.
+  const rigOn = heroRigReady();
+  const spriteFrame = !rigOn && SPR && pickFrame(o, attack, recoil, sprint, t);
   const freq = idle ? 0 : (sprint ? 15 : 10.5) * (0.9 + 0.1 * vigor);
   const ph = t * freq;
   const stride = (idle ? 0 : sprint ? 11 : 8) * k;
@@ -267,11 +269,13 @@ export function drawHeroV2(ctx, x, footY, opts = {}) {
   const headCy = -88 * k;
   const headR = 33 * k;
 
-  // —— body: canon sprite atlas when loaded, procedural fallback otherwise ——
-  // The sprite path reuses every juice transform above (shadow, squash, lunge,
-  // hover, flinch) and the halo below, so both paths feel identical.
-  // (fallback block intentionally keeps flat indentation for a clean diff)
-  if (spriteFrame) {
+  // —— body: skeletal rig (canon parts) > flipbook fallback > procedural ————
+  // All three paths reuse the juice transforms above (shadow, squash, lunge,
+  // hover, flinch) and the halo below, so they feel identical.
+  // (procedural fallback intentionally keeps flat indentation for a clean diff)
+  if (rigOn) {
+    drawRigBody(ctx, o, { t, ph, idle, sprint, over, crit, motion, vigor, reduced, attack, thrust, recoil, levelT, defeatT, lootT });
+  } else if (spriteFrame) {
     drawSpriteBody(ctx, spriteFrame, o, { t, attack, recoil, crit, over });
   } else {
 

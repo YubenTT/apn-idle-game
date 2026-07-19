@@ -7,6 +7,7 @@ import { createAssetStore, preloadRouteAssets, packWindowForRoute } from './asse
 import { bindUI, renderHUD } from './ui.js?v=golive-pr5';
 import { save, load, apply } from './save.js?v=golive-pr5';
 import { setHeroSprites } from './hero-v2.js?v=golive-pr5';
+import { setHeroRig } from './hero-rig.js?v=golive-pr5';
 
 const canvas = document.getElementById('game');
 const s = createState();
@@ -72,6 +73,14 @@ Promise.all([
   assetStore.loadJson('assets/mascot/v2/host.json'),
 ]).then(([image, data]) => setHeroSprites(image, data))
   .catch(() => { /* procedural Host remains active */ });
+
+// Canon skeletal rig — generated A-pose parts, engine-animated. Outranks the
+// flipbook atlas; both fall back silently to the procedural Host.
+Promise.all([
+  assetStore.loadImage('assets/mascot/v2/rig.webp'),
+  assetStore.loadJson('assets/mascot/v2/rig.json'),
+]).then(([image, data]) => setHeroRig(image, data))
+  .catch(() => { /* flipbook/procedural Host remains active */ });
 
 function pos(ev) {
   const r = canvas.getBoundingClientRect();

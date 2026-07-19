@@ -945,6 +945,13 @@
       "firstPlayable": true
     },
     {
+      "id": "game-packs/valorant/gen/lineup-v1.png",
+      "path": "assets/game-packs/valorant/gen/lineup-v1.png",
+      "bytes": 2711881,
+      "sha256": "d92b8523b7d5f25b5e82e5c3a4b85ad7e6fc15b1ebc15eef6069660160371e84",
+      "firstPlayable": null
+    },
+    {
       "id": "game-packs/valorant/pack.json",
       "path": "assets/game-packs/valorant/pack.json",
       "bytes": 1717,
@@ -1188,6 +1195,20 @@
       "path": "assets/mascot/v2/host.webp",
       "bytes": 222012,
       "sha256": "9487b11b80049af9db32be46e9852990477f0011200edb5e1d00995cfaf35ec0",
+      "firstPlayable": true
+    },
+    {
+      "id": "mascot/v2/rig.json",
+      "path": "assets/mascot/v2/rig.json",
+      "bytes": 1206,
+      "sha256": "7167de4b19bda2830600f88c700e220a205ba7ba670fb42ef54367b5f7c66653",
+      "firstPlayable": true
+    },
+    {
+      "id": "mascot/v2/rig.webp",
+      "path": "assets/mascot/v2/rig.webp",
+      "bytes": 16570,
+      "sha256": "66bb1679c7c4688b6e8df68672ac0abd0113009cd95be4bc23a1e64eedecc248",
       "firstPlayable": true
     },
     {

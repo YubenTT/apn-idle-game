@@ -67,4 +67,31 @@ const mainSrc = fs.readFileSync(path.join(root, 'js/main.js'), 'utf8');
 assert(mainSrc.includes('assets/mascot/v2/host.webp') && mainSrc.includes('assets/mascot/v2/host.json'), 'main.js loads the hero atlas');
 assert(mainSrc.includes('setHeroSprites'), 'main.js wires setHeroSprites');
 
+// —— skeletal rig contract (canon parts, engine-animated) ————————————————
+const rigJsonPath = path.join(root, 'assets/mascot/v2/rig.json');
+const rigWebpPath = path.join(root, 'assets/mascot/v2/rig.webp');
+assert(fs.existsSync(rigJsonPath), 'rig.json exists');
+assert(fs.existsSync(rigWebpPath), 'rig.webp exists');
+const rig = JSON.parse(fs.readFileSync(rigJsonPath, 'utf8'));
+for (const part of ['head', 'torso', 'arm', 'arm-far', 'leg', 'leg-far']) {
+  assert(rig.parts?.[part]?.rect?.w > 10, `rig part present: ${part}`);
+  assert(rig.parts[part].pivot, `rig part pivot: ${part}`);
+}
+const sk = rig.skeleton || {};
+assert(sk.designHeight === 512, 'rig skeleton designHeight 512');
+assert(sk.hipY > 100 && sk.hipY < sk.shoulderY && sk.shoulderY < sk.neckY && sk.neckY < 512, 'rig skeleton chain hip<shoulder<neck ordered');
+assert(sk.headR >= 60 && sk.headR <= 140, `rig headR sane (${sk.headR})`);
+assert(rig.visor && rig.visor.w > 0.15 && rig.visor.w < 0.95 && rig.visor.h > 0.1, `rig visor rect sane (${rig.visor?.w}x${rig.visor?.h})`);
+const rigKB = fs.statSync(rigWebpPath).size / 1024;
+assert(rigKB <= 120, `rig.webp ${Math.round(rigKB)}KB <= 120KB budget`);
+for (const part of ['head', 'torso', 'arm', 'leg']) {
+  assert(fs.existsSync(path.join(root, `assets/mascot/v2/master/rig-${part}.png`)), `rig master kept: ${part}.png`);
+}
+const rigSrc = fs.readFileSync(path.join(root, 'js/hero-rig.js'), 'utf8');
+assert(rigSrc.includes('setHeroRig') && rigSrc.includes('drawRigBody'), 'hero-rig exports setHeroRig + drawRigBody');
+const heroV2Src = fs.readFileSync(path.join(root, 'js/hero-v2.js'), 'utf8');
+assert(heroV2Src.includes('heroRigReady') && heroV2Src.includes('drawRigBody'), 'hero-v2 prefers the skeletal rig');
+const mainRigSrc = fs.readFileSync(path.join(root, 'js/main.js'), 'utf8');
+assert(mainRigSrc.includes('assets/mascot/v2/rig.webp') && mainRigSrc.includes('setHeroRig'), 'main.js loads the hero rig');
+
 console.log('HeroAtlas: ALL PASS');
