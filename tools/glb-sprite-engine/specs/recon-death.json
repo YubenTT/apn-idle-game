@@ -1,0 +1,22 @@
+{
+  "name": "death",
+  "source": { "type": "scene", "module": "./models/recon.js" },
+  "camera": { "pos": [1.9, 1.0, 2.5], "lookAt": [0, 0.6, 0], "fov": 34 },
+  "view": "three-quarter-front-right",
+  "clip": { "fps": 16, "frames": 14 },
+  "loop": false,
+  "tracks": [
+    { "node": "recon", "prop": "rotation.x", "keys": [[0, 0], [4, 0.12], [9, 0.85], [14, 1.15]], "ease": "sine", "comment": "crumple forward to the ground" },
+    { "node": "recon", "prop": "position.y", "keys": [[0, 0], [9, -0.12], [14, -0.3]], "ease": "sine", "comment": "sink as knees give" },
+    { "node": "head", "prop": "rotation.x", "keys": [[0, 0], [5, 0.3], [14, 0.55]], "ease": "sine", "comment": "head droops" },
+    { "node": "hood", "prop": "rotation.x", "keys": [[0, 0], [5, 0.3], [14, 0.55]], "ease": "sine" },
+    { "node": "cape", "prop": "rotation.x", "keys": [[0, 0.02], [6, 0.2], [14, 0.45]], "ease": "sine", "comment": "cape settles over the body" },
+    { "node": "bow", "prop": "rotation.z", "keys": [[0, 0], [6, -0.35], [14, -0.6]], "ease": "sine", "comment": "bow slips" },
+    { "node": "bow", "prop": "position.y", "keys": [[0, 0], [8, -0.15], [14, -0.28]], "ease": "sine" },
+    { "node": "arm_l", "prop": "rotation.z", "keys": [[0, 0], [7, -0.7], [14, -1.1]], "ease": "sine", "comment": "arms go limp" },
+    { "node": "arm_r", "prop": "rotation.z", "keys": [[0, 0], [7, 0.7], [14, 1.1]], "ease": "sine" },
+    { "node": "drone", "prop": "position.y", "keys": [[0, 0], [3, 0.05], [9, -0.7], [14, -0.95]], "ease": "sine", "comment": "drone powers down and drops" },
+    { "node": "drone", "prop": "rotation.z", "keys": [[0, 0], [14, 0.9]], "comment": "drone tumbles" }
+  ],
+  "output": { "frame": 256 }
+}

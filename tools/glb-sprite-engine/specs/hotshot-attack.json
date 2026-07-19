@@ -1,0 +1,30 @@
+{
+  "name": "hotshot-attack",
+  "source": { "type": "scene", "module": "./models/hotshot.js" },
+  "camera": { "pos": [1.81, 1.32, 2.16], "lookAt": [0, 0.62, 0], "fov": 32 },
+  "view": "three-quarter-front-right",
+  "clip": { "fps": 16, "frames": 10 },
+  "loop": false,
+  "tracks": [
+    { "node": "arm_r", "prop": "rotation.x", "keys": [[0, 0], [2, 0.35], [4, -0.55], [6, -0.5], [10, 0]], "comment": "windup back, palm thrust forward" },
+    { "node": "arm_r", "prop": "rotation.z", "keys": [[0, 0], [4, -0.15], [10, 0]] },
+    { "node": "palm_r", "prop": "position.z", "keys": [[0, 0], [2, -0.12], [4, 0.5], [6, 0.42], [10, 0]], "comment": "palm punches forward" },
+    { "node": "palm_r", "prop": "position.y", "keys": [[0, 0], [2, -0.06], [4, 0.12], [6, 0.1], [10, 0]] },
+    { "node": "orb", "prop": "position.z", "keys": [[0, 0], [2, -0.18], [4, 1.2], [6, 1.5], [8, 0.5], [10, 0]], "comment": "orb hurls forward, boomerangs home" },
+    { "node": "orb", "prop": "position.y", "keys": [[0, 0], [2, -0.08], [4, 0.3], [6, 0.32], [8, 0.12], [10, 0]] },
+    { "node": "orb", "prop": "scale", "keys": [[0, 0], [2, -0.15], [4, 0.3], [6, 0.2], [10, 0]], "comment": "charge squash, launch stretch" },
+    { "node": "torso", "prop": "rotation.x", "keys": [[0, 0], [2, 0.12], [4, -0.18], [6, -0.15], [10, 0]], "comment": "lean into the throw" },
+    { "node": "jacket", "prop": "rotation.x", "keys": [[0, 0], [2, 0.1], [4, -0.15], [6, -0.12], [10, 0]] },
+    { "node": "collar", "prop": "rotation.x", "keys": [[0, 0], [2, 0.1], [4, -0.13], [6, -0.1], [10, 0]] },
+    { "node": "head", "prop": "rotation.x", "keys": [[0, 0], [2, 0.1], [4, -0.12], [6, -0.1], [10, 0]] },
+    { "node": "torso", "prop": "position.y", "keys": [[0, 0], [2, 0.03], [4, -0.06], [6, -0.05], [10, 0]] },
+    { "node": "jacket", "prop": "position.y", "keys": [[0, 0], [2, 0.03], [4, -0.06], [6, -0.05], [10, 0]] },
+    { "node": "collar", "prop": "position.y", "keys": [[0, 0], [2, 0.03], [4, -0.055], [6, -0.045], [10, 0]] },
+    { "node": "head", "prop": "position.y", "keys": [[0, 0], [2, 0.03], [4, -0.055], [6, -0.045], [10, 0]] },
+    { "node": "leg_l", "prop": "rotation.x", "keys": [[0, 0], [4, -0.3], [10, 0]], "comment": "stagger stance" },
+    { "node": "leg_r", "prop": "rotation.x", "keys": [[0, 0], [4, 0.25], [10, 0]] },
+    { "node": "arm_l", "prop": "rotation.x", "keys": [[0, 0], [2, 0.3], [4, -0.4], [6, -0.35], [10, 0]], "comment": "counter swing" },
+    { "node": "arm_l", "prop": "rotation.z", "keys": [[0, 0], [4, -0.2], [10, 0]] }
+  ],
+  "output": { "frame": 256 }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "idle",
+  "source": { "type": "scene", "module": "./models/recon.js" },
+  "camera": { "pos": [1.9, 1.0, 2.5], "lookAt": [0, 0.6, 0], "fov": 34 },
+  "view": "three-quarter-front-right",
+  "clip": { "fps": 12, "frames": 12 },
+  "loop": true,
+  "tracks": [
+    { "node": "torso", "prop": "position.y", "keys": [[0, 0], [6, 0.015], [12, 0]], "ease": "sine", "comment": "calm breathing" },
+    { "node": "head", "prop": "position.y", "keys": [[0, 0], [6, 0.015], [12, 0]], "ease": "sine" },
+    { "node": "hood", "prop": "position.y", "keys": [[0, 0], [6, 0.015], [12, 0]], "ease": "sine" },
+    { "node": "head", "prop": "rotation.y", "keys": [[0, -0.06], [6, 0.08], [12, -0.06]], "ease": "sine", "comment": "slow scan" },
+    { "node": "hood", "prop": "rotation.y", "keys": [[0, -0.06], [6, 0.08], [12, -0.06]], "ease": "sine" },
+    { "node": "cape", "prop": "rotation.x", "keys": [[0, 0.02], [6, 0.06], [12, 0.02]], "ease": "sine", "comment": "cape breathe" },
+    { "node": "bow", "prop": "rotation.z", "keys": [[0, 0], [6, -0.03], [12, 0]], "ease": "sine", "comment": "bow sways with breath" },
+    { "node": "drone", "prop": "position.y", "keys": [[0, 0], [3, 0.06], [6, 0], [9, 0.06], [12, 0]], "ease": "sine", "comment": "hover bob 2x" },
+    { "node": "drone", "prop": "rotation.y", "keys": [[0, 0], [12, 6.2832]], "comment": "slow rotor survey spin" }
+  ],
+  "output": { "frame": 256 }
+}

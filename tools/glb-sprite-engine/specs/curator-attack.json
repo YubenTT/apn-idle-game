@@ -1,0 +1,650 @@
+{
+  "name": "attack",
+  "source": {
+    "type": "scene",
+    "module": "./models/curator.js"
+  },
+  "camera": {
+    "pos": [
+      1.9,
+      1.0,
+      2.5
+    ],
+    "lookAt": [
+      0,
+      0.6,
+      0
+    ],
+    "fov": 34
+  },
+  "view": "three-quarter-front-right",
+  "clip": {
+    "fps": 24,
+    "frames": 10
+  },
+  "loop": false,
+  "tracks": [
+    {
+      "node": "torso",
+      "prop": "rotation.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          3,
+          -0.14
+        ],
+        [
+          6,
+          -0.14
+        ],
+        [
+          10,
+          0
+        ]
+      ],
+      "comment": "side-on sniper stance"
+    },
+    {
+      "node": "head",
+      "prop": "rotation.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          3,
+          -0.14
+        ],
+        [
+          6,
+          -0.14
+        ],
+        [
+          10,
+          0
+        ]
+      ]
+    },
+    {
+      "node": "shades",
+      "prop": "rotation.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          3,
+          -0.14
+        ],
+        [
+          6,
+          -0.14
+        ],
+        [
+          10,
+          0
+        ]
+      ]
+    },
+    {
+      "node": "arm_l",
+      "prop": "rotation.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          3,
+          -0.14
+        ],
+        [
+          6,
+          -0.14
+        ],
+        [
+          10,
+          0
+        ]
+      ]
+    },
+    {
+      "node": "arm_r",
+      "prop": "rotation.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          3,
+          -0.14
+        ],
+        [
+          6,
+          -0.14
+        ],
+        [
+          10,
+          0
+        ]
+      ]
+    },
+    {
+      "node": "coat_l",
+      "prop": "rotation.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          3,
+          -0.14
+        ],
+        [
+          6,
+          -0.14
+        ],
+        [
+          10,
+          0
+        ]
+      ]
+    },
+    {
+      "node": "coat_r",
+      "prop": "rotation.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          3,
+          -0.14
+        ],
+        [
+          6,
+          -0.14
+        ],
+        [
+          10,
+          0
+        ]
+      ]
+    },
+    {
+      "node": "cane",
+      "prop": "rotation.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          3,
+          -0.14
+        ],
+        [
+          6,
+          -0.14
+        ],
+        [
+          10,
+          0
+        ]
+      ]
+    },
+    {
+      "node": "torso",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          3,
+          -0.02
+        ],
+        [
+          6,
+          -0.02
+        ],
+        [
+          10,
+          0
+        ]
+      ],
+      "comment": "brace crouch"
+    },
+    {
+      "node": "head",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          3,
+          -0.02
+        ],
+        [
+          6,
+          -0.02
+        ],
+        [
+          10,
+          0
+        ]
+      ]
+    },
+    {
+      "node": "shades",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          3,
+          -0.02
+        ],
+        [
+          6,
+          -0.02
+        ],
+        [
+          10,
+          0
+        ]
+      ]
+    },
+    {
+      "node": "arm_l",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          3,
+          -0.02
+        ],
+        [
+          6,
+          -0.02
+        ],
+        [
+          10,
+          0
+        ]
+      ]
+    },
+    {
+      "node": "arm_r",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          3,
+          -0.02
+        ],
+        [
+          6,
+          -0.02
+        ],
+        [
+          10,
+          0
+        ]
+      ]
+    },
+    {
+      "node": "coat_l",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          3,
+          -0.02
+        ],
+        [
+          6,
+          -0.02
+        ],
+        [
+          10,
+          0
+        ]
+      ]
+    },
+    {
+      "node": "coat_r",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          3,
+          -0.02
+        ],
+        [
+          6,
+          -0.02
+        ],
+        [
+          10,
+          0
+        ]
+      ]
+    },
+    {
+      "node": "cane",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          3,
+          -0.02
+        ],
+        [
+          6,
+          -0.02
+        ],
+        [
+          10,
+          0
+        ]
+      ]
+    },
+    {
+      "node": "cane",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          3,
+          1.42
+        ],
+        [
+          4,
+          1.42
+        ],
+        [
+          5,
+          1.26
+        ],
+        [
+          6,
+          1.42
+        ],
+        [
+          10,
+          0
+        ]
+      ],
+      "comment": "cane raised level, recoil kick at f5"
+    },
+    {
+      "node": "arm_r",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          3,
+          -1.35
+        ],
+        [
+          4,
+          -1.35
+        ],
+        [
+          5,
+          -1.18
+        ],
+        [
+          6,
+          -1.35
+        ],
+        [
+          10,
+          0
+        ]
+      ],
+      "comment": "arm swings cane up, absorbs recoil"
+    },
+    {
+      "node": "torso",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          3,
+          0.06
+        ],
+        [
+          6,
+          0.06
+        ],
+        [
+          10,
+          0
+        ]
+      ],
+      "comment": "brace lean"
+    },
+    {
+      "node": "head",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          3,
+          -0.05
+        ],
+        [
+          6,
+          -0.05
+        ],
+        [
+          10,
+          0
+        ]
+      ],
+      "comment": "aim down scope"
+    },
+    {
+      "node": "shades",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          3,
+          -0.05
+        ],
+        [
+          6,
+          -0.05
+        ],
+        [
+          10,
+          0
+        ]
+      ]
+    },
+    {
+      "node": "head",
+      "prop": "rotation.z",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          3,
+          0.04
+        ],
+        [
+          6,
+          0.04
+        ],
+        [
+          10,
+          0
+        ]
+      ],
+      "comment": "cheek weld"
+    },
+    {
+      "node": "shades",
+      "prop": "rotation.z",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          3,
+          0.04
+        ],
+        [
+          6,
+          0.04
+        ],
+        [
+          10,
+          0
+        ]
+      ]
+    },
+    {
+      "node": "arm_l",
+      "prop": "rotation.z",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          3,
+          -0.25
+        ],
+        [
+          6,
+          -0.25
+        ],
+        [
+          10,
+          0
+        ]
+      ],
+      "comment": "counter-balance"
+    },
+    {
+      "node": "arm_l",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          3,
+          -0.3
+        ],
+        [
+          6,
+          -0.3
+        ],
+        [
+          10,
+          0
+        ]
+      ]
+    },
+    {
+      "node": "coat_l",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          2,
+          -0.1
+        ],
+        [
+          4,
+          -0.04
+        ],
+        [
+          10,
+          0
+        ]
+      ],
+      "comment": "coat momentum"
+    },
+    {
+      "node": "coat_r",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          2,
+          -0.1
+        ],
+        [
+          4,
+          -0.04
+        ],
+        [
+          10,
+          0
+        ]
+      ]
+    }
+  ],
+  "output": {
+    "frame": 256
+  }
+}

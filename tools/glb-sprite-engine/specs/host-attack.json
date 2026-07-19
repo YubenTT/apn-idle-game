@@ -1,0 +1,24 @@
+{
+  "name": "attack",
+  "source": { "type": "glb", "path": "../../assets/apn-mascot-glb-host.glb" },
+  "camera": { "pos": [2.3, 0.8, 4.9], "lookAt": [0, -0.15, 0], "fov": 35 },
+  "view": "three-quarter-front-right",
+  "clip": { "fps": 16, "frames": 10 },
+  "loop": true,
+  "tracks": [
+    { "node": "red_underglow_stage", "prop": "rotation.x", "keys": [[0, -1.5708], [10, -1.5708]], "comment": "glow floor flat (constant)" },
+    { "node": "red_underglow_stage", "prop": "position.y", "keys": [[0, -0.35], [10, -0.35]] },
+    { "node": "red_underglow_stage", "prop": "scale.x", "keys": [[0, 0], [3, -0.03], [5, 0.06], [10, 0]], "ease": "sine", "comment": "glow compresses on windup, bursts on hit" },
+    { "node": "red_underglow_stage", "prop": "scale.z", "keys": [[0, 0], [3, -0.03], [5, 0.06], [10, 0]], "ease": "sine" },
+    { "node": "apn_glb_host", "prop": "position.x", "keys": [[0, 0], [3, -0.1], [5, 0.38], [7, 0.3], [10, 0]], "comment": "windup back, lunge forward, recover" },
+    { "node": "apn_glb_host", "prop": "rotation.x", "keys": [[0, 0.06], [3, -0.08], [5, 0.22], [7, 0.16], [10, 0.06]], "comment": "lean back then slam forward" },
+    { "node": "host_soft_torso", "prop": "position.y", "keys": [[0, 0], [3, -0.08], [5, 0.04], [10, 0]], "ease": "sine", "comment": "crouch then pop" },
+    { "node": "host_short_neck", "prop": "position.y", "keys": [[0, 0], [3, -0.06], [5, 0.03], [10, 0]], "ease": "sine" },
+    { "node": "APN_Logo_Head", "prop": "position.y", "keys": [[0, 0.02], [3, -0.05], [5, 0.05], [10, 0.02]], "ease": "sine" },
+    { "node": "host_right_arm", "prop": "rotation.x", "keys": [[0, -0.2], [3, 0.9], [5, -1.2], [7, -1.0], [10, -0.2]], "comment": "right arm windup overhead then smash" },
+    { "node": "host_right_arm", "prop": "rotation.z", "keys": [[0, -0.1], [3, -0.5], [5, 0.2], [10, -0.1]], "ease": "sine" },
+    { "node": "host_left_arm", "prop": "rotation.x", "keys": [[0, 0.2], [3, 0.5], [5, -0.4], [10, 0.2]], "ease": "sine", "comment": "left arm counterbalance" },
+    { "node": "host_left_arm", "prop": "rotation.z", "keys": [[0, 0.3], [3, 0.6], [5, 0.1], [10, 0.3]], "ease": "sine" }
+  ],
+  "output": { "frame": 256 }
+}

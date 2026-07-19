@@ -1,0 +1,23 @@
+{
+  "name": "celebrate",
+  "source": { "type": "glb", "path": "../../assets/apn-mascot-glb-host.glb" },
+  "camera": { "pos": [2.3, 0.8, 4.9], "lookAt": [0, -0.15, 0], "fov": 35 },
+  "view": "three-quarter-front-right",
+  "clip": { "fps": 16, "frames": 16 },
+  "loop": true,
+  "tracks": [
+    { "node": "red_underglow_stage", "prop": "rotation.x", "keys": [[0, -1.5708], [16, -1.5708]] },
+    { "node": "red_underglow_stage", "prop": "position.y", "keys": [[0, -0.35], [16, -0.35]] },
+    { "node": "red_underglow_stage", "prop": "scale.x", "keys": [[0, 0], [2, 0.08], [4, -0.05], [8, 0], [10, 0.08], [12, -0.05], [16, 0]], "ease": "sine", "comment": "glow cheers on each landing" },
+    { "node": "red_underglow_stage", "prop": "scale.z", "keys": [[0, 0], [2, 0.08], [4, -0.05], [8, 0], [10, 0.08], [12, -0.05], [16, 0]], "ease": "sine" },
+    { "node": "apn_glb_host", "prop": "position.y", "keys": [[0, 0], [2, 0.42], [4, 0], [8, 0], [10, 0.42], [12, 0], [16, 0]], "ease": "sine", "comment": "two big joy hops" },
+    { "node": "apn_glb_host", "prop": "scale.y", "keys": [[0, 0], [1, 0.08], [4, -0.1], [6, 0], [9, 0.08], [12, -0.1], [14, 0], [16, 0]], "ease": "sine", "comment": "stretch in air, squash on land" },
+    { "node": "host_left_arm", "prop": "rotation.z", "keys": [[0, 0.3], [2, 2.4], [4, 0.3], [8, 0.3], [10, 2.4], [12, 0.3], [16, 0.3]], "ease": "sine", "comment": "arms throw up at each hop" },
+    { "node": "host_right_arm", "prop": "rotation.z", "keys": [[0, -0.1], [2, -2.4], [4, -0.1], [8, -0.1], [10, -2.4], [12, -0.1], [16, -0.1]], "ease": "sine" },
+    { "node": "host_left_arm", "prop": "rotation.x", "keys": [[0, 0], [2, -0.4], [4, 0], [10, -0.4], [12, 0], [16, 0]], "ease": "sine" },
+    { "node": "host_right_arm", "prop": "rotation.x", "keys": [[0, 0], [2, -0.4], [4, 0], [10, -0.4], [12, 0], [16, 0]], "ease": "sine" },
+    { "node": "APN_Logo_Head", "prop": "rotation.z", "keys": [[0, 0], [2, 0.12], [4, -0.08], [8, 0], [10, -0.12], [12, 0.08], [16, 0]], "ease": "sine", "comment": "happy head waggle" },
+    { "node": "APN_Logo_Head", "prop": "position.y", "keys": [[0, 0.02], [16, 0.02]] }
+  ],
+  "output": { "frame": 256 }
+}
