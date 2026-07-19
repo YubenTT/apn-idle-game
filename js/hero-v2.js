@@ -44,6 +44,123 @@ const GREEN = '#3ecf8e';
 
 const TAU = Math.PI * 2;
 
+// —— generated canon sprite atlas (optional; loaded by main.js) ————————————
+// When assets/mascot/v2/host.{webp,json} is present the Host body renders the
+// canon generated poses. Every juice layer (shadow, squash & stretch, lunge,
+// hover, halo, sparks, flashes) stays procedural so both paths feel identical.
+// Missing atlas = procedural fallback — headless tests never load images.
+let SPR = null;
+
+export function setHeroSprites(image, data) {
+  if (!image || !data || !data.frames) return;
+  SPR = {
+    image,
+    frames: data.frames,
+    designH: (data.meta && data.meta.designHeight) || 512,
+  };
+}
+
+export function heroSpritesReady() {
+  return !!SPR;
+}
+
+/** Map the live animation vocabulary to the best atlas frame. */
+function pickFrame(o, attack, recoil, sprint, t) {
+  const frames = SPR.frames;
+  let name;
+  if ((o.defeatT || 0) > 0) name = 'defeat';
+  else if ((o.levelT || 0) > 0) name = 'level';
+  else if ((o.lootT || 0) > 0) name = 'walk';
+  else if (recoil > 0.4) name = 'recoil';
+  else if (attack > 0.55) name = 'attack';
+  else if (attack > 0.18) name = 'charge'; // wind-up crouch before the strike
+  else if (o.pose === 'idle' || o.pose === 'overdrive') name = 'idle';
+  else if (o.pose === 'loot') name = 'walk';
+  else {
+    // 4-phase generated cycle when present (contact/recoil/contact/push-off);
+    // the 2-frame flipbook stays only as a legacy fallback.
+    const fps = sprint ? 14 : 10;
+    if (frames['run-1']) name = `run-${(Math.floor(t * fps) % 4) + 1}`;
+    else name = Math.floor(t * fps) % 2 === 0 ? 'run-a' : 'run-b';
+  }
+  return frames[name] ? name : null;
+}
+
+/** Canon sprite body + procedural overlays (glow, flashes, fist spark). */
+function drawSpriteBody(ctx, name, o, st) {
+  const f = SPR.frames[name];
+  const H = o.height || T;
+  const scale = H / SPR.designH;
+  const dw = f.rect.w * scale;
+  const dh = f.rect.h * scale;
+
+  // overdrive under-glow behind the body
+  if (st.over) {
+    const pulse = 0.5 + Math.sin(st.t * 7) * 0.5;
+    const gy = -dh * 0.45;
+    const rg = ctx.createRadialGradient(0, gy, 2, 0, gy, dh * 0.62);
+    rg.addColorStop(0, `rgba(252,18,67,${0.34 + pulse * 0.14})`);
+    rg.addColorStop(1, 'rgba(252,18,67,0)');
+    ctx.fillStyle = rg;
+    ctx.beginPath();
+    ctx.arc(0, gy, dh * 0.62, 0, TAU);
+    ctx.fill();
+  }
+
+  ctx.drawImage(SPR.image, f.rect.x, f.rect.y, f.rect.w, f.rect.h,
+    -f.pivot.x * dw, -f.pivot.y * dh, dw, dh);
+
+  // head zone ≈ 17% below frame top (tracks crouched frames automatically)
+  const headX = (0.5 - f.pivot.x) * dw;
+  const headY = -dh + dh * 0.17;
+  const headR = dh * 0.21;
+
+  // damage blink — white/red flicker across the visor zone
+  if (st.recoil > 0.3) {
+    const on = Math.sin(st.t * 60) > 0;
+    ctx.fillStyle = on
+      ? `rgba(255,235,240,${st.recoil * 0.5})`
+      : `rgba(252,18,67,${st.recoil * 0.28})`;
+    ctx.beginPath();
+    ctx.ellipse(headX, headY, headR * 0.85, headR * 0.42, 0, 0, TAU);
+    ctx.fill();
+  }
+  // crit visor flash
+  if (st.crit && st.attack > 0.5) {
+    ctx.fillStyle = `rgba(255,255,255,${(st.attack - 0.5) * 0.8})`;
+    ctx.beginPath();
+    ctx.ellipse(headX, headY, headR * 0.95, headR * 0.48, 0, 0, TAU);
+    ctx.fill();
+  }
+
+  // fist spark at impact (attack frame: fist ≈ 62% across, 52% down)
+  const spark = clamp((st.attack - 0.45) / 0.5, 0, 1);
+  if (spark > 0) {
+    const hot = st.crit;
+    const hx = (0.62 - f.pivot.x) * dw;
+    const hy = -0.52 * dh;
+    const k = H / T;
+    ctx.save();
+    ctx.translate(hx, hy);
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.fillStyle = hot ? `rgba(255,255,255,${0.9 * spark})` : `rgba(255,120,140,${0.75 * spark})`;
+    ctx.beginPath();
+    ctx.arc(0, 0, (2.2 + spark * 3.2) * k, 0, TAU);
+    ctx.fill();
+    ctx.strokeStyle = hot ? `rgba(255,240,245,${spark})` : `rgba(252,18,67,${0.8 * spark})`;
+    ctx.lineWidth = 1.4 * k;
+    for (let i = 0; i < 4; i++) {
+      const a = st.t * 24 + i * (Math.PI / 2);
+      const d = (4 + spark * 7) * k;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a) * 2 * k, Math.sin(a) * 2 * k);
+      ctx.lineTo(Math.cos(a) * d, Math.sin(a) * d);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+
 function rr(ctx, x, y, w, h, r) {
   const q = Math.min(r, w / 2, h / 2);
   ctx.beginPath();
@@ -91,13 +208,19 @@ export function drawHeroV2(ctx, x, footY, opts = {}) {
   // 'idle' pose: no locomotion — legs planted, weight rests on the breathe
   // cycle (visor sweep + blink keep the character alive). Used by the Gear niche.
   const idle = o.pose === 'idle';
+  // Sprite body decision comes FIRST: the generated 4-phase run cycle carries
+  // its own vertical motion — procedural run bounce on top of it reads as a
+  // nervous hop (user review), so sprite frames kill the bounce and keep only
+  // the idle breathing sway.
+  const spriteFrame = SPR && pickFrame(o, attack, recoil, sprint, t);
   const freq = idle ? 0 : (sprint ? 15 : 10.5) * (0.9 + 0.1 * vigor);
   const ph = t * freq;
   const stride = (idle ? 0 : sprint ? 11 : 8) * k;
   const lift = (idle ? 0 : sprint ? 7.5 : 5) * k * motion * vigor;
-  const bounce = idle
-    ? (0.5 + Math.sin(t * 2.1) * 0.5) * 0.9 * k * motion // slow breathing sway
-    : Math.abs(Math.sin(ph)) * (sprint ? 4.2 : 2.6) * k * motion * vigor;
+  const idleSway = (0.5 + Math.sin(t * 2.1) * 0.5) * 0.9 * k * motion;
+  const bounce = spriteFrame
+    ? (idle ? idleSway : 0)
+    : (idle ? idleSway : Math.abs(Math.sin(ph)) * (sprint ? 4.2 : 2.6) * k * motion * vigor);
   const breathe = Math.sin(t * 2.1) * (idle ? 0.022 : 0.014) * motion;
   const thrust = attack; // 1 at impact, decays to 0
   const lunge = (crit ? 16 : 10.5) * k * thrust;
@@ -143,6 +266,14 @@ export function drawHeroV2(ctx, x, footY, opts = {}) {
   const shoulderY = -56 * k;
   const headCy = -88 * k;
   const headR = 33 * k;
+
+  // —— body: canon sprite atlas when loaded, procedural fallback otherwise ——
+  // The sprite path reuses every juice transform above (shadow, squash, lunge,
+  // hover, flinch) and the halo below, so both paths feel identical.
+  // (fallback block intentionally keeps flat indentation for a clean diff)
+  if (spriteFrame) {
+    drawSpriteBody(ctx, spriteFrame, o, { t, attack, recoil, crit, over });
+  } else {
 
   // —— scarf (behind body, follow-through lag) ————————————————
   drawScarf(ctx, k, t, idle ? 1.2 : freq, motion, sprint, recoil, defeatT);
@@ -301,6 +432,8 @@ export function drawHeroV2(ctx, x, footY, opts = {}) {
       ctx.restore();
     }
   }
+
+  } // end procedural fallback body (sprite path already drew the body)
 
   // level-up halo pop
   if (levelT > 0) {

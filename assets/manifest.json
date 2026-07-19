@@ -1177,6 +1177,20 @@
       "firstPlayable": true
     },
     {
+      "id": "mascot/v2/host.json",
+      "path": "assets/mascot/v2/host.json",
+      "bytes": 2073,
+      "sha256": "d2090450a13ddce8b902178ab644cd3cf6a46d1ebd3c75114ba7161886513fdb",
+      "firstPlayable": true
+    },
+    {
+      "id": "mascot/v2/host.webp",
+      "path": "assets/mascot/v2/host.webp",
+      "bytes": 222012,
+      "sha256": "9487b11b80049af9db32be46e9852990477f0011200edb5e1d00995cfaf35ec0",
+      "firstPlayable": true
+    },
+    {
       "id": "mascot-34.jpg",
       "path": "assets/mascot-34.jpg",
       "bytes": 34748,

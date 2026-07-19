@@ -6,6 +6,7 @@ import { sizeCanvas, draw } from './render.js?v=golive-pr5';
 import { createAssetStore, preloadRouteAssets, packWindowForRoute } from './assets.js?v=golive-pr5';
 import { bindUI, renderHUD } from './ui.js?v=golive-pr5';
 import { save, load, apply } from './save.js?v=golive-pr5';
+import { setHeroSprites } from './hero-v2.js?v=golive-pr5';
 
 const canvas = document.getElementById('game');
 const s = createState();
@@ -63,6 +64,14 @@ function syncRouteAssets() {
   preloadRouteAssets(assetStore, s.route);
 }
 syncRouteAssets();
+
+// Canon Host sprite atlas — optional enhancement; procedural Host V2 remains
+// as the fallback when the atlas cannot be loaded (tests, broken cache).
+Promise.all([
+  assetStore.loadImage('assets/mascot/v2/host.webp'),
+  assetStore.loadJson('assets/mascot/v2/host.json'),
+]).then(([image, data]) => setHeroSprites(image, data))
+  .catch(() => { /* procedural Host remains active */ });
 
 function pos(ev) {
   const r = canvas.getBoundingClientRect();

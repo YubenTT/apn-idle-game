@@ -148,6 +148,11 @@ process.stdout.write(
     encoding: 'utf8',
   })
 );
+process.stdout.write(
+  execFileSync(process.execPath, [fileURLToPath(new URL('./check-hero-atlas.mjs', import.meta.url))], {
+    encoding: 'utf8',
+  })
+);
 
 let fails = 0;
 const ok = (c, m) => {
