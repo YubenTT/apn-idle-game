@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>glb-sprite-engine</title>
+<!--
+  glb-sprite-engine · ENGINE CONTRACT v1
+  Usage: render.html?spec=<path-to-spec.json>
+  Deterministically renders every frame of ONE clip side-by-side into a single
+  horizontal strip canvas (no wall-clock rAF), then sets title = 'render-ready'.
+  On failure sets title = 'render-error: ...' instead.
+-->
+<style>
+  html, body { margin: 0; padding: 0; background: transparent; overflow: hidden; }
+  canvas { display: block; }
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three.module.js"
+  }
+}
+</script>
+</head>
+<body>
+<script type="module" src="./engine.js"></script>
+</body>
+</html>

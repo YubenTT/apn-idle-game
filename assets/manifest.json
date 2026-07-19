@@ -31,6 +31,230 @@
       "firstPlayable": true
     },
     {
+      "id": "creatures/curator/advance.json",
+      "path": "assets/creatures/curator/advance.json",
+      "bytes": 1570,
+      "sha256": "44bf8bb254912b86ab2963e94894b7dc755b3f21e4185f4c1c93113844b7de52",
+      "firstPlayable": true
+    },
+    {
+      "id": "creatures/curator/advance.webp",
+      "path": "assets/creatures/curator/advance.webp",
+      "bytes": 123604,
+      "sha256": "61246135fc5296238e927d8f31746e6b6bf19e374f6397a38962d5a344001ee0",
+      "firstPlayable": true
+    },
+    {
+      "id": "creatures/curator/attack.json",
+      "path": "assets/creatures/curator/attack.json",
+      "bytes": 1117,
+      "sha256": "1520c020f0d3a8c04abcddc6a673a4a6e57a3804f5f01d36851265bb446b488f",
+      "firstPlayable": true
+    },
+    {
+      "id": "creatures/curator/attack.webp",
+      "path": "assets/creatures/curator/attack.webp",
+      "bytes": 81060,
+      "sha256": "5230d1780df99f97957de18b332c061aca9a34205b8d181f5d2f887daf232454",
+      "firstPlayable": true
+    },
+    {
+      "id": "creatures/curator/broken.json",
+      "path": "assets/creatures/curator/broken.json",
+      "bytes": 1267,
+      "sha256": "80e6f6fc3ec34b2bc34db2c528753804504880906a6c49e5de5a94fd87d655fc",
+      "firstPlayable": true
+    },
+    {
+      "id": "creatures/curator/broken.webp",
+      "path": "assets/creatures/curator/broken.webp",
+      "bytes": 94556,
+      "sha256": "96c7da4c6ca428456a7e92c37769a16c370980e7773d0d77dac1cc37ed0c2d8f",
+      "firstPlayable": true
+    },
+    {
+      "id": "creatures/curator/death.json",
+      "path": "assets/creatures/curator/death.json",
+      "bytes": 1416,
+      "sha256": "f8fc36182e042e83739fc5d344af3b76a0bca9726b3d9a02b86c59c5e3e1c55f",
+      "firstPlayable": true
+    },
+    {
+      "id": "creatures/curator/death.webp",
+      "path": "assets/creatures/curator/death.webp",
+      "bytes": 110002,
+      "sha256": "e96a4e783619ff1da6fd579fc8705791ed8584ad1a55ee7c965acc5d62301cf7",
+      "firstPlayable": true
+    },
+    {
+      "id": "creatures/curator/hit.json",
+      "path": "assets/creatures/curator/hit.json",
+      "bytes": 811,
+      "sha256": "10bb24f5ba665441c6c28bc5df79e4181f9960c34a2cb7957aa4dc7042a00c52",
+      "firstPlayable": true
+    },
+    {
+      "id": "creatures/curator/hit.webp",
+      "path": "assets/creatures/curator/hit.webp",
+      "bytes": 50094,
+      "sha256": "73cb19373fb3412b77c3450716c7c647892b26fcd71b8dfddfc75dfb0d2e6c8a",
+      "firstPlayable": true
+    },
+    {
+      "id": "creatures/curator/idle.json",
+      "path": "assets/creatures/curator/idle.json",
+      "bytes": 1263,
+      "sha256": "f98ad35b4df8d6595e30ba903ab9e72a42300b09bc0f7420989b2ff6c403df57",
+      "firstPlayable": true
+    },
+    {
+      "id": "creatures/curator/idle.webp",
+      "path": "assets/creatures/curator/idle.webp",
+      "bytes": 93238,
+      "sha256": "a87c45914b6b6e91c98d4a656baeb15da48f65556e77a198bf3cfc124b157be1",
+      "firstPlayable": true
+    },
+    {
+      "id": "creatures/hotshot/hotshot-advance.json",
+      "path": "assets/creatures/hotshot/hotshot-advance.json",
+      "bytes": 1585,
+      "sha256": "7e43c3f2f075b305e21cdb0974da76478b8bd7e6d26b2c5ba15d5768506f7698",
+      "firstPlayable": true
+    },
+    {
+      "id": "creatures/hotshot/hotshot-advance.webp",
+      "path": "assets/creatures/hotshot/hotshot-advance.webp",
+      "bytes": 128144,
+      "sha256": "22571da3f64fafa4c4db49d3bf0e8a74850d76f2b86551c2e08823a5889f9e0f",
+      "firstPlayable": true
+    },
+    {
+      "id": "creatures/hotshot/hotshot-attack.json",
+      "path": "assets/creatures/hotshot/hotshot-attack.json",
+      "bytes": 1134,
+      "sha256": "acfe618a9e04baeb1316341d77ee60a31304442ba20b48760232c648d3a202a0",
+      "firstPlayable": true
+    },
+    {
+      "id": "creatures/hotshot/hotshot-attack.webp",
+      "path": "assets/creatures/hotshot/hotshot-attack.webp",
+      "bytes": 85106,
+      "sha256": "ed030a4ef84caaf5467d31e80a68beb1b2dbcf7c072af415a551c6c84e68cb8c",
+      "firstPlayable": true
+    },
+    {
+      "id": "creatures/hotshot/hotshot-death.json",
+      "path": "assets/creatures/hotshot/hotshot-death.json",
+      "bytes": 1431,
+      "sha256": "21fbe915c6410254681c7ae7b58944311ac1a48b531828a490bf5ac8535b9165",
+      "firstPlayable": true
+    },
+    {
+      "id": "creatures/hotshot/hotshot-death.webp",
+      "path": "assets/creatures/hotshot/hotshot-death.webp",
+      "bytes": 105616,
+      "sha256": "684395285ba9e25f89343343660c3659ff5222433b280a63f6d580f4e452d8e9",
+      "firstPlayable": true
+    },
+    {
+      "id": "creatures/hotshot/hotshot-hit.json",
+      "path": "assets/creatures/hotshot/hotshot-hit.json",
+      "bytes": 827,
+      "sha256": "c8091a541a9c6e21e0766fedcc65c54e161546b4612c8d99281a16337275abed",
+      "firstPlayable": true
+    },
+    {
+      "id": "creatures/hotshot/hotshot-hit.webp",
+      "path": "assets/creatures/hotshot/hotshot-hit.webp",
+      "bytes": 49660,
+      "sha256": "59c199585eae9bc33c923b21a6d84f476577885ca55e116345aa41e4b14b4454",
+      "firstPlayable": true
+    },
+    {
+      "id": "creatures/hotshot/hotshot-idle.json",
+      "path": "assets/creatures/hotshot/hotshot-idle.json",
+      "bytes": 1278,
+      "sha256": "fb2f344300a62fcec90791e907da8003e30983bcb091f569e3261115e00f5d53",
+      "firstPlayable": true
+    },
+    {
+      "id": "creatures/hotshot/hotshot-idle.webp",
+      "path": "assets/creatures/hotshot/hotshot-idle.webp",
+      "bytes": 96144,
+      "sha256": "1f5354f648b3339e9e42f2f7d12fefcd4ba048bdf5cf18f6d10b8b0338b10c4b",
+      "firstPlayable": true
+    },
+    {
+      "id": "creatures/recon/advance.json",
+      "path": "assets/creatures/recon/advance.json",
+      "bytes": 1570,
+      "sha256": "5095a42b205cf59d8eaf70b86111fc1afec2c0f9d084437f26cb17d83b8fe5dd",
+      "firstPlayable": true
+    },
+    {
+      "id": "creatures/recon/advance.webp",
+      "path": "assets/creatures/recon/advance.webp",
+      "bytes": 191890,
+      "sha256": "3058fe43db8554a76ed0b3ca54858008d73aa3c6c64b2991a799ed2b74fe42ec",
+      "firstPlayable": true
+    },
+    {
+      "id": "creatures/recon/attack.json",
+      "path": "assets/creatures/recon/attack.json",
+      "bytes": 1120,
+      "sha256": "0c3cdd81f5e6c54267faa1c213cb7e208e2091bc89c2e37c0f18de9746cb38d8",
+      "firstPlayable": true
+    },
+    {
+      "id": "creatures/recon/attack.webp",
+      "path": "assets/creatures/recon/attack.webp",
+      "bytes": 123680,
+      "sha256": "78e9abf186800ac2e1aebd518e93b2a8132364e01bef21fe213c2410ae9b26f8",
+      "firstPlayable": true
+    },
+    {
+      "id": "creatures/recon/death.json",
+      "path": "assets/creatures/recon/death.json",
+      "bytes": 1417,
+      "sha256": "892f2427ae7d86436defc6c095c8851129ad14ed09f0cf1f413053df860674eb",
+      "firstPlayable": true
+    },
+    {
+      "id": "creatures/recon/death.webp",
+      "path": "assets/creatures/recon/death.webp",
+      "bytes": 140108,
+      "sha256": "399f8a2c49df48f94aecf4fc696a37f967587610b90eb1bbc4138976c4532a7c",
+      "firstPlayable": true
+    },
+    {
+      "id": "creatures/recon/hit.json",
+      "path": "assets/creatures/recon/hit.json",
+      "bytes": 811,
+      "sha256": "71f4122578591c86435b3411757b7053474af4b0467aca9297223cbc4f8e91b2",
+      "firstPlayable": true
+    },
+    {
+      "id": "creatures/recon/hit.webp",
+      "path": "assets/creatures/recon/hit.webp",
+      "bytes": 71372,
+      "sha256": "41e370f0f4210f0c1ed545f04d658ce330f25386dfcd72d0d8d875e49c97b570",
+      "firstPlayable": true
+    },
+    {
+      "id": "creatures/recon/idle.json",
+      "path": "assets/creatures/recon/idle.json",
+      "bytes": 1264,
+      "sha256": "8a89f9fbac5e21efe96a7ba28fa5b74ca00744df6ebe5edb1059549e657dc533",
+      "firstPlayable": true
+    },
+    {
+      "id": "creatures/recon/idle.webp",
+      "path": "assets/creatures/recon/idle.webp",
+      "bytes": 140676,
+      "sha256": "a1a949beb9bfeba30ad54a5eb590ce590e24a7714093d382475d5e24578d2c10",
+      "firstPlayable": true
+    },
+    {
       "id": "enemies/boss.png",
       "path": "assets/enemies/boss.png",
       "bytes": 27917,
@@ -945,6 +1169,13 @@
       "firstPlayable": true
     },
     {
+      "id": "game-packs/valorant/gen/lineup-v1.png",
+      "path": "assets/game-packs/valorant/gen/lineup-v1.png",
+      "bytes": 2711881,
+      "sha256": "d92b8523b7d5f25b5e82e5c3a4b85ad7e6fc15b1ebc15eef6069660160371e84",
+      "firstPlayable": null
+    },
+    {
       "id": "game-packs/valorant/pack.json",
       "path": "assets/game-packs/valorant/pack.json",
       "bytes": 1717,
@@ -1174,6 +1405,146 @@
       "path": "assets/mascot/atlas/apn-mascot-base.json",
       "bytes": 4666,
       "sha256": "0245863112cbf664bb008333ce58fdabf69d7872e46d24289a5a8c04febc2a8e",
+      "firstPlayable": true
+    },
+    {
+      "id": "mascot/v2/host.json",
+      "path": "assets/mascot/v2/host.json",
+      "bytes": 2073,
+      "sha256": "d2090450a13ddce8b902178ab644cd3cf6a46d1ebd3c75114ba7161886513fdb",
+      "firstPlayable": true
+    },
+    {
+      "id": "mascot/v2/host.webp",
+      "path": "assets/mascot/v2/host.webp",
+      "bytes": 222012,
+      "sha256": "9487b11b80049af9db32be46e9852990477f0011200edb5e1d00995cfaf35ec0",
+      "firstPlayable": true
+    },
+    {
+      "id": "mascot/v2/rig.json",
+      "path": "assets/mascot/v2/rig.json",
+      "bytes": 1206,
+      "sha256": "7167de4b19bda2830600f88c700e220a205ba7ba670fb42ef54367b5f7c66653",
+      "firstPlayable": true
+    },
+    {
+      "id": "mascot/v2/rig.webp",
+      "path": "assets/mascot/v2/rig.webp",
+      "bytes": 16570,
+      "sha256": "66bb1679c7c4688b6e8df68672ac0abd0113009cd95be4bc23a1e64eedecc248",
+      "firstPlayable": true
+    },
+    {
+      "id": "mascot/v3/attack.json",
+      "path": "assets/mascot/v3/attack.json",
+      "bytes": 1124,
+      "sha256": "d77cbf7979f1fd99cb91f6c979b76d8c2c45ee72ed0b2af3281cef221570f335",
+      "firstPlayable": true
+    },
+    {
+      "id": "mascot/v3/attack.webp",
+      "path": "assets/mascot/v3/attack.webp",
+      "bytes": 63526,
+      "sha256": "7d8ae131213fddc538707ce5c70f29d8ce3f75e6ee67353e772f761d70a41b49",
+      "firstPlayable": true
+    },
+    {
+      "id": "mascot/v3/celebrate.json",
+      "path": "assets/mascot/v3/celebrate.json",
+      "bytes": 1573,
+      "sha256": "1e6091bf74b26f9b580bf43a0c6587e088f42a907180723ae64b336828f6b92b",
+      "firstPlayable": true
+    },
+    {
+      "id": "mascot/v3/celebrate.webp",
+      "path": "assets/mascot/v3/celebrate.webp",
+      "bytes": 97550,
+      "sha256": "996e42b0f3ae8d14e663bfa310f7894196cb86133f8729a775ffddaa9ca6a17e",
+      "firstPlayable": true
+    },
+    {
+      "id": "mascot/v3/crit.json",
+      "path": "assets/mascot/v3/crit.json",
+      "bytes": 1265,
+      "sha256": "883885d4984f63308447c2909069be6422dcdd8f2d677a84f2bc7242c8030c8d",
+      "firstPlayable": true
+    },
+    {
+      "id": "mascot/v3/crit.webp",
+      "path": "assets/mascot/v3/crit.webp",
+      "bytes": 75642,
+      "sha256": "0178c8826550921fb05d0a07694a2e073e0a94da24bfac5bedc0c446bed60ba2",
+      "firstPlayable": true
+    },
+    {
+      "id": "mascot/v3/death.json",
+      "path": "assets/mascot/v3/death.json",
+      "bytes": 1415,
+      "sha256": "d761122363eaf89c0a1236533d90b7156ae30e87fcf05815243b8af11027239f",
+      "firstPlayable": true
+    },
+    {
+      "id": "mascot/v3/death.webp",
+      "path": "assets/mascot/v3/death.webp",
+      "bytes": 77888,
+      "sha256": "76d16ed213759410fd3a8b7c4d6c588c49947ba5c8dbef25b3eb45b4f0f9fa22",
+      "firstPlayable": true
+    },
+    {
+      "id": "mascot/v3/hit.json",
+      "path": "assets/mascot/v3/hit.json",
+      "bytes": 770,
+      "sha256": "0a2d5ad508a3687c1e1086d044dfafcd562ce886edc53bc66dd7e69e6af56e47",
+      "firstPlayable": true
+    },
+    {
+      "id": "mascot/v3/hit.webp",
+      "path": "assets/mascot/v3/hit.webp",
+      "bytes": 38160,
+      "sha256": "9f53439c7e31a06583f29c98d631c1c3dc796fde36cc18852ed04131803f1082",
+      "firstPlayable": true
+    },
+    {
+      "id": "mascot/v3/idle.json",
+      "path": "assets/mascot/v3/idle.json",
+      "bytes": 1264,
+      "sha256": "e7c9371b1085485fed59df68b11d5dfa08ade6bb29235d47ec35c6927541fe65",
+      "firstPlayable": true
+    },
+    {
+      "id": "mascot/v3/idle.webp",
+      "path": "assets/mascot/v3/idle.webp",
+      "bytes": 74992,
+      "sha256": "0d501c0ad7beb503255ffe97eedf2b651c9e9aacfc57cd954caecca152c29ac1",
+      "firstPlayable": true
+    },
+    {
+      "id": "mascot/v3/run.json",
+      "path": "assets/mascot/v3/run.json",
+      "bytes": 1561,
+      "sha256": "de94e69ee51f4e612c846cc33b69b3ddcf38866bcdde1db11acd736d4d89d420",
+      "firstPlayable": true
+    },
+    {
+      "id": "mascot/v3/run.webp",
+      "path": "assets/mascot/v3/run.webp",
+      "bytes": 94480,
+      "sha256": "0aef7d64e849b0ab61a1f646d7363757187ababce63c0d530b6fe2cb7a4df6ae",
+      "firstPlayable": true
+    },
+    {
+      "id": "mascot/v3/sprint.json",
+      "path": "assets/mascot/v3/sprint.json",
+      "bytes": 1267,
+      "sha256": "77838a31cedee6c63f019fdb605e9f14ac3a620b86da4e2df007e20323544db1",
+      "firstPlayable": true
+    },
+    {
+      "id": "mascot/v3/sprint.webp",
+      "path": "assets/mascot/v3/sprint.webp",
+      "bytes": 71238,
+      "sha256": "370ad5c8405a46cca024601b864760dc5a8ee95ea72a4e6b336f6797df36bd97",
       "firstPlayable": true
     },
     {

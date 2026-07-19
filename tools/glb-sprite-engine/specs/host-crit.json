@@ -1,0 +1,365 @@
+{
+  "name": "crit",
+  "source": {
+    "type": "glb",
+    "path": "../../assets/apn-mascot-glb-host.glb"
+  },
+  "camera": {
+    "pos": [
+      2.3,
+      0.8,
+      4.9
+    ],
+    "lookAt": [
+      0,
+      -0.15,
+      0
+    ],
+    "fov": 35
+  },
+  "view": "three-quarter-front-right",
+  "clip": {
+    "fps": 16,
+    "frames": 12
+  },
+  "loop": true,
+  "tracks": [
+    {
+      "node": "red_underglow_stage",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          -1.5708
+        ],
+        [
+          12,
+          -1.5708
+        ]
+      ]
+    },
+    {
+      "node": "red_underglow_stage",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          -0.35
+        ],
+        [
+          12,
+          -0.35
+        ]
+      ]
+    },
+    {
+      "node": "red_underglow_stage",
+      "prop": "scale.x",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          4,
+          -0.06
+        ],
+        [
+          7,
+          0.14
+        ],
+        [
+          12,
+          0
+        ]
+      ],
+      "ease": "sine",
+      "comment": "big glow burst on crit"
+    },
+    {
+      "node": "red_underglow_stage",
+      "prop": "scale.z",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          4,
+          -0.06
+        ],
+        [
+          7,
+          0.14
+        ],
+        [
+          12,
+          0
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "apn_glb_host",
+      "prop": "position.x",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          4,
+          -0.16
+        ],
+        [
+          7,
+          0.5
+        ],
+        [
+          9,
+          0.42
+        ],
+        [
+          12,
+          0
+        ]
+      ],
+      "comment": "huge windup, explosive lunge"
+    },
+    {
+      "node": "apn_glb_host",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0.06
+        ],
+        [
+          4,
+          -0.14
+        ],
+        [
+          7,
+          0.3
+        ],
+        [
+          12,
+          0.06
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "host_soft_torso",
+      "prop": "scale.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          4,
+          -0.14
+        ],
+        [
+          7,
+          0.08
+        ],
+        [
+          12,
+          0
+        ]
+      ],
+      "ease": "sine",
+      "comment": "deep squash then stretch"
+    },
+    {
+      "node": "host_soft_torso",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          4,
+          -0.12
+        ],
+        [
+          7,
+          0.06
+        ],
+        [
+          12,
+          0
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "host_short_neck",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          4,
+          -0.09
+        ],
+        [
+          7,
+          0.05
+        ],
+        [
+          12,
+          0
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "APN_Logo_Head",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0.02
+        ],
+        [
+          4,
+          -0.08
+        ],
+        [
+          7,
+          0.08
+        ],
+        [
+          12,
+          0.02
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "APN_Logo_Head",
+      "prop": "rotation.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          10,
+          6.2832
+        ],
+        [
+          12,
+          6.2832
+        ]
+      ],
+      "comment": "head does a full showboat spin through the strike"
+    },
+    {
+      "node": "host_right_arm",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          -0.2
+        ],
+        [
+          4,
+          1.2
+        ],
+        [
+          7,
+          -1.4
+        ],
+        [
+          12,
+          -0.2
+        ]
+      ],
+      "comment": "massive overhead slam"
+    },
+    {
+      "node": "host_right_arm",
+      "prop": "rotation.z",
+      "keys": [
+        [
+          0,
+          -0.1
+        ],
+        [
+          4,
+          -0.7
+        ],
+        [
+          7,
+          0.3
+        ],
+        [
+          12,
+          -0.1
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "host_left_arm",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0.2
+        ],
+        [
+          4,
+          1.0
+        ],
+        [
+          7,
+          -0.9
+        ],
+        [
+          12,
+          0.2
+        ]
+      ],
+      "comment": "both arms commit on crit"
+    },
+    {
+      "node": "host_left_arm",
+      "prop": "rotation.z",
+      "keys": [
+        [
+          0,
+          0.3
+        ],
+        [
+          4,
+          0.7
+        ],
+        [
+          7,
+          -0.2
+        ],
+        [
+          12,
+          0.3
+        ]
+      ],
+      "ease": "sine"
+    }
+  ],
+  "output": {
+    "frame": 256
+  },
+  "kind": "action"
+}

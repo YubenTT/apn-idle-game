@@ -52,6 +52,10 @@ Living plan — not a commitment calendar.
 - [x] Redesign screens against [SCREEN-SPECS](./SCREEN-SPECS.md) (Run HUD, Gear,
       Build, Ship, Hub, Boosts, Menu) — one screen at a time, each through
       [QA-CHECKLIST](./QA-CHECKLIST.md)
+- [x] V2 Super Polish (waves 1–4, `v2/super-polish`): procedural Host V2 +
+      feed-noise enemy family + layered editorial scenery, premium chrome,
+      combat juice & cinematics, full QA matrix — ADR-0012; evidence at
+      `qa/screenshots/v2-final/`
 - [ ] Schema rename bytes→signal (with save migrate)
 - [x] Mobile layout polish, safe-area coverage, and long-press gesture hardening
 - [x] Free MVP economy cut: no demo store, paid power, coin rewards, Gear Boxes,

@@ -1,0 +1,45 @@
+<!doctype html>
+<!-- QA harness: exercises the REAL js/creatures.js + js/hero-v3.js render paths
+     outside the full game loop so headless screenshots stay fast. -->
+<html><head><meta charset="utf-8"><style>html,body{margin:0;background:#141820}</style></head>
+<body>
+<canvas id="c" width="1100" height="560"></canvas>
+<script type="module">
+import { loadCreatures, drawCreature, creaturesReady } from '/js/creatures.js';
+import { loadHeroV3, heroV3Ready, getV3Clip, drawV3Frame } from '/js/hero-v3.js';
+
+const ctx = document.getElementById('c').getContext('2d');
+ctx.fillStyle = '#141820';
+ctx.fillRect(0, 0, 1100, 560);
+
+await Promise.all([loadCreatures(), loadHeroV3('assets/mascot/v3/')].map(p => p.catch(e => String(e))));
+
+const ground = 400;
+// hero: 4 clips side by side
+const heroClips = ['run', 'attack', 'crit', 'celebrate'];
+heroClips.forEach((clip, i) => {
+  const c = getV3Clip(clip);
+  if (!c) return;
+  const f = Math.floor(c.frames.length * 0.6);
+  ctx.save();
+  ctx.translate(90 + i * 110, ground);
+  drawV3Frame(ctx, clip, f, 150);
+  ctx.restore();
+});
+// creatures: 3 kinds x 2 clips
+const rows = [
+  ['recon', 'idle', 'attack'],
+  ['hotshot', 'advance', 'attack'],
+  ['curator', 'idle', 'broken'],
+];
+rows.forEach(([kind, c1, c2], r) => {
+  drawCreature(ctx, kind, c1, 0.5, 560 + r * 170, ground, 150);
+  drawCreature(ctx, kind, c2, kind === 'curator' ? 0.5 : 0.45, 640 + r * 170, ground, 150);
+});
+ctx.fillStyle = '#8fa3bf';
+ctx.font = '11px system-ui';
+ctx.fillText('hero: run / attack / crit / celebrate', 40, 430);
+ctx.fillText('recon idle+attack · hotshot advance+attack · curator idle+broken', 520, 430);
+document.title = (creaturesReady() && heroV3Ready()) ? 'shot-ready' : 'shot-partial';
+</script>
+</body></html>

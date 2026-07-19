@@ -6,6 +6,9 @@ import { sizeCanvas, draw } from './render.js?v=golive-pr5';
 import { createAssetStore, preloadRouteAssets, packWindowForRoute } from './assets.js?v=golive-pr5';
 import { bindUI, renderHUD } from './ui.js?v=golive-pr5';
 import { save, load, apply } from './save.js?v=golive-pr5';
+import { loadHeroV3 } from './hero-v3.js?v=golive-pr5';
+import { loadCreatures } from './creatures.js?v=golive-pr5';
+import { setHeroRig } from './hero-rig.js?v=golive-pr5';
 
 const canvas = document.getElementById('game');
 const s = createState();
@@ -63,6 +66,20 @@ function syncRouteAssets() {
   preloadRouteAssets(assetStore, s.route);
 }
 syncRouteAssets();
+
+// Canon Host V3 — GLB-rendered clip atlases are the primary hero body.
+// The V2 skeletal rig loads ONLY as a fallback when V3 fails; both fall
+// back silently to the procedural Host (tests, broken cache, offline).
+loadHeroV3('assets/mascot/v3/')
+  .catch(() => Promise.all([
+    assetStore.loadImage('assets/mascot/v2/rig.webp'),
+    assetStore.loadJson('assets/mascot/v2/rig.json'),
+  ]).then(([image, data]) => setHeroRig(image, data)))
+  .catch(() => { /* procedural Host remains active */ });
+
+// V3 vinyl creatures (Curator boss / Recon / Hotshot) — soft-fail per clip;
+// the procedural feed-noise family stays as automatic fallback.
+loadCreatures().catch(() => { /* procedural enemies remain active */ });
 
 function pos(ev) {
   const r = canvas.getBoundingClientRect();
@@ -249,9 +266,15 @@ let qaFrameWindowStart = performance.now();
 function frame(now) {
   let dt = Math.min(0.05, (now - last) / 1000);
   last = now;
+  // Wave 3 juice: hit stop + Go Live slow-mo are cosmetic timescale dips on the
+  // accumulator only — combat math, rewards, and kill timing in sim-time are
+  // untouched. Both clocks are set exclusively under reduced-motion guards.
+  if (s.world.hitStopT > 0) s.world.hitStopT = Math.max(0, s.world.hitStopT - dt);
+  if (s.world.slowMoT > 0) s.world.slowMoT = Math.max(0, s.world.slowMoT - dt);
+  const feelScale = s.world.hitStopT > 0 ? 0.08 : s.world.slowMoT > 0 ? 0.35 : 1;
   // Sprint multiplies sim speed — whole game (combat, spawn, regen) runs faster
   const sprintScale = isSprinting(s) ? C.SPRINT_TIME : 1;
-  acc += dt * sprintScale;
+  acc += dt * sprintScale * feelScale;
   // Cap catch-up so a long tab-hide doesn't explode
   let steps = 0;
   while (acc >= C.FIXED_DT && steps < 8) {

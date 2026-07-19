@@ -1,0 +1,12 @@
+{
+  "name": "apn-idle",
+  "version": "2.0.0",
+  "private": true,
+  "description": "APN Idle — the All Patch Notes waiting-room idle game. Zero-dependency vanilla ES modules + Canvas 2D.",
+  "type": "module",
+  "scripts": {
+    "dev": "node tools/dev-server.mjs",
+    "serve": "bash serve.sh",
+    "test": "node qa/run-tests.mjs"
+  }
+}

@@ -5,6 +5,23 @@
 > *family* of similar red figures instead of one hero). This doc exists to make
 > that impossible. See [ADR-0003](../docs/decisions/ADR-0003-mascot-single-source.md).
 
+## Runtime source (2026-07-18, V2)
+
+**The shipped runtime Host is the procedural Canvas character in
+[`js/hero-v2.js`](../js/hero-v2.js)** — see
+[ADR-0012](../docs/decisions/ADR-0012-procedural-host-v2.md). The **silhouette
+DNA below is unchanged and still binds**: oversized spherical head, integrated
+black visor, slim torso, short arms, minimal oval shadow. The procedural rig
+adds what the placeholder atlas never had: run cycle, breathe, blink, visor
+scan sweep, attack/crit anticipation, damage flinch, sprint lean, overdrive
+hover, and level/loot/defeat clips — all reduced-motion gated.
+
+The GLB files and the `tools/mascot-render` export pipeline are **superseded as
+runtime inputs** (ADR-0012): they remain in repo history as reference geometry,
+but no runtime code loads GLB-derived Host frames. Future pose and animation
+work is code in `hero-v2.js`, not new renders. Everything below this section is
+the historical GLB canon, kept for provenance.
+
 ## The one rule
 
 **The GLB is the geometry source of truth.** No new mesh and no invented
@@ -138,3 +155,16 @@ same perspective, same outline — on every screen.
 `node qa/check-assets.mjs` additionally fails unless all ten poses share a foot
 pivot within one pixel, head/body ratio within 3%, non-empty visor coverage, the
 18°/9° camera lock, and the canonical GLB source path.
+
+## V3 — engine-rendered canon (current)
+
+Since V3 the canonical mascot pixels are **rendered, not drawn**: the Host GLB
+(`assets/apn-mascot-glb-host.glb`) is animated by `tools/glb-sprite-engine/`
+through deterministic keyframe specs and packed into the 8 clip atlases in
+`assets/mascot/v3/`. The silhouette DNA is unchanged — glossy crimson sphere
+head, integrated black controller visor, capsule torso, stubby arms, red
+underglow base — but it is now *the same 3D body in every frame by
+construction*, which hand-drawn atlases could never guarantee. Any change to
+the mascot must go through the engine (new spec or GLB revision) and re-pass
+the gates in [docs/ASSET-ENGINE](../docs/ASSET-ENGINE.md); hand-editing atlas
+pixels is forbidden.

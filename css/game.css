@@ -910,6 +910,27 @@ canvas {
   z-index: 8;
 }
 
+/* drop arrival pop — domain chipPulse.bag drives .pulse (transform only) */
+.bag-fab.pulse {
+  animation: fab-drop-pop var(--dur-pop) var(--ease-spring);
+}
+
+.bag-fab.pulse .bag-fab-badge {
+  animation: fab-badge-pop var(--dur-pop) var(--ease-spring);
+}
+
+@keyframes fab-drop-pop {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.14); }
+  100% { transform: scale(1); }
+}
+
+@keyframes fab-badge-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.45); }
+  100% { transform: scale(1); }
+}
+
 /* ---- NAV (44–48px targets, clear active) — 5 tabs, Gear is left bag ---- */
 .hud-nav {
   flex: 0 0 auto;
@@ -5505,7 +5526,7 @@ button[hidden] {
   }
 
   .hud-stage {
-    min-height: calc(var(--size-inventory-slot) + var(--sp-12));
+    min-height: calc(var(--size-inventory-slot) * 3);
   }
 
   .hud-bars {
@@ -5838,5 +5859,698 @@ button[hidden] {
   }
   .inv-cards {
     grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+
+/* ============================================================================
+   V2 SUPER POLISH · WAVE 2 — premium chrome (append-only overrides)
+   ----------------------------------------------------------------------------
+   Depth, press physics, sheet springs, animated counters, sliding nav pill,
+   toast banner, coach hint. Every rule is an override layered AFTER the
+   shipped sheets, so tested byte-patterns above (`.btn-chip` min-height,
+   `.hud-stage` edge-to-edge, economy color roles) stay intact.
+
+   Gating: in-app/OS reduced motion collapses --dur-* tokens to 0ms and the
+   global `html.reduce-motion` rule kills every animation below. JS-driven
+   effects (counter tween, gear Host loop) check the same two signals.
+   ============================================================================ */
+
+/* —— 1 · HUD resource strip ——————————————————————————————————————— */
+
+/* currency wash + value pop on gain (domain chipPulse drives .pulse) */
+.hud-res .chip.signal { --chip-wash: var(--c-signal-a14); }
+.hud-res .chip.notes { --chip-wash: var(--c-notes-a14); }
+
+.hud-res .chip.notes {
+  box-shadow: inset 1px 0 0 var(--border-700);
+}
+
+.hud-res .chip.pulse {
+  animation: chip-wash 0.55s var(--ease-out);
+}
+
+.hud-res .chip.pulse strong {
+  animation: chip-val-pop var(--dur-pop) var(--ease-spring);
+}
+
+@keyframes chip-wash {
+  0% { background-color: var(--chip-wash, transparent); }
+  100% { background-color: transparent; }
+}
+
+@keyframes chip-val-pop {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+
+/* metric values read as numbers, not labels */
+.hud-res .chip strong,
+.stage-stat-lab em,
+.stage-live-value em,
+.cost-chip strong {
+  font-weight: 900;
+}
+
+/* —— 2 · Action dock —————————————————————————————————————————————— */
+
+/* Upgrade Scanner — the one crimson primary, now with real depth */
+#btn-scanner.btn-primary {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, var(--apn-primary-hi) 0%, var(--apn-primary) 52%, var(--apn-primary-dim) 100%);
+  box-shadow:
+    inset 0 1px 0 var(--gloss-strong),
+    inset 0 -2px 0 var(--ink-shade-a35),
+    0 6px 18px var(--apn-primary-a30);
+  transition:
+    transform var(--dur-fast) var(--ease-press),
+    box-shadow var(--dur-fast) var(--ease-press),
+    filter var(--dur-fast) var(--ease-out);
+}
+
+#btn-scanner.btn-primary > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* shine sweep while affordable — sits under the content, crosses the fill */
+#btn-scanner.btn-primary::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(105deg, transparent 42%, var(--gloss-strong) 50%, transparent 58%);
+  background-size: 240% 100%;
+  background-position: 130% 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+#btn-scanner.btn-primary:not(.is-locked)::before {
+  opacity: 1;
+  animation: cta-shine 2.8s var(--ease-in-out) infinite;
+}
+
+@keyframes cta-shine {
+  0% { background-position: 130% 0; }
+  55% { background-position: -130% 0; }
+  100% { background-position: -130% 0; }
+}
+
+#btn-scanner.btn-primary:active {
+  transform: translateY(2px) scale(0.96);
+  box-shadow:
+    inset 0 1px 0 var(--gloss-soft),
+    0 1px 6px var(--apn-primary-a30);
+}
+
+/* can't afford — clearly muted, no shine, no glow */
+#btn-scanner.btn-primary.is-locked {
+  background: color-mix(in srgb, var(--apn-primary) 22%, var(--surface-800));
+  box-shadow: none;
+  color: var(--text-low);
+  filter: saturate(0.55);
+}
+
+#btn-scanner.btn-primary.is-locked::before {
+  display: none;
+}
+
+#btn-scanner.btn-primary.is-locked .btn-primary-title,
+#btn-scanner.btn-primary.is-locked .btn-primary-sub,
+#btn-scanner.btn-primary.is-locked .cta-weapon-icon {
+  color: var(--text-low);
+}
+
+#btn-scanner.btn-primary.is-locked .cost-chip {
+  background: color-mix(in srgb, var(--ink-950) 55%, transparent);
+  color: var(--text-low);
+}
+
+/* Sprint — energy-linked held fill drains with the meter */
+.btn-sprint {
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform var(--dur-fast) var(--ease-press),
+    border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
+}
+
+.btn-sprint::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--en, 100%);
+  background: color-mix(in srgb, var(--c-rep) 14%, transparent);
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out);
+  pointer-events: none;
+}
+
+.btn-sprint > * {
+  position: relative;
+  z-index: 1;
+}
+
+.btn-sprint.is-held::after,
+.btn-sprint.is-active::after {
+  opacity: 1;
+}
+
+.btn-sprint.is-held,
+.btn-sprint.is-active,
+.btn-sprint:active {
+  transform: translateY(1px) scale(0.98);
+  box-shadow:
+    inset var(--border-accent) 0 0 var(--c-rep),
+    0 0 14px var(--c-rep-a45);
+}
+
+/* Skill chips — name · cost/state · rank pips · Focus charge fill.
+   NOTE: min-height stays owned by the tested `.btn-chip` rule above. */
+.btn-chip {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto auto auto;
+  justify-items: center;
+  align-content: center;
+  gap: 3px;
+  padding: var(--sp-2) var(--sp-1) calc(var(--sp-2) + 3px);
+  overflow: hidden;
+  transition:
+    transform var(--dur-fast) var(--ease-press),
+    border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
+}
+
+.btn-chip:active {
+  transform: translateY(1px) scale(0.97);
+}
+
+.btn-chip .chip-lab {
+  font-size: var(--fs-label-m);
+  line-height: var(--lh-label-m);
+  font-weight: 800;
+  color: var(--text-high);
+}
+
+.btn-chip .chip-sub {
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+  font-weight: 700;
+  color: var(--text-low);
+  font-variant-numeric: tabular-nums;
+}
+
+.btn-chip .chip-sub.ready {
+  color: var(--c-info);
+}
+
+.btn-chip .chip-pips {
+  display: flex;
+  gap: 3px;
+}
+
+.btn-chip .chip-pips i {
+  width: 10px;
+  height: 2px;
+  border-radius: var(--r-pill);
+  background: var(--surface-700);
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.btn-chip .chip-pips i.fill {
+  background: var(--c-sp);
+}
+
+.btn-chip .chip-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: var(--c-info);
+  opacity: 0.85;
+  transform: scaleX(var(--charge, 0));
+  transform-origin: left center;
+  transition: transform var(--dur-base) var(--ease-out);
+  pointer-events: none;
+}
+
+/* ready to cast — positive border + the sheet "can"-state inset underline
+   (one affordance language; the always-on drop glow was too loud) */
+.btn-chip.charged {
+  border-color: var(--c-positive);
+  box-shadow: inset 0 calc(var(--border-accent) * -1) 0 var(--c-positive);
+}
+
+.btn-chip.charged .chip-fill {
+  background: var(--c-positive);
+}
+
+.btn-chip.locked .chip-lab,
+.btn-chip.locked .chip-sub {
+  color: var(--text-low);
+}
+
+.btn-chip.locked .chip-fill {
+  display: none;
+}
+
+/* —— 3 · Energy / Focus meters ———————————————————————————————————— */
+
+.bar-bg {
+  box-shadow: inset 0 1px 2px var(--ink-shade-a35);
+}
+
+.bar-fg {
+  transition: width var(--dur-fast) linear;
+}
+
+.bar-lab span:first-child {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+#bar-energy-wrap.full .bar-fg.en {
+  box-shadow: 0 0 10px var(--apn-primary-a55);
+}
+
+#bar-focus-wrap.full .bar-fg.mn {
+  box-shadow: 0 0 10px var(--c-info-a40);
+}
+
+/* —— 4 · Sheet chrome ————————————————————————————————————————————— */
+
+/* one shared spring: overshoot ease, scrim fades in behind */
+.sheet {
+  animation: sheet-spring var(--dur-pop) var(--ease-spring) both;
+  box-shadow: var(--elev-sheet), inset 0 1px 0 var(--gloss-soft);
+}
+
+@keyframes sheet-spring {
+  from { transform: translateY(56px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.sheet-backdrop {
+  animation: scrim-in var(--dur-base) var(--ease-out);
+}
+
+@keyframes scrim-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* staggered card entrance — one shot per open (`.sheet-enter` is removed
+   after 700ms so in-sheet re-renders never replay it) */
+.sheet-root.sheet-enter .skill-card,
+.sheet-root.sheet-enter .boost-row,
+.sheet-root.sheet-enter .quest-row,
+.sheet-root.sheet-enter .season-mil,
+.sheet-root.sheet-enter .sp-bank,
+.sheet-root.sheet-enter .build-branch-head,
+.sheet-root.sheet-enter .ship-gain-card,
+.sheet-root.sheet-enter .ship-formula,
+.sheet-root.sheet-enter .season-contract section,
+.sheet-root.sheet-enter .season-confirm,
+.sheet-root.sheet-enter .hub-season,
+.sheet-root.sheet-enter .menu-section,
+.sheet-root.sheet-enter .brand-loadout,
+.sheet-root.sheet-enter .inv-head,
+.sheet-root.sheet-enter .icard,
+.sheet-root.sheet-enter .gear-detail,
+.sheet-root.sheet-enter .inv-empty-state {
+  animation: card-rise var(--dur-slow) var(--ease-out) both;
+}
+
+@keyframes card-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.sheet-root.sheet-enter .skill-grid .skill-card:nth-child(n+2),
+.sheet-root.sheet-enter .boost-list .boost-row:nth-child(n+2),
+.sheet-root.sheet-enter .quest-list .quest-row:nth-child(n+2),
+.sheet-root.sheet-enter .brand-slots .gcard:nth-child(n+2),
+.sheet-root.sheet-enter .inv-cards .icard:nth-child(n+2) {
+  animation-delay: 45ms;
+}
+
+.sheet-root.sheet-enter .skill-grid .skill-card:nth-child(n+3),
+.sheet-root.sheet-enter .boost-list .boost-row:nth-child(n+3),
+.sheet-root.sheet-enter .quest-list .quest-row:nth-child(n+3),
+.sheet-root.sheet-enter .brand-slots .gcard:nth-child(n+3),
+.sheet-root.sheet-enter .inv-cards .icard:nth-child(n+3) {
+  animation-delay: 90ms;
+}
+
+.sheet-root.sheet-enter .skill-grid .skill-card:nth-child(n+4),
+.sheet-root.sheet-enter .boost-list .boost-row:nth-child(n+4),
+.sheet-root.sheet-enter .quest-list .quest-row:nth-child(n+4),
+.sheet-root.sheet-enter .brand-slots .gcard:nth-child(n+4),
+.sheet-root.sheet-enter .inv-cards .icard:nth-child(n+4) {
+  animation-delay: 135ms;
+}
+
+.sheet-root.sheet-enter .inv-cards .icard:nth-child(n+5) {
+  animation-delay: 175ms;
+}
+
+.sheet-root.sheet-enter .inv-cards .icard:nth-child(n+6) {
+  animation-delay: 210ms;
+}
+
+/* press physics on every tappable row inside sheets */
+#panel-skills .build-skill-card,
+.boost-row,
+.quest-cta,
+.season-mil,
+.gcard,
+.icard {
+  transition:
+    transform var(--dur-fast) var(--ease-press),
+    border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
+}
+
+#panel-skills .build-skill-card:active,
+.boost-row:active,
+.quest-cta:active,
+.season-mil:active,
+.gcard:active,
+.icard:active {
+  transform: scale(0.97);
+}
+
+/* section headers — consistent uppercase micro-labels */
+.menu-section-title {
+  padding: var(--sp-2) var(--sp-3);
+  color: var(--text-mid);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sheet-head h2 {
+  font-size: var(--fs-display-m);
+  line-height: var(--lh-display-m);
+  letter-spacing: -0.01em;
+}
+
+/* friendly two-line empty states (icon slot is a dashed slot outline) */
+.inv-empty-state {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: var(--sp-2);
+  padding: var(--sp-6) var(--sp-3);
+  text-align: center;
+}
+
+.inv-empty-state::before {
+  content: "";
+  width: var(--sp-8);
+  height: var(--sp-8);
+  border: 2px dashed var(--border-600);
+  border-radius: var(--r-chip);
+}
+
+.inv-empty-state strong {
+  color: var(--text-high);
+  font-size: var(--fs-label-m);
+  line-height: var(--lh-label-m);
+  font-weight: 800;
+}
+
+.inv-empty-state span {
+  color: var(--text-mid);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+}
+
+.sheet-root[data-panel="gear"] .inv-empty-state {
+  place-items: unset;
+  justify-items: center;
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+}
+
+/* Gear niche — the live Host canvas inherits the old frame exactly */
+.sheet-root[data-panel="gear"] canvas.brand-mascot {
+  width: calc(var(--size-host-niche) - var(--sp-4));
+  height: calc(var(--size-host-niche) - var(--sp-4));
+  margin-top: var(--sp-2);
+  object-position: center bottom;
+  filter: none;
+}
+
+@media (max-width: 360px) {
+  .sheet-root[data-panel="gear"] canvas.brand-mascot {
+    width: calc(var(--size-host-niche) - var(--sp-8));
+    height: calc(var(--size-host-niche) - var(--sp-8));
+  }
+}
+
+/* —— 5 · Bottom navigation ———————————————————————————————————————— */
+
+/* sliding active pill — travels between tabs with a spring */
+.nav-pill {
+  position: absolute;
+  top: 4px;
+  bottom: calc(6px + var(--safe-bottom));
+  left: 2px;
+  width: calc((100% - 4px) / 5);
+  border-radius: var(--r-chip);
+  background: var(--surface-700);
+  box-shadow: inset 0 var(--border-accent) 0 var(--c-info);
+  opacity: 0;
+  transform: translateX(calc(var(--nav-i, 0) * 100%));
+  transition:
+    transform var(--dur-pop) var(--ease-spring),
+    opacity var(--dur-fast) var(--ease-out);
+  pointer-events: none;
+}
+
+.hud-nav.has-active .nav-pill {
+  opacity: 1;
+}
+
+.hud-nav .nav-btn {
+  position: relative;
+  z-index: 1;
+}
+
+/* the pill carries the active fill now — the button stays transparent */
+.nav-btn.active {
+  background: transparent;
+  box-shadow: none;
+}
+
+@media (orientation: landscape) and (max-height: 480px) {
+  .nav-pill {
+    top: var(--sp-1);
+    bottom: calc(var(--sp-1) + var(--safe-bottom));
+  }
+}
+
+/* —— 6 · Toast banner ————————————————————————————————————————————— */
+
+#toast.toast-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  max-width: min(92%, calc(480px - var(--sp-8)));
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--border-600);
+  border-left: var(--border-accent) solid var(--toast-tone, var(--c-info));
+  border-radius: var(--r-chip);
+  background: color-mix(in srgb, var(--ink-950) 94%, transparent);
+  color: var(--text-high);
+  font-size: var(--fs-label-m);
+  line-height: var(--lh-label-m);
+  font-weight: 700;
+  box-shadow: var(--elev-card);
+  animation: none;
+  pointer-events: none;
+}
+
+#toast.toast-banner .toast-ico {
+  flex: 0 0 auto;
+  width: var(--sp-4);
+  height: var(--sp-4);
+  display: inline-flex;
+  color: var(--toast-tone, var(--c-info));
+}
+
+#toast.toast-banner .toast-ico svg {
+  width: 100%;
+  height: 100%;
+}
+
+#toast.toast-banner .toast-msg {
+  min-width: 0;
+}
+
+#toast.t-info { --toast-tone: var(--c-info); }
+#toast.t-rank { --toast-tone: var(--c-sp); }
+#toast.t-zone { --toast-tone: var(--c-zone); }
+#toast.t-win { --toast-tone: var(--c-positive); }
+#toast.t-live { --toast-tone: var(--apn-primary); }
+
+#toast.in {
+  animation: toast-drop var(--dur-pop) var(--ease-spring);
+}
+
+@keyframes toast-drop {
+  from { opacity: 0; transform: translateX(-50%) translateY(-14px) scale(0.96); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+
+#toast.out {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-8px);
+  transition:
+    opacity var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+/* —— 7 · First-run coach hint ————————————————————————————————————— */
+
+.hud-cta {
+  position: relative;
+}
+
+.coach-hint {
+  position: absolute;
+  right: var(--sp-2);
+  bottom: calc(100% + var(--sp-1));
+  z-index: 9;
+  display: grid;
+  gap: 2px;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--c-signal);
+  border-radius: var(--r-chip);
+  background: var(--surface-800);
+  box-shadow: var(--elev-card), 0 0 16px var(--c-signal-a45);
+  pointer-events: none;
+  animation: coach-pulse 1.6s var(--ease-in-out) infinite;
+}
+
+.coach-hint strong {
+  color: var(--text-high);
+  font-size: var(--fs-label-m);
+  line-height: var(--lh-label-m);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.coach-hint span {
+  color: var(--c-signal);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+  white-space: nowrap;
+}
+
+.coach-hint::after {
+  content: "";
+  position: absolute;
+  bottom: -5px;
+  right: var(--sp-8);
+  width: 10px;
+  height: 10px;
+  transform: rotate(45deg);
+  background: var(--surface-800);
+  border-right: 1px solid var(--c-signal);
+  border-bottom: 1px solid var(--c-signal);
+}
+
+.coach-hint[hidden] {
+  display: none;
+}
+
+@keyframes coach-pulse {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+/* —— 8 · Round-2 review fixes ————————————————————————————————————— */
+
+/* Sheet primaries (Go Live arm, receipt Continue) — same depth language as the
+   dock CTA, minus the shine sweep: sheets are calmer surfaces than the dock. */
+.sheet-body .btn-primary:not(.is-locked) {
+  background: linear-gradient(180deg, var(--apn-primary-hi) 0%, var(--apn-primary) 52%, var(--apn-primary-dim) 100%);
+  box-shadow:
+    inset 0 1px 0 var(--gloss-strong),
+    inset 0 -2px 0 var(--ink-shade-a35),
+    0 6px 18px var(--apn-primary-a30);
+  transition:
+    transform var(--dur-fast) var(--ease-press),
+    box-shadow var(--dur-fast) var(--ease-press),
+    filter var(--dur-fast) var(--ease-out);
+}
+
+.sheet-body .btn-primary:not(.is-locked):active {
+  transform: translateY(2px) scale(0.98);
+  box-shadow:
+    inset 0 1px 0 var(--gloss-soft),
+    0 1px 6px var(--apn-primary-a30);
+}
+
+/* locked sheet primary — saturated-muted, matching the dock CTA's locked state */
+.sheet-body .btn-primary.is-locked {
+  background: color-mix(in srgb, var(--apn-primary) 22%, var(--surface-800));
+  box-shadow: none;
+  color: var(--text-low);
+  filter: saturate(0.55);
+}
+
+/* Landscape dock — the 4-across chip row sits in a 3fr grid track; grid items
+   default to min-width:auto, so the chip row could overflow the dock's right
+   edge at 844×390. Allow the row to shrink, then compact its contents. */
+.hud-cta .btn-skills {
+  min-width: 0;
+}
+
+/* Any chip label that still can't fit ellipsizes instead of clipping mid-glyph */
+.btn-chip .chip-lab {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (orientation: landscape) and (max-height: 480px) {
+  /* Rebalance the dock 60/40 — measured: "Overclock" needs a 71px chip, and a
+     40% track yields ~77px at 844px wide. The Scanner CTA stays generously wide. */
+  .hud-cta {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  }
+
+  .hud-cta .btn-skills {
+    gap: var(--sp-1);
+  }
+
+  .btn-chip {
+    padding: var(--sp-1) 2px calc(var(--sp-1) + 3px);
+  }
+
+  .btn-chip .chip-lab {
+    letter-spacing: -0.02em;
+  }
+
+  /* pips are the widest fixed row — at 390px tall they cost more than they tell */
+  .btn-chip .chip-pips {
+    display: none;
   }
 }

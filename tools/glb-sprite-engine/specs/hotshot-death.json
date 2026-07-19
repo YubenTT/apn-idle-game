@@ -1,0 +1,521 @@
+{
+  "name": "hotshot-death",
+  "source": {
+    "type": "scene",
+    "module": "./models/hotshot.js"
+  },
+  "camera": {
+    "pos": [
+      1.81,
+      1.32,
+      2.16
+    ],
+    "lookAt": [
+      0,
+      0.62,
+      0
+    ],
+    "fov": 32
+  },
+  "view": "three-quarter-front-right",
+  "clip": {
+    "fps": 16,
+    "frames": 14
+  },
+  "loop": false,
+  "tracks": [
+    {
+      "node": "orb",
+      "prop": "scale",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          4,
+          -0.1
+        ],
+        [
+          6,
+          -0.4
+        ],
+        [
+          9,
+          -0.75
+        ],
+        [
+          12,
+          -1
+        ],
+        [
+          14,
+          -1
+        ]
+      ],
+      "comment": "fire fizzles out: scale reaches zero by frame 12"
+    },
+    {
+      "node": "orb",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          4,
+          0.35
+        ],
+        [
+          8,
+          0.15
+        ],
+        [
+          11,
+          -0.3
+        ],
+        [
+          14,
+          -0.3
+        ]
+      ],
+      "comment": "last flare up, then drops"
+    },
+    {
+      "node": "orb",
+      "prop": "position.z",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          6,
+          0.2
+        ],
+        [
+          11,
+          -0.2
+        ],
+        [
+          14,
+          -0.2
+        ]
+      ]
+    },
+    {
+      "node": "torso",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          2,
+          0.18
+        ],
+        [
+          5,
+          0.4
+        ],
+        [
+          8,
+          0.9
+        ],
+        [
+          11,
+          1.25
+        ],
+        [
+          14,
+          1.25
+        ]
+      ],
+      "ease": "sine",
+      "comment": "crumple forward"
+    },
+    {
+      "node": "jacket",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          2,
+          0.16
+        ],
+        [
+          5,
+          0.35
+        ],
+        [
+          8,
+          0.8
+        ],
+        [
+          11,
+          1.1
+        ],
+        [
+          14,
+          1.1
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "collar",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          2,
+          0.15
+        ],
+        [
+          5,
+          0.3
+        ],
+        [
+          8,
+          0.7
+        ],
+        [
+          11,
+          1.0
+        ],
+        [
+          14,
+          1.0
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "head",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          2,
+          0.25
+        ],
+        [
+          5,
+          0.5
+        ],
+        [
+          8,
+          1.0
+        ],
+        [
+          11,
+          1.35
+        ],
+        [
+          14,
+          1.35
+        ]
+      ],
+      "ease": "sine",
+      "comment": "head droops hard"
+    },
+    {
+      "node": "torso",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          5,
+          -0.08
+        ],
+        [
+          8,
+          -0.28
+        ],
+        [
+          11,
+          -0.4
+        ],
+        [
+          14,
+          -0.4
+        ]
+      ],
+      "ease": "sine",
+      "comment": "knees buckle, body sinks"
+    },
+    {
+      "node": "jacket",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          5,
+          -0.08
+        ],
+        [
+          8,
+          -0.27
+        ],
+        [
+          11,
+          -0.38
+        ],
+        [
+          14,
+          -0.38
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "collar",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          5,
+          -0.1
+        ],
+        [
+          8,
+          -0.3
+        ],
+        [
+          11,
+          -0.42
+        ],
+        [
+          14,
+          -0.42
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "head",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          5,
+          -0.12
+        ],
+        [
+          8,
+          -0.35
+        ],
+        [
+          11,
+          -0.5
+        ],
+        [
+          14,
+          -0.5
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "leg_l",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          4,
+          -0.45
+        ],
+        [
+          8,
+          -0.85
+        ],
+        [
+          11,
+          -1.05
+        ],
+        [
+          14,
+          -1.05
+        ]
+      ],
+      "ease": "sine",
+      "comment": "sit-down collapse, feet kick forward"
+    },
+    {
+      "node": "leg_r",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          4,
+          -0.4
+        ],
+        [
+          8,
+          -0.8
+        ],
+        [
+          11,
+          -0.95
+        ],
+        [
+          14,
+          -0.95
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "arm_l",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          3,
+          0.35
+        ],
+        [
+          8,
+          0.85
+        ],
+        [
+          11,
+          1.05
+        ],
+        [
+          14,
+          1.05
+        ]
+      ],
+      "ease": "sine",
+      "comment": "arms flop forward"
+    },
+    {
+      "node": "arm_l",
+      "prop": "rotation.z",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          8,
+          0.35
+        ],
+        [
+          14,
+          0.35
+        ]
+      ]
+    },
+    {
+      "node": "arm_r",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          3,
+          0.3
+        ],
+        [
+          8,
+          0.75
+        ],
+        [
+          11,
+          0.9
+        ],
+        [
+          14,
+          0.9
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "palm_r",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          4,
+          -0.2
+        ],
+        [
+          8,
+          -0.5
+        ],
+        [
+          11,
+          -0.62
+        ],
+        [
+          14,
+          -0.62
+        ]
+      ],
+      "ease": "sine",
+      "comment": "palm drops to the ground"
+    },
+    {
+      "node": "palm_r",
+      "prop": "position.z",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          8,
+          0.15
+        ],
+        [
+          14,
+          0.15
+        ]
+      ]
+    }
+  ],
+  "output": {
+    "frame": 256
+  },
+  "kind": "action"
+}

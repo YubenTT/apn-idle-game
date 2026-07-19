@@ -1,0 +1,60 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>rig-preview</title>
+<body style="background:#141820;margin:0">
+<canvas id="c" width="1610" height="430"></canvas>
+<script type="module">
+import { drawHeroV2 } from '../js/hero-v2.js?v=golive-pr5';
+import { setHeroRig } from '../js/hero-rig.js?v=golive-pr5';
+
+const load = (src) => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+const [rigImg, rigData] = await Promise.all([
+  load('../assets/mascot/v2/rig.webp'),
+  fetch('../assets/mascot/v2/rig.json').then((r) => r.json()),
+]);
+setHeroRig(rigImg, rigData);
+
+const ctx = document.getElementById('c').getContext('2d');
+ctx.fillStyle = '#141820';
+ctx.fillRect(0, 0, 1610, 430);
+
+// ?cycle — clean 8-frame run strip for GIF assembly (no labels, fixed cells)
+if (new URLSearchParams(location.search).has('cycle')) {
+  const CELL = 150;
+  for (let i = 0; i < 8; i++) {
+    const x = CELL / 2 + i * CELL;
+    const footY = 330;
+    ctx.strokeStyle = 'rgba(120,140,165,0.25)';
+    ctx.beginPath(); ctx.moveTo(x - CELL / 2, footY); ctx.lineTo(x + CELL / 2, footY); ctx.stroke();
+    drawHeroV2(ctx, x, footY, { height: 240, energy: 100, time: i * 0.075, pose: 'run' });
+  }
+  document.title = "rig-ready";
+}
+} else {
+
+const H = 260; // ~2x the in-game 130px for inspection
+const poses = [{ label: 'idle', opts: { time: 1.2, pose: 'idle' } }];
+for (let i = 0; i < 6; i++) poses.push({ label: `run ${i}`, opts: { time: i * 0.1, pose: 'run' } });
+poses.push({ label: 'windup', opts: { time: 0.3, pose: 'scan', attack: 0.3 } });
+poses.push({ label: 'strike', opts: { time: 0.3, pose: 'scan', attack: 0.85 } });
+poses.push({ label: 'crit', opts: { time: 0.3, pose: 'crit', attack: 1, crit: true } });
+poses.push({ label: 'recoil', opts: { time: 0.5, pose: 'damage', hitRecoil: 0.8 } });
+poses.push({ label: 'level', opts: { time: 0.5, pose: 'level', levelT: 0.5 } });
+poses.push({ label: 'defeat', opts: { time: 0.5, pose: 'defeat', defeatT: 0.8 } });
+poses.push({ label: 'sprint', opts: { time: 0.37, pose: 'sprint', sprinting: true } });
+
+poses.forEach((p, i) => {
+  const x = 75 + i * 118;
+  const footY = 372;
+  ctx.strokeStyle = 'rgba(120,140,165,0.25)';
+  ctx.beginPath(); ctx.moveTo(x - 50, footY); ctx.lineTo(x + 50, footY); ctx.stroke();
+  drawHeroV2(ctx, x, footY, { height: H, energy: 100, ...p.opts });
+  ctx.fillStyle = '#8fa3b8';
+  ctx.font = '12px system-ui';
+  ctx.textAlign = 'center';
+  ctx.fillText(p.label, x, 404);
+});
+document.title = "rig-ready";
+}
+</script>
+</body>

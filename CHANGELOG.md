@@ -9,6 +9,79 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Added
 
+- **V3 · Real-mascot asset engine + vinyl creature family.** New build-time
+  3D→2D pipeline (`tools/glb-sprite-engine/`, standard: `docs/ASSET-ENGINE.md`)
+  renders the actual Host GLB — glossy sphere head, controller visor — into
+  8 deterministic clip atlases (idle/run/sprint/attack/crit/hit/death/
+  celebrate) that replace the skeletal rig as the primary hero renderer, with
+  the full V2 juice overlay stack preserved on top. Three new vinyl-toy
+  creatures join the feed-noise family as homage-energy originals: **The
+  Curator** (elite boss with a <34% HP broken phase), **The Recon** and **The
+  Hotshot** (elite regulars), each with idle/advance/attack/hit/death clips
+  drawn through the same atlas pipeline. 24/24 clips pass the new QA gates
+  (node existence, alpha, locomotion anchor stability, action stance-return,
+  atlas budgets, palette identity).
+
+### Added
+
+- V2 Super Polish · Wave 4 QA & ship-readiness: full headless gate re-verified
+  (`run-tests.mjs` ALL PASS, playthrough, pacing profiles, Zone-1000 long-run)
+  plus the complete fresh Chrome matrix — route smoke (3 viewports × zones
+  1/10/11/20/200/201), Build/Gear/Go Live sheet smokes, and Wave 2/3 capture
+  sets — all zero console errors, zero document overflow. Legacy combat text
+  re-anchored to stage-aware origins so floaters/currency/quips rise from the
+  combat cast instead of colliding with the Wave 2 toast banner (canvas y
+  ≈112–162 on every viewport); kill-cluster particles/confetti burst at the
+  body, centered streak milestones sit below the toast band, and zone-clear
+  wipes fall back to body-height text. Docs: ADR-0012 (procedural Host V2 is
+  the shipped runtime character), MASCOT-CANON V2 section, ARCHITECTURE module
+  map. Evidence: `qa/screenshots/v2-final/` (route + sheets), `…/wave2/` (24
+  captures), `…/wave3/` (6 captures). V2 waves 1–4 complete on
+  `v2/super-polish`; pre-V2 state restorable via tag
+  `backup/pre-v2-super-polish`.
+
+- V2 Super Polish · Wave 1 art core: procedural Canvas Host V2 (`js/hero-v2.js`)
+  — one animated character with the canonical silhouette DNA (run cycle,
+  breathe, blink, visor scan sweep, attack/crit anticipation, sprint lean,
+  overdrive hover, damage flinch); procedural feed-noise enemy family with a
+  unified presentation layer for pack targets (`js/enemies-v2.js`: spawn pop,
+  hit squash, death burst, ground shadow); layered editorial scenery with
+  per-zone seeded moods and pack plates as dimmed far layers
+  (`js/scenery-v2.js`); stage-fit scaling keeps cast + HP plates uncropped on
+  short landscape stages (`js/render.js`). Spec:
+  `docs/superpowers/specs/2026-07-18-v2-super-polish.md`.
+
+- V2 Super Polish · Wave 3 juice & feel: kill hit stop (40–110ms timescale dip,
+  bigger on crit kills and boss breaks), tuned screen shake with smooth decay,
+  crit presentation (white-hot flash frame, big gold scale-pop number, radial
+  ring), token-colored death-burst shards with white-hot accents + shock rings
+  (boss: staggered multi-ring), stage-aware effect origins (bursts spawn at the
+  body via `world.groundY`, not the legacy sky line), slim combo decay meter
+  under the streak chip, milestone streak counters (10/25/50) center-stage,
+  zone-clear light sweep + "Zone N cleared" toast + confetti, wired hero
+  `levelT` / `lootT` / `defeatT` clip clocks (rank jump + golden halo ring,
+  gear reach-pull, boss-fail buckle), gear drops fly rarity-colored to the bag
+  FAB with a badge pop, and a Go Live mini-cinematic (screen flash → slow-mo
+  beat → confetti storm + Live Mult count-up). SFX enriched: layered hit/crit/
+  kill cues, loot chirp arpeggio, rank arpeggio, zone fanfare, Go Live resolve
+  chord, combo blip, toggle tick, deny buzz — one modest master bus, all under
+  the existing mute + reduced-motion gates. Hard particle/confetti caps now
+  enforced (PERF-BUDGET). Evidence: `qa/screenshots/v2-wave3/`.
+
+- V2 Super Polish · Wave 2 chrome overhaul: rAF count-up currency counters,
+  glossy Scanner CTA with shine sweep and locked muted state, structured skill
+  chips (name · cost/state · rank pips · Focus charge fill), spring sheet
+  entrances with staggered card rise, sliding nav pill, toned toast banner
+  (info/rank/zone/win/live), live procedural Host in the Gear empty niche, and a
+  first-run coach hint dismissed on the first Scanner upgrade. Landscape docks
+  rebalance 60/40 and hide pips so chip labels never clip. Sheet primaries share
+  the CTA depth language; charged chips use the sheet "can" inset underline.
+  All new motion collapses under reduced motion; new chrome uses derived alpha /
+  gloss / motion tokens only (`--dur-pop`, `--dur-glide`, `--ease-spring`,
+  `--ease-press`, `--apn-primary-a30/-a55`, `--gloss-*`, `--ink-shade-a35`,
+  per-currency `-a14/-a40/-a45`). Evidence: `qa/screenshots/v2-wave2/` (24
+  captures, 3 viewports, zero console errors).
+
 - Added the final five-viewport, seven-screen regression pack (35 accepted
   captures), exact-dimension baseline QA, opt-in browser performance probes, and
   an integrated release report with zero open Blocker/Critical defects.

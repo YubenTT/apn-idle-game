@@ -19,6 +19,7 @@
 | [0009](./ADR-0009-rights-modes-required.md) | Every Game Pack declares a required, validated rights mode | Accepted |
 | [0010](./ADR-0010-extended-full-body-glb.md) | Extended full-body canonical GLB (extends ADR-0003/0005 scope) | Accepted |
 | [0011](./ADR-0011-transitional-rights-pending-review.md) | Transitional `pending-review` warns for wave packs, blocks for launch | Accepted |
+| [0012](./ADR-0012-procedural-host-v2.md) | Procedural Canvas Host V2 is the shipped runtime character; GLB pipeline retired from runtime | Accepted |
 
 ## When to write one
 

@@ -109,18 +109,32 @@ flowchart TB
 
 ### `host-contract.js`
 
-- Sole code owner for the canonical Host GLB path, camera/pivot render lock,
-  118–142px Run presentation gate, placeholder frames, and semantic clip names.
-- `render.js` and contract QA import this module. A future approved export path
-  must import it too rather than retyping a parallel Host vocabulary.
+- Sole code owner for the 118–142px Run presentation gate and the semantic clip
+  vocabulary (`resolveHostClip`), plus the historical GLB path/render-lock
+  constants (superseded as runtime inputs — ADR-0012).
+- `render.js` (via `hero-v2.js`) and contract QA import this module. Any future
+  Host surface must import it too rather than retyping a parallel vocabulary.
 - Contains presentation/asset metadata only. It never owns combat or economy.
 
 ### `render.js`
 
 - Stateless draw from `s` plus an explicit decoded asset store.
-- The scheduled Game Pack owns the happy-path environment and target atlas;
-  procedural Patchline scenery is a missing/slow-asset fallback only.
+- V2: composes the layered world from `scenery-v2.js` (per-zone seeded moods;
+  the scheduled Game Pack plate integrates as a dimmed far layer), targets from
+  `enemies-v2.js`, and the Host from `hero-v2.js`. Stamps `world.groundY` +
+  `world.stageFit` each frame so `game.js` can stage-anchor effects and text.
 - Never grant currency.
+
+### `hero-v2.js` · `enemies-v2.js` · `scenery-v2.js` (V2)
+
+- `hero-v2.js` — procedural Canvas Host; the single runtime character
+  ([ADR-0012](./decisions/ADR-0012-procedural-host-v2.md)). Locked silhouette
+  DNA; semantic poses resolved via `host-contract.js`.
+- `enemies-v2.js` — procedural feed-noise creature family + the unified target
+  presentation layer (shadow, spawn pop, hit squash, death burst, HP plates).
+- `scenery-v2.js` — per-zone seeded editorial moods (skyline, towers, rails,
+  feed cards, props, atmosphere) drawn in parallax layers under the cast.
+- Pure-ish presentation: deterministic from state + time, no DOM, no currency.
 
 ### `assets.js`
 
@@ -163,7 +177,8 @@ s
 ├── run
 │   ├── bytes (Signal), patches (Notes)
 │   └── hero { level, xp, sp, scanner, skills, buildVersion, energy, focus, … }
-├── world       enemies, alerts, floaters, particles, confetti, sprinting, scroll
+├── world       enemies, alerts, floaters, particles, confetti, shocks, sprinting, scroll
+│               (+ cosmetic feel clocks: shake, hitStopT, slowMoT)
 ├── ui          panel, toast, seasonDone, tips, chipPulse, fx
 ├── stats       dps, combo
 └── settings    reducedMotion, sfx, gearSort, gearFilter, lastTs

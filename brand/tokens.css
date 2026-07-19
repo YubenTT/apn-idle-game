@@ -238,6 +238,29 @@
   --ease-out: cubic-bezier(.22,.61,.36,1);
   --ease-in-out: cubic-bezier(.45,0,.15,1);
 
+  /* --- V2 Super Polish · Wave 2 chrome (additive) --------------------------
+     Premium depth + spring motion for HUD/sheets. These are alpha/gloss roles
+     derived from the canonical hues above — one color still does one job. */
+  --apn-primary-a30: rgba(252,18,67,.3);    /* primary CTA resting glow */
+  --apn-primary-a55: rgba(252,18,67,.55);   /* primary CTA press/locked depth */
+  --apn-primary-hi-a35: rgba(255,58,99,.35);/* shine sweep tint on the CTA */
+  --c-signal-a14: rgba(94,176,255,.14);     /* Signal chip gain wash */
+  --c-signal-a45: rgba(94,176,255,.45);     /* Signal glow at full */
+  --c-notes-a14: rgba(255,106,143,.14);     /* Notes chip gain wash */
+  --c-notes-a45: rgba(255,106,143,.45);     /* Notes glow at full */
+  --c-rep-a45: rgba(230,184,77,.45);        /* Sprint held glow */
+  --c-positive-a45: rgba(62,207,142,.45);   /* ready / full-meter glow */
+  --c-info-a40: rgba(98,168,255,.4);        /* Focus charge fill */
+  --gloss-strong: rgba(255,255,255,.3);     /* top inner highlight, primary only */
+  --gloss-soft: rgba(255,255,255,.07);      /* card top edge highlight */
+  --ink-shade-a35: rgba(0,0,0,.35);         /* lower depth edge on raised controls */
+
+  /* --- Motion additions (collapse under the reduced-motion gate below) ----- */
+  --dur-pop: 420ms;                            /* badge pop, sheet spring settle */
+  --dur-glide: 560ms;                          /* counter tween, nav pill travel */
+  --ease-spring: cubic-bezier(.34,1.56,.5,1);  /* overshoot — sheets, pops, pill */
+  --ease-press: cubic-bezier(.3,.7,.4,1);      /* fast press/release physics */
+
   /* --- Touch + safe area ------------------------------------------------- */
   --touch-min: 44px;                 /* iOS min; Android target 48px */
   --safe-top:    env(safe-area-inset-top, 0px);
@@ -249,5 +272,5 @@
 /* Respect the OS/user setting. Motion tokens collapse; the game also exposes an
    in-app "Reduced motion" toggle that must gate the same animations. */
 @media (prefers-reduced-motion: reduce) {
-  :root { --dur-fast: 0ms; --dur-base: 0ms; --dur-slow: 0ms; }
+  :root { --dur-fast: 0ms; --dur-base: 0ms; --dur-slow: 0ms; --dur-pop: 0ms; --dur-glide: 0ms; }
 }
