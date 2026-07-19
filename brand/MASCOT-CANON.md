@@ -155,3 +155,16 @@ same perspective, same outline — on every screen.
 `node qa/check-assets.mjs` additionally fails unless all ten poses share a foot
 pivot within one pixel, head/body ratio within 3%, non-empty visor coverage, the
 18°/9° camera lock, and the canonical GLB source path.
+
+## V3 — engine-rendered canon (current)
+
+Since V3 the canonical mascot pixels are **rendered, not drawn**: the Host GLB
+(`assets/apn-mascot-glb-host.glb`) is animated by `tools/glb-sprite-engine/`
+through deterministic keyframe specs and packed into the 8 clip atlases in
+`assets/mascot/v3/`. The silhouette DNA is unchanged — glossy crimson sphere
+head, integrated black controller visor, capsule torso, stubby arms, red
+underglow base — but it is now *the same 3D body in every frame by
+construction*, which hand-drawn atlases could never guarantee. Any change to
+the mascot must go through the engine (new spec or GLB revision) and re-pass
+the gates in [docs/ASSET-ENGINE](../docs/ASSET-ENGINE.md); hand-editing atlas
+pixels is forbidden.

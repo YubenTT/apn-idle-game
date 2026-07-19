@@ -9,6 +9,21 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Added
 
+- **V3 · Real-mascot asset engine + vinyl creature family.** New build-time
+  3D→2D pipeline (`tools/glb-sprite-engine/`, standard: `docs/ASSET-ENGINE.md`)
+  renders the actual Host GLB — glossy sphere head, controller visor — into
+  8 deterministic clip atlases (idle/run/sprint/attack/crit/hit/death/
+  celebrate) that replace the skeletal rig as the primary hero renderer, with
+  the full V2 juice overlay stack preserved on top. Three new vinyl-toy
+  creatures join the feed-noise family as homage-energy originals: **The
+  Curator** (elite boss with a <34% HP broken phase), **The Recon** and **The
+  Hotshot** (elite regulars), each with idle/advance/attack/hit/death clips
+  drawn through the same atlas pipeline. 24/24 clips pass the new QA gates
+  (node existence, alpha, locomotion anchor stability, action stance-return,
+  atlas budgets, palette identity).
+
+### Added
+
 - V2 Super Polish · Wave 4 QA & ship-readiness: full headless gate re-verified
   (`run-tests.mjs` ALL PASS, playthrough, pacing profiles, Zone-1000 long-run)
   plus the complete fresh Chrome matrix — route smoke (3 viewports × zones
