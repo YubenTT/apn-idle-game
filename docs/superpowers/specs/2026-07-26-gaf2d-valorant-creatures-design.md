@@ -98,4 +98,3 @@ The APN Hero loader and rendering path are unchanged.
   reduced-motion checks are green.
 - Documentation, changelog, progress log, generated catalog, and generated
   asset manifest match the shipped build.
-

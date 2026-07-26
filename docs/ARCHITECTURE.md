@@ -86,6 +86,9 @@ flowchart TB
 - Priority Tag is a `game.js` target-state mechanic. It consumes Focus, records the
   purchased rank on the current enemy, and multiplies only that enemy's Signal and
   Notes reward. `render.js` reads the tag solely to draw its targeting brackets.
+- The first Game Pack's Wave 1–10 cast pools live here as pure domain selectors.
+  They choose existing enemy types only; HP, rewards, kill budgets, and boss
+  cadence keep their existing owners.
 
 ### `route.js`
 
@@ -123,6 +126,10 @@ flowchart TB
   the scheduled Game Pack plate integrates as a dimmed far layer), targets from
   `enemies-v2.js`, and the Host from `hero-v2.js`. Stamps `world.groundY` +
   `world.stageFit` each frame so `game.js` can stage-anchor effects and text.
+- `enemyFrameFor` is the one normal/boss-break frame resolver used by both the
+  renderer and deterministic browser QA.
+- Valorant uses its complete approved GAF2D pack atlas; legacy V3 creature bodies
+  remain available outside that pack.
 - Never grant currency.
 
 ### `hero-v2.js` · `enemies-v2.js` · `scenery-v2.js` (V2)
@@ -141,7 +148,19 @@ flowchart TB
 - Owns browser decode promises and explicit current/next Game Pack references.
 - Deduplicates loads, treats props/masks as optional, releases cold decoded images,
   and never keeps more than two pack records after a transition.
+- Appends the runtime build ID to image/JSON requests so atlas and metadata cache
+  invalidation stays atomic with the importing modules.
 - Reads pure Route scheduling; it does not calculate combat or choose balance.
+
+### `main.js` QA surface
+
+- Production pages expose no state or stepping controls.
+- `?chrome-smoke=1` exposes `window.render_game_to_text`,
+  `window.advanceTime(ms)`, and the existing `window.__APN_QA__` action surface.
+- Adding `qa-manual=1` suppresses the normal animation loop so fixed-step browser
+  evidence cannot race a queued frame.
+- The text snapshot reports only visible Route/pack/enemy/atlas/viewport state.
+  It uses the same boss-frame resolver as Canvas.
 
 ### `ui.js`
 
@@ -208,6 +227,7 @@ Keeps combat deterministic enough for headless tests and fair offline simulation
 | New skill | `content.SKILLS` + `game.combatStats` / cast + optional chip |
 | New boost | `content.META` + `metaPer` usage |
 | New Game Pack | manifest + generated catalog + static atlas; schedule at End Season |
+| New GAF2D static target cast | approved identity project + `gaf2d-sources.json` + deterministic atlas builder |
 | New fallback enemy type | `ENEMY_FLAVOR` + sprite + `typeHpMult` / rewards |
 | New currency | formulas + game grant + HUD chip + save migrate |
 | 3D hero | GLB assets already in `assets/`; replace `drawHero` path |
@@ -220,9 +240,12 @@ qa/run-tests.mjs
   → import game + formulas
   → simulate steps without canvas
   → assert kills, ship, boss, zone > 20, soft HP scale
+  → validate GAF2D approval mappings, wave pools, atlas, and render precedence
 ```
 
 CI runs the same command (see `.github/workflows/ci.yml`).
+The dedicated muted Chrome matrix additionally drives all ten first-pack waves
+at three viewports through the fixed-step QA surface.
 
 ## Non-goals (v1)
 

@@ -1,12 +1,18 @@
-# APN Idle — Asset Production Engine (glb-sprite-engine) v1
+# APN Idle — Character asset production
 
-The standard for producing **every** character asset in APN Idle. This engine is
-how the Host hero and the vinyl creature family were made. Follow it and new
-assets come out consistent, QA'd, and game-ready. **Build-time 3D → runtime 2D**:
-the runtime stays zero-dependency Canvas 2D (ADR-0001); all 3D work happens
-offline and ships as webp clip atlases.
+APN Idle has two controlled build-time lanes.
+Both ship ordinary WebP/JSON into the same zero-dependency Canvas 2D runtime:
 
-## Why this pipeline (decisions, settled)
+| Lane | Use it for | Source authority | Motion owner |
+|---|---|---|---|
+| Animated GLB atlas | Host/legacy characters that need authored clips | model + clip specs | exported atlas frames |
+| Static GAF2D pack atlas | approved pack targets whose motion is already supplied by Canvas | hash-locked GAF2D identity | `enemies-v2.js` transforms |
+
+ADR-0013 authorizes the second lane for the six first-pack creatures.
+It does not change the APN Hero runtime or weaken the identity, rights, upload,
+budget, and release gates.
+
+## Animated GLB lane (settled decisions)
 
 - **Source of truth = real 3D models**, never still-image AI generation.
   Single-image models drift proportions frame-to-frame (the "missing arm"
@@ -20,6 +26,31 @@ offline and ships as webp clip atlases.
 - **Homage, never copy.** Creatures may channel pop-culture energy through
   palette/silhouette/props only. Original names, no trademark logos or outfits.
   Crimson (`--apn-red` family) is reserved for the Host.
+
+## Static GAF2D pack-target lane
+
+Use this lane only when shared Canvas transforms provide every required gameplay
+motion.
+It is not a shortcut for characters that need authored acting.
+
+1. Review the exact GAF2D identity evidence at actual runtime-relevant sizes.
+2. Record the human identity approval so the selected bytes and manifest version
+   are SHA-256 locked.
+3. Run GAF2D integrity QA and deterministic double export.
+4. Store portable asset/manifest paths, approval hashes, fixed crop recipes, and
+   the runtime derivative hash in the pack's `gaf2d-sources.json`.
+5. Build with `scripts/assets/build-gaf2d-targets.mjs --gaf2d-project <path>`.
+   The script rejects absolute mapping paths, stale approvals, changed bytes,
+   wrong manifest versions, invalid crops, and derivative-hash drift.
+   It also requires the recorded ImageMagick and cwebp versions so a toolchain
+   upgrade cannot silently rewrite checked-in pixels.
+6. Ship untrimmed `128×128` cells with the normalized foot-center pivot.
+7. Verify the 72 px common, 128 px boss, break-state, real-game composite, atlas
+   budget, first-playable budget, and muted browser matrix.
+
+Live provider calls and source uploads remain outside repository builds.
+Changing selected identity bytes requires a new human identity approval.
+Runtime spawn/idle/hit/death transforms are not a GAF2D motion approval.
 
 ## Directory contract
 
@@ -104,7 +135,7 @@ hotshot=orange, curator=pale navy-gold). This catches cross-contamination.
   standing→flattened left-to-right, so runtime scrubs `progress = 1 - clock`.
 - **No wall-clock anywhere** — engine steps fixed dt; runtime loops by t*fps.
 
-## Adding a new character (checklist)
+## Adding a new animated GLB character (checklist)
 
 1. Model `models/<name>.js` (primitives/lathes, MeshPhysicalMaterial clearcoat,
    named animatable parts, display base + signature underglow).
@@ -116,3 +147,5 @@ hotshot=orange, curator=pale navy-gold). This catches cross-contamination.
 6. Palette identity check; register in `js/content.js` (CREATURES) and let
    `js/creatures.js` + `render.js` draw it; QA script contract entries.
 7. `node qa/run-tests.mjs` → ALL PASS. Commit assets + specs + evidence.
+
+For static pack targets, use the GAF2D checklist above instead.

@@ -1,15 +1,47 @@
 /** APN Idle canvas — V2 scenery/targets/Host + combat juice overlays */
 
-import { C, clamp, easeOutCubic, easeOutQuad } from './formulas.js?v=golive-pr5';
-import { getCurrentPackAssets } from './assets.js?v=golive-pr5';
-import { HOST_PRESENTATION, resolveHostClip } from './host-contract.js?v=golive-pr5';
-import { drawHeroV2 } from './hero-v2.js?v=golive-pr5';
-import { drawTarget } from './enemies-v2.js?v=golive-pr5';
-import { drawScenery } from './scenery-v2.js?v=golive-pr5';
-import { CREATURES, creatureKindFor } from './content.js?v=golive-pr5';
-import { creatureClipReady, drawCreature } from './creatures.js?v=golive-pr5';
+import { C, clamp, easeOutCubic, easeOutQuad } from './formulas.js?v=gaf2d-creatures-v1';
+import { getCurrentPackAssets } from './assets.js?v=gaf2d-creatures-v1';
+import { HOST_PRESENTATION, resolveHostClip } from './host-contract.js?v=gaf2d-creatures-v1';
+import { drawHeroV2 } from './hero-v2.js?v=gaf2d-creatures-v1';
+import { drawTarget } from './enemies-v2.js?v=gaf2d-creatures-v1';
+import { drawScenery } from './scenery-v2.js?v=gaf2d-creatures-v1';
+import { CREATURES, creatureKindFor } from './content.js?v=gaf2d-creatures-v1';
+import { creatureClipReady, drawCreature } from './creatures.js?v=gaf2d-creatures-v1';
 
 const enemyRenderSize = (enemy) => enemy.type === 'boss' ? 136 : enemy.type === 'patch' ? 100 : 96;
+
+/** Resolve the exact pack-atlas frame used by both Canvas and deterministic QA. */
+export function enemyFrameFor(enemy) {
+  if (!enemy) return null;
+  const hpRatio = enemy.hpMax > 0 ? enemy.hp / enemy.hpMax : 1;
+  return enemy.type === 'boss' && hpRatio < 0.34 ? 'boss-break' : enemy.frame;
+}
+
+/** Keep approved identity names intact while bounding unforeseen pack labels. */
+export function enemyLabelForDisplay(labelSource, isBoss = false) {
+  const label = String(labelSource || '');
+  const limit = isBoss ? 20 : 18;
+  return label.length > limit ? `${label.slice(0, limit - 1)}…` : label;
+}
+
+/** Name approved Valorant identities and V3 variants without changing legacy packs. */
+export function bossBannerFor(activeBoss, zone = 0) {
+  if (!activeBoss) return 'VERSION GATE';
+  const kind = creatureKindFor(activeBoss, zone);
+  const label = kind && CREATURES[kind]
+    ? CREATURES[kind].label
+    : activeBoss.packId === 'valorant'
+      ? activeBoss.label
+      : 'Version Gate';
+  return String(label || 'Version Gate').toUpperCase();
+}
+
+/** Dock the timer below the fixed two-row DOM stage HUD. */
+export function bossTimerYFor(stageHeight) {
+  return Math.min(108, Math.max(0, stageHeight - 34));
+}
+
 export const CANVAS_TONE_TOKENS = Object.freeze({
   signal: '--c-signal',
   notes: '--c-notes',
@@ -171,7 +203,7 @@ export function draw(ctx, w, h, s, assetStore = null) {
     const ratio = clamp(s.world.bossTimer / C.BOSS_TIMER, 0, 1);
     const bx = w * 0.18;
     const bw = w * 0.64;
-    const by = 54;
+    const by = bossTimerYFor(h);
     ctx.fillStyle = 'rgba(10,14,19,0.8)';
     roundRect(ctx, bx, by, bw, 10, 5);
     ctx.fill();
@@ -186,9 +218,11 @@ export function draw(ctx, w, h, s, assetStore = null) {
     ctx.textAlign = 'center';
     // Zone-boss variant: the banner names whichever boss is actually on stage
     const activeBoss = s.world.enemies.find((e) => e.type === 'boss' && e.hp > 0);
-    const bossKind = activeBoss ? creatureKindFor(activeBoss, s.route?.zone ?? 0) : null;
-    const bossBanner = bossKind ? CREATURES[bossKind].label.toUpperCase() : 'VERSION GATE';
-    ctx.fillText(bossBanner, w / 2, by + 22);
+    const banner = bossBannerFor(activeBoss, s.route?.zone ?? 0);
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = 'rgba(6,10,16,0.92)';
+    ctx.strokeText(banner, w / 2, by + 22);
+    ctx.fillText(banner, w / 2, by + 22);
   }
 
   ctx.restore();
@@ -325,7 +359,7 @@ function drawEnemy(ctx, e, gy, t, packAssets = null, reducedMotion = false, fit 
   const isBoss = e.type === 'boss';
   const size = enemyRenderSize(e) * fit;
   const atlas = packAssets?.ready && ready(packAssets.targets) ? packAssets.targets : null;
-  const frameName = isBoss && e.hp / e.hpMax < 0.34 ? 'boss-break' : e.frame;
+  const frameName = enemyFrameFor(e);
   const frame = packAssets?.targetData?.frames?.[frameName];
   const footY = gy - 2;
 
@@ -375,7 +409,7 @@ function drawEnemy(ctx, e, gy, t, packAssets = null, reducedMotion = false, fit 
     ctx.restore();
   }
 
-  const barW = isBoss ? 148 : 112;
+  const barW = isBoss ? 148 : 124;
   const compact = fit < 0.92; // short stages (landscape): slim nameplate, no big card
   const bannerH = compact ? 30 : isBoss ? 62 : 54;
   const barY = Math.max(compact ? 56 : 4, footY - size - bannerH - 8);
@@ -390,10 +424,7 @@ function drawEnemy(ctx, e, gy, t, packAssets = null, reducedMotion = false, fit 
   ctx.font = `800 ${isBoss ? 11 : 10}px system-ui,sans-serif`;
   ctx.textAlign = 'center';
   const labelSource = kind && CREATURES[kind] ? CREATURES[kind].label : e.label;
-  const label =
-    labelSource.length > (isBoss ? 18 : 14)
-      ? `${labelSource.slice(0, isBoss ? 17 : 13)}…`
-      : labelSource;
+  const label = enemyLabelForDisplay(labelSource, isBoss);
   if (compact) {
     // Short stages: the DOM stage-hud owns the sky, so the nameplate docks
     // under the target's feet — name + slim bar, always clear of overlays.

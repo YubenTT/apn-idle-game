@@ -21,8 +21,8 @@ import {
   spentSkillPoints,
   verifyYieldMultiplier,
   relayIdleEfficiency,
-} from './formulas.js?v=golive-pr5';
-import { SEASON, META, SKILLS, ENEMY_FLAVOR, skillSpCost } from './content.js?v=golive-pr5';
+} from './formulas.js?v=gaf2d-creatures-v1';
+import { SEASON, META, SKILLS, ENEMY_FLAVOR, skillSpCost } from './content.js?v=gaf2d-creatures-v1';
 import {
   ensureHub,
   hubOnKill,
@@ -38,7 +38,7 @@ import {
   applyReward,
   seasonLevel,
   SEASON_MILESTONES,
-} from './hub.js?v=golive-pr5';
+} from './hub.js?v=gaf2d-creatures-v1';
 import {
   killLine,
   pick,
@@ -48,8 +48,8 @@ import {
   LEVEL_LINES,
   SHIP_LINES,
   SCANNER_LINES,
-} from './comedy.js?v=golive-pr5';
-import { sfx } from './sfx.js?v=golive-pr5';
+} from './comedy.js?v=gaf2d-creatures-v1';
+import { sfx } from './sfx.js?v=gaf2d-creatures-v1';
 import {
   emptyGear,
   normalizeGear,
@@ -65,9 +65,9 @@ import {
   pickSlotForGear,
   SLOTS,
   BAG_CAP,
-} from './loot.js?v=golive-pr5';
-import { createRouteState, nextSeasonBoundary, packForRoute } from './route.js?v=golive-pr5';
-import { GAME_PACKS } from './generated/game-packs.js?v=golive-pr5';
+} from './loot.js?v=gaf2d-creatures-v1';
+import { createRouteState, nextSeasonBoundary, packForRoute } from './route.js?v=gaf2d-creatures-v1';
+import { GAME_PACKS } from './generated/game-packs.js?v=gaf2d-creatures-v1';
 
 export function createState() {
   return {
@@ -500,8 +500,41 @@ export function confetti(s, x, y, colors, n = 22) {
   }
 }
 
-function pickEnemyType(zone, forceBoss) {
+const VALORANT_WAVE_POOLS = Object.freeze([
+  Object.freeze(['stale']),
+  Object.freeze(['rumor']),
+  Object.freeze(['lag']),
+  Object.freeze(['stale', 'rumor']),
+  Object.freeze(['patch']),
+  Object.freeze(['stale', 'lag']),
+  Object.freeze(['rumor', 'patch']),
+  Object.freeze(['stale', 'rumor', 'lag', 'patch']),
+  Object.freeze(['event']),
+  Object.freeze(['boss']),
+]);
+
+/**
+ * Return the authored enemy-type pool for a 1-based pack wave.
+ * `null` means the pack keeps the legacy probability table below.
+ */
+export function enemyTypesForPackWave(packId, packWave) {
+  if (packId !== 'valorant') return null;
+  const index = Math.floor(Number(packWave)) - 1;
+  return index >= 0 && index < VALORANT_WAVE_POOLS.length ? VALORANT_WAVE_POOLS[index] : null;
+}
+
+/** Pure selector used by spawnEnemy and deterministic QA. */
+export function pickEnemyTypeForPackWave(packId, packWave, random = Math.random) {
+  const pool = enemyTypesForPackWave(packId, packWave);
+  if (!pool?.length) return null;
+  const roll = clamp(Number(random()) || 0, 0, 0.999999999);
+  return pool[Math.floor(roll * pool.length)];
+}
+
+function pickEnemyType(zone, forceBoss, packId) {
   if (forceBoss) return 'boss';
+  const authored = pickEnemyTypeForPackWave(packId, (zone % 10) + 1);
+  if (authored) return authored;
   const r = Math.random();
   if (r < C.CHAMPION_CHANCE) return 'patch';
   if (r < C.CHAMPION_CHANCE + C.ELITE_CHANCE) {
@@ -518,7 +551,7 @@ export function spawnEnemy(s) {
   if (boss && s.world.bossActive) return null;
   if (boss && s.route.killsInZone > 0) return null;
 
-  const type = pickEnemyType(zone, boss && !s.world.bossActive);
+  const type = pickEnemyType(zone, boss && !s.world.bossActive, pack?.id);
   if (type === 'boss') {
     s.world.bossActive = true;
     s.world.bossTimer = C.BOSS_TIMER;

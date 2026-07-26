@@ -1,16 +1,19 @@
-import { GAME_PACKS } from './generated/game-packs.js?v=golive-pr5';
-import { packForRoute } from './route.js?v=golive-pr5';
+import { GAME_PACKS } from './generated/game-packs.js?v=gaf2d-creatures-v1';
+import { packForRoute } from './route.js?v=gaf2d-creatures-v1';
+
+const ASSET_BUILD_ID = 'gaf2d-creatures-v1';
+const versioned = (src) => `./${src}?v=${ASSET_BUILD_ID}`;
 
 const browserImage = (src) => new Promise((resolve, reject) => {
   const image = new Image();
   image.decoding = 'async';
   image.onload = () => resolve(image);
   image.onerror = () => reject(new Error(`Image failed: ${src}`));
-  image.src = `./${src}`;
+  image.src = versioned(src);
 });
 
 const browserJson = async (src) => {
-  const response = await fetch(`./${src}`);
+  const response = await fetch(versioned(src));
   if (!response.ok) throw new Error(`JSON failed ${response.status}: ${src}`);
   return response.json();
 };

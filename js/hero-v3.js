@@ -23,7 +23,7 @@
  * No DOM, no fetch at import time — headless tests never touch the network.
  */
 
-import { clamp } from './formulas.js?v=golive-pr5';
+import { clamp } from './formulas.js?v=gaf2d-creatures-v1';
 
 export const V3_CLIPS = Object.freeze([
   'idle', 'run', 'attack', 'crit', 'sprint', 'hit', 'death', 'celebrate',

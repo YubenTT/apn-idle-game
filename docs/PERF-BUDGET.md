@@ -76,3 +76,11 @@ requires byte-identical output, and enforces at most two hot pack records.
 `qa/check-asset-loader.mjs` additionally executes current/next preload, optional
 fallback, transition release, Zone 200/201, and explicit close semantics without
 a browser; muted Chrome then verifies the real decode/composite path.
+
+## 2026-07-26 GAF2D measurement
+
+- First-pack target atlas: 30,506 bytes (`896×128`, seven cells).
+- First-playable compressed assets: 4,928,494 of the 5,242,879-byte hard cap.
+- Remaining measured headroom: 314,385 bytes.
+- The GAF2D atlas replaces the previous first-pack target texture; it does not
+  add a parallel animation suite or a runtime dependency.

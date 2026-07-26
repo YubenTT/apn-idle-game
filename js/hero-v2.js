@@ -23,9 +23,9 @@
  *   levelT/defeatT/lootT  optional 0..1 clip clocks (wired by later waves)
  */
 
-import { clamp } from './formulas.js?v=golive-pr5';
-import { heroRigReady, drawRigBody } from './hero-rig.js?v=golive-pr5';
-import { heroV3Ready, pickV3, drawV3Frame } from './hero-v3.js?v=golive-pr5';
+import { clamp } from './formulas.js?v=gaf2d-creatures-v1';
+import { heroRigReady, drawRigBody } from './hero-rig.js?v=gaf2d-creatures-v1';
+import { heroV3Ready, pickV3, drawV3Frame } from './hero-v3.js?v=gaf2d-creatures-v1';
 
 const T = 130; // design height in px (HOST_PRESENTATION.target)
 

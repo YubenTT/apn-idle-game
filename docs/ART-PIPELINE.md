@@ -1,4 +1,4 @@
-# Art pipeline — GLB → sprite → atlas → WebP
+# Art pipeline — approved source → atlas → WebP
 
 > How art gets from source into the game. Pragmatic and **optional-build**: the
 > game stays static-file playable ([ADR-0001](./decisions/ADR-0001-vanilla-stack.md)),
@@ -13,13 +13,15 @@ just make it repeatable.
 ## Source of truth
 
 - Mascot geometry: `assets/apn-mascot-glb-*.glb` → [MASCOT-CANON](../brand/MASCOT-CANON.md)
+- First-pack creature identity: sibling GAF2D project, locked by
+  `assets/game-packs/valorant/gaf2d-sources.json` and ADR-0013
 - Art grammar for everything drawn: [ART-DIRECTION](../brand/ART-DIRECTION.md)
 
 ## Stages
 
 ```
-GLB / master ──▶ headless render (Blender) ──▶ cleanup / outline composite
-             ──▶ atlas pack (trim on, pivot preserved) ──▶ WebP convert ──▶ assets/
+Animated: GLB / master ──▶ deterministic render ──▶ union-trim atlas ──▶ WebP
+Static:   approved GAF2D identity ──▶ hash check ──▶ fixed crop/fit ──▶ WebP
 ```
 
 | Stage | Tool | Output |
@@ -27,6 +29,7 @@ GLB / master ──▶ headless render (Blender) ──▶ cleanup / outline com
 | Render mascot frames | Blender CLI (headless), ortho camera per render-lock | trimmed PNG frames |
 | Composite | outline + shadow + gloss-reduction pass | clean PNG frames |
 | Pack | atlas packer, **trim on but pivot data preserved** | atlas PNG + JSON |
+| GAF2D pack derivative | ImageMagick fixed crop/fit after approval-hash validation | untrimmed 128 px cells |
 | Compress | PNG/JPEG → WebP | runtime `.webp` + `.json` |
 
 **Pivot warning:** trimming without preserving pivot makes animations jump. The
@@ -40,16 +43,18 @@ Mirror the layout the research proposed, scoped to this repo:
 ```
 scripts/assets/
   validate-manifests.mjs  # stable pack IDs, roles, asset-path contract
+  build-gaf2d-targets.mjs # approved GAF2D hashes → first-pack target atlas
   pack-atlas.mjs          # deterministic shelf pack, pivot/trim metadata kept
   convert-webp.mjs        # cwebp q82 targets/Host, q78 backgrounds
   verify-sizes.mjs        # hard per-kind and first-playable budgets
   generate-manifest.mjs   # stable SHA-256 cache manifest
 ```
 
-These are **dev-time**, run before commit. They never ship to the player and add
-no npm dependency to the runtime. The packer invokes the installed `ffmpeg`
-binary with an argument array; conversion invokes `/opt/homebrew/bin/cwebp` with
-an argument array. Neither script constructs a shell command string.
+These are **dev-time**, run before commit.
+They never ship to the player and add no npm dependency to the runtime.
+The scripts resolve `ffmpeg`, `magick`, and `cwebp` from the configured
+environment and invoke them with argument arrays.
+No script constructs a shell command string.
 
 Frame input specs include authored trim rectangles and normalized foot pivots.
 The packer sorts frame names before shelf layout, retains `sourceSize`,
@@ -71,7 +76,8 @@ node qa/check-assets.mjs
 |-------|--------|---------|
 | Mascot | 2048² PNG (from GLB) | 2048² WebP + JSON |
 | Items | 2048² PNG | 1024² + 2048² WebP LOD |
-| Enemies | 2048² PNG | 2048² WebP |
+| Animated enemies | GLB/scene-derived frame sets | clip WebP + JSON |
+| Static pack targets | approved GAF2D identity in its authoritative project | `896×128` WebP + JSON |
 | UI / feed icons | SVG | 24/32/48 PNG + atlas |
 | Backgrounds | PNG | WebP |
 | Concept frames | 1284×2778 / 844×390 PNG | review only, not shipped |
@@ -86,6 +92,8 @@ The legacy flat PNGs and two GLBs remain while the canonical Host and Game Pack
 atlases are produced issue-by-issue. The pipeline and gates are active now:
 
 - New sprites must enter through pivot-preserving atlas JSON.
+- The first-pack GAF2D derivative must match its recorded approval and runtime
+  hashes before the builder can replace the checked-in atlas.
 - Runtime rasters are WebP; editable masters stay out of first-playable bytes.
 - Playback remains plain `Image()` + Canvas with no build or runtime dependency.
 - Generated mesh candidates, provider receipts, turntables, and rejected motion

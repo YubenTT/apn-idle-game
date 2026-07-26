@@ -106,3 +106,43 @@ Original prompt: Complete the APN Idle redesign autonomously, including QA, revi
   scenery mood crossfade between zones is a hard cut today; the damage vignette
   from the Wave 3 scope was dropped as N/A (hit stop + shake + crit flash carry
   the hurt read); no V2 perf probe beyond the existing PERF-BUDGET caps yet.
+
+## GAF2D first-pack creature integration · 2026-07-26
+
+- Owner approved the six reviewed creature identities and the static-atlas
+  integration; APN Hero V3 remains out of scope and unchanged.
+- Isolated worktree: `codex/gaf2d-2d-identities`; binding spec and ADR-0013 are
+  committed at `631bcae`.
+- Authoritative GAF2D state: Entry Runner, Veil Operator, Signal Hunter, Site
+  Sentinel, Protocol Courier, and Site Warden are identity-approved, integrity
+  QA-passed, double-export verified, and `exported`; APN Hero remains
+  `awaiting_identity_approval`.
+- Deterministic atlas builder verifies every approved source hash before fixed
+  crops/scales. Two consecutive builds produced identical runtime hashes.
+- Current runtime atlas: 7 cells, `896×128`, 30,506 bytes, SHA-256
+  `a88bc072c0604f8e84cd02e9548989db9313dfe315d655696e98a95a2b2e8252`.
+- Exact derivative tools are pinned to ImageMagick 7.1.2-13 and cwebp 1.6.0.
+  The builder now rejects an approval whose source manifest version is not the
+  current asset manifest version.
+- Independent review found and removed one detached neighboring platform
+  fragment from the Site Warden break crop. RGBA decode, per-cell alpha/
+  occupancy/ground-contact checks, and a connected-component regression now
+  guard the runtime pixels.
+- Wave 1–10 authored cast, real `spawnEnemy()` mapping, GAF2D-over-V3
+  precedence, boss-break threshold, asset loader, and 140 KB target budget
+  focused checks are green.
+- The boss timer names Site Warden rather than the legacy Version Gate fallback,
+  clears the two-row DOM stage HUD at every tested viewport, and remains
+  readable over combat effects; non-Valorant packs retain their legacy banner.
+  First-pack boss help copy is identity-neutral.
+- Measured first-playable assets after integration: 4,928,494 bytes of the
+  5,242,879-byte hard cap.
+- Browser evidence covers all ten waves at 375×812, 428×926, and 844×390:
+  30 wave cases plus three Site Warden break cases, decoded atlas readiness,
+  muted audio, visible boss-timer geometry, no overflow/network/console
+  failures, and a separate assertion that production pages expose no QA
+  controls.
+- `qa/run-tests.mjs`, playthrough, three pacing profiles, long-run, deterministic
+  double build, documentation reconciliation, and clean-state checks are green.
+- Independent findings-first acceptance review closed with no remaining
+  blocking or actionable findings.

@@ -1,0 +1,266 @@
+{
+  "status": "ok",
+  "baseUrl": "http://127.0.0.1:8792",
+  "outputDir": "qa/screenshots/gaf2d-creatures",
+  "verified": 30,
+  "findings": [
+    {
+      "viewport": "mobile-375",
+      "wave": 1,
+      "label": "Entry Runner",
+      "frame": "common-a",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-creatures/mobile-375-wave-01.png"
+    },
+    {
+      "viewport": "mobile-375",
+      "wave": 2,
+      "label": "Veil Operator",
+      "frame": "common-b",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-creatures/mobile-375-wave-02.png"
+    },
+    {
+      "viewport": "mobile-375",
+      "wave": 3,
+      "label": "Signal Hunter",
+      "frame": "common-c",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-creatures/mobile-375-wave-03.png"
+    },
+    {
+      "viewport": "mobile-375",
+      "wave": 4,
+      "label": "Entry Runner",
+      "frame": "common-a",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-creatures/mobile-375-wave-04.png"
+    },
+    {
+      "viewport": "mobile-375",
+      "wave": 5,
+      "label": "Site Sentinel",
+      "frame": "elite",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-creatures/mobile-375-wave-05.png"
+    },
+    {
+      "viewport": "mobile-375",
+      "wave": 6,
+      "label": "Entry Runner",
+      "frame": "common-a",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-creatures/mobile-375-wave-06.png"
+    },
+    {
+      "viewport": "mobile-375",
+      "wave": 7,
+      "label": "Veil Operator",
+      "frame": "common-b",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-creatures/mobile-375-wave-07.png"
+    },
+    {
+      "viewport": "mobile-375",
+      "wave": 8,
+      "label": "Entry Runner",
+      "frame": "common-a",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-creatures/mobile-375-wave-08.png"
+    },
+    {
+      "viewport": "mobile-375",
+      "wave": 9,
+      "label": "Protocol Courier",
+      "frame": "event",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-creatures/mobile-375-wave-09.png"
+    },
+    {
+      "viewport": "mobile-375",
+      "wave": 10,
+      "label": "Site Warden",
+      "frame": "boss",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-creatures/mobile-375-wave-10.png",
+      "bossBreak": {
+        "frame": "boss-break",
+        "hpRatio": 0.33,
+        "screenshot": "qa/screenshots/gaf2d-creatures/mobile-375-wave-10-boss-break.png"
+      }
+    },
+    {
+      "viewport": "mobile-428",
+      "wave": 1,
+      "label": "Entry Runner",
+      "frame": "common-a",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-creatures/mobile-428-wave-01.png"
+    },
+    {
+      "viewport": "mobile-428",
+      "wave": 2,
+      "label": "Veil Operator",
+      "frame": "common-b",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-creatures/mobile-428-wave-02.png"
+    },
+    {
+      "viewport": "mobile-428",
+      "wave": 3,
+      "label": "Signal Hunter",
+      "frame": "common-c",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-creatures/mobile-428-wave-03.png"
+    },
+    {
+      "viewport": "mobile-428",
+      "wave": 4,
+      "label": "Entry Runner",
+      "frame": "common-a",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-creatures/mobile-428-wave-04.png"
+    },
+    {
+      "viewport": "mobile-428",
+      "wave": 5,
+      "label": "Site Sentinel",
+      "frame": "elite",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-creatures/mobile-428-wave-05.png"
+    },
+    {
+      "viewport": "mobile-428",
+      "wave": 6,
+      "label": "Entry Runner",
+      "frame": "common-a",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-creatures/mobile-428-wave-06.png"
+    },
+    {
+      "viewport": "mobile-428",
+      "wave": 7,
+      "label": "Veil Operator",
+      "frame": "common-b",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-creatures/mobile-428-wave-07.png"
+    },
+    {
+      "viewport": "mobile-428",
+      "wave": 8,
+      "label": "Entry Runner",
+      "frame": "common-a",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-creatures/mobile-428-wave-08.png"
+    },
+    {
+      "viewport": "mobile-428",
+      "wave": 9,
+      "label": "Protocol Courier",
+      "frame": "event",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-creatures/mobile-428-wave-09.png"
+    },
+    {
+      "viewport": "mobile-428",
+      "wave": 10,
+      "label": "Site Warden",
+      "frame": "boss",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-creatures/mobile-428-wave-10.png",
+      "bossBreak": {
+        "frame": "boss-break",
+        "hpRatio": 0.33,
+        "screenshot": "qa/screenshots/gaf2d-creatures/mobile-428-wave-10-boss-break.png"
+      }
+    },
+    {
+      "viewport": "landscape-844",
+      "wave": 1,
+      "label": "Entry Runner",
+      "frame": "common-a",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-creatures/landscape-844-wave-01.png"
+    },
+    {
+      "viewport": "landscape-844",
+      "wave": 2,
+      "label": "Veil Operator",
+      "frame": "common-b",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-creatures/landscape-844-wave-02.png"
+    },
+    {
+      "viewport": "landscape-844",
+      "wave": 3,
+      "label": "Signal Hunter",
+      "frame": "common-c",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-creatures/landscape-844-wave-03.png"
+    },
+    {
+      "viewport": "landscape-844",
+      "wave": 4,
+      "label": "Entry Runner",
+      "frame": "common-a",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-creatures/landscape-844-wave-04.png"
+    },
+    {
+      "viewport": "landscape-844",
+      "wave": 5,
+      "label": "Site Sentinel",
+      "frame": "elite",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-creatures/landscape-844-wave-05.png"
+    },
+    {
+      "viewport": "landscape-844",
+      "wave": 6,
+      "label": "Entry Runner",
+      "frame": "common-a",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-creatures/landscape-844-wave-06.png"
+    },
+    {
+      "viewport": "landscape-844",
+      "wave": 7,
+      "label": "Veil Operator",
+      "frame": "common-b",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-creatures/landscape-844-wave-07.png"
+    },
+    {
+      "viewport": "landscape-844",
+      "wave": 8,
+      "label": "Entry Runner",
+      "frame": "common-a",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-creatures/landscape-844-wave-08.png"
+    },
+    {
+      "viewport": "landscape-844",
+      "wave": 9,
+      "label": "Protocol Courier",
+      "frame": "event",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-creatures/landscape-844-wave-09.png"
+    },
+    {
+      "viewport": "landscape-844",
+      "wave": 10,
+      "label": "Site Warden",
+      "frame": "boss",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-creatures/landscape-844-wave-10.png",
+      "bossBreak": {
+        "frame": "boss-break",
+        "hpRatio": 0.33,
+        "screenshot": "qa/screenshots/gaf2d-creatures/landscape-844-wave-10-boss-break.png"
+      }
+    }
+  ],
+  "noGate": {
+    "checked": true
+  }
+}

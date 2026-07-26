@@ -68,4 +68,3 @@ identity review.
 - GAF2D adds a native multi-action character bundle.
 - The runtime texture budget can support lazy multi-clip assets with a measured
   player benefit.
-

@@ -1,32 +1,22 @@
 /** APN Idle bootstrap */
 
-import { C } from './formulas.js?v=golive-pr5';
-import { createState, step, collectAlert, simulateOffline, setSprint, isSprinting, goLive, canGoLive, goLiveAvailableZone } from './game.js?v=golive-pr5';
-import { sizeCanvas, draw } from './render.js?v=golive-pr5';
-import { createAssetStore, preloadRouteAssets, packWindowForRoute } from './assets.js?v=golive-pr5';
-import { bindUI, renderHUD } from './ui.js?v=golive-pr5';
-import { save, load, apply } from './save.js?v=golive-pr5';
-import { loadHeroV3 } from './hero-v3.js?v=golive-pr5';
-import { loadCreatures } from './creatures.js?v=golive-pr5';
-import { setHeroRig } from './hero-rig.js?v=golive-pr5';
+import { C } from './formulas.js?v=gaf2d-creatures-v1';
+import { createState, step, collectAlert, simulateOffline, setSprint, isSprinting, goLive, canGoLive, goLiveAvailableZone } from './game.js?v=gaf2d-creatures-v1';
+import { sizeCanvas, draw, bossTimerYFor, enemyFrameFor } from './render.js?v=gaf2d-creatures-v1';
+import { createAssetStore, preloadRouteAssets, packWindowForRoute } from './assets.js?v=gaf2d-creatures-v1';
+import { bindUI, renderHUD } from './ui.js?v=gaf2d-creatures-v1';
+import { save, load, apply } from './save.js?v=gaf2d-creatures-v1';
+import { loadHeroV3 } from './hero-v3.js?v=gaf2d-creatures-v1';
+import { loadCreatures } from './creatures.js?v=gaf2d-creatures-v1';
+import { setHeroRig } from './hero-rig.js?v=gaf2d-creatures-v1';
 
 const canvas = document.getElementById('game');
 const s = createState();
 const assetStore = createAssetStore();
 const qaParams = new URLSearchParams(location.search);
 const qaMetricsEnabled = qaParams.has('qa_metrics');
-if (qaParams.has('chrome-smoke')) {
-  // Route/render evidence + a thin action surface for the direct Chrome CDP gates.
-  window.__APN_QA__ = {
-    state: s,
-    assets: assetStore,
-    actions: {
-      goLive: (id = null, opts = {}) => goLive(s, id, opts),
-      canGoLive: () => canGoLive(s),
-      goLiveAvailableZone: () => goLiveAvailableZone(s),
-    },
-  };
-}
+const qaEnabled = qaParams.has('chrome-smoke');
+const qaManualMode = qaEnabled && qaParams.has('qa-manual');
 
 const saved = load();
 if (saved) {
@@ -66,6 +56,78 @@ function syncRouteAssets() {
   preloadRouteAssets(assetStore, s.route);
 }
 syncRouteAssets();
+
+let qaStepRemainderMs = 0;
+function renderGameToText() {
+  const packId = assetStore.currentId || s.route.currentPackId;
+  const packAssets = packId ? assetStore.packs.get(packId) : null;
+  const enemy = s.world.enemies.find((candidate) => candidate.hp > 0) || null;
+  const frame = enemyFrameFor(enemy);
+  const hpRatio = enemy?.hpMax > 0 ? enemy.hp / enemy.hpMax : null;
+  const clientWidth = document.documentElement.clientWidth;
+  return JSON.stringify({
+    coordinateSystem: 'Canvas origin top-left; +x right; +y down; enemy x is its foot-center.',
+    routeZone: (s.route.zone | 0) + 1,
+    packWave: ((s.route.zone | 0) % 10) + 1,
+    packId,
+    pack: {
+      ready: packAssets?.ready === true,
+      atlas: {
+        width: packAssets?.targets?.naturalWidth || 0,
+        height: packAssets?.targets?.naturalHeight || 0,
+      },
+    },
+    enemy: enemy
+      ? {
+          type: enemy.type,
+          label: enemy.label,
+          frame,
+          x: Math.round(enemy.displayX),
+          hpRatio: Math.round(hpRatio * 1000) / 1000,
+        }
+      : null,
+    bossBreak: frame === 'boss-break',
+    bossTimerY: s.world.bossActive ? bossTimerYFor(view.h) : null,
+    muted: s.settings.sfx === false,
+    viewport: {
+      width: view.w,
+      height: view.h,
+      overflowX: Math.max(0, document.documentElement.scrollWidth - clientWidth),
+    },
+  });
+}
+
+function advanceQaTime(milliseconds) {
+  const amount = Number(milliseconds);
+  if (!Number.isFinite(amount) || amount < 0 || amount > 10000) {
+    throw new RangeError('advanceTime milliseconds must be finite and between 0 and 10000');
+  }
+  qaStepRemainderMs += amount;
+  const fixedMs = C.FIXED_DT * 1000;
+  const steps = Math.floor((qaStepRemainderMs + 1e-9) / fixedMs);
+  qaStepRemainderMs -= steps * fixedMs;
+  for (let index = 0; index < steps; index += 1) step(s, C.FIXED_DT);
+  syncRouteAssets();
+  draw(view.ctx, view.w, view.h, s, assetStore);
+  renderHUD(s, Math.max(C.FIXED_DT, amount / 1000));
+  return renderGameToText();
+}
+
+if (qaEnabled) {
+  // Query-gated deterministic surface for browser evidence. Production pages do
+  // not expose state or stepping controls.
+  window.__APN_QA__ = {
+    state: s,
+    assets: assetStore,
+    actions: {
+      goLive: (id = null, opts = {}) => goLive(s, id, opts),
+      canGoLive: () => canGoLive(s),
+      goLiveAvailableZone: () => goLiveAvailableZone(s),
+    },
+  };
+  window.render_game_to_text = renderGameToText;
+  window.advanceTime = advanceQaTime;
+}
 
 // Canon Host V3 — GLB-rendered clip atlases are the primary hero body.
 // The V2 skeletal rig loads ONLY as a fallback when V3 fails; both fall
@@ -317,5 +379,10 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 
-requestAnimationFrame(frame);
+if (qaManualMode) {
+  draw(view.ctx, view.w, view.h, s, assetStore);
+  renderHUD(s, C.FIXED_DT);
+} else {
+  requestAnimationFrame(frame);
+}
 console.info('%cAPN Idle', 'color:#FC1243;font-weight:bold', '— All Patch Notes mini-game');

@@ -1,6 +1,6 @@
 /** APN Idle content — skills, permanent Boosts, tips */
 
-import { skillSpCost as buildSkillSpCost, isBossZone } from './formulas.js?v=golive-pr5';
+import { skillSpCost as buildSkillSpCost, isBossZone } from './formulas.js?v=gaf2d-creatures-v1';
 
 export const SEASON = {
   id: 'season_01',
@@ -216,14 +216,13 @@ export const ENEMY_FLAVOR = {
 };
 
 /**
- * V3 vinyl creatures — homage-original APN sentinels drawn from the generated
+ * Legacy V3 vinyl creatures — homage-original APN sentinels drawn from generated
  * atlases in assets/creatures/ (loader: js/creatures.js, stage: js/render.js).
  * Presentational layer only: game.js domain types stay untouched and no
- * existing enemy kind is removed — creatureKindFor maps living targets onto
- * these kinds so the first zones rotate them in:
+ * existing enemy kind is removed. Complete pack-owned casts such as Valorant
+ * keep their approved atlas; elsewhere creatureKindFor maps living targets:
  *  - elites (lag/spoiler/event) → The Recon / The Hotshot, per-enemy stable
- *  - boss → The Curator on odd boss-zone ordinals (the FIRST boss zone
- *    included), classic Version Gate on even ones
+ *  - boss → The Curator on odd boss-zone ordinals, classic Version Gate on even
  * The Curator mirrors the Version Gate broken-phase contract: below 34% HP its
  * base clip swaps to `broken` (wired in render.js).
  */
@@ -276,6 +275,9 @@ function bossZoneOrdinal(zone) {
  */
 export function creatureKindFor(enemy, zone = 0) {
   if (!enemy) return null;
+  // The first pack owns a complete, identity-approved GAF2D cast. Its pack
+  // atlas must never be replaced by the legacy V3 creature rotation.
+  if (enemy.packId === 'valorant') return null;
   if (enemy.type === 'boss') {
     return bossZoneOrdinal(zone) % 2 === 1 ? 'curator' : null;
   }
@@ -292,7 +294,7 @@ export const TIPS = {
   level: 'Rank up! Open Build and strengthen one focused branch.',
   patch: 'Notes banked. Go Live → permanent Rep → Boosts.',
   alert: 'Collect orbs for Energy and Signal. Sprint spends Energy.',
-  boss: 'Version Gate drops gear. Kill before the timer.',
+  boss: 'Final target drops gear. Kill before the timer.',
   ship: 'Go Live to bank Notes for Rep. Stuck? Improve Boosts, Gear, or Scanner.',
   combo: 'Feed streak! Bonus Signal while it holds.',
   season:

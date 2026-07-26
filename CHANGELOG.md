@@ -9,6 +9,18 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Added
 
+- **GAF2D first-pack creature cast.** Six owner-approved APN-original identities
+  now replace the complete Valorant Wave 1–10 target family: Entry Runner, Veil
+  Operator, Signal Hunter, Site Sentinel, Protocol Courier, and Site Warden.
+  One deterministic 30,506-byte `896×128` WebP carries five targets, the boss,
+  and its below-34% break state. Portable source/approval hashes, fixed crop
+  recipes, double-build determinism, authored wave pools, cache-safe asset
+  loading, fixed-step browser hooks, atlas/first-playable budgets, and
+  GAF2D-over-legacy-V3 render precedence are contract-tested. APN Hero V3 is
+  unchanged. The Site Warden timer now clears the two-row stage HUD at every
+  tested viewport while legacy packs retain their Version Gate banner.
+  ADR-0013 defines the controlled static GAF2D lane.
+
 - **V3 · Real-mascot asset engine + vinyl creature family.** New build-time
   3D→2D pipeline (`tools/glb-sprite-engine/`, standard: `docs/ASSET-ENGINE.md`)
   renders the actual Host GLB — glossy sphere head, controller visor — into

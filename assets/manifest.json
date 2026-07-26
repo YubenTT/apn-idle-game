@@ -366,8 +366,8 @@
     {
       "id": "game-packs/catalog.json",
       "path": "assets/game-packs/catalog.json",
-      "bytes": 38048,
-      "sha256": "1da91ca5078170624d462b5e2f81cd648e4f9683290febf46687f7d2bc66f4e3",
+      "bytes": 38032,
+      "sha256": "ab2983e732d2bc7c7214170ab8d6e79508a05a13f660859055e8edfe19c21e93",
       "firstPlayable": null
     },
     {
@@ -1169,6 +1169,13 @@
       "firstPlayable": true
     },
     {
+      "id": "game-packs/valorant/gaf2d-sources.json",
+      "path": "assets/game-packs/valorant/gaf2d-sources.json",
+      "bytes": 5062,
+      "sha256": "bb612ff492a969280609d6bddd18019d90aa5abe894093d6fb4459c2573d962e",
+      "firstPlayable": null
+    },
+    {
       "id": "game-packs/valorant/gen/lineup-v1.png",
       "path": "assets/game-packs/valorant/gen/lineup-v1.png",
       "bytes": 2711881,
@@ -1178,8 +1185,8 @@
     {
       "id": "game-packs/valorant/pack.json",
       "path": "assets/game-packs/valorant/pack.json",
-      "bytes": 1717,
-      "sha256": "4c3b5669eba2ee98720896e7fb77e1e900cc380de12624a809bf47176754e02a",
+      "bytes": 1701,
+      "sha256": "6449aa3f87e00d0c8f95c2e7f354d5e09000d221844e9a182730f2e7bf1dde43",
       "firstPlayable": null
     },
     {
@@ -1193,15 +1200,15 @@
     {
       "id": "game-packs/valorant/targets.json",
       "path": "assets/game-packs/valorant/targets.json",
-      "bytes": 3193,
-      "sha256": "6a6ddb1c6eb146618061cdf158e13e53dc75dd4d8981685af3e0b53f4d50be1b",
+      "bytes": 4999,
+      "sha256": "4c0b536f34e291b337eddfb17cc074c09ee9970aa98c40273e09a97da6fc690b",
       "firstPlayable": null
     },
     {
       "id": "game-packs/valorant/targets.webp",
       "path": "assets/game-packs/valorant/targets.webp",
-      "bytes": 11324,
-      "sha256": "c4035da0674a2fd7339b825aa4931341e403bc5e474de7551b50ae993ca057a7",
+      "bytes": 30506,
+      "sha256": "a88bc072c0604f8e84cd02e9548989db9313dfe315d655696e98a95a2b2e8252",
       "kind": "targets",
       "firstPlayable": true
     },

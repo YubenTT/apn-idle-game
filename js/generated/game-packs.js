@@ -16,9 +16,9 @@ export const GAME_PACKS = deepFreeze([
     "zones": 10,
     "targets": [
       {
-        "id": "entry-duelist",
+        "id": "entry-runner",
         "role": "common-a",
-        "label": "Entry Duelist",
+        "label": "Entry Runner",
         "frame": "common-a",
         "pivot": {
           "x": 0.5,
@@ -26,9 +26,9 @@ export const GAME_PACKS = deepFreeze([
         }
       },
       {
-        "id": "smoke-controller",
+        "id": "veil-operator",
         "role": "common-b",
-        "label": "Smoke Controller",
+        "label": "Veil Operator",
         "frame": "common-b",
         "pivot": {
           "x": 0.5,
@@ -36,9 +36,9 @@ export const GAME_PACKS = deepFreeze([
         }
       },
       {
-        "id": "recon-initiator",
+        "id": "signal-hunter",
         "role": "common-c",
-        "label": "Recon Initiator",
+        "label": "Signal Hunter",
         "frame": "common-c",
         "pivot": {
           "x": 0.5,
@@ -56,9 +56,9 @@ export const GAME_PACKS = deepFreeze([
         }
       },
       {
-        "id": "spike-courier",
+        "id": "protocol-courier",
         "role": "event",
-        "label": "Spike Courier",
+        "label": "Protocol Courier",
         "frame": "event",
         "pivot": {
           "x": 0.5,
@@ -67,8 +67,8 @@ export const GAME_PACKS = deepFreeze([
       }
     ],
     "boss": {
-      "id": "radiant-protocol",
-      "label": "Radiant Protocol",
+      "id": "site-warden",
+      "label": "Site Warden",
       "frame": "boss",
       "breakFrame": "boss-break",
       "pivot": {

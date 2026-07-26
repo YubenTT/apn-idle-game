@@ -9,7 +9,7 @@ import {
   clamp,
   killsNeeded,
   nextGoLiveBoundary,
-} from './formulas.js?v=golive-pr5';
+} from './formulas.js?v=gaf2d-creatures-v1';
 import {
   META,
   SKILLS,
@@ -17,9 +17,9 @@ import {
   TIPS,
   FEED_COPY,
   skillSpCost,
-} from './content.js?v=golive-pr5';
-import { packForRoute, packZoneDisplay } from './route.js?v=golive-pr5';
-import { GAME_PACKS } from './generated/game-packs.js?v=golive-pr5';
+} from './content.js?v=gaf2d-creatures-v1';
+import { packForRoute, packZoneDisplay } from './route.js?v=gaf2d-creatures-v1';
+import { GAME_PACKS } from './generated/game-packs.js?v=gaf2d-creatures-v1';
 import {
   combatStats,
   allocSkill,
@@ -49,7 +49,7 @@ import {
   normalizeGear,
   HOTFIX_FOCUS_COST,
   PRIORITY_FOCUS_COST,
-} from './game.js?v=golive-pr5';
+} from './game.js?v=gaf2d-creatures-v1';
 import {
   formatAffix,
   sellValue,
@@ -63,7 +63,7 @@ import {
   primaryStat,
   queryGearBag,
   toggleJunk,
-} from './loot.js?v=golive-pr5';
+} from './loot.js?v=gaf2d-creatures-v1';
 import {
   DAILY_DEFS,
   WEEKLY_DEFS,
@@ -74,11 +74,11 @@ import {
   seasonLevel,
   SEASON_MILESTONES,
   formatReward,
-} from './hub.js?v=golive-pr5';
-import { skillIco, metaIco, hubIco, gearIcon } from './icons.js?v=golive-pr5';
-import { drawHeroV2 } from './hero-v2.js?v=golive-pr5';
-import { save, clear } from './save.js?v=golive-pr5';
-import { sfx, unlockAudio, setMuted, setReducedMotion } from './sfx.js?v=golive-pr5';
+} from './hub.js?v=gaf2d-creatures-v1';
+import { skillIco, metaIco, hubIco, gearIcon } from './icons.js?v=gaf2d-creatures-v1';
+import { drawHeroV2 } from './hero-v2.js?v=gaf2d-creatures-v1';
+import { save, clear } from './save.js?v=gaf2d-creatures-v1';
+import { sfx, unlockAudio, setMuted, setReducedMotion } from './sfx.js?v=gaf2d-creatures-v1';
 
 const PANEL_TITLES = {
   skills: 'Build',

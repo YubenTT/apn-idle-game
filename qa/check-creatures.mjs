@@ -6,7 +6,7 @@
  *  - every json honors the shared atlas contract (frames, fps, frameSize,
  *    foot anchor [0.5,1], trim rect, in-bounds frames)
  *  - content.js registers the three kinds with APN labels and the rotation
- *    resolver (elites → recon/hotshot, odd boss zones → curator, nothing removed)
+ *    resolver outside the approved GAF2D first pack
  *  - creatures.js exports the loader/blitter; render.js stages them with the
  *    boss broken phase mirrored below 34% HP
  * Run: node qa/check-creatures.mjs (also wired into qa/run-tests.mjs)
@@ -92,8 +92,14 @@ assert(
   CREATURES.curator.role === 'boss' && CREATURES.recon.role === 'elite' && CREATURES.hotshot.role === 'elite',
   'creature roles locked (boss + two elites)'
 );
-assert(creatureKindFor({ type: 'boss', id: 'b1' }, 9) === 'curator', 'first boss zone fields The Curator');
-assert(creatureKindFor({ type: 'boss', id: 'b1' }, 19) === null, 'second boss zone keeps Version Gate');
+assert(
+  creatureKindFor({ type: 'boss', id: 'b1', packId: 'league' }, 9) === 'curator',
+  'legacy first boss ordinal can field The Curator outside Valorant',
+);
+assert(
+  creatureKindFor({ type: 'boss', id: 'b1', packId: 'league' }, 19) === null,
+  'legacy second boss ordinal keeps Version Gate',
+);
 for (const type of ['lag', 'spoiler', 'event']) {
   const kind = creatureKindFor({ type, id: `elite-${type}` }, 0);
   assert(kind === 'recon' || kind === 'hotshot', `elite ${type} rotates to a creature (${kind})`);
@@ -104,5 +110,11 @@ assert(seen.has('recon') && seen.has('hotshot'), 'both elite creatures appear ac
 assert(creatureKindFor({ type: 'stale', id: 'n1' }, 0) === null, 'normal feed-noise kinds untouched');
 assert(creatureKindFor({ type: 'rumor', id: 'n2' }, 0) === null, 'rumor stays procedural');
 assert(creatureKindFor({ type: 'patch', id: 'n3' }, 0) === null, 'Patch Note stays procedural');
+for (const type of ['boss', 'lag', 'spoiler', 'event']) {
+  assert(
+    creatureKindFor({ type, id: `gaf2d-${type}`, packId: 'valorant' }, 9) === null,
+    `Valorant ${type} keeps its GAF2D pack body`,
+  );
+}
 
 console.log('Creatures: ALL PASS');

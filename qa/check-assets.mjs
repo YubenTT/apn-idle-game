@@ -19,6 +19,7 @@ const assert = (condition, message) => {
 
 for (const script of [
   'scripts/assets/pack-atlas.mjs',
+  'scripts/assets/build-gaf2d-targets.mjs',
   'scripts/assets/convert-webp.mjs',
   'scripts/assets/export-mascot.mjs',
   'scripts/assets/produce-game-packs.mjs',

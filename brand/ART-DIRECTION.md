@@ -7,9 +7,12 @@
 
 ## The thesis
 
-**APN Idle is 2D Patchline editorial-action, not a generic cyberpunk battler.**
-Flat-shaded, crisp-outlined, dark editorial night. No 3D toy gloss, no fantasy
-clutter, no random sci-fi kit look.
+**APN Idle is Patchline editorial-action, not a generic cyberpunk battler.**
+UI, environments, icons, FX, and fallback silhouettes stay flat-shaded,
+crisp-outlined, and dark-editorial.
+An owner-approved GAF2D collectible cast may use controlled toy volume inside one
+complete pack under ADR-0013; mixing unrelated render styles inside that cast is
+still prohibited.
 
 ## One grammar for everything
 
@@ -24,6 +27,17 @@ clutter, no random sci-fi kit look.
 
 If two assets sit next to each other and look like they came from different asset
 packs, one of them is wrong.
+
+### Controlled GAF2D character exception
+
+The exception is narrow: a complete target family must share one camera,
+material response, display-base language, scale ladder, direction, and
+bottom-center pivot.
+Every identity is reviewed together, hash-approved separately, and tested in the
+real Run surface at 72/128 px.
+No one-off generated sprite, mixed model family, copied character, official mark,
+or uncontrolled prompt variation qualifies.
+Canvas still supplies the common spawn/hit/death grammar around the sprites.
 
 ## Icon system
 

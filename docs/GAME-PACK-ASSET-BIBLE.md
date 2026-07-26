@@ -21,7 +21,7 @@ if a pack `master/` directory contains anything but generated SVG/MD sources.
 
 | Set | Deliverable | Runtime intent |
 |---|---|---|
-| Host | canonical base animation atlas, six additive role accents, FX atlas | one GLB-derived character; fixed foot pivot |
+| Host | canonical V3 GLB-derived clip atlases, role accents, FX | one runtime character; fixed foot pivot; procedural fallback |
 | Corruption | four-tier fissure, redaction, parasite, armor, fracture, and environment overlays | reused by every pack; Tier 4 is the art cap |
 | Encounter FX | scan beam, hit, crit, boss-break, loot pull, spawn/despawn | token-colored, pre-composited where possible |
 | Route transitions | clean pack arrival, boss clear, End Season handoff, corruption reveal | no full-screen video; reduced-motion variant |
@@ -53,8 +53,10 @@ not simultaneously decoded textures.
 - Recognizability comes from silhouette, environment, signature prop, and color
   hierarchy together. Logos and floating game-title text are not the solution.
 - A target must survive a 72 px silhouette check; a boss must survive at 128 px.
-- Every generated proof is redrawn into the APN grammar. Do not paste screenshots
-  or mix realistic, painterly, 3D-toy, and cartoon rendering in one atlas.
+- Every generated proof is normalized into one approved pack grammar.
+  Do not paste screenshots or mix unrelated realistic, painterly, collectible,
+  and cartoon rendering in one atlas.
+  ADR-0013 governs the approved GAF2D first-pack exception.
 
 ## Clean Era source boards
 
@@ -66,9 +68,14 @@ the five-target-plus-final contract.
 
 - Space: Bind-style tactical corridor, hard sightlines, site crates, teleporter
   geometry, planted-site telemetry.
-- Small rivals: Jett, Cypher, Killjoy, Omen, KAY/O role silhouettes.
-- Final: overclocked KAY/O guarding a planted Spike core; break state removes the
-  outer suppression armor.
+- Small rivals: Entry Runner, Veil Operator, Signal Hunter, Site Sentinel, and
+  Protocol Courier — APN-original tactical archetypes with no copied agent
+  likeness, costume, weapon, logo, or UI.
+- Final: Site Warden, an APN-original shielded protocol guardian; the break state
+  keeps the same identity with a visibly damaged shoulder assembly.
+- Runtime source: six owner-approved GAF2D identities, integrity QA and
+  deterministic double export completed 2026-07-26; portable hashes/crops live
+  in `assets/game-packs/valorant/gaf2d-sources.json`.
 - Official basis: [maps](https://playvalorant.com/en-us/maps/), [beginner's
   guide](https://playvalorant.com/en-us/news/announcements/beginners-guide/), and
   [current agent patch references](https://playvalorant.com/en-us/news/game-updates/valorant-patch-notes-13-00/).
