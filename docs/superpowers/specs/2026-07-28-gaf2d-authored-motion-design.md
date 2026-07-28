@@ -2,47 +2,36 @@
 
 Date: 2026-07-28
 
-Status: The architecture was approved by the owner on 2026-07-28.
-This written specification is awaiting the owner's review before implementation planning.
+Status: Final. The owner delegated final technical review and implementation on 2026-07-28.
+Exact GAF2D identity, motion, rig, and release approvals remain human gates.
 
 ## Goal
 
-Replace the first pack's sliding static targets with character-specific authored 2D motion and
-replace the current APN Hero runtime art with clips that preserve the owner's exact legless,
-floating Hero identity.
+Replace first-pack sliding target cells with readable character-owned 2D motion, and replace the
+current Hero art with clips that preserve the owner's exact legless, floating APN Hero identity.
 
-The complete path remains deterministic, local, provider-free, 3D-free, hash-locked, and
-compatible with the zero-dependency Canvas runtime.
+The path stays deterministic, local, provider-free, 3D-free, hash-locked, Canvas-only, and
+dependency-free at runtime.
 
-## Why the current result is wrong
+## Correct diagnosis
 
-ADR-0013 deliberately selected one static GAF2D cell per target and assigned motion to whole-sprite
-Canvas transforms.
-That decision preserved identity and performance but did not produce walking or character acting.
-The renderer changes position, bob, and squash while repeatedly sampling the same source rectangle.
+The current first-pack renderer changes x-position, bob, and squash while repeatedly sampling one
+static atlas cell. This is movement, not authored character motion.
 
-The Hero is a separate mismatch.
-The current runtime still loads the pre-existing eight V3 clip atlases.
-The GAF2D Hero candidate was never approved or integrated, and its four-view extraction adds legs
-that are absent from the owner's supplied identity reference.
-
-## Superseded decisions
+The current Hero still loads the old eight V3 atlases. The unapproved GAF2D candidate added legs
+that do not exist in the owner's supplied identity reference and cannot be integrated.
 
 This specification supersedes the runtime-motion portions of:
 
 - `docs/superpowers/specs/2026-07-26-gaf2d-valorant-creatures-design.md`;
 - `docs/decisions/ADR-0013-gaf2d-static-creature-atlas.md`.
 
-The six creature identities, wave mapping, original-IP restrictions, source hashes, and pack role
-names remain valid.
-The static runtime atlas and “Hero unchanged” decisions do not.
+The fixed cast, original-IP restrictions, source hashes, wave mapping, and role names remain valid.
+A new ADR records the replacement; history is not rewritten.
 
-A new ADR records the replacement.
-The historical files remain unchanged apart from an explicit superseded-status link.
+## Fixed scope
 
-## Asset scope
-
-The fixed identity count remains seven:
+Exactly seven identities:
 
 - `apn-hero`;
 - `entry-runner`;
@@ -52,53 +41,60 @@ The fixed identity count remains seven:
 - `protocol-courier`;
 - `site-warden`.
 
-No skins, recolors, extra creatures, or one-off wave variants are added.
-The Site Warden broken state remains part of the same asset.
+No skins, recolors, wave variants, extra creatures, 3D assets, or automatic rig authoring.
+`site-warden` owns its broken phase as part of the same asset.
 
-## Authoring boundary
+## Authoring contract
 
-GAF2D remains the canonical approval, lineage, QA, and export authority.
-APN-specific part masks, pivots, pose curves, and clip recipes live in the sibling APN GAF2D
-project, not in the generic GAF2D repository or browser code.
+GAF2D owns manifests, hashes, approvals, QA, and exports. APN-specific masks, pivots, draw order,
+pose curves, and recipes live in the sibling APN GAF2D project.
 
-The motion authoring tool is a deterministic local compositor.
-It consumes:
+Each character is approved as one named motion set, not as unrelated per-clip approvals and not as
+one walk cycle standing in for the other clips.
+The generic GAF2D `MotionSetApproval` hash-locks every required clip, frame, order, timing,
+playback mode, and review hash in one human action.
+
+The deterministic local compositor consumes:
 
 - one exact approved identity image;
-- manually authored alpha masks for movable parts;
-- manually authored normalized pivots;
-- fixed clip recipes and timing curves;
-- a fixed canvas, scale, sampling filter, and encoder configuration.
+- manually reviewed alpha masks for movable parts;
+- explicit draw order and normalized pivots;
+- fixed per-frame part-pose transforms, clip timing, and deformation bounds;
+- a fixed canvas, sampling mode, color mode, and encoder toolchain.
 
-It produces ordinary transparent PNG frames and review contact sheets.
-GAF2D ingests those outputs through its canonical CLI workflow.
-The compositor never approves its own identity, masks, pivots, acting, loop, deformation, or
-release quality.
+It emits transparent PNG frames, actual-size previews, and contact sheets for GAF2D ingest.
+Automatic segmentation may prepare a candidate mask but can never pass the visual gate by itself.
+The compositor cannot approve its own identity, rig, acting, loop, deformation, or release.
 
-This is baked 2D animation, not automatic final-rig authoring and not a 3D pipeline.
+Every recipe must lock:
 
-## Hero identity lock
+- immutable identity-source hash;
+- part names, masks, pivots, and z-order;
+- maximum translation, rotation, and non-uniform scale per part;
+- silhouette and ground-contact tolerances;
+- clip frame count, FPS, playback, and deterministic phase;
+- the exact tool versions and command arguments.
 
-The owner's supplied nine-view image is the identity authority.
-The accepted Hero has:
+## Hero identity and clips
 
-- a glossy red spherical head;
-- one integrated matte-black wraparound visor;
-- a legless red capsule torso;
-- two short detached capsule arms;
-- no hands, feet, shoes, knees, neck, mouth, facial features, accessories, or platform.
+Identity authority is the owner-supplied nine-view APN Hero reference. The operator provides that
+file through an explicit local CLI argument; only its SHA-256 enters portable project metadata.
+The private path and source bytes never enter this repository.
 
-The current legged four-view candidate is rejected and cannot be used as runtime source.
+The accepted Hero has a glossy red spherical head, one integrated matte-black wraparound visor, a
+legless red capsule torso, and two short detached capsule arms. It has no hands, feet, shoes, knees,
+neck, mouth, facial features, accessories, or platform.
 
-Local matting extracts the approved source views without provider upload.
-The review must specifically check gray-background halos, visor geometry, red material continuity,
-and the legless silhouette at gameplay size.
+Local extraction must reject gray-background halos and preserve visor geometry, red material
+continuity, gloss placement, and the legless silhouette at actual gameplay size.
 
-`apn-hero` keeps its editable-rig lane.
-Its manually authored layer/pivot specification must pass GAF2D rig validation and an explicit rig
-approval before runtime export.
+`apn-hero` keeps the editable-rig lane and requires exact identity, motion, and rig approvals.
+Its runtime interface remains:
 
-The runtime retains the existing eight clip names:
+```text
+assets/mascot/v3/{clip}.webp
+assets/mascot/v3/{clip}.json
+```
 
 | Clip | Frames | Playback |
 |---|---:|---|
@@ -111,208 +107,241 @@ The runtime retains the existing eight clip names:
 | `death` | 8 | progress |
 | `celebrate` | 8 | loop |
 
-“Run” and “sprint” mean forward hover/propulsion.
-They do not add legs.
-The motion comes from arm swing, head/body counter-rotation, controlled vertical displacement,
-anticipation, recovery, and silhouette-preserving squash.
+`run` and `sprint` mean forward hover/propulsion. Motion comes from arm swing, head/body
+counter-rotation, restrained vertical displacement, anticipation, recovery, and
+silhouette-preserving squash—never added legs.
 
-The existing `assets/mascot/v3/{clip}.webp|json` runtime interface remains unchanged.
-Only approved source lineage and atlas bytes change.
+## Creature clips and semantics
 
-## Creature motion lock
-
-Every creature receives these five clip families:
+Every creature owns:
 
 | Clip | Frames | Playback |
 |---|---:|---|
 | `idle` | 8 | loop |
 | `advance` | 8 | loop |
-| `attack` | 6 | progress |
+| `engaged` | 6 | loop |
 | `hit` | 4 | progress |
 | `death` | 8 | progress |
 
-Site Warden additionally receives an 8-frame looping `broken` clip.
+`site-warden` additionally owns an 8-frame looping `broken` clip.
 
-Motion follows anatomy:
+`engaged` is deliberate: enemies do not execute a domain attack in the current game. It represents
+the close-range brace/reaction while the Hero attacks and must not imply enemy damage timing.
 
-- Entry Runner uses a quick alternating step with forward torso intent.
-- Veil Operator uses a low hover cycle with counter-rotating shutters and arm balance.
-- Signal Hunter uses a measured step with sensor and orb follow-through.
-- Site Sentinel uses a heavy planted march with shoulder and arm counter-motion.
-- Protocol Courier uses a guarded step that keeps its core stable and readable.
-- Site Warden uses a slow weighted march; `broken` has asymmetric guarded breathing without
-  changing identity.
+Clip precedence is exact:
 
-The display base may remain visually stable while the body moves above it.
-Whole-sprite translation, bob, squash, or runtime x-position changes cannot satisfy authored
-motion acceptance by themselves.
+```text
+death > hit > broken > advance > engaged > idle
+```
 
-## Runtime bundle
+Loops use simulation time plus a stable per-entity phase; progress clips use the existing hit/death
+progress clocks. Frame choice never depends on render count or refresh rate.
 
-Each character ships one WebP atlas and one JSON descriptor under:
+Acting follows anatomy:
+
+- Entry Runner: fast alternating step and forward torso intent;
+- Veil Operator: low hover, shutter counter-rotation, arm balance;
+- Signal Hunter: measured step, sensor/orb follow-through;
+- Site Sentinel: heavy planted march and shoulder counter-motion;
+- Protocol Courier: guarded step with a stable core;
+- Site Warden: slow weighted march; asymmetric guarded `broken` breathing.
+
+A stable display base is allowed. Whole-sprite translation, runtime bob, camera motion, or global
+squash cannot satisfy authored-motion acceptance.
+
+## Motion bundle v1
+
+Each creature ships:
 
 ```text
 assets/game-packs/valorant/characters/<asset-id>/motion.webp
 assets/game-packs/valorant/characters/<asset-id>/motion.json
 ```
 
-The descriptor uses grammar `gaf2d-motion-bundle-v1` and contains:
+`gaf2d-motion-bundle-v1` is one character-owned, matrix-packed atlas. It contains:
 
-- fixed frame rectangles;
-- clip name, first frame, frame count, FPS, and playback mode;
-- untrimmed frame size;
-- one bottom-center normalized pivot;
-- trim union;
-- source asset ID;
-- current identity, motion, and rig approval hashes as applicable;
-- source manifest hash;
-- atlas hash;
-- deterministic toolchain facts.
+- grammar, asset ID, image-relative portable path, atlas dimensions, and atlas SHA-256;
+- untrimmed frame size, trim union, and one normalized bottom-center pivot;
+- named clips with playback, FPS, and ordered frame rectangles;
+- current identity and motion approval hashes;
+- the current GAF2D motion-set candidate and approval hashes;
+- rig approval hash when applicable;
+- source manifest hash and exported artifact hash;
+- encoder name/version and canonical arguments.
 
-The game repository stores portable mappings and hashes only.
-It does not store private source media, local absolute paths, review packages, or signed URLs.
+Part-pose transforms vary by frame according to the approved acting recipe.
+After compositing those poses on one source canvas, GAF2D applies one global normalization transform
+and one bottom-center pivot across the character's entire approved motion set.
+All atlas rectangles are integer, positive, non-overlapping, and inside the declared atlas.
+Atlas dimensions are at most `2048×2048`; packing uses rows/columns, never one unbounded horizontal
+strip.
 
-The legacy `targets.webp` remains only as a load-failure fallback during rollout.
-It is not sufficient for acceptance and cannot take precedence after an animated character bundle
-is ready.
+The game stores runtime derivatives and portable hashes only—no private source, review package,
+absolute path, or signed URL.
 
-## Runtime modules
+## Loader and lifecycle
 
-Add a pack-owned motion loader with three responsibilities:
+Add a pure validator/frame selector and a browser resource store. The validator has no DOM or
+network dependency.
 
-1. validate and load `gaf2d-motion-bundle-v1`;
-2. select loop or progress frames from existing game state;
-3. draw one frame at the current bottom-center pivot.
+The store:
 
-`render.js` selects clips from existing state:
+- fetches and validates JSON before decode;
+- verifies the fetched atlas hash before accepting it;
+- decodes asynchronously with `createImageBitmap` where available;
+- coalesces duplicate requests;
+- warms the current and next wave's possible identity set;
+- releases cold bitmaps with `ImageBitmap.close()` where supported;
+- parses no JSON and allocates no image inside a frame draw.
 
-- normal presence uses `idle` or `advance`;
-- attack timing uses `attack`;
-- recent damage uses `hit`;
-- defeat uses `death`;
-- Site Warden below 34% HP uses `broken` when no stronger one-shot is active.
+Boot waits for the current wave's required motion set before simulation begins. While a later wave
+is warming, the next spawn—not the whole UI—is held at the between-wave boundary. A normal,
+successful load never displays a static cell first.
 
-The loader fails soft per asset.
-Failure draws the legacy static target and records one diagnostic without breaking combat.
-The QA harness treats any fallback during the canonical wave 1–10 run as a failure.
+One failing asset logs one structured, deduplicated diagnostic and draws the legacy `targets.webp`
+cell. This is resilience only: canonical wave 1–10 QA fails if a motion fallback is observed.
 
-The Hero continues through `hero-v3.js`.
-No APN GAF2D project path is fetched by the browser.
+The existing pack atlas remains available during rollout but never outranks a ready bundle.
+The browser never reads a GAF2D project path.
 
-## Performance
+Runtime ownership is exclusive:
 
-The runtime remains static-file-only and dependency-free.
+- `apn-hero` is loaded only by `hero-v3.js` from `assets/mascot/v3/{clip}.webp|json`;
+- the six creature IDs are loaded only by the pack motion store from their character-owned bundle;
+- the Hero never resolves through pack metadata;
+- a mapped creature never resolves through the legacy global creature loader;
+- `targets.webp` is the mapped creature's failure-only fallback, never a competing primary source.
 
-The motion bundle budget is:
+QA rejects duplicate ownership, a missing expected owner, or a ready identity drawn from the wrong
+loader path.
 
-- at most 160 KB per common/event creature;
-- at most 240 KB for Site Warden;
-- at most 640 KB for all eight Hero clips;
-- at most 1.8 MB total new compressed motion bytes;
-- below 5 MB first-playable transfer;
-- no more than one decoded current enemy bundle plus one prefetched next-wave bundle;
-- no per-frame image allocation or JSON parsing.
+## Performance contract
 
-The pack loader prefetches the next deterministic wave identity after the current bundle becomes
-ready.
-It does not load all creature atlases at boot.
+Compressed limits:
 
-Reduced-motion mode keeps authored frame changes but disables nonessential camera and whole-sprite
-amplitude.
-It does not replace animation with a static cell.
+- common/event creature bundle: `≤ 160 KB` each;
+- Site Warden bundle: `≤ 240 KB`;
+- all Hero WebP clips: `≤ 640 KB`;
+- all new/replaced first-pack motion WebP + JSON: `≤ 1.8 MB`;
+- measured first-playable transfer: `< 5,242,879 bytes`.
+
+Decoded limits:
+
+- each common/event creature atlas: `≤ 6 MiB RGBA`;
+- Site Warden atlas: `≤ 8 MiB RGBA`;
+- every atlas dimension: `≤ 2048 px`;
+- current + next wave creature motion: `≤ 32 MiB RGBA`;
+- entire hot Canvas texture set: `< 64 MiB`;
+- no more than the current/next wave identity union remains decoded.
+
+The asset manifest must represent files actually fetched before play, not every file under
+`assets/`. Reference images, GLBs, inactive legacy creature sets, and cold pack assets cannot be
+marked first-playable merely because they ship in the repository. Motion must fit the cap by
+replacing obsolete hot art or by loading later; the budget is never raised silently.
+
+## Reduced motion
+
+Reduced-motion mode preserves essential state-readable frame changes at lower intensity:
+
+- authored clips remain active;
+- nonessential camera shake, spawn overshoot, idle bob, and whole-sprite amplitude are removed or
+  reduced;
+- hit/death state remains legible;
+- no path freezes to one static cell.
+
+Standard and reduced modes use the same asset lineage and pivot.
 
 ## Deterministic build
 
-The builder:
+The builder accepts the GAF2D project root explicitly and:
 
-- accepts the GAF2D project root as an explicit argument;
-- validates current manifest and approval hashes before reading frames;
-- rejects missing clip ranges, duplicate frames, invalid pivots, non-portable paths, stale
-  approvals, and unexpected tool versions;
-- writes through a temporary directory and atomically replaces complete outputs;
-- produces stable JSON serialization;
-- produces identical file hashes across two unchanged builds.
+- validates current source, manifest, approval, and export hashes;
+- rejects a single-cycle approval where the APN delivery requires the complete named clip set;
+- rejects missing clips, duplicate frames, invalid pivots, stale approval, non-portable paths, and
+  unknown tool versions;
+- writes to a temporary directory and atomically replaces a complete bundle;
+- emits canonical JSON;
+- matrix-packs inside the atlas bounds;
+- invokes pinned `cwebp` arguments with `-exact`, without stochastic `-pre` and without `-mt`;
+- proves same-toolchain reproducibility with two clean builds and equal hashes.
 
-No network, provider, image generation, private-media upload, licensed Spine invocation, publish,
-push, or deploy occurs.
+The contract does not claim cross-version or cross-platform encoder byte identity. Reproducibility
+is scoped to the recorded toolchain.
+
+## Automated and visual QA
+
+Headless gates:
+
+- descriptor schema, hash, path, bounds, overlap, pivot, and clip validation;
+- loop/progress frame selection from timestamp/progress;
+- pack role → asset mapping and all wave 1–10 pools;
+- exact clip precedence, including `broken`;
+- deduplicated fallback and bitmap release;
+- Hero's exact eight-clip contract;
+- current GAF2D lineage;
+- exact required-clip coverage by one current motion-set approval;
+- deterministic double build;
+- compressed, decoded, hot-texture, and first-playable budgets;
+- generated manifest and documentation consistency.
+
+Browser gates use `?chrome-smoke=1` and deterministic `window.advanceTime(ms)`. They capture the same
+entity at three fixed simulation timestamps and assert:
+
+- at least two frame indexes and pixel hashes differ;
+- an authored body-part pose changes;
+- bottom-center pivot drift is at most one pixel;
+- the body stays within canvas and atlas bounds;
+- no matte halo, clipping, jitter, foot sliding, decode placeholder, or fallback appears.
+
+Run waves 1–10 at `375×812`, `428×926`, and `844×390`, in standard and reduced motion. Console,
+overflow, long-run, pacing, and existing visual gates remain mandatory.
 
 ## Human gates
 
-Work pauses only for exact GAF2D gates:
+Implementation may proceed mechanically, but exact artifacts stop at:
 
-1. Hero identity approval of the legless candidate;
-2. batch identity refresh if changing motion intent stales the six existing approvals;
-3. batch motion approval after inspecting all clip contact sheets;
-4. Hero rig approval after inspecting masks, pivots, deformation limits, and gameplay proof;
-5. release authorization before any push, publish, deploy, or shipping action.
+1. legless Hero identity approval;
+2. refreshed identity approval if a manifest change stales an existing approval;
+3. batch motion approval after contact-sheet and temporal proof review;
+4. Hero rig approval after mask, pivot, z-order, and deformation review;
+5. release authorization before push, publish, deploy, or shipping.
 
-Mechanical QA may reject an artifact but never records these approvals.
+QA can reject bytes; it cannot record these approvals.
 
-## Automated QA
+## Documentation and acceptance
 
-Headless tests cover:
+Add ADR-0014 and update architecture, art pipeline, asset engine, asset catalog, pack asset bible,
+performance budget, QA checklist/report, definition of done, changelog, and both progress logs.
+Regenerate catalogs/manifests only through their documented scripts.
 
-- descriptor validation and path safety;
-- loop and progress frame selection;
-- pack-role to asset mapping;
-- wave 1–10 clip selection;
-- Site Warden broken precedence;
-- fallback behavior;
-- Hero's exact eight-clip contract;
-- current approval and source-hash validation;
-- deterministic double build;
-- asset and first-playable size budgets;
-- documentation and generated manifest consistency.
+Acceptance is complete when:
 
-Temporal browser QA captures the same character at three fixed timestamps.
-It fails unless:
+- Hero matches the exact legless reference at gameplay size;
+- all six first-pack creatures show part-level authored motion;
+- no accepted character merely slides a static cell;
+- all required GAF2D approval, QA, lineage, and export hashes are current;
+- normal play shows no fallback or decode placeholder;
+- deterministic headless, temporal, responsive, reduced-motion, long-run, and documentation gates
+  pass;
+- compressed and decoded budgets pass;
+- no provider call, external media upload, paid call, 3D pipeline, publish, push, or deploy occurs.
 
-- at least two authored frame indexes differ;
-- the sampled frame pixel hashes differ;
-- the body-part pose changes;
-- the pivot remains within one pixel;
-- the body stays inside the canvas;
-- no matte halo, clipping, jitter, foot sliding, or unexpected fallback is visible.
+## Research basis
 
-The real-game matrix covers waves 1–10 at:
-
-- 375 px mobile;
-- 428 px mobile;
-- 844×390 landscape;
-- standard and reduced motion.
-
-The console must remain free of errors.
-Long-run, playthrough, pacing, overflow, and existing visual gates remain required.
-
-## Documentation
-
-Add ADR-0014 for authored GAF2D motion.
-Update:
-
-- `docs/ARCHITECTURE.md`;
-- `docs/ART-PIPELINE.md`;
-- `docs/ASSET-ENGINE.md`;
-- `docs/ASSETS.md`;
-- `docs/GAME-PACK-ASSET-BIBLE.md`;
-- `docs/PERF-BUDGET.md`;
-- `docs/QA-CHECKLIST.md`;
-- `docs/DEFINITION-OF-DONE.md`;
-- `CHANGELOG.md`;
-- `PROGRESS.md`;
-- `qa/QA-REPORT.md`.
-
-Generated asset catalogs and manifests are regenerated with their documented scripts.
-
-## Acceptance criteria
-
-- APN Hero matches the owner's legless source identity at gameplay size.
-- Every first-pack creature shows authored part-level motion during gameplay.
-- No accepted creature merely slides a static cell.
-- All required GAF2D identity, motion, rig, QA, lineage, and export records are current.
-- The game loads only portable, hash-verified runtime derivatives.
-- Two unchanged builds produce identical descriptor and atlas hashes.
-- All headless, temporal, browser, responsive, reduced-motion, long-run, and documentation gates
-  pass.
-- Runtime budgets pass.
-- No provider call, external media upload, paid call, 3D pipeline, publish, push, or deployment
-  occurs.
+- Canvas sprite rectangles and source/destination drawing:
+  <https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage>
+- Async bitmap decode and explicit graphics-resource release:
+  <https://developer.mozilla.org/en-US/docs/Web/API/Window/createImageBitmap>,
+  <https://developer.mozilla.org/en-US/docs/Web/API/ImageBitmap/close>
+- Canvas size limits, including the `4096×4096` iOS ceiling:
+  <https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/canvas>
+- Timestamp-based animation and background-tab behavior:
+  <https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame>
+- Named clips and per-frame animation durations:
+  <https://docs.godotengine.org/en/latest/classes/class_spriteframes.html>
+- Matrix sprite sheets and animation tags:
+  <https://www.aseprite.org/docs/sprite-sheet/>, <https://www.aseprite.org/docs/tags/>
+- Reduced-motion preference:
+  <https://www.w3.org/TR/mediaqueries-5/>
+- Recorded WebP encoder options:
+  <https://developers.google.com/speed/webp/docs/cwebp>
