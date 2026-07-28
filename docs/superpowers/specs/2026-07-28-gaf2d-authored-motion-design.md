@@ -14,14 +14,39 @@ stage. The deterministic frame selection, alpha extraction, shared
 normalization, temporal review, runtime, tests, derivative build, and release
 remain local and provider-free.
 
-Live source production is fixed to exactly one focused five-second 480p
-`grok_video_v15` job for each of the 39 required clips. Every job is
-image-conditioned by the current hash-approved, single-subject, platform-free
-identity bytes as its first source. Source upload is limited to those approved
-bytes. Cost must be known and within an explicit per-run credit budget before a
-generation job can be created. Model fallback, extra candidates, automatic
-creative approval, 3D generation, rig approval, export, push, and deploy are
-not authorized by this stage.
+The closed world remains exactly one candidate for each of the 39 required
+clips. Live attempts must be image-conditioned by the current hash-approved,
+single-subject, platform-free identity bytes. Source upload is limited to those
+approved bytes. Cost must be known and within an explicit per-run credit budget
+before a generation job can be created. Any provider/model change must be an
+explicit recorded contract revision; silent fallback, extra candidates,
+automatic creative approval, 3D generation, rig approval, export, push, and
+deploy are not authorized by this stage.
+
+Execution on 2026-07-28 selected two valid Seedance 2.0 loop sources: APN Hero
+`idle` and Entry Runner `advance`. Higgsfield then stopped all new creates
+before job creation with `grace_daily_limit_reached`; no blocked attempt spent
+credits. The project budget was returned to zero. The remaining 37 clips use a
+deterministic project-local authored-motion fallback built directly from the
+same approved identity bytes. Provider-derived and locally authored frames
+must pass the same alpha, anatomy, temporal, hash, and explicit human
+motion-set approval gates.
+
+The final pre-approval candidate contains exactly 7 assets, 39 clips, and 276
+fixed-rate 640 × 640 RGBA frames. Two unchanged clean builds are byte-identical.
+All seven V2 named sets are current and every asset is exactly
+`awaiting_motion_approval`; every approval map still contains identity only.
+No rig, pack, export, game integration, push, or deploy action belongs to this
+gate.
+
+The final real-browser gate loads all seven self-contained named-set reviews in
+Local Studio at `http://127.0.0.1:43127/`. Each surface contains the complete
+ordered frame sheet and exact-cadence animated temporal proof and advertises
+only `motion-set.approve.preview` before a human supplies approval fields. A
+separate client-controlled playback rate is intentionally not review authority:
+the script-free portable HTML uses exact cadence for feel and the complete
+ordered frame sheet for deterministic slow inspection. No browser visit,
+selection, or preview writes an approval.
 
 The complete execution contract is
 `docs/superpowers/plans/2026-07-28-apn-live-motion-production.md`.
@@ -94,14 +119,18 @@ playback mode, and review hash in one human action.
 The deterministic local compositor consumes:
 
 - one exact approved, single-subject, platform-free identity image;
-- manually reviewed alpha masks for movable parts;
-- explicit draw order and normalized pivots;
-- fixed per-frame part-pose transforms, clip timing, and deformation bounds;
+- one asset-specific, normalized influence profile for head, torso, arms, and
+  available locomotion parts;
+- fixed body-height-relative translations and rotations, clip timing, phase,
+  and deformation bounds;
 - a fixed canvas, sampling mode, color mode, and encoder toolchain.
 
 It emits transparent PNG frames, actual-size previews, and contact sheets for GAF2D ingest.
-Automatic segmentation may prepare a candidate mask but can never pass the visual gate by itself.
-The compositor cannot approve its own identity, rig, acting, loop, deformation, or release.
+Its Gaussian part-influence field preserves one connected source silhouette
+without inventing geometry or claiming a finished rig. Mechanical readability,
+silhouette-IoU, opaque-area, new-hole, alpha-border, floor/fringe, loop, and
+held-terminal checks may reject a clip, but cannot approve identity, acting,
+loop feel, deformation, rig quality, or release.
 
 Turnarounds and contact sheets are comparison evidence only. The
 image-conditioned motion source is exactly one isolated character in the
@@ -115,11 +144,13 @@ character atlas, pivot, or approval hash.
 Every recipe must lock:
 
 - immutable identity-source hash;
-- part names, masks, pivots, and z-order;
-- maximum translation, rotation, and non-uniform scale per part;
+- part names, normalized influence anchors, and authoring algorithm version;
+- maximum body-height-relative translation and rotation per part;
 - silhouette and ground-contact tolerances;
 - clip frame count, FPS, playback, and deterministic phase;
-- the exact tool versions and command arguments.
+- exact emitted-frame hashes plus the deterministic clean-build equality
+  witness. Local tool argv and checkout paths are operator evidence, not
+  portable approval authority unless a later schema records them explicitly.
 
 ## Hero identity and clips
 
@@ -485,7 +516,8 @@ acceptance is complete only when:
 - deterministic headless, temporal, responsive, reduced-motion, long-run, and documentation gates
   pass;
 - compressed and decoded budgets pass;
-- no provider call, external media upload, paid call, 3D pipeline, publish, push, or deploy occurs.
+- no further or unauthorized provider call, external media upload, or
+  unbudgeted paid call occurs; no 3D pipeline, publish, push, or deploy occurs.
 
 ## Research basis
 
