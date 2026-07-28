@@ -71,7 +71,7 @@ playback mode, and review hash in one human action.
 
 The deterministic local compositor consumes:
 
-- one exact approved identity image;
+- one exact approved, single-subject, platform-free identity image;
 - manually reviewed alpha masks for movable parts;
 - explicit draw order and normalized pivots;
 - fixed per-frame part-pose transforms, clip timing, and deformation bounds;
@@ -80,6 +80,15 @@ The deterministic local compositor consumes:
 It emits transparent PNG frames, actual-size previews, and contact sheets for GAF2D ingest.
 Automatic segmentation may prepare a candidate mask but can never pass the visual gate by itself.
 The compositor cannot approve its own identity, rig, acting, loop, deformation, or release.
+
+Turnarounds and contact sheets are comparison evidence only. The
+image-conditioned motion source is exactly one isolated character in the
+intended gameplay camera and neutral starting pose. Its bytes must match the
+current identity approval before a provider can be constructed or contacted.
+Display bases, stands, pedestals, floors, cast shadows, reflections, underglow,
+labels, and checkerboards are prohibited in candidate and frame pixels. A
+renderer-owned gameplay shadow may be drawn separately and is not part of the
+character atlas, pivot, or approval hash.
 
 Every recipe must lock:
 
@@ -176,8 +185,8 @@ Acting follows anatomy:
 - Protocol Courier: guarded step with a stable core;
 - Site Warden: slow weighted march; asymmetric guarded `broken` breathing.
 
-A stable display base is allowed. Whole-sprite translation, runtime bob, camera motion, or global
-squash cannot satisfy authored-motion acceptance.
+A baked display base or stand is forbidden. Whole-sprite translation, runtime
+bob, camera motion, or global squash cannot satisfy authored-motion acceptance.
 
 ## Motion bundle v1
 

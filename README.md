@@ -289,6 +289,7 @@ every doc + the source-of-truth table (which doc wins on which topic).
 | [REDESIGN-PLAN.md](./docs/REDESIGN-PLAN.md) | Execution plan — sequenced issue backlog |
 | [ART-PIPELINE.md](./docs/ART-PIPELINE.md) | Approved GAF2D identity/motion → deterministic runtime bundles |
 | [authored-motion design](./docs/superpowers/specs/2026-07-28-gaf2d-authored-motion-design.md) | Hero + creature clip, runtime, budget, QA, and human-gate contract |
+| [motion-ready identity seeds](./docs/decisions/ADR-0016-motion-ready-identity-seeds.md) | Single-subject, platform-free source contract for authored motion |
 | [PERF-BUDGET.md](./docs/PERF-BUDGET.md) | Load + runtime budgets |
 | [QA-CHECKLIST.md](./docs/QA-CHECKLIST.md) | V1 quality gate |
 | **Engineering / governance** | |

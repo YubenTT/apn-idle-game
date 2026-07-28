@@ -22,6 +22,9 @@
 - [ ] **Character authority is singular** — a mapped identity draws one current,
       hash-locked character-owned bundle; static translation, bob, camera motion,
       or squash never counts as authored locomotion.
+- [ ] **Motion seed is clean** — image-conditioned motion starts from the exact
+      approved single subject; no turnaround cell, display base, stand, floor,
+      shadow, underglow, or review fixture is baked into character pixels.
 - [ ] **Creative gates are real** — automated QA may reject identity, motion, rig,
       or release bytes, but never records the required human approval.
 - [ ] **Domain purity kept** — combat/economy math stays in `formulas.js` /

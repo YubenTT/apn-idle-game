@@ -68,8 +68,10 @@ It does not substitute a different body or bypass approved authored frames.
 ## Approval order
 
 1. Register the owner reference in GAF2D without uploading it to a provider.
-2. Prepare and inspect front, three-quarter, side, and back identity evidence.
-3. Obtain the exact human identity approval.
+2. Prepare front/three-quarter/side/back comparison evidence and one isolated,
+   legless, platform-free three-quarter motion seed.
+3. Inspect the seed at gameplay size and obtain the exact human identity
+   approval over those candidate bytes.
 4. Prepare one complete eight-clip motion set and inspect every temporal proof.
 5. Obtain the exact human motion approval and rig approval only if the selected lane needs it.
 6. Run complete GAF2D QA, deterministic export, APN bundle validation, three-viewport browser QA,

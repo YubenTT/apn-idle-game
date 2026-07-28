@@ -21,13 +21,14 @@ just make it repeatable.
 ## Stages
 
 ```
-Hero:   identity lock ──▶ complete motion + rig locks ──▶ set.json + eight clip pairs
-GAF2D:  identity lock ──▶ named motion-set lock ──▶ matrix atlas + descriptor
+Hero:   single-subject seed ──▶ identity lock ──▶ complete motion + rig locks ──▶ set.json + eight clip pairs
+GAF2D:  single-subject seed ──▶ identity lock ──▶ named motion-set lock ──▶ matrix atlas + descriptor
 Static: pack target atlas ──▶ failure-only fallback or unmapped legacy pack
 ```
 
 | Stage | Tool | Output |
 |-------|------|--------|
+| Prepare motion seed | owner reference or generated identity → local alpha/seed QA | one platform-free subject; sheets remain reference-only |
 | Prepare Hero evidence | GAF2D identity + named motion-set workflows | reviewed, hash-locked frames |
 | Composite | one approved shared transform + controlled cleanup | clean PNG frames |
 | Pack | atlas packer, **trim on but pivot data preserved** | atlas PNG + JSON |
@@ -68,6 +69,10 @@ baseline pivots (`foot` is retained only in legacy coordinate names).
 The packer sorts frame names before shelf layout, retains `sourceSize`,
 `trimOffset`, and `pivot`, and emits stable JSON. `qa/check-assets.mjs` rejects a
 missing pivot, an out-of-bounds rect, an oversized asset, or a third hot pack.
+
+ADR-0016 applies before motion generation: no display base, stand, pedestal,
+floor, cast shadow, reflection, or underglow may be baked into identity or
+motion pixels. Scene-owned ground/hover shadow is drawn separately at runtime.
 
 Run the contract before every art commit:
 

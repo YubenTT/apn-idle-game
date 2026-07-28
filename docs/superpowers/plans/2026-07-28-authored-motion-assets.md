@@ -1,5 +1,10 @@
 # Authored Motion Asset Production and Integration Plan
 
+> **Motion-seed correction (2026-07-28):** ADR-0016 supersedes every step below
+> that could treat a turnaround/contact sheet as a motion candidate. Those
+> sheets remain reference evidence. Every image-conditioned motion batch starts
+> from a separately reviewed single-subject, platform-free seed.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Produce, review, approve, export, and integrate exact authored motion for APN Hero plus the fixed six-creature first-pack cast without changing identity count or bypassing a GAF2D human gate.
@@ -17,6 +22,8 @@
 - Each character uses one current GAF2D named motion-set approval covering every clip.
 - Automatic masks are candidates only; exact identity, motion, Hero rig, and release remain human gates.
 - One shared source canvas, pivot, and normalization transform covers each approved character set.
+- Turnarounds/contact sheets are reference evidence only; one platform-free
+  subject is the identity candidate and first motion source.
 - No private media enters git; no absolute source path enters portable metadata.
 - No network/provider call, paid call, private upload, 3D, licensed Spine execution, publish, push, or deploy.
 
@@ -28,27 +35,31 @@
 - Create: `tools/build_apn_hero_identity.py`
 - Create: `tools/test_build_apn_hero_identity.py`
 - Create: `review/apn-hero-legless-contact-sheet.png`
+- Create: `generated/motion-seeds-v2/apn-hero.png`
 - Create through GAF2D: `assets/apn-hero/work/identity/candidates/<hash>.png`
 - Replace through GAF2D review workflow: `assets/apn-hero/review/identity/**`
 
 **Interfaces:**
 - Consumes: the already ingested nine-view source under `assets/apn-hero/work/manual/image/`
-- Produces: one transparent, legless, four-view identity candidate and actual-size proof
+- Produces: one transparent, legless four-view comparison proof plus one
+  transparent, legless, platform-free three-quarter identity candidate
 
 - [ ] **Step 1: Write failing matting and silhouette tests**
 
 ```python
 def test_hero_candidate_is_legless_and_transparent() -> None:
     image = Image.open(OUTPUT).convert("RGBA")
-    assert image.size == (1400, 560)
+    assert image.size == (512, 512)
     assert image.getbbox() is not None
     assert alpha_edge_contact(image) == 0
     assert opaque_components_below_torso(image) == 0
     assert visor_region_is_present(image)
 ```
 
-The test also requires four view cells, transparent corners, no gray fringe above tolerance, red
-head/body continuity, black visor occupancy, and stable per-view scale.
+The motion-seed test requires one major subject, transparent corners, no gray
+fringe above tolerance, red head/body continuity, black visor occupancy, and no
+wide baseline component consistent with a platform. The separate comparison
+proof still verifies four stable views.
 
 - [ ] **Step 2: Run the focused test and confirm the red state**
 
@@ -62,7 +73,8 @@ Expected: fail because the new candidate builder/output is absent.
 
 - [ ] **Step 3: Implement deterministic local extraction**
 
-The builder accepts `--source`, `--output`, and `--contact-sheet` arguments. It crops the canonical
+The builder accepts `--source`, `--output`, `--contact-sheet`, and
+`--motion-seed` arguments. It crops the canonical
 front, three-quarter, side, and back cells from the nine-view board; estimates the neutral gray
 background only from each crop border; flood-removes border-connected pixels within a fixed
 CIELAB-distance threshold; preserves interior visor black; defringes RGB only where alpha is
@@ -85,7 +97,7 @@ Use the canonical manual image registration path, then:
 uv run --project ../gaf2d gaf2d identity prepare apn-hero \
   --project . \
   --reference <registered-nine-view-path> \
-  --candidate <registered-legless-candidate-path> \
+  --candidate <registered-single-subject-motion-seed-path> \
   --json
 ```
 

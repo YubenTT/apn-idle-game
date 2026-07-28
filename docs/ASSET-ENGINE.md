@@ -28,9 +28,10 @@ the current GAF2D identity/motion approval chain.
 - **The engine is the animator.** Animation is declared as keyframe tracks over
   named scene nodes and stepped deterministically (fixed dt, no wall-clock).
   Consistency is guaranteed by construction.
-- **Vinyl-toy art direction.** Glossy volumetric primitives, chibi proportions
-  (head ≈ 45% of height), display base with signature underglow ring. Every
-  character — hero or creature — belongs to the same collectible family.
+- **Legacy vinyl-toy art direction.** Historical GLB-derived characters used
+  glossy volumetric primitives, chibi proportions, and a display base with
+  signature underglow. New GAF2D motion-ready identities follow ADR-0016:
+  platform-free character pixels with scene-owned ground presentation.
 - **Homage, never copy.** Creatures may channel pop-culture energy through
   palette/silhouette/props only. Original names, no trademark logos or outfits.
   Crimson (`--apn-red` family) is reserved for the Host.
@@ -155,7 +156,8 @@ hotshot=orange, curator=pale navy-gold). This catches cross-contamination.
 ## Maintaining a legacy GLB-derived character (not a new-character path)
 
 1. Model `models/<name>.js` (primitives/lathes, MeshPhysicalMaterial clearcoat,
-   named animatable parts, display base + signature underglow).
+   named animatable parts, historical display base + signature underglow). This
+   maintenance path must not feed a GAF2D motion-ready identity.
 2. Turntable self-review (4 stills, LOOK at them) before writing any spec.
 3. Write the canon clip specs for its tier (table above).
 4. `node tools/glb-sprite-engine/capture.mjs --spec … --out assets/creatures/<name>/`
