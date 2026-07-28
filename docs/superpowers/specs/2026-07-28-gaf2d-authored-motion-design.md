@@ -5,12 +5,34 @@ Date: 2026-07-28
 Status: Final. The owner delegated final technical review and implementation on 2026-07-28.
 Exact GAF2D identity, motion, rig, and release approvals remain human gates.
 
+## Live source-production authorization
+
+The owner explicitly authorized live authored-motion source production on
+2026-07-28 after approving all seven identities. This authorization supersedes
+the earlier `provider-free` wording only for the private pre-production source
+stage. The deterministic frame selection, alpha extraction, shared
+normalization, temporal review, runtime, tests, derivative build, and release
+remain local and provider-free.
+
+Live source production is fixed to exactly one focused five-second 480p
+`grok_video_v15` job for each of the 39 required clips. Every job is
+image-conditioned by the current hash-approved, single-subject, platform-free
+identity bytes as its first source. Source upload is limited to those approved
+bytes. Cost must be known and within an explicit per-run credit budget before a
+generation job can be created. Model fallback, extra candidates, automatic
+creative approval, 3D generation, rig approval, export, push, and deploy are
+not authorized by this stage.
+
+The complete execution contract is
+`docs/superpowers/plans/2026-07-28-apn-live-motion-production.md`.
+
 ## Goal
 
 Replace first-pack sliding target cells with readable character-owned 2D motion, and replace the
 current Hero art with clips that preserve the owner's exact legless, floating APN Hero identity.
 
-The path stays deterministic, local, provider-free, 3D-free, hash-locked, Canvas-only, and
+After its explicitly authorized live source stage, the path stays
+deterministic, local, provider-free, 3D-free, hash-locked, Canvas-only, and
 dependency-free at runtime.
 
 ## Correct diagnosis

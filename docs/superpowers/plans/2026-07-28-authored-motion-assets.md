@@ -1,5 +1,11 @@
 # Authored Motion Asset Production and Integration Plan
 
+> **Live-source amendment (2026-07-28):** The owner later authorized the
+> bounded live source-production stage defined in
+> `2026-07-28-apn-live-motion-production.md`. That plan supersedes this
+> document's provider/network prohibition only for the 39 fixed source jobs;
+> every downstream deterministic and human-gated requirement remains in force.
+
 > **Motion-seed correction (2026-07-28):** ADR-0016 supersedes every step below
 > that could treat a turnaround/contact sheet as a motion candidate. Those
 > sheets remain reference evidence. Every image-conditioned motion batch starts
@@ -25,7 +31,8 @@
 - Turnarounds/contact sheets are reference evidence only; one platform-free
   subject is the identity candidate and first motion source.
 - No private media enters git; no absolute source path enters portable metadata.
-- No network/provider call, paid call, private upload, 3D, licensed Spine execution, publish, push, or deploy.
+- No provider action outside the separately authorized 39-job live-source
+  plan; no 3D, licensed Spine execution, publish, push, or deploy.
 
 ---
 
