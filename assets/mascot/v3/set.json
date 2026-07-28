@@ -1,0 +1,56 @@
+{
+  "clips": {
+    "attack": {
+      "descriptor": "attack.json",
+      "descriptorSha256": "daa2fd0a87c2fd347fe71901dc023293c8b972282a7090dda1a8841723bda770",
+      "image": "attack.webp",
+      "imageSha256": "7d8ae131213fddc538707ce5c70f29d8ce3f75e6ee67353e772f761d70a41b49"
+    },
+    "celebrate": {
+      "descriptor": "celebrate.json",
+      "descriptorSha256": "74386ee2cbbb7ad636007f896d94455d83121b09ac52b846f0f168c250480d2a",
+      "image": "celebrate.webp",
+      "imageSha256": "996e42b0f3ae8d14e663bfa310f7894196cb86133f8729a775ffddaa9ca6a17e"
+    },
+    "crit": {
+      "descriptor": "crit.json",
+      "descriptorSha256": "ad8a93abecf65537bdb5721280c479204e92ea576f69dd0f65dde4b43f48d308",
+      "image": "crit.webp",
+      "imageSha256": "0178c8826550921fb05d0a07694a2e073e0a94da24bfac5bedc0c446bed60ba2"
+    },
+    "death": {
+      "descriptor": "death.json",
+      "descriptorSha256": "927e497b167b5a92698fe416ffd77293d8f0b7d3195fc6a3b207ec7de1f70259",
+      "image": "death.webp",
+      "imageSha256": "76d16ed213759410fd3a8b7c4d6c588c49947ba5c8dbef25b3eb45b4f0f9fa22"
+    },
+    "hit": {
+      "descriptor": "hit.json",
+      "descriptorSha256": "da2c7033594e80541ddf0c587b91d3e94b4942c511aae2ad5a1dde0bf9509f9c",
+      "image": "hit.webp",
+      "imageSha256": "9f53439c7e31a06583f29c98d631c1c3dc796fde36cc18852ed04131803f1082"
+    },
+    "idle": {
+      "descriptor": "idle.json",
+      "descriptorSha256": "98a788a82e59fc79cbedd7621f2e03dace0d685160b8f2c4d1d770d004ddd2c4",
+      "image": "idle.webp",
+      "imageSha256": "0d501c0ad7beb503255ffe97eedf2b651c9e9aacfc57cd954caecca152c29ac1"
+    },
+    "run": {
+      "descriptor": "run.json",
+      "descriptorSha256": "3a0e58f170a91af0abc3bb0195ac1e749029017371e6f2162178016b4407a533",
+      "image": "run.webp",
+      "imageSha256": "0aef7d64e849b0ab61a1f646d7363757187ababce63c0d530b6fe2cb7a4df6ae"
+    },
+    "sprint": {
+      "descriptor": "sprint.json",
+      "descriptorSha256": "8856bd334b8fa220f1e453f65d4e405c56b1c883f827eeb3dfb82aa921016f12",
+      "image": "sprint.webp",
+      "imageSha256": "370ad5c8405a46cca024601b864760dc5a8ee95ea72a4e6b336f6797df36bd97"
+    }
+  },
+  "grammar": "gaf2d-hero-set-v1",
+  "lineage": null,
+  "status": "historical",
+  "toolchain": null
+}

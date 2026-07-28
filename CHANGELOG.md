@@ -9,6 +9,19 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Added
 
+- **Character-owned authored-motion foundation.** APN Idle now has one closed,
+  hash-locked `gaf2d-motion-bundle-v1` contract, a deterministic approved-export
+  builder, pack-owned current/next-wave warming, bounded decode and release,
+  live OS + saved reduced-motion authority, and real-browser temporal gates.
+  The Hero failure body is explicitly legless and the old segmented rig cannot
+  silently become its fallback. Generic packs and renamed bosses derive
+  behavior from trusted pack roles rather than identity names or array
+  positions. Offline QA uses synthetic approved fixtures only: the production
+  Valorant pack intentionally has no motion mapping yet, its six creatures
+  still use the approved static atlas, and the shipped Hero V3 bytes remain
+  historical until the exact identity, complete motion-set, optional rig, and
+  release gates are passed. ADR-0014 and ADR-0015 define those boundaries.
+
 - **GAF2D first-pack creature cast.** Six owner-approved APN-original identities
   now replace the complete Valorant Wave 1–10 target family: Entry Runner, Veil
   Operator, Signal Hunter, Site Sentinel, Protocol Courier, and Site Warden.

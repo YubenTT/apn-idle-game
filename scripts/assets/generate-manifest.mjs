@@ -2,18 +2,28 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { sha256, stableJson, walkFiles } from './lib.mjs';
+import { firstPlayableAssetPaths } from './first-playable.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-const assetsRoot = path.join(root, 'assets');
-const output = path.join(assetsRoot, 'manifest.json');
 
-export function generateManifest() {
+export function generateManifest(options = {}) {
+  const rootDir = options.rootDir ? path.resolve(options.rootDir) : root;
+  const assetsRoot = options.assetsRoot
+    ? path.resolve(options.assetsRoot)
+    : path.join(rootDir, 'assets');
+  const output = options.outputFile
+    ? path.resolve(options.outputFile)
+    : path.join(assetsRoot, 'manifest.json');
+  const canonicalOutput = path.join(assetsRoot, 'manifest.json');
   const catalogFile = path.join(assetsRoot, 'game-packs/catalog.json');
-  const catalog = fs.existsSync(catalogFile) ? JSON.parse(fs.readFileSync(catalogFile, 'utf8')) : [];
-  const hotIds = new Set(catalog.slice(0, 2).map((pack) => pack.id));
+  const catalog = options.packs ??
+    (fs.existsSync(catalogFile)
+      ? JSON.parse(fs.readFileSync(catalogFile, 'utf8'))
+      : []);
+  const firstPlayablePaths = firstPlayableAssetPaths(catalog);
   const runtimeFiles = walkFiles(assetsRoot)
     .filter((file) => !file.includes(`${path.sep}master${path.sep}`))
-    .filter((file) => file !== output)
+    .filter((file) => file !== output && file !== canonicalOutput)
     .filter((file) => /\.(webp|png|jpg|svg|glb|json)$/.test(file));
   const assets = runtimeFiles.map((file) => {
     const relative = path.relative(assetsRoot, file).replaceAll(path.sep, '/');
@@ -29,7 +39,7 @@ export function generateManifest() {
       bytes: fs.statSync(file).size,
       sha256: sha256(file),
       ...(kind ? { kind } : {}),
-      firstPlayable: !relative.startsWith('game-packs/') || (packMatch && hotIds.has(packMatch[1])),
+      firstPlayable: firstPlayablePaths.has(`assets/${relative}`),
     };
   });
   const manifest = {
@@ -38,6 +48,7 @@ export function generateManifest() {
     assets,
     packs: catalog.map((pack, index) => ({ id: pack.id, hot: index < 2 })),
   };
+  fs.mkdirSync(path.dirname(output), { recursive: true });
   fs.writeFileSync(output, stableJson(manifest));
   return manifest;
 }

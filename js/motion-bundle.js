@@ -31,8 +31,7 @@ const MIN_CLIP_FPS = 1;
 const MAX_CLIP_FPS = 60;
 const MAX_ATLAS_DIMENSION = 2048;
 const COMMON_DECODED_BYTES = 6 * 1024 * 1024;
-const WARDEN_DECODED_BYTES = 8 * 1024 * 1024;
-const BROKEN_ASSET_ID = 'site-warden';
+const BOSS_DECODED_BYTES = 8 * 1024 * 1024;
 const REQUIRED_LINEAGE_HASHES = Object.freeze([
   'identityApprovalSha256',
   'motionApprovalSha256',
@@ -40,7 +39,40 @@ const REQUIRED_LINEAGE_HASHES = Object.freeze([
   'motionSetApprovalSha256',
   'sourceManifestSha256',
   'exportArtifactSha256',
+  'derivativeToolchainSha256',
 ]);
+const EXPECTED_FRAME_COUNTS = Object.freeze({
+  idle: 8,
+  advance: 8,
+  engaged: 6,
+  hit: 4,
+  death: 8,
+  broken: 8,
+});
+const TOP_LEVEL_KEYS = new Set([
+  'grammar',
+  'assetId',
+  'image',
+  'atlas',
+  'frameSize',
+  'trim',
+  'pivot',
+  'clips',
+  'lineage',
+  'encoder',
+]);
+const ATLAS_KEYS = new Set(['width', 'height', 'sha256']);
+const SIZE_KEYS = new Set(['width', 'height']);
+const RECT_KEYS = new Set(['x', 'y', 'width', 'height']);
+const PIVOT_KEYS = new Set(['x', 'y']);
+const CLIP_KEYS = new Set(['playback', 'fps', 'frames']);
+const LINEAGE_KEYS = new Set([
+  ...REQUIRED_LINEAGE_HASHES,
+  'rigApprovalSha256',
+]);
+const ENCODER_KEYS = new Set(['name', 'version', 'arguments']);
+const EXACT_ENCODER_VERSION = '1.6.0';
+const EXACT_ENCODER_ARGUMENTS = Object.freeze(['-exact', '-q', '90']);
 
 const isObject = (value) =>
   value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -56,19 +88,54 @@ function rectsOverlap(left, right) {
   );
 }
 
+function rejectUnknownProperties(value, allowed, label, addError) {
+  if (!isObject(value)) return;
+  let count = 0;
+  for (const key in value) {
+    if (!Object.hasOwn(value, key)) continue;
+    count += 1;
+    if (!allowed.has(key)) addError(`${label}: unexpected property "${key}"`);
+    if (count > allowed.size) {
+      addError(`${label}: expected at most ${allowed.size} properties`);
+      break;
+    }
+  }
+}
+
+function exactStringArrayEqual(left, right) {
+  if (!Array.isArray(left) || left.length !== right.length) return false;
+  for (let index = 0; index < right.length; index += 1) {
+    if (left[index] !== right[index]) return false;
+  }
+  return true;
+}
+
+function boundedOwnKeys(value, maxKeys) {
+  if (!isObject(value)) return { keys: [], overflow: false };
+  const keys = [];
+  for (const key in value) {
+    if (!Object.hasOwn(value, key)) continue;
+    if (keys.length >= maxKeys) return { keys, overflow: true };
+    keys.push(key);
+  }
+  return { keys, overflow: false };
+}
+
 /**
  * Validate untrusted descriptor JSON without throwing.
  *
- * The expected asset ID comes from pack metadata and therefore also selects the
- * trusted decoded-byte class; an untrusted descriptor cannot promote itself to
- * the larger Site Warden allowance.
+ * The expected asset ID and optional role come from pack metadata. Descriptor
+ * contents never select the trusted boss byte class or boss-only clip grammar.
+ * Omitting options preserves the conservative non-boss contract.
  */
-export function validateMotionBundle(data, expectedAssetId) {
+export function validateMotionBundle(data, expectedAssetId, options = {}) {
   const errors = [];
   const addError = (message) => {
     if (errors.length < MAX_VALIDATION_ERRORS) errors.push(message);
   };
+  const isBoss = options?.role === 'boss';
   if (!isObject(data)) return ['bundle: must be an object'];
+  rejectUnknownProperties(data, TOP_LEVEL_KEYS, 'bundle', addError);
 
   if (data.grammar !== MOTION_GRAMMAR) {
     addError(`grammar: expected "${MOTION_GRAMMAR}"`);
@@ -91,6 +158,7 @@ export function validateMotionBundle(data, expectedAssetId) {
   }
 
   const atlas = data.atlas;
+  rejectUnknownProperties(atlas, ATLAS_KEYS, 'atlas', addError);
   const atlasSizeValid =
     isObject(atlas) &&
     isPositiveInteger(atlas.width) &&
@@ -107,12 +175,9 @@ export function validateMotionBundle(data, expectedAssetId) {
       );
     }
     const decodedBytes = atlas.width * atlas.height * 4;
-    const assetId =
-      typeof expectedAssetId === 'string' ? expectedAssetId : data.assetId;
-    const decodedLimit =
-      assetId === BROKEN_ASSET_ID
-        ? WARDEN_DECODED_BYTES
-        : COMMON_DECODED_BYTES;
+    const decodedLimit = isBoss
+      ? BOSS_DECODED_BYTES
+      : COMMON_DECODED_BYTES;
     if (decodedBytes > decodedLimit) {
       addError(
         `atlas: decoded RGBA bytes ${decodedBytes} exceed ${decodedLimit}`,
@@ -124,6 +189,7 @@ export function validateMotionBundle(data, expectedAssetId) {
   }
 
   const frameSize = data.frameSize;
+  rejectUnknownProperties(frameSize, SIZE_KEYS, 'frameSize', addError);
   const frameSizeValid =
     isObject(frameSize) &&
     isPositiveInteger(frameSize.width) &&
@@ -133,6 +199,7 @@ export function validateMotionBundle(data, expectedAssetId) {
   }
 
   const trim = data.trim;
+  rejectUnknownProperties(trim, RECT_KEYS, 'trim', addError);
   const trimValid =
     isObject(trim) &&
     Number.isInteger(trim.x) &&
@@ -151,6 +218,7 @@ export function validateMotionBundle(data, expectedAssetId) {
     addError('trim: must be inside the untrimmed frame size');
   }
 
+  rejectUnknownProperties(data.pivot, PIVOT_KEYS, 'pivot', addError);
   if (
     !isObject(data.pivot) ||
     data.pivot.x !== 0.5 ||
@@ -162,6 +230,7 @@ export function validateMotionBundle(data, expectedAssetId) {
   if (!isObject(data.lineage)) {
     addError('lineage: must be an object');
   } else {
+    rejectUnknownProperties(data.lineage, LINEAGE_KEYS, 'lineage', addError);
     for (const field of REQUIRED_LINEAGE_HASHES) {
       if (!SHA256.test(data.lineage[field] || '')) {
         addError(
@@ -179,18 +248,26 @@ export function validateMotionBundle(data, expectedAssetId) {
     }
   }
 
+  rejectUnknownProperties(data.encoder, ENCODER_KEYS, 'encoder', addError);
+  const encoderArguments = data.encoder?.arguments;
   if (
     !isObject(data.encoder) ||
-    typeof data.encoder.name !== 'string' ||
-    data.encoder.name.length === 0 ||
+    data.encoder.name !== 'cwebp' ||
     typeof data.encoder.version !== 'string' ||
-    data.encoder.version.length === 0 ||
-    !Array.isArray(data.encoder.arguments) ||
-    data.encoder.arguments.length === 0 ||
-    !data.encoder.arguments.every((argument) => typeof argument === 'string')
+    !Array.isArray(encoderArguments) ||
+    encoderArguments.length === 0 ||
+    encoderArguments.length > 64 ||
+    !encoderArguments.every((argument) => typeof argument === 'string')
   ) {
     addError(
       'encoder: name, version, and canonical string arguments are required',
+    );
+  } else if (
+    data.encoder.version !== EXACT_ENCODER_VERSION ||
+    !exactStringArrayEqual(encoderArguments, EXACT_ENCODER_ARGUMENTS)
+  ) {
+    addError(
+      'encoder.profile: must equal cwebp 1.6.0 with arguments ["-exact","-q","90"]',
     );
   }
 
@@ -199,8 +276,15 @@ export function validateMotionBundle(data, expectedAssetId) {
     return errors;
   }
 
-  const clipNames = Object.keys(data.clips);
+  const { keys: clipNames, overflow: clipOverflow } = boundedOwnKeys(
+    data.clips,
+    REQUIRED_CLIPS.length + 1,
+  );
   const allowedClips = new Set([...REQUIRED_CLIPS, 'broken']);
+  if (clipOverflow) {
+    addError(`clips: expected at most ${allowedClips.size} entries`);
+    return errors;
+  }
   for (const name of REQUIRED_CLIPS) {
     if (!Object.hasOwn(data.clips, name)) {
       addError(`clips: missing required clip "${name}"`);
@@ -212,10 +296,10 @@ export function validateMotionBundle(data, expectedAssetId) {
     }
   }
   const ownsBrokenClip = Object.hasOwn(data.clips, 'broken');
-  if (data.assetId === BROKEN_ASSET_ID && !ownsBrokenClip) {
+  if (isBoss && !ownsBrokenClip) {
     addError('clips: missing required clip "broken"');
-  } else if (ownsBrokenClip && data.assetId !== BROKEN_ASSET_ID) {
-    addError(`clips: "broken" is only allowed for "${BROKEN_ASSET_ID}"`);
+  } else if (!isBoss && ownsBrokenClip) {
+    addError('clips: "broken" is forbidden for non-boss role');
   }
 
   let declaredTotalFrames = 0;
@@ -244,6 +328,7 @@ export function validateMotionBundle(data, expectedAssetId) {
       addError(`clips.${name}: must be an object`);
       continue;
     }
+    rejectUnknownProperties(clip, CLIP_KEYS, `clips.${name}`, addError);
 
     const expectedPlayback = LOOP_CLIP_SET.has(name) ? 'loop' : 'progress';
     if (
@@ -255,17 +340,26 @@ export function validateMotionBundle(data, expectedAssetId) {
       );
     }
     if (
-      !Number.isFinite(clip.fps) ||
+      !Number.isInteger(clip.fps) ||
       clip.fps < MIN_CLIP_FPS ||
       clip.fps > MAX_CLIP_FPS
     ) {
       addError(
-        `clips.${name}.fps: must be finite and within ${MIN_CLIP_FPS}..${MAX_CLIP_FPS}`,
+        `clips.${name}.fps: must be an integer within ${MIN_CLIP_FPS}..${MAX_CLIP_FPS}`,
       );
     }
     if (!Array.isArray(clip.frames) || clip.frames.length === 0) {
       addError(`clips.${name}.frames: must be a nonempty ordered array`);
       continue;
+    }
+    const expectedFrameCount = EXPECTED_FRAME_COUNTS[name];
+    if (
+      Number.isInteger(expectedFrameCount) &&
+      clip.frames.length !== expectedFrameCount
+    ) {
+      addError(
+        `clips.${name}.frames: expected exactly ${expectedFrameCount} frames`,
+      );
     }
 
     const framesToValidate = Math.min(
@@ -276,6 +370,7 @@ export function validateMotionBundle(data, expectedAssetId) {
     for (let index = 0; index < framesToValidate; index += 1) {
       const rect = clip.frames[index];
       const label = `clips.${name}.frames[${index}]`;
+      rejectUnknownProperties(rect, RECT_KEYS, label, addError);
       const rectValid =
         isObject(rect) &&
         Number.isInteger(rect.x) &&
@@ -333,7 +428,7 @@ export function frameIndexForClip(clip, value) {
   }
   return Math.min(
     count - 1,
-    Math.round(clamp(safeValue, 0, 1) * (count - 1)),
+    Math.floor(clamp(safeValue, 0, 1) * count),
   );
 }
 
@@ -356,9 +451,10 @@ function simulationTimestamp(context) {
 /**
  * Resolve the exact creature clip precedence from current simulation state.
  *
- * `context.assetId` and `context.clips` are the validated descriptor ownership
- * fields. A low-HP boss may select `broken` only when both identify Site Warden
- * and the current descriptor owns that clip.
+ * `context.clips` is validated descriptor ownership. A low-HP boss may select
+ * `broken` only when the current descriptor owns that clip. The validator and
+ * motion store are responsible for admitting it only for the pack-declared
+ * boss, so this selector never relies on a character ID allowlist.
  */
 export function selectEnemyMotion(enemy, context = {}) {
   const loopValue =
@@ -395,7 +491,6 @@ export function selectEnemyMotion(enemy, context = {}) {
       ? enemy.hp / enemy.hpMax
       : 1;
   const ownsBrokenClip =
-    context.assetId === BROKEN_ASSET_ID &&
     isObject(context.clips) &&
     Object.hasOwn(context.clips, 'broken');
   if (enemy?.type === 'boss' && ownsBrokenClip && hpRatio < 0.34) {

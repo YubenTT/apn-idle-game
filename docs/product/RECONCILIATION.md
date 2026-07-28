@@ -12,7 +12,12 @@ owner answers (AUDIT §6 + plan v2 locks)
         → code
 ```
 
-When a V3 doc and plan v2 disagree, **plan v2 wins**. The V3 docs are imported **verbatim** (each carries a header pointing here); this file carries the deltas so the source stays faithful and the overrides stay in one place.
+When a V3 doc and plan v2 disagree, **plan v2 wins**. Later accepted ADRs may
+supersede that imported baseline for their named scope. In particular,
+[ADR-0015](../decisions/ADR-0015-legless-hero-runtime-authority.md) is the current
+Hero identity, motion, and fallback authority. The V3 docs are imported
+**verbatim** (each carries a header pointing here); this file carries the deltas
+so the source stays faithful and the overrides stay in one place.
 
 ## What was imported
 
@@ -38,6 +43,7 @@ When a V3 doc and plan v2 disagree, **plan v2 wins**. The V3 docs are imported *
 | Rights reviewer field | `reviewer` | **`reviewedBy`** (+ required `editorialReference`) |
 | Display names | "Tactical Echo / Floodlight XI / Fashion Dream" | **A′ parody**: Spike Protocol / Ultimate Touchline / Dreamline Detour (plan §Content Spine) |
 | Offline at boundary | stops (zones) | stops for zones **and currency is capped at the boundary** (PR-1) |
+| Host identity / motion authority | canonical full-body GLB; foot-center biped derivatives | **ADR-0015**: owner-approved GAF2D `apn-hero` identity + one complete motion set; exact legless anatomy; historical GLBs are provenance only |
 
 The imported doc bodies still use the left column; do **not** rewrite them — read them through this table.
 

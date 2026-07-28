@@ -1,19 +1,17 @@
-import { GAME_PACKS } from './generated/game-packs.js?v=gaf2d-creatures-v1';
-import { packForRoute } from './route.js?v=gaf2d-creatures-v1';
-
-const ASSET_BUILD_ID = 'gaf2d-creatures-v1';
-const versioned = (src) => `./${src}?v=${ASSET_BUILD_ID}`;
+import { GAME_PACKS } from './generated/game-packs.js?v=gaf2d-motion-v1';
+import { packForRoute } from './route.js?v=gaf2d-motion-v1';
+import { withRuntimeVersion } from './cache.js?v=gaf2d-motion-v1';
 
 const browserImage = (src) => new Promise((resolve, reject) => {
   const image = new Image();
   image.decoding = 'async';
   image.onload = () => resolve(image);
   image.onerror = () => reject(new Error(`Image failed: ${src}`));
-  image.src = versioned(src);
+  image.src = withRuntimeVersion(src);
 });
 
 const browserJson = async (src) => {
-  const response = await fetch(versioned(src));
+  const response = await fetch(withRuntimeVersion(src));
   if (!response.ok) throw new Error(`JSON failed ${response.status}: ${src}`);
   return response.json();
 };
@@ -24,6 +22,8 @@ export function createAssetStore(options = {}) {
     pending: new Map(),
     currentId: null,
     nextId: null,
+    motionStore: options.motionStore || null,
+    creatureStore: options.creatureStore || null,
     loadImage: options.loadImage || browserImage,
     loadJson: options.loadJson || browserJson,
     warn: options.warn || ((message) => console.warn(message)),

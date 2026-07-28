@@ -1,0 +1,23 @@
+{
+  "grammar": "apn-browser-motion-fixture-v1",
+  "generator": "generate.mjs",
+  "encoder": {
+    "name": "cwebp",
+    "version": "1.6.0",
+    "arguments": [
+      "-exact",
+      "-q",
+      "90"
+    ]
+  },
+  "assets": {
+    "entry-runner": {
+      "descriptorSha256": "3534820683364b5c0da38b4186f9ecc61ef7e94e95c809f4fad21fe4ae5f8797",
+      "atlasSha256": "be846888f9e02c3f6032486fff38520262f5634fc3fe11bfb7b258c82d33156e"
+    },
+    "veil-operator": {
+      "descriptorSha256": "82cc6b4187f966f3ec81196ab5c8f71caaf672e54612a8259d26a0a98f2950df",
+      "atlasSha256": "be846888f9e02c3f6032486fff38520262f5634fc3fe11bfb7b258c82d33156e"
+    }
+  }
+}

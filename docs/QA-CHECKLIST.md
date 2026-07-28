@@ -19,6 +19,8 @@
 | **Economy QA** | Signal/Notes/SP/Rep are visually distinct and correctly labeled; no wrong hue. |
 | **Perf QA** | Cold-start and fps budgets hold on the device matrix ([PERF-BUDGET](./PERF-BUDGET.md)). |
 | **Memory QA** | Atlas load/unload works; no leak across sheet open/close and season transitions. |
+| **Motion QA** | Every mapped identity draws a ready owned bundle; pending never flashes static; canonical waves 1–10 report zero fallback. |
+| **Lineage QA** | Descriptor and atlas hashes, exact frame vocabulary, encoder profile, dimensions, and current identity/motion approvals all match. |
 | **A11y QA** | Reduced-motion toggle + `prefers-reduced-motion`, SFX toggle, safe tap spacing all work. |
 | **Regression QA** | Portrait/landscape screenshot diff approved vs. `qa/screenshots/`. |
 | **Domain QA** | `node qa/run-tests.mjs` → ALL PASS (kills, upgrades, ship, boss, zone>20, HP scale). |

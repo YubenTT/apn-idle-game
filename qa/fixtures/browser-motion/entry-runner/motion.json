@@ -1,0 +1,104 @@
+{
+  "grammar": "gaf2d-motion-bundle-v1",
+  "assetId": "entry-runner",
+  "image": "motion.webp",
+  "atlas": {
+    "width": 128,
+    "height": 80,
+    "sha256": "be846888f9e02c3f6032486fff38520262f5634fc3fe11bfb7b258c82d33156e"
+  },
+  "frameSize": {
+    "width": 16,
+    "height": 16
+  },
+  "trim": {
+    "x": 0,
+    "y": 0,
+    "width": 16,
+    "height": 16
+  },
+  "pivot": {
+    "x": 0.5,
+    "y": 1
+  },
+  "clips": {
+    "idle": {
+      "playback": "loop",
+      "fps": 8,
+      "frames": [
+        { "x": 0, "y": 0, "width": 16, "height": 16 },
+        { "x": 16, "y": 0, "width": 16, "height": 16 },
+        { "x": 32, "y": 0, "width": 16, "height": 16 },
+        { "x": 48, "y": 0, "width": 16, "height": 16 },
+        { "x": 64, "y": 0, "width": 16, "height": 16 },
+        { "x": 80, "y": 0, "width": 16, "height": 16 },
+        { "x": 96, "y": 0, "width": 16, "height": 16 },
+        { "x": 112, "y": 0, "width": 16, "height": 16 }
+      ]
+    },
+    "advance": {
+      "playback": "loop",
+      "fps": 8,
+      "frames": [
+        { "x": 0, "y": 16, "width": 16, "height": 16 },
+        { "x": 16, "y": 16, "width": 16, "height": 16 },
+        { "x": 32, "y": 16, "width": 16, "height": 16 },
+        { "x": 48, "y": 16, "width": 16, "height": 16 },
+        { "x": 64, "y": 16, "width": 16, "height": 16 },
+        { "x": 80, "y": 16, "width": 16, "height": 16 },
+        { "x": 96, "y": 16, "width": 16, "height": 16 },
+        { "x": 112, "y": 16, "width": 16, "height": 16 }
+      ]
+    },
+    "engaged": {
+      "playback": "loop",
+      "fps": 8,
+      "frames": [
+        { "x": 0, "y": 32, "width": 16, "height": 16 },
+        { "x": 16, "y": 32, "width": 16, "height": 16 },
+        { "x": 32, "y": 32, "width": 16, "height": 16 },
+        { "x": 48, "y": 32, "width": 16, "height": 16 },
+        { "x": 64, "y": 32, "width": 16, "height": 16 },
+        { "x": 80, "y": 32, "width": 16, "height": 16 }
+      ]
+    },
+    "hit": {
+      "playback": "progress",
+      "fps": 12,
+      "frames": [
+        { "x": 0, "y": 48, "width": 16, "height": 16 },
+        { "x": 16, "y": 48, "width": 16, "height": 16 },
+        { "x": 32, "y": 48, "width": 16, "height": 16 },
+        { "x": 48, "y": 48, "width": 16, "height": 16 }
+      ]
+    },
+    "death": {
+      "playback": "progress",
+      "fps": 10,
+      "frames": [
+        { "x": 0, "y": 64, "width": 16, "height": 16 },
+        { "x": 16, "y": 64, "width": 16, "height": 16 },
+        { "x": 32, "y": 64, "width": 16, "height": 16 },
+        { "x": 48, "y": 64, "width": 16, "height": 16 },
+        { "x": 64, "y": 64, "width": 16, "height": 16 },
+        { "x": 80, "y": 64, "width": 16, "height": 16 },
+        { "x": 96, "y": 64, "width": 16, "height": 16 },
+        { "x": 112, "y": 64, "width": 16, "height": 16 }
+      ]
+    }
+  },
+  "lineage": {
+    "identityApprovalSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+    "motionApprovalSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+    "motionSetCandidateSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+    "motionSetApprovalSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+    "sourceManifestSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+    "exportArtifactSha256": "6666666666666666666666666666666666666666666666666666666666666666",
+    "derivativeToolchainSha256": "7777777777777777777777777777777777777777777777777777777777777777"
+  },
+  "encoder": {
+    "name": "cwebp",
+    "version": "1.6.0",
+    "arguments": ["-exact", "-q", "90"]
+  }
+}

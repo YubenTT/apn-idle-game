@@ -19,6 +19,9 @@ and hold frame rate on mid/low devices. A slow idle game defeats its own purpose
 | Per-pack target atlas | `≤ 140 KB` WebP |
 | Per-pack background | `≤ 150 KB` WebP |
 | Per-pack props + masks | `≤ 50 KB` combined |
+| Common/event motion bundle | `≤ 160 KB` compressed; `≤ 6 MiB` decoded RGBA |
+| Pack-declared boss motion bundle | `≤ 240 KB` compressed; `≤ 8 MiB` decoded RGBA |
+| Current + next wave motion | `≤ 32 MiB` decoded RGBA |
 | SFX preload | `≤ 300 KB` (currently WebAudio-synth, ~0 asset bytes) |
 | Cold start (Wi-Fi) | `< 3.5 s` |
 | Cold start (good 4G) | `< 6 s` |
@@ -77,10 +80,14 @@ requires byte-identical output, and enforces at most two hot pack records.
 fallback, transition release, Zone 200/201, and explicit close semantics without
 a browser; muted Chrome then verifies the real decode/composite path.
 
-## 2026-07-26 GAF2D measurement
+## GAF2D authored-motion rollout
 
 - First-pack target atlas: 30,506 bytes (`896×128`, seven cells).
-- First-playable compressed assets: 4,928,494 of the 5,242,879-byte hard cap.
-- Remaining measured headroom: 314,385 bytes.
-- The GAF2D atlas replaces the previous first-pack target texture; it does not
-  add a parallel animation suite or a runtime dependency.
+- The exact first-playable hard cap is `< 5,242,879` bytes and is calculated from
+  the canonical request set, not directory membership or stale manifest flags.
+- New/replaced first-pack motion WebP + JSON is capped at `≤ 1.8 MB`; all Hero
+  WebP clips remain `≤ 640 KB`.
+- Only the current and next wave identity union may remain decoded. Cold
+  in-flight work aborts and cold `ImageBitmap` instances close.
+- `targets.webp` remains a compact fallback, but canonical motion QA fails on any
+  mapped-identity fallback; it cannot hide a missing production bundle.

@@ -1,7 +1,7 @@
-import { normalizeGear, emptyGear, GEAR_SORTS, GEAR_FILTERS } from './loot.js?v=gaf2d-creatures-v1';
-import { normalizeRoute } from './route.js?v=gaf2d-creatures-v1';
-import { C, spentSkillPoints } from './formulas.js?v=gaf2d-creatures-v1';
-import { SKILLS } from './content.js?v=gaf2d-creatures-v1';
+import { normalizeGear, emptyGear, GEAR_SORTS, GEAR_FILTERS } from './loot.js?v=gaf2d-motion-v1';
+import { normalizeRoute } from './route.js?v=gaf2d-motion-v1';
+import { C, spentSkillPoints } from './formulas.js?v=gaf2d-motion-v1';
+import { SKILLS } from './content.js?v=gaf2d-motion-v1';
 
 export const SAVE_KEY_V1 = 'apn_idle_save_v1';
 export const SAVE_KEY_V2 = 'apn_idle_save_v2';

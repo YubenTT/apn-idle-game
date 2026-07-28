@@ -1,9 +1,40 @@
 Original prompt: Complete the APN Idle redesign autonomously, including QA, review, and a muted localhost build for the final integrated user gate.
 
+## 2026-07-28 authored-motion authority and honest rollout
+
+- Finalized one future-character-safe contract: pack metadata owns identity and
+  boss roles; each mapped creature owns one complete hash-locked
+  `gaf2d-motion-bundle-v1`; no character ID, array position, static atlas cell,
+  whole-sprite bob, or camera effect can impersonate authored motion.
+- Added the deterministic GAF2D approved-export builder and synthetic approved
+  fixture gate. The builder rejects stale or legacy approval lineage, missing
+  or extra clips, aliased atlas cells, unsafe paths, unpinned encoders, wrong
+  pack-role coverage, and partial output.
+- Added current-wave-before-play and next-wave-after-first-frame warming,
+  descriptor/atlas hash verification, dimension and decoded-memory checks,
+  abort/timeout/stale-completion handling, bitmap release, and one deduplicated
+  diagnostic per failed asset. Unmapped packs keep their lazy legacy path.
+- Added one effective reduced-motion authority:
+  `saved preference || live OS preference`. Essential authored frames remain
+  active; only secondary motion is reduced.
+- Locked the APN Hero runtime to the exact legless reference contract. The safe
+  Canvas body has no legs, feet, boots, or platform; the segmented V2 rig cannot
+  become a fallback. The new local four-view identity candidate is mechanical
+  evidence only and remains `awaiting_identity_approval`.
+- Production truth is intentionally unchanged until creative gates pass:
+  `valorant/pack.json` has no motion character map, the six approved creatures
+  still use their static atlas, and the current Hero V3 files remain historical
+  bytes. Identity, complete motion-set, optional rig, and release approvals
+  cannot be replaced by automated QA.
+- Offline technical acceptance is green: 1,929 headless assertions, 12 PASS
+  markers, 60 real-Chrome wave cases (standard + reduced), three synthetic
+  authored-motion temporal cases with zero fallback, first-playable 779,169
+  bytes, and two byte-stable catalog/manifest generations.
+
 ## Current execution
 
 - I-007 catalog renderer complete with muted direct-Chrome route evidence.
-- I-021 Gear implementation is complete: 5-column inventory, explicit compare/sort/filter/junk/scrap flows, canonical Host, persistence, and portrait/small/landscape Chrome evidence.
+- I-021 Gear implementation is complete: 5-column inventory, explicit compare/sort/filter/junk/scrap flows, Hero presentation, persistence, and portrait/small/landscape Chrome evidence.
 - I-010–I-014 Run hero experience is implemented; integrated Run Chrome review is active.
 - I-020 Build is implemented with requirement-derived next-unlock previews and
   428/375 Chrome Extension evidence (44pt touch, zero overflow/truncation).
@@ -47,15 +78,18 @@ Original prompt: Complete the APN Idle redesign autonomously, including QA, revi
   Gear scroll/native sort, and a clean Sprint release. The owner confirmed the
   physical iOS Safari long-press recheck on 2026-07-15; I-045 is release-ready.
 
-## Open chain
+## Open chain (historical R-005 checkpoint)
 
 - Draft integration PR #8 publishes the original 34-commit redesign history from
   `release/apn-idle-redesign-v1` without merging it.
 - R-005 is green across negative economy contracts, playthrough, 30-minute pacing,
   Zone 1000, and muted Chrome Run/Menu evidence. It is being prepared as a stacked
   PR against the release branch.
-- Next user gate: approve the Host V2 motion proof. No creature/item/runtime Host
-  asset replacement proceeds before that approval.
+- At this checkpoint the next user gate was a Host V2 motion proof. That gate and
+  body authority are superseded by the current authored-motion section above:
+  exact legless Hero identity, complete motion-set, optional rig, and release
+  approvals now control replacement; each creature owns its own complete motion
+  set.
 
 ## Go Live v2 · PR-5 checkpoint (2026-07-18)
 
@@ -69,9 +103,11 @@ Original prompt: Complete the APN Idle redesign autonomously, including QA, revi
   proof renderer, proof image, and experimental asset checks were purged before
   commit; they never entered the runtime atlas. Do not recreate its
   arm/neck-as-leg construction.
-- The existing canonical GLB and placeholder atlas remain shipped. Issue #23
-  stays open for a different owner-approved four-angle full-body identity,
-  deterministic pose derivation, and real-pixel asset gate.
+- At this historical checkpoint, the existing canonical GLB and placeholder
+  atlas remained shipped and Issue #23 still described a different full-body
+  direction. That direction is no longer an active next step: the current
+  authored-motion section above and ADR-0015 supersede it with the exact legless
+  GAF2D identity authority.
 - This checkpoint is intended to merge through `release/go-live-v3` into `main`
   only after `node qa/run-tests.mjs` and muted Chrome verification are green.
 
@@ -146,3 +182,16 @@ Original prompt: Complete the APN Idle redesign autonomously, including QA, revi
   double build, documentation reconciliation, and clean-state checks are green.
 - Independent findings-first acceptance review closed with no remaining
   blocking or actionable findings.
+
+## 2026-07-28 authored-motion reduced-motion authority
+
+- Added `js/motion-preference.js` as the single runtime authority for reduced
+  motion: effective preference is `saved toggle OR live OS media query`, and OS
+  changes never overwrite the saved toggle.
+- `js/main.js` now owns the live `MediaQueryList` bridge and forces immediate
+  stage/HUD refresh on OS preference changes.
+- `js/game.js`, `js/render.js`, `js/ui.js`, and `js/sfx.js` now consume the same
+  effective reduced-motion value for gameplay FX, render FX, gear hero preview,
+  CSS classing, and audio/haptics gating.
+- Deterministic QA added at `qa/check-motion-preference.mjs` and wired into
+  `qa/run-tests.mjs`; focused check and full `node qa/run-tests.mjs` end green.

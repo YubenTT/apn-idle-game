@@ -1,6 +1,6 @@
 # ADR-0013 — GAF2D static atlases are the first-pack creature source
 
-- Status: Accepted
+- Status: Superseded by ADR-0014
 - Date: 2026-07-26
 
 ## Context

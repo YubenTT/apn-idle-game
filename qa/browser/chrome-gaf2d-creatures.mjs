@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import net from 'node:net';
 import os from 'node:os';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 import { spawn, execFileSync } from 'node:child_process';
 
 function resolveChrome() {
@@ -122,6 +123,50 @@ async function waitFor(cdp, expression, label, timeoutMs = 8000) {
 function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
+
+const SYNTHETIC_MOTION_ROOT = path.resolve('qa/fixtures/browser-motion');
+const SYNTHETIC_MOTION_IDS = Object.freeze(['entry-runner', 'veil-operator']);
+const SYNTHETIC_MOTION_INTEGRITY = JSON.parse(
+  fs.readFileSync(path.join(SYNTHETIC_MOTION_ROOT, 'integrity.json'), 'utf8'),
+);
+
+function sha256File(file) {
+  return createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+}
+
+function loadSyntheticMotionFixture(assetId) {
+  const fixtureDir = path.join(SYNTHETIC_MOTION_ROOT, assetId);
+  const descriptorFile = path.join(fixtureDir, 'motion.json');
+  const imageFile = path.join(fixtureDir, 'motion.webp');
+  const descriptor = JSON.parse(fs.readFileSync(descriptorFile, 'utf8'));
+  const descriptorSha256 = sha256File(descriptorFile);
+  const imageSha256 = sha256File(imageFile);
+  const expected = SYNTHETIC_MOTION_INTEGRITY.assets?.[assetId];
+  assert(expected, `${assetId}: missing synthetic integrity record`);
+  assert(
+    expected.descriptorSha256 === descriptorSha256,
+    `${assetId}: synthetic descriptor hash drift`,
+  );
+  assert(
+    expected.atlasSha256 === imageSha256,
+    `${assetId}: synthetic atlas integrity hash drift`,
+  );
+  assert(descriptor.assetId === assetId, `${assetId}: synthetic descriptor identity mismatch`);
+  assert(descriptor.atlas.sha256 === imageSha256, `${assetId}: synthetic atlas hash mismatch`);
+  return {
+    assetId,
+    descriptor,
+    source: {
+      descriptor: `/qa/fixtures/browser-motion/${assetId}/motion.json`,
+      image: `/qa/fixtures/browser-motion/${assetId}/motion.webp`,
+      descriptorSha256,
+    },
+  };
+}
+
+const SYNTHETIC_MOTION_FIXTURES = Object.freeze(
+  SYNTHETIC_MOTION_IDS.map(loadSyntheticMotionFixture),
+);
 
 function screenshotFile(outputDir, viewportLabel, wave, suffix = '') {
   const waveLabel = String(wave).padStart(2, '0');
@@ -309,7 +354,501 @@ async function readState(cdp) {
   return { ...parsed, extra };
 }
 
-async function validateWave(cdp, viewport, wave, outputDir) {
+async function installSyntheticMotion(cdp) {
+  const characters = Object.fromEntries(
+    SYNTHETIC_MOTION_FIXTURES.map(({ assetId, source }) => [assetId, source]),
+  );
+  return evaluate(cdp, `(async () => {
+    const { warmMotionSet, releaseColdMotion, motionDiagnostics } =
+      await import('/js/motion-store.js?v=gaf2d-motion-v1');
+    const q = window.__APN_QA__;
+    const packAssets = q?.assets?.packs?.get('valorant');
+    if (!packAssets?.pack || !q.assets.motionStore) {
+      throw new Error('Synthetic motion injection requires the query-gated asset store');
+    }
+    const pack = {
+      ...packAssets.pack,
+      motion: {
+        grammar: 'gaf2d-motion-bundle-v1',
+        characters: ${JSON.stringify(characters)},
+      },
+    };
+    packAssets.pack = pack;
+    releaseColdMotion(q.assets.motionStore, new Set());
+    q.assets.motionStore.diagnostics.clear();
+    performance.clearResourceTimings();
+    for (const name of [
+      'qa-motion-current-start',
+      'qa-motion-current-ready',
+      'qa-motion-first-frame',
+      'qa-motion-next-start',
+      'qa-motion-next-ready',
+    ]) {
+      performance.clearMarks(name);
+    }
+
+    performance.mark('qa-motion-current-start');
+    await warmMotionSet(q.assets.motionStore, pack, ['entry-runner']);
+    performance.mark('qa-motion-current-ready');
+    q.state.world.time = 0;
+    window.advanceTime(0);
+    performance.mark('qa-motion-first-frame');
+    performance.mark('qa-motion-next-start');
+    await warmMotionSet(q.assets.motionStore, pack, ['veil-operator']);
+    performance.mark('qa-motion-next-ready');
+
+    const resources = performance
+      .getEntriesByType('resource')
+      .filter((entry) => entry.name.includes('/qa/fixtures/browser-motion/'))
+      .map((entry) => ({
+        name: entry.name,
+        startTime: entry.startTime,
+        responseEnd: entry.responseEnd,
+        transferSize: entry.transferSize,
+      }));
+    const marks = Object.fromEntries(
+      performance
+        .getEntriesByType('mark')
+        .filter((entry) => entry.name.startsWith('qa-motion-'))
+        .map((entry) => [entry.name, entry.startTime]),
+    );
+    return {
+      statuses: Object.fromEntries(
+        ['entry-runner', 'veil-operator'].map((assetId) => [
+          assetId,
+          q.assets.motionStore.entries.get('valorant/' + assetId)?.status || null,
+        ]),
+      ),
+      diagnostics: motionDiagnostics(q.assets.motionStore),
+      resources,
+      marks,
+    };
+  })()`);
+}
+
+async function observeSyntheticMotion(cdp, timestamp) {
+  return evaluate(cdp, `(async () => {
+    const q = window.__APN_QA__;
+    const state = q.state;
+    const enemy = state.world.enemies.find((candidate) => candidate.hp > 0);
+    if (!enemy) throw new Error('Synthetic motion enemy is missing');
+    state.world.time = ${JSON.stringify(timestamp)};
+    window.advanceTime(0);
+    const text = JSON.parse(window.render_game_to_text());
+    const canvas = document.querySelector('#game');
+    const ratioX = canvas.width / canvas.parentElement.clientWidth;
+    // sizeCanvas() intentionally floors short landscape stages to a 160px
+    // logical canvas, so clientHeight may be cropped by flex layout. Canvas 2D
+    // uses one uniform DPR transform; derive it from the uncropped width.
+    const ratioY = ratioX;
+    const logicalX = enemy.displayX;
+    const logicalSize = 96 * state.world.stageFit;
+    const logicalY = state.world.groundY - 2 - logicalSize;
+    const x = Math.max(0, Math.round((logicalX - logicalSize / 2) * ratioX));
+    const y = Math.max(0, Math.round(logicalY * ratioY));
+    const width = Math.max(1, Math.round(logicalSize * ratioX));
+    const height = Math.max(1, Math.min(
+      canvas.height - y,
+      Math.round(logicalSize * ratioY),
+    ));
+    const sampler = new OffscreenCanvas(width, height);
+    const samplerContext = sampler.getContext('2d', { willReadFrequently: true });
+    samplerContext.drawImage(
+      canvas,
+      x,
+      y,
+      width,
+      height,
+      0,
+      0,
+      width,
+      height,
+    );
+    const pixels = samplerContext.getImageData(0, 0, width, height).data;
+    const digest = await crypto.subtle.digest('SHA-256', pixels);
+    const hash = [...new Uint8Array(digest)]
+      .map((value) => value.toString(16).padStart(2, '0'))
+      .join('');
+    const rgba = [0, 0, 0, 0];
+    let posePixels = 0;
+    let poseX = 0;
+    let poseY = 0;
+    let strongestPose = { score: -Infinity, red: 0, green: 0, blue: 0, x: 0, y: 0 };
+    const pixelCount = pixels.length / 4;
+    for (let index = 0; index < pixels.length; index += 4) {
+      rgba[0] += pixels[index];
+      rgba[1] += pixels[index + 1];
+      rgba[2] += pixels[index + 2];
+      rgba[3] += pixels[index + 3];
+      const pixelIndex = index / 4;
+      const cyanScore =
+        Math.min(pixels[index + 1], pixels[index + 2]) - pixels[index];
+      if (cyanScore > strongestPose.score) {
+        strongestPose = {
+          score: cyanScore,
+          red: pixels[index],
+          green: pixels[index + 1],
+          blue: pixels[index + 2],
+          x: pixelIndex % width,
+          y: Math.floor(pixelIndex / width),
+        };
+      }
+      if (
+        pixels[index] < 90 &&
+        pixels[index + 1] > 100 &&
+        pixels[index + 2] > 100 &&
+        cyanScore > 70 &&
+        pixels[index + 3] > 220
+      ) {
+        posePixels += 1;
+        poseX += pixelIndex % width;
+        poseY += Math.floor(pixelIndex / width);
+      }
+    }
+    return {
+      timestamp: state.world.time,
+      motion: text.motion,
+      sample: {
+        x,
+        y,
+        width,
+        height,
+        rgba: rgba.map((value) => Math.round(value / pixelCount)),
+        sha256: hash,
+        pose: {
+          pixels: posePixels,
+          centroidX: posePixels ? poseX / posePixels / width : null,
+          centroidY: posePixels ? poseY / posePixels / height : null,
+          strongest: strongestPose,
+        },
+      },
+    };
+  })()`);
+}
+
+async function validateReducedMotionAuthority(cdp) {
+  const emulate = (value) =>
+    cdp.send('Emulation.setEmulatedMedia', {
+      media: 'screen',
+      features: [{ name: 'prefers-reduced-motion', value }],
+    });
+  const snapshot = () =>
+    evaluate(cdp, `(async () => {
+      const { motionReduced } =
+        await import('/js/motion-preference.js?v=gaf2d-motion-v1');
+      const state = window.__APN_QA__.state;
+      const savedRaw = localStorage.getItem('apn_idle_save_v2');
+      return {
+        saved: state.settings.reducedMotion,
+        os: state.runtime.osReducedMotion,
+        effective: motionReduced(state),
+        css: document.documentElement.classList.contains('reduce-motion'),
+        media: matchMedia('(prefers-reduced-motion: reduce)').matches,
+        checkbox: document.querySelector('#chk-motion')?.checked,
+        savedRaw,
+      };
+    })()`);
+
+  await emulate('no-preference');
+  await waitFor(
+    cdp,
+    `window.__APN_QA__.state.runtime.osReducedMotion === false &&
+      !document.documentElement.classList.contains('reduce-motion')`,
+    'baseline motion preference',
+  );
+  const baseline = await snapshot();
+  assert(
+    baseline.saved === false &&
+      baseline.os === false &&
+      baseline.effective === false &&
+      baseline.css === false &&
+      baseline.media === false &&
+      baseline.checkbox === false,
+    'motion baseline is not unified',
+  );
+
+  await emulate('reduce');
+  await waitFor(
+    cdp,
+    `window.__APN_QA__.state.runtime.osReducedMotion === true &&
+      document.documentElement.classList.contains('reduce-motion')`,
+    'OS reduced-motion activation',
+  );
+  const osReduced = await snapshot();
+  assert(
+    osReduced.saved === false &&
+      osReduced.os === true &&
+      osReduced.effective === true &&
+      osReduced.css === true &&
+      osReduced.media === true &&
+      osReduced.checkbox === false &&
+      osReduced.savedRaw === baseline.savedRaw,
+    'OS reduced motion changed the saved in-app toggle or split state/CSS',
+  );
+
+  await emulate('no-preference');
+  await waitFor(
+    cdp,
+    `window.__APN_QA__.state.runtime.osReducedMotion === false &&
+      !document.documentElement.classList.contains('reduce-motion')`,
+    'OS reduced-motion deactivation',
+  );
+  const osCleared = await snapshot();
+  assert(
+    osCleared.saved === false &&
+      osCleared.effective === false &&
+      osCleared.savedRaw === baseline.savedRaw,
+    'clearing OS reduced motion changed the saved toggle',
+  );
+
+  await evaluate(cdp, `(() => {
+    const checkbox = document.querySelector('#chk-motion');
+    checkbox.checked = true;
+    checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+    return true;
+  })()`);
+  await waitFor(
+    cdp,
+    `window.__APN_QA__.state.settings.reducedMotion === true &&
+      document.documentElement.classList.contains('reduce-motion')`,
+    'saved reduced-motion activation',
+  );
+  const savedReduced = await snapshot();
+  assert(
+    savedReduced.saved === true &&
+      savedReduced.os === false &&
+      savedReduced.effective === true &&
+      savedReduced.css === true &&
+      savedReduced.checkbox === true,
+    'saved reduced motion is not the unified authority',
+  );
+
+  await emulate('reduce');
+  await waitFor(cdp, `window.__APN_QA__.state.runtime.osReducedMotion === true`, 'saved + OS reduced motion');
+  await emulate('no-preference');
+  await waitFor(cdp, `window.__APN_QA__.state.runtime.osReducedMotion === false`, 'saved-only reduced motion');
+  const savedAfterOsChanges = await snapshot();
+  assert(
+    savedAfterOsChanges.saved === true &&
+      savedAfterOsChanges.effective === true &&
+      savedAfterOsChanges.css === true &&
+      savedAfterOsChanges.savedRaw === savedReduced.savedRaw,
+    'OS media-query changes overwrote the saved reduced-motion toggle',
+  );
+
+  await evaluate(cdp, `(() => {
+    const checkbox = document.querySelector('#chk-motion');
+    checkbox.checked = false;
+    checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+    return true;
+  })()`);
+  await waitFor(
+    cdp,
+    `window.__APN_QA__.state.settings.reducedMotion === false &&
+      !document.documentElement.classList.contains('reduce-motion')`,
+    'reduced-motion cleanup',
+  );
+
+  return {
+    baseline: {
+      saved: baseline.saved,
+      os: baseline.os,
+      effective: baseline.effective,
+      css: baseline.css,
+    },
+    osReduced: {
+      saved: osReduced.saved,
+      os: osReduced.os,
+      effective: osReduced.effective,
+      css: osReduced.css,
+    },
+    savedAfterOsChanges: {
+      saved: savedAfterOsChanges.saved,
+      os: savedAfterOsChanges.os,
+      effective: savedAfterOsChanges.effective,
+      css: savedAfterOsChanges.css,
+    },
+  };
+}
+
+async function validateSyntheticMotion(cdp, viewport, outputDir, port) {
+  await prepareWave(cdp, 1);
+  await evaluate(cdp, `window.advanceTime(17)`);
+  await evaluate(cdp, `(() => {
+    const state = window.__APN_QA__.state;
+    const enemy = state.world.enemies.find((candidate) => candidate.hp > 0);
+    if (!enemy) throw new Error('Enemy missing before synthetic motion injection');
+    enemy.id = 'qa-58';
+    enemy.type = 'stale';
+    enemy.label = 'Entry Runner';
+    enemy.packId = 'valorant';
+    enemy.frame = 'common-a';
+    enemy.x = state.world.heroX + 150;
+    enemy.displayX = enemy.x;
+    enemy.hurt = 0;
+    enemy.hitFlash = 0;
+    enemy.critFlash = 0;
+    state.world.shake = 0;
+    state.world.alerts = [];
+    state.world.floaters = [];
+    state.world.particles = [];
+    state.world.lootFlights = [];
+    state.world.confetti = [];
+    state.world.shocks = [];
+    state.ui.toast = null;
+    state.ui.toastT = 0;
+    return true;
+  })()`);
+
+  const warm = await installSyntheticMotion(cdp);
+  assert(warm.statuses['entry-runner'] === 'ready', `${viewport.label}: current motion did not become ready`);
+  assert(warm.statuses['veil-operator'] === 'ready', `${viewport.label}: next-wave motion did not become ready`);
+  assert(warm.diagnostics.length === 0, `${viewport.label}: synthetic warm recorded fallback diagnostics`);
+
+  const currentResources = warm.resources.filter((entry) => entry.name.includes('/entry-runner/'));
+  const nextResources = warm.resources.filter((entry) => entry.name.includes('/veil-operator/'));
+  assert(currentResources.length === 2, `${viewport.label}: current motion did not request descriptor + atlas exactly once`);
+  assert(nextResources.length === 2, `${viewport.label}: next motion did not request descriptor + atlas exactly once`);
+  assert(
+    currentResources.every((entry) => entry.name.includes('sha256=')) &&
+      nextResources.every((entry) => entry.name.includes('sha256=')),
+    `${viewport.label}: motion ResourceTiming entries lack immutable hash tokens`,
+  );
+  assert(
+    warm.marks['qa-motion-current-ready'] <= warm.marks['qa-motion-next-start'] &&
+      warm.marks['qa-motion-current-ready'] <= warm.marks['qa-motion-first-frame'] &&
+      warm.marks['qa-motion-first-frame'] <= warm.marks['qa-motion-next-start'] &&
+      currentResources.every((entry) => entry.startTime <= warm.marks['qa-motion-first-frame']) &&
+      nextResources.every((entry) => entry.startTime >= warm.marks['qa-motion-first-frame']),
+    `${viewport.label}: next-wave warm started before the current motion's first drawable frame`,
+  );
+
+  const frame0 = await observeSyntheticMotion(cdp, 0);
+  await captureScreenshot(cdp, screenshotFile(outputDir, viewport.label, 1, '-motion-frame-0'));
+  assert(
+    frame0.motion.status === 'ready' &&
+      frame0.motion.assetId === 'entry-runner' &&
+      frame0.motion.clip === 'advance' &&
+      frame0.motion.frameIndex === 0 &&
+      frame0.motion.fallbacks === 0 &&
+      frame0.sample.pose.pixels > 0,
+    `${viewport.label}: timestamp 0 did not select ready advance frame 0 with zero fallback (${JSON.stringify(frame0)})`,
+  );
+  const frame1 = await observeSyntheticMotion(cdp, 0.13);
+  assert(
+      frame1.motion.status === 'ready' &&
+      frame1.motion.clip === 'advance' &&
+      frame1.motion.frameIndex === 1 &&
+      frame1.motion.fallbacks === 0 &&
+      frame1.sample.pose.pixels > 0 &&
+      frame1.sample.pose.centroidX > frame0.sample.pose.centroidX + 0.25 &&
+      frame1.sample.pose.centroidY < frame0.sample.pose.centroidY - 0.05,
+    `${viewport.label}: timestamp 0.13 did not select advance frame 1 with zero fallback (${JSON.stringify(frame1)})`,
+  );
+  assert(
+    frame0.sample.sha256 !== frame1.sample.sha256,
+    `${viewport.label}: changing authored frame produced identical sampled pixels`,
+  );
+  await captureScreenshot(cdp, screenshotFile(outputDir, viewport.label, 1, '-motion-frame-1'));
+
+  const replay0 = await observeSyntheticMotion(cdp, 0);
+  assert(
+    replay0.motion.frameIndex === frame0.motion.frameIndex &&
+      replay0.sample.sha256 === frame0.sample.sha256,
+    `${viewport.label}: fixed simulation timestamp did not reproduce exact frame pixels`,
+  );
+
+  await evaluate(cdp, `(() => {
+    window.__APN_QA_LIFECYCLE__ = [document.visibilityState];
+    document.addEventListener('visibilitychange', () => {
+      window.__APN_QA_LIFECYCLE__.push(document.visibilityState);
+    });
+    return true;
+  })()`);
+  const beforeLifecycle = await observeSyntheticMotion(cdp, 0.13);
+  const coverPage = await createPage(port);
+  try {
+    await waitFor(cdp, `document.visibilityState === 'hidden'`, 'hidden-tab lifecycle state');
+    await delay(120);
+    await cdp.send('Page.bringToFront');
+    await waitFor(cdp, `document.visibilityState === 'visible'`, 'page lifecycle resume');
+  } finally {
+    await closePage(port, coverPage.id);
+  }
+  const afterLifecycle = await observeSyntheticMotion(cdp, 0.13);
+  const lifecycleStates = await evaluate(cdp, `window.__APN_QA_LIFECYCLE__`);
+  assert(
+    lifecycleStates.includes('hidden') && lifecycleStates.at(-1) === 'visible',
+    `${viewport.label}: lifecycle did not traverse hidden → visible`,
+  );
+  assert(
+    afterLifecycle.motion.status === 'ready' &&
+      afterLifecycle.motion.frameIndex === beforeLifecycle.motion.frameIndex &&
+      afterLifecycle.motion.fallbacks === 0 &&
+      afterLifecycle.sample.sha256 === beforeLifecycle.sample.sha256,
+    `${viewport.label}: lifecycle resume corrupted the fixed authored frame`,
+  );
+  const frame2 = await observeSyntheticMotion(cdp, 0.26);
+  assert(
+    frame2.motion.frameIndex === 2 &&
+      frame2.motion.fallbacks === 0 &&
+      frame2.sample.sha256 !== frame1.sample.sha256 &&
+      frame2.sample.pose.pixels > 0 &&
+      frame2.sample.pose.centroidX < frame1.sample.pose.centroidX - 0.25 &&
+      Math.abs(frame2.sample.pose.centroidX - frame0.sample.pose.centroidX) < 0.15 &&
+      frame2.sample.pose.centroidY < frame0.sample.pose.centroidY - 0.05,
+    `${viewport.label}: post-resume timestamp did not advance to authored frame 2 (${JSON.stringify(frame2)})`,
+  );
+
+  const reducedMotion = await validateReducedMotionAuthority(cdp);
+  const problems = consoleProblems(cdp.events);
+  assert(problems.length === 0, `${viewport.label}: authored-motion browser problems: ${problems.join(' | ')}`);
+
+  return {
+    viewport: viewport.label,
+    status: frame2.motion.status,
+    clip: frame2.motion.clip,
+    fallbacks: frame2.motion.fallbacks,
+    frames: [frame0, frame1, frame2],
+    lifecycle: lifecycleStates,
+    reducedMotion,
+    resourceOrder: {
+      marks: warm.marks,
+      current: currentResources,
+      next: nextResources,
+    },
+    screenshots: [
+      path.relative(process.cwd(), screenshotFile(outputDir, viewport.label, 1, '-motion-frame-0')),
+      path.relative(process.cwd(), screenshotFile(outputDir, viewport.label, 1, '-motion-frame-1')),
+    ],
+  };
+}
+
+async function setOsReducedMotion(cdp, enabled) {
+  await cdp.send('Emulation.setEmulatedMedia', {
+    media: 'screen',
+    features: [
+      {
+        name: 'prefers-reduced-motion',
+        value: enabled ? 'reduce' : 'no-preference',
+      },
+    ],
+  });
+  await waitFor(
+    cdp,
+    `window.__APN_QA__.state.runtime.osReducedMotion === ${enabled} &&
+      document.documentElement.classList.contains('reduce-motion') === ${enabled}`,
+    enabled ? 'reduced wave-matrix mode' : 'standard wave-matrix mode',
+  );
+}
+
+async function validateWave(
+  cdp,
+  viewport,
+  wave,
+  outputDir,
+  reducedMotion = false,
+) {
   await prepareWave(cdp, wave);
   await evaluate(cdp, `window.advanceTime(17)`);
   // Keep the actual spawn path under test, then dock the spawned target inside
@@ -337,6 +876,10 @@ async function validateWave(cdp, viewport, wave, outputDir) {
   assert(state.pack?.atlas?.width === 896 && state.pack?.atlas?.height === 128, `${viewport.label} wave ${wave}: atlas size mismatch`);
   assert(state.extra?.targetNaturalWidth === 896 && state.extra?.targetNaturalHeight === 128, `${viewport.label} wave ${wave}: natural atlas size mismatch`);
   assert(state.muted === true, `${viewport.label} wave ${wave}: audio not muted`);
+  assert(
+    state.reducedMotion === reducedMotion,
+    `${viewport.label} wave ${wave}: expected ${reducedMotion ? 'reduced' : 'standard'} motion authority`,
+  );
   assert(state.viewport?.overflowX === 0, `${viewport.label} wave ${wave}: horizontal overflow detected`);
   assert(state.extra?.overflowY === 0, `${viewport.label} wave ${wave}: vertical overflow detected`);
   assert(enemy, `${viewport.label} wave ${wave}: no spawned enemy`);
@@ -356,15 +899,23 @@ async function validateWave(cdp, viewport, wave, outputDir) {
   }
   assert(problems.length === 0, `${viewport.label} wave ${wave}: console problems: ${problems.join(' | ')}`);
 
-  await captureScreenshot(cdp, screenshotFile(outputDir, viewport.label, wave));
+  const modeSuffix = reducedMotion ? '-reduced' : '';
+  await captureScreenshot(
+    cdp,
+    screenshotFile(outputDir, viewport.label, wave, modeSuffix),
+  );
 
   const result = {
     viewport: viewport.label,
     wave,
+    mode: reducedMotion ? 'reduced' : 'standard',
     label: enemy.label,
     frame: enemy.frame,
     hpRatio: enemy.hpRatio,
-    screenshot: path.relative(process.cwd(), screenshotFile(outputDir, viewport.label, wave)),
+    screenshot: path.relative(
+      process.cwd(),
+      screenshotFile(outputDir, viewport.label, wave, modeSuffix),
+    ),
   };
 
   if (wave === 10) {
@@ -380,11 +931,27 @@ async function validateWave(cdp, viewport, wave, outputDir) {
     assert(brokenEnemy, `${viewport.label} wave 10: boss missing after break test`);
     assert(brokenEnemy.frame === 'boss-break', `${viewport.label} wave 10: boss break frame missing`);
     assert(brokenState.bossBreak === true, `${viewport.label} wave 10: bossBreak flag missing`);
-    await captureScreenshot(cdp, screenshotFile(outputDir, viewport.label, wave, '-boss-break'));
+    await captureScreenshot(
+      cdp,
+      screenshotFile(
+        outputDir,
+        viewport.label,
+        wave,
+        `${modeSuffix}-boss-break`,
+      ),
+    );
     result.bossBreak = {
       frame: brokenEnemy.frame,
       hpRatio: brokenEnemy.hpRatio,
-      screenshot: path.relative(process.cwd(), screenshotFile(outputDir, viewport.label, wave, '-boss-break')),
+      screenshot: path.relative(
+        process.cwd(),
+        screenshotFile(
+          outputDir,
+          viewport.label,
+          wave,
+          `${modeSuffix}-boss-break`,
+        ),
+      ),
     };
   }
 
@@ -443,13 +1010,23 @@ try {
   await waitForChrome(port, chromeStderrRef);
 
   const findings = [];
+  const motionFindings = [];
   for (const viewport of VIEWPORTS) {
     const { cdp, page } = await bootstrapPage(port, viewport, smokeUrl(1, true));
     try {
       await waitForQaReady(cdp);
+      await setOsReducedMotion(cdp, false);
       for (let wave = 1; wave <= 10; wave += 1) {
         findings.push(await validateWave(cdp, viewport, wave, OUTPUT_DIR));
       }
+      await setOsReducedMotion(cdp, true);
+      for (let wave = 1; wave <= 10; wave += 1) {
+        findings.push(
+          await validateWave(cdp, viewport, wave, OUTPUT_DIR, true),
+        );
+      }
+      await setOsReducedMotion(cdp, false);
+      motionFindings.push(await validateSyntheticMotion(cdp, viewport, OUTPUT_DIR, port));
     } finally {
       cdp.close();
       await closePage(port, page.id);
@@ -463,6 +1040,7 @@ try {
     outputDir: path.relative(process.cwd(), OUTPUT_DIR),
     verified: findings.length,
     findings,
+    authoredMotion: motionFindings,
     noGate,
   }, null, 2));
 } finally {

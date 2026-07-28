@@ -1,18 +1,42 @@
 /** APN Idle bootstrap */
 
-import { C } from './formulas.js?v=gaf2d-creatures-v1';
-import { createState, step, collectAlert, simulateOffline, setSprint, isSprinting, goLive, canGoLive, goLiveAvailableZone } from './game.js?v=gaf2d-creatures-v1';
-import { sizeCanvas, draw, bossTimerYFor, enemyFrameFor } from './render.js?v=gaf2d-creatures-v1';
-import { createAssetStore, preloadRouteAssets, packWindowForRoute } from './assets.js?v=gaf2d-creatures-v1';
-import { bindUI, renderHUD } from './ui.js?v=gaf2d-creatures-v1';
-import { save, load, apply } from './save.js?v=gaf2d-creatures-v1';
-import { loadHeroV3 } from './hero-v3.js?v=gaf2d-creatures-v1';
-import { loadCreatures } from './creatures.js?v=gaf2d-creatures-v1';
-import { setHeroRig } from './hero-rig.js?v=gaf2d-creatures-v1';
+import { C } from './formulas.js?v=gaf2d-motion-v1';
+import { createState, step, collectAlert, simulateOffline, setSprint, isSprinting, goLive, canGoLive, goLiveAvailableZone } from './game.js?v=gaf2d-motion-v1';
+import { sizeCanvas, draw, bossTimerYFor, enemyFrameFor, inspectEnemyMotion, legacyCreatureKindForStage } from './render.js?v=gaf2d-motion-v1';
+import { createAssetStore, getCurrentPackAssets, preloadRouteAssets, packWindowForRoute } from './assets.js?v=gaf2d-motion-v1';
+import { bindUI, renderHUD } from './ui.js?v=gaf2d-motion-v1';
+import { save, load, apply } from './save.js?v=gaf2d-motion-v1';
+import { loadHeroV3 } from './hero-v3.js?v=gaf2d-motion-v1';
+import {
+  createMotionPreferenceController,
+  motionReduced,
+} from './motion-preference.js?v=gaf2d-motion-v1';
+import { setReducedMotion } from './sfx.js?v=gaf2d-motion-v1';
+import {
+  createMotionStore,
+  getMotionRecord,
+  motionDiagnostics,
+  releaseColdMotion,
+  warmMotionSet,
+} from './motion-store.js?v=gaf2d-motion-v1';
+import {
+  packWaveIdentityIds,
+  routeWaveIdentityUnion,
+  routeWaveWindow,
+} from './wave-roster.js?v=gaf2d-motion-v1';
+import { GAME_PACKS } from './generated/game-packs.js?v=gaf2d-motion-v1';
+import {
+  createCreatureStore,
+  releaseColdCreatureKinds,
+  warmCreatureKind,
+} from './creatures.js?v=gaf2d-motion-v1';
 
 const canvas = document.getElementById('game');
 const s = createState();
-const assetStore = createAssetStore();
+const assetStore = createAssetStore({
+  motionStore: createMotionStore(),
+  creatureStore: createCreatureStore(),
+});
 const qaParams = new URLSearchParams(location.search);
 const qaMetricsEnabled = qaParams.has('qa_metrics');
 const qaEnabled = qaParams.has('chrome-smoke');
@@ -47,15 +71,133 @@ window.addEventListener('resize', () => {
   view = sizeCanvas(canvas);
 });
 
-bindUI(s);
+const motionPreference = createMotionPreferenceController({
+  state: s,
+  applyReducedMotion: setReducedMotion,
+  onEffectiveChange() {
+    draw(view.ctx, view.w, view.h, s, assetStore);
+    renderHUD(s, C.FIXED_DT);
+  },
+});
+
+bindUI(s, motionPreference);
 let assetWindowKey = '';
+let assetSyncPromise = Promise.resolve();
 function syncRouteAssets() {
   const key = packWindowForRoute(s.route).map((pack) => pack.id).join(',');
-  if (key === assetWindowKey) return;
+  if (key === assetWindowKey) return assetSyncPromise;
   assetWindowKey = key;
-  preloadRouteAssets(assetStore, s.route);
+  assetSyncPromise = preloadRouteAssets(assetStore, s.route).catch(() => []);
+  return assetSyncPromise;
 }
-syncRouteAssets();
+
+function motionAssetIdsForPackWave(pack, packWave) {
+  return packWaveIdentityIds(pack, packWave).filter(
+    (assetId) =>
+      pack?.motion?.characters &&
+      Object.hasOwn(pack.motion.characters, assetId),
+  );
+}
+
+function groupMotionRequests(requests) {
+  const grouped = new Map();
+  for (const { pack, assetId } of requests) {
+    const bucket = grouped.get(pack.id) || { pack, assetIds: [] };
+    bucket.assetIds.push(assetId);
+    grouped.set(pack.id, bucket);
+  }
+  return [...grouped.values()].map(({ pack, assetIds }) => ({
+    pack,
+    assetIds: [...new Set(assetIds)],
+  }));
+}
+
+function currentMotionRequests(route = s.route) {
+  const [current] = routeWaveWindow(route, GAME_PACKS);
+  if (!current?.pack) return [];
+  return motionAssetIdsForPackWave(current.pack, current.wave).map((assetId) => ({
+    pack: current.pack,
+    assetId,
+  }));
+}
+
+function routeMotionRequests(route = s.route) {
+  return routeWaveIdentityUnion(route, GAME_PACKS)
+    .map(({ packId, assetId }) => ({
+      pack: GAME_PACKS.find((candidate) => candidate.id === packId),
+      assetId,
+    }))
+    .filter(
+      ({ pack, assetId }) =>
+        pack &&
+        Object.hasOwn(pack?.motion?.characters || {}, assetId),
+    );
+}
+
+function motionKeepKeys(requests) {
+  return new Set(requests.map(({ pack, assetId }) => `${pack.id}/${assetId}`));
+}
+
+async function warmMotionRequests(requests) {
+  const groups = groupMotionRequests(requests);
+  await Promise.all(groups.map(({ pack, assetIds }) => warmMotionSet(
+    assetStore.motionStore,
+    pack,
+    assetIds,
+  )));
+}
+
+function currentMotionSettled(route = s.route) {
+  return currentMotionRequests(route).every(({ pack, assetId }) => {
+    const record = getMotionRecord(assetStore.motionStore, pack.id, assetId);
+    return record && (record.status === 'ready' || record.status === 'failed');
+  });
+}
+
+let motionWindowKey = '';
+let motionSyncPromise = Promise.resolve();
+function syncMotionWindow() {
+  const requests = routeMotionRequests();
+  releaseColdMotion(assetStore.motionStore, motionKeepKeys(requests));
+  const key = requests.map(({ pack, assetId }) => `${pack.id}/${assetId}`).join(',');
+  if (key === motionWindowKey) return motionSyncPromise;
+  motionWindowKey = key;
+  motionSyncPromise = warmMotionRequests(requests).catch(() => []);
+  return motionSyncPromise;
+}
+
+let legacyCreatureOwner = null;
+let legacyCreaturePromise = Promise.resolve();
+function syncLegacyCreatureOwner() {
+  const hasStageEnemy = s.world.enemies.some(
+    (candidate) =>
+      candidate.hp > 0 ||
+      (candidate.deathT && candidate.deathT > 0),
+  );
+  if (!hasStageEnemy) return legacyCreaturePromise;
+  const packAssets = getCurrentPackAssets(assetStore, s.route);
+  const kind = legacyCreatureKindForStage(
+    s.world.enemies,
+    packAssets,
+    assetStore,
+    { zone: s.route?.zone ?? 0 },
+  );
+  if (kind === legacyCreatureOwner) return legacyCreaturePromise;
+  legacyCreatureOwner = kind;
+  releaseColdCreatureKinds(
+    assetStore.creatureStore,
+    kind ? new Set([kind]) : new Set(),
+  );
+  if (!kind) {
+    legacyCreaturePromise = Promise.resolve();
+    return legacyCreaturePromise;
+  }
+  legacyCreaturePromise = warmCreatureKind(
+    assetStore.creatureStore,
+    kind,
+  ).catch(() => []);
+  return legacyCreaturePromise;
+}
 
 let qaStepRemainderMs = 0;
 function renderGameToText() {
@@ -65,6 +207,16 @@ function renderGameToText() {
   const frame = enemyFrameFor(enemy);
   const hpRatio = enemy?.hpMax > 0 ? enemy.hp / enemy.hpMax : null;
   const clientWidth = document.documentElement.clientWidth;
+  const heroX = s.world.heroX;
+  const motion = enemy
+    ? inspectEnemyMotion(enemy, packAssets, assetStore, {
+        zone: s.route?.zone ?? 0,
+        meleeStop: heroX + C.MELEE_RANGE - 8,
+        engagedId:
+          s.world.enemies.find((candidate) => candidate.hp > 0 && candidate.x <= heroX + C.MELEE_RANGE)?.id || null,
+        t: s.world.time,
+      })
+    : null;
   return JSON.stringify({
     coordinateSystem: 'Canvas origin top-left; +x right; +y down; enemy x is its foot-center.',
     routeZone: (s.route.zone | 0) + 1,
@@ -86,9 +238,25 @@ function renderGameToText() {
           hpRatio: Math.round(hpRatio * 1000) / 1000,
         }
       : null,
+    motion: motion
+      ? {
+          assetId: motion.assetId,
+          clip: motion.clip,
+          frameIndex: motion.frameIndex,
+          status: motion.status,
+          fallbacks: motion.fallbacks,
+        }
+      : {
+          assetId: null,
+          clip: null,
+          frameIndex: null,
+          status: null,
+          fallbacks: motionDiagnostics(assetStore.motionStore).length,
+        },
     bossBreak: frame === 'boss-break',
     bossTimerY: s.world.bossActive ? bossTimerYFor(view.h) : null,
     muted: s.settings.sfx === false,
+    reducedMotion: motionReduced(s),
     viewport: {
       width: view.w,
       height: view.h,
@@ -106,8 +274,12 @@ function advanceQaTime(milliseconds) {
   const fixedMs = C.FIXED_DT * 1000;
   const steps = Math.floor((qaStepRemainderMs + 1e-9) / fixedMs);
   qaStepRemainderMs -= steps * fixedMs;
-  for (let index = 0; index < steps; index += 1) step(s, C.FIXED_DT);
-  syncRouteAssets();
+  for (let index = 0; index < steps; index += 1) {
+    step(s, C.FIXED_DT, { allowSpawn: currentMotionSettled() });
+    syncRouteAssets();
+    syncMotionWindow();
+    syncLegacyCreatureOwner();
+  }
   draw(view.ctx, view.w, view.h, s, assetStore);
   renderHUD(s, Math.max(C.FIXED_DT, amount / 1000));
   return renderGameToText();
@@ -129,19 +301,10 @@ if (qaEnabled) {
   window.advanceTime = advanceQaTime;
 }
 
-// Canon Host V3 — GLB-rendered clip atlases are the primary hero body.
-// The V2 skeletal rig loads ONLY as a fallback when V3 fails; both fall
-// back silently to the procedural Host (tests, broken cache, offline).
-loadHeroV3('assets/mascot/v3/')
-  .catch(() => Promise.all([
-    assetStore.loadImage('assets/mascot/v2/rig.webp'),
-    assetStore.loadJson('assets/mascot/v2/rig.json'),
-  ]).then(([image, data]) => setHeroRig(image, data)))
-  .catch(() => { /* procedural Host remains active */ });
-
-// V3 vinyl creatures (Curator boss / Recon / Hotshot) — soft-fail per clip;
-// the procedural feed-noise family stays as automatic fallback.
-loadCreatures().catch(() => { /* procedural enemies remain active */ });
+// Canon Host V3 is primary. A load failure stays on the explicit legless,
+// identity-safe Canvas silhouette owned by hero-v2.js.
+const heroV3Load = loadHeroV3('assets/mascot/v3/')
+  .catch(() => null); // identity-safe Canvas silhouette remains active
 
 function pos(ev) {
   const r = canvas.getBoundingClientRect();
@@ -340,13 +503,15 @@ function frame(now) {
   // Cap catch-up so a long tab-hide doesn't explode
   let steps = 0;
   while (acc >= C.FIXED_DT && steps < 8) {
-    step(s, C.FIXED_DT);
+    step(s, C.FIXED_DT, { allowSpawn: currentMotionSettled() });
     acc -= C.FIXED_DT;
     steps++;
   }
   if (acc > C.FIXED_DT * 4) acc = 0;
 
   syncRouteAssets();
+  syncMotionWindow();
+  syncLegacyCreatureOwner();
   draw(view.ctx, view.w, view.h, s, assetStore);
 
   if (qaMetricsEnabled) {
@@ -379,10 +544,17 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 
-if (qaManualMode) {
+async function boot() {
+  await Promise.all([heroV3Load, syncRouteAssets()]);
+  const currentRequests = currentMotionRequests();
+  releaseColdMotion(assetStore.motionStore, motionKeepKeys(currentRequests));
+  await warmMotionRequests(currentRequests);
   draw(view.ctx, view.w, view.h, s, assetStore);
   renderHUD(s, C.FIXED_DT);
-} else {
-  requestAnimationFrame(frame);
+  performance.mark?.('apn-first-playable');
+  document.documentElement.dataset.firstPlayable = 'ready';
+  if (!qaManualMode) requestAnimationFrame(frame);
+  console.info('%cAPN Idle', 'color:#FC1243;font-weight:bold', '— All Patch Notes mini-game');
 }
-console.info('%cAPN Idle', 'color:#FC1243;font-weight:bold', '— All Patch Notes mini-game');
+
+boot();

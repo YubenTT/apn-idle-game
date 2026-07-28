@@ -119,6 +119,11 @@ process.stdout.write(
   })
 );
 process.stdout.write(
+  execFileSync(process.execPath, [fileURLToPath(new URL('./check-runtime-cache.mjs', import.meta.url))], {
+    encoding: 'utf8',
+  })
+);
+process.stdout.write(
   execFileSync(process.execPath, [fileURLToPath(new URL('./check-icon-grammar.mjs', import.meta.url))], {
     encoding: 'utf8',
   })
@@ -130,6 +135,26 @@ process.stdout.write(
 );
 process.stdout.write(
   execFileSync(process.execPath, [fileURLToPath(new URL('./check-motion-bundle.mjs', import.meta.url))], {
+    encoding: 'utf8',
+  })
+);
+process.stdout.write(
+  execFileSync(process.execPath, [fileURLToPath(new URL('./check-gaf2d-motion-build.mjs', import.meta.url))], {
+    encoding: 'utf8',
+  })
+);
+process.stdout.write(
+  execFileSync(process.execPath, [fileURLToPath(new URL('./check-gaf2d-hero-build.mjs', import.meta.url))], {
+    encoding: 'utf8',
+  })
+);
+process.stdout.write(
+  execFileSync(process.execPath, [fileURLToPath(new URL('./check-motion-store.mjs', import.meta.url))], {
+    encoding: 'utf8',
+  })
+);
+process.stdout.write(
+  execFileSync(process.execPath, [fileURLToPath(new URL('./check-motion-preference.mjs', import.meta.url))], {
     encoding: 'utf8',
   })
 );
@@ -155,6 +180,11 @@ process.stdout.write(
 );
 process.stdout.write(
   execFileSync(process.execPath, [fileURLToPath(new URL('./check-hero-atlas.mjs', import.meta.url))], {
+    encoding: 'utf8',
+  })
+);
+process.stdout.write(
+  execFileSync(process.execPath, [fileURLToPath(new URL('./check-hero-v3-runtime.mjs', import.meta.url))], {
     encoding: 'utf8',
   })
 );

@@ -10,12 +10,40 @@ export const ASSET_BUDGETS = Object.freeze({
   propsAndMasks: 50 * 1024,
 });
 
+export const MOTION_GRAMMAR = 'gaf2d-motion-bundle-v1';
+export const MOTION_BUDGETS = Object.freeze({
+  commonCompressed: 160 * 1024,
+  bossCompressed: 240 * 1024,
+  heroCompressed: 640 * 1024,
+  newMotionCompressed: Math.floor(1.8 * 1024 * 1024),
+  commonDecoded: 6 * 1024 * 1024,
+  bossDecoded: 8 * 1024 * 1024,
+  waveDecoded: 32 * 1024 * 1024,
+  hotTextures: 64 * 1024 * 1024,
+});
+const TARGET_ROLES = Object.freeze([
+  'common-a',
+  'common-b',
+  'common-c',
+  'elite',
+  'event',
+]);
+
 export const readJson = (file) => JSON.parse(fs.readFileSync(file, 'utf8'));
 export const stableJson = (value) => `${JSON.stringify(value, null, 2)}\n`;
 export const sha256 = (file) =>
   crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 
 const finite = (value) => Number.isFinite(value);
+const isObject = (value) =>
+  value !== null && typeof value === 'object' && !Array.isArray(value);
+
+function rejectUnknownProperties(value, allowed, label, errors) {
+  if (!isObject(value)) return;
+  for (const key of Object.keys(value)) {
+    if (!allowed.has(key)) errors.push(`${label}: unexpected property "${key}"`);
+  }
+}
 
 export function validateAtlasData(data, label = 'atlas') {
   const errors = [];
@@ -56,14 +84,116 @@ export function validateAtlasData(data, label = 'atlas') {
 export function validatePackManifest(pack, label = pack?.id || 'pack') {
   const errors = [];
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(pack?.id || '')) errors.push(`${label}: invalid id`);
+  if (!Number.isInteger(pack?.order) || pack.order < 1) errors.push(`${label}: invalid order`);
   if (pack?.zones !== 10) errors.push(`${label}: zones must equal 10`);
+  if (!pack?.genre || !pack?.title) errors.push(`${label}: missing title or genre`);
   if (!Array.isArray(pack?.targets) || pack.targets.length !== 5) errors.push(`${label}: requires five targets`);
-  if (!pack?.boss?.frame || !pack?.boss?.breakFrame || !pack?.boss?.pivot) errors.push(`${label}: incomplete boss`);
+  if (
+    Array.isArray(pack?.targets) &&
+    new Set(pack.targets.map((target) => target?.id)).size !== pack.targets.length
+  ) {
+    errors.push(`${label}: duplicate target id`);
+  }
+  if (Array.isArray(pack?.targets)) {
+    const roles = pack.targets.map((target) => target?.role);
+    if (new Set(roles).size !== TARGET_ROLES.length || TARGET_ROLES.some((role) => !roles.includes(role))) {
+      errors.push(`${label}: target roles must be exactly ${TARGET_ROLES.join(', ')}`);
+    }
+  }
+  if (!pack?.boss?.id || !pack?.boss?.frame || !pack?.boss?.breakFrame || !pack?.boss?.pivot) {
+    errors.push(`${label}: incomplete boss`);
+  } else {
+    if (pack.boss.frame !== 'boss') errors.push(`${label}: boss frame must equal "boss"`);
+    if (pack.boss.breakFrame !== 'boss-break') {
+      errors.push(`${label}: boss breakFrame must equal "boss-break"`);
+    }
+  }
   for (const target of pack?.targets || []) {
-    if (!target.frame || !target.pivot) errors.push(`${label}/${target.id || 'target'}: incomplete target`);
+    if (!target?.id || !target.role || !target.frame || !target.pivot) {
+      errors.push(`${label}/${target?.id || 'target'}: incomplete target`);
+      continue;
+    }
+    if (target.frame !== target.role) {
+      errors.push(`${label}/${target.id}: frame must equal role`);
+    }
   }
   for (const key of ['background', 'targets', 'targetData', 'props', 'corruptionMask']) {
     if (!pack?.assets?.[key]) errors.push(`${label}: missing asset ${key}`);
+  }
+  if (!pack?.sourceBoard) errors.push(`${label}: missing source board`);
+
+  if (pack?.motion !== undefined) {
+    if (
+      !pack.motion ||
+      typeof pack.motion !== 'object' ||
+      Array.isArray(pack.motion)
+    ) {
+      errors.push(`${label}: motion must be an object`);
+    } else {
+      rejectUnknownProperties(
+        pack.motion,
+        new Set(['grammar', 'characters']),
+        `${label}/motion`,
+        errors,
+      );
+      if (pack.motion.grammar !== MOTION_GRAMMAR) {
+        errors.push(
+          `${label}: motion grammar must equal "${MOTION_GRAMMAR}"`,
+        );
+      }
+      const characters = pack.motion.characters;
+      if (
+        !characters ||
+        typeof characters !== 'object' ||
+        Array.isArray(characters)
+      ) {
+        errors.push(`${label}: motion characters must be an object`);
+      } else {
+        const characterIds = new Set([
+          ...(pack.targets || []).map((target) => target?.id),
+          pack.boss?.id,
+        ]);
+        const seenPaths = new Set();
+        for (const [assetId, record] of Object.entries(characters)) {
+          const motionLabel = `${label}/motion/${assetId}`;
+          if (!characterIds.has(assetId)) {
+            errors.push(`${motionLabel}: unknown character`);
+          }
+          if (!record || typeof record !== 'object' || Array.isArray(record)) {
+            errors.push(`${motionLabel}: motion record must be an object`);
+            continue;
+          }
+          rejectUnknownProperties(
+            record,
+            new Set(['image', 'descriptor', 'descriptorSha256']),
+            motionLabel,
+            errors,
+          );
+          if (!/^[0-9a-f]{64}$/.test(record.descriptorSha256 || '')) {
+            errors.push(
+              `${motionLabel}: descriptorSha256 must be 64 lowercase hex characters`,
+            );
+          }
+          for (const [field, filename] of [
+            ['image', 'motion.webp'],
+            ['descriptor', 'motion.json'],
+          ]) {
+            const value = record[field];
+            if (typeof value === 'string' && seenPaths.has(value)) {
+              errors.push(`${motionLabel}: duplicate motion path ${value}`);
+            }
+            if (typeof value === 'string') seenPaths.add(value);
+            const expected =
+              `assets/game-packs/${pack.id}/characters/${assetId}/${filename}`;
+            if (value !== expected) {
+              errors.push(
+                `${motionLabel}: ${field} must equal ${expected}`,
+              );
+            }
+          }
+        }
+      }
+    }
   }
   return errors;
 }

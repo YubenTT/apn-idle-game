@@ -31,7 +31,7 @@ export function hapticPattern(name) {
 export function feedbackAllowed({
   muted: isMuted = muted,
   inAppReduced: appReduced = inAppReduced,
-  osReduced = typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches,
+  osReduced = false,
 } = {}) {
   return !isMuted && !appReduced && !osReduced;
 }

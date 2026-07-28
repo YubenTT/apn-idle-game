@@ -1,6 +1,6 @@
 # ADR-0012 — Procedural Canvas Host V2 is the shipped runtime character
 
-- Status: Accepted
+- Status: Superseded by ADR-0015 for runtime body ownership and fallback anatomy
 - Date: 2026-07-18
 
 ## Context

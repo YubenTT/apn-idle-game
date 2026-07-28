@@ -25,7 +25,7 @@
 | **Secondary action** | h 48 · r 16 | outline or neutral fill. Never crimson. |
 | **Skill chip** | h ≥48 | Structured: name · cost/state line · rank pips (5) · Focus charge fill. Charged = positive border + inset positive underline (the sheet "can" language — never an always-on drop glow). Landscape (≤480px tall) compacts: pips hidden, dock rebalances 60/40 so labels never clip. |
 | **Bottom sheet** | r-top 24 | handle 36×5 · title 28/32 · content padding 16 · `--elev-sheet`. Spring entrance; cards rise staggered on open. |
-| **Inventory slot** | 72×72 | 1px border; rarity accent on corners/edges only. States: empty · filled · selected · compare · junk. Empty Gear niche hosts the live procedural Host (static frame under reduced motion). |
+| **Inventory slot** | 72×72 | 1px border; rarity accent on corners/edges only. States: empty · filled · selected · compare · junk. Empty Gear niche hosts the current approved Hero clip (an approved static frame under reduced motion; the legless safe body appears only after load failure). |
 | **Item list card** | h 88 | icon left · name + 2 stats center · compare-delta / cost right. |
 | **Tab item** | h 60 | icon 22–24 · label 11. Active = sliding pill (travels via `--nav-i`, surface-700 + inset info accent), never a crimson slab. Badge count changes pop once. |
 | **Toast banner** | top-center | icon + one message. Tones: info / rank / zone / win / live, each in its owning token. Spring drop in, 240ms fade out. |

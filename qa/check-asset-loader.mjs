@@ -1,5 +1,8 @@
 import { createAssetStore, preloadRouteAssets, getCurrentPackAssets, releaseColdPacks, packWindowForRoute } from '../js/assets.js';
 import { createRouteState } from '../js/route.js';
+import { firstPlayableAssetPaths } from '../scripts/assets/first-playable.mjs';
+import { LEGACY_CREATURE_BOOT_ASSET_PATHS } from '../js/creatures.js';
+import { packWavePairIdentityUnion } from '../js/wave-roster.js';
 
 const assert = (condition, message) => {
   if (!condition) throw new Error(`Asset loader: ${message}`);
@@ -12,7 +15,10 @@ const loadImage = async (src) => {
   if (src.includes('/props.webp')) throw new Error('optional prop missing');
   return { src, close() { this.closed = true; } };
 };
-const loadJson = async (src) => ({ src, frames: { 'common-a': {}, 'common-b': {}, 'common-c': {}, elite: {}, event: {}, boss: {}, 'boss-break': {} } });
+const loadJson = async (src) => {
+  loads.push(src);
+  return { src, frames: { 'common-a': {}, 'common-b': {}, 'common-c': {}, elite: {}, event: {}, boss: {}, 'boss-break': {} } };
+};
 const warn = [];
 const store = createAssetStore({ loadImage, loadJson, warn: (message) => warn.push(message) });
 const route = createRouteState();
@@ -20,6 +26,15 @@ const route = createRouteState();
 const firstWindow = packWindowForRoute(route);
 assert(firstWindow.map((pack) => pack.id).join(',') === 'valorant,league', 'current and next pack window');
 await preloadRouteAssets(store, route);
+const firstPlayable = firstPlayableAssetPaths(firstWindow);
+assert(
+  loads.every((assetPath) => firstPlayable.has(assetPath)),
+  'real current/next pack network requests are first-playable',
+);
+assert(
+  LEGACY_CREATURE_BOOT_ASSET_PATHS.every((assetPath) => !firstPlayable.has(assetPath)),
+  'legacy creature atlases are no longer first-playable boot assets',
+);
 assert(store.packs.size === 2, 'two decoded pack records maximum');
 assert(store.currentId === 'valorant' && store.nextId === 'league', 'store ownership recorded');
 assert(getCurrentPackAssets(store, route)?.id === 'valorant', 'current pack lookup');
@@ -41,5 +56,35 @@ await preloadRouteAssets(store, route);
 assert(store.packs.size <= 2, 'Zone 201 respects decoded cap');
 releaseColdPacks(store, new Set([store.currentId]));
 assert(store.packs.size === 1, 'explicit cold release');
+
+const scheduled = createRouteState();
+scheduled.zone = 200;
+scheduled.deck = ['valorant', 'fortnite'];
+scheduled.seenPackIds = ['valorant', 'fortnite'];
+const scheduledWindow = packWindowForRoute(scheduled);
+assert(
+  scheduledWindow.map((pack) => pack.id).join(',') === 'valorant,fortnite',
+  'scheduled window preserves an explicit non-adjacent pack pairing',
+);
+const scheduledUnion = packWavePairIdentityUnion(
+  scheduledWindow[0],
+  10,
+  scheduledWindow[1],
+  1,
+);
+assert(
+  scheduledUnion.some(
+    ({ packId, assetId }) =>
+      packId === 'valorant' && assetId === 'site-warden',
+  ) &&
+    scheduledUnion.filter(({ packId }) => packId === 'fortnite').length === 5,
+  'scheduled 10→1 identity union is conservative across non-adjacent packs',
+);
+scheduled.zone = 210;
+assert(
+  packWindowForRoute(scheduled).map((pack) => pack.id).join(',') ===
+    'fortnite,valorant',
+  'revisit window preserves the scheduler reverse pairing',
+);
 
 console.log(`ASSET LOADER PASS ${loads.length} resource attempts`);

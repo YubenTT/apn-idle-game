@@ -15,6 +15,7 @@
 | A screen's layout / decision | [SCREEN-SPECS.md](./SCREEN-SPECS.md) |
 | Mascot geometry / variant / animation | [../brand/MASCOT-CANON.md](../brand/MASCOT-CANON.md) |
 | Icon / enemy / item / background art rules | [../brand/ART-DIRECTION.md](../brand/ART-DIRECTION.md) |
+| Character identity / clip vocabulary / motion loader | [authored-motion design](./superpowers/specs/2026-07-28-gaf2d-authored-motion-design.md) + [ART-PIPELINE](./ART-PIPELINE.md) + [QA-CHECKLIST](./QA-CHECKLIST.md) |
 | Player-facing wording / a term | [../brand/NAMING.md](../brand/NAMING.md) + [GLOSSARY.md](./GLOSSARY.md) |
 | Module boundaries / data flow / state shape | [ARCHITECTURE.md](./ARCHITECTURE.md) |
 | Save schema | `js/save.js` + [GLOSSARY.md](./GLOSSARY.md) code-map + migration note |

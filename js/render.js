@@ -1,13 +1,25 @@
 /** APN Idle canvas — V2 scenery/targets/Host + combat juice overlays */
 
-import { C, clamp, easeOutCubic, easeOutQuad } from './formulas.js?v=gaf2d-creatures-v1';
-import { getCurrentPackAssets } from './assets.js?v=gaf2d-creatures-v1';
-import { HOST_PRESENTATION, resolveHostClip } from './host-contract.js?v=gaf2d-creatures-v1';
-import { drawHeroV2 } from './hero-v2.js?v=gaf2d-creatures-v1';
-import { drawTarget } from './enemies-v2.js?v=gaf2d-creatures-v1';
-import { drawScenery } from './scenery-v2.js?v=gaf2d-creatures-v1';
-import { CREATURES, creatureKindFor } from './content.js?v=gaf2d-creatures-v1';
-import { creatureClipReady, drawCreature } from './creatures.js?v=gaf2d-creatures-v1';
+import { C, clamp, easeOutCubic, easeOutQuad } from './formulas.js?v=gaf2d-motion-v1';
+import { getCurrentPackAssets } from './assets.js?v=gaf2d-motion-v1';
+import { HOST_PRESENTATION, resolveHostClip } from './host-contract.js?v=gaf2d-motion-v1';
+import { drawHeroV2 } from './hero-v2.js?v=gaf2d-motion-v1';
+import { motionReduced } from './motion-preference.js?v=gaf2d-motion-v1';
+import {
+  drawMotionFrame,
+  frameIndexForClip,
+  selectEnemyMotion,
+} from './motion-bundle.js?v=gaf2d-motion-v1';
+import {
+  failMotionRecord,
+  getMotionRecord,
+  motionDiagnostics,
+} from './motion-store.js?v=gaf2d-motion-v1';
+import { drawTarget } from './enemies-v2.js?v=gaf2d-motion-v1';
+import { drawScenery } from './scenery-v2.js?v=gaf2d-motion-v1';
+import { CREATURES, creatureKindFor } from './content.js?v=gaf2d-motion-v1';
+import { creatureClipReady, drawCreature } from './creatures.js?v=gaf2d-motion-v1';
+import { targetForEnemyType } from './wave-roster.js?v=gaf2d-motion-v1';
 
 const enemyRenderSize = (enemy) => enemy.type === 'boss' ? 136 : enemy.type === 'patch' ? 100 : 96;
 
@@ -102,7 +114,7 @@ export function draw(ctx, w, h, s, assetStore = null) {
     gy,
     scroll,
     t,
-    reducedMotion: s.settings.reducedMotion,
+    reducedMotion: motionReduced(s),
     packBg: packAssets?.ready && ready(packAssets.background) ? packAssets.background : null,
   });
 
@@ -120,7 +132,7 @@ export function draw(ctx, w, h, s, assetStore = null) {
   };
   const show = s.world.enemies.filter((e) => e.hp > 0 || (e.deathT && e.deathT > 0));
   show.forEach((e) => {
-    drawEnemy(ctx, e, gy, t, packAssets, s.settings.reducedMotion, stageFit, enemyEnv);
+    drawEnemy(ctx, e, gy, t, packAssets, assetStore, motionReduced(s), stageFit, enemyEnv);
     if (e.critFlash > 0) drawCritFlash(ctx, e, gy, stageFit);
   });
 
@@ -187,7 +199,7 @@ export function draw(ctx, w, h, s, assetStore = null) {
     } else if (fx.kind === 'sweep') {
       drawZoneSweep(ctx, w, h, fx);
     } else if (fx.kind === 'golive') {
-      drawGoLiveFx(ctx, w, h, fx, s.settings.reducedMotion);
+      drawGoLiveFx(ctx, w, h, fx, motionReduced(s));
     }
   }
 
@@ -304,7 +316,7 @@ function drawHero(ctx, x, gy, s, t, fit = 1) {
     sprinting,
     tracker,
     energy: h.energy,
-    reducedMotion: s.settings.reducedMotion,
+    reducedMotion: motionReduced(s),
     pose: hostPose,
     levelT: h.levelT || 0,
     defeatT: h.defeatT || 0,
@@ -353,7 +365,118 @@ function drawHero(ctx, x, gy, s, t, fit = 1) {
   }
 }
 
-function drawEnemy(ctx, e, gy, t, packAssets = null, reducedMotion = false, fit = 1, env = null) {
+export function inspectEnemyMotion(enemy, packAssets = null, assetStore = null, env = null) {
+  const pack = packAssets?.pack || null;
+  const target = pack ? targetForEnemyType(pack, enemy?.type) : null;
+  const assetId = target?.id || null;
+  const source = assetId ? pack?.motion?.characters?.[assetId] : null;
+  const fallbackCount = assetStore?.motionStore
+    ? motionDiagnostics(assetStore.motionStore).length
+    : 0;
+  if (!pack || !assetId || !source) {
+    return {
+      mode: 'unmapped',
+      status: 'unmapped',
+      assetId,
+      clip: null,
+      frameIndex: null,
+      fallbacks: fallbackCount,
+      target,
+    };
+  }
+  const record = assetStore?.motionStore
+    ? getMotionRecord(assetStore.motionStore, pack.id, assetId)
+    : null;
+  if (!record || record.status === 'pending') {
+    return {
+      mode: 'pending',
+      status: 'pending',
+      assetId,
+      clip: null,
+      frameIndex: null,
+      fallbacks: fallbackCount,
+      target,
+    };
+  }
+  if (record.status === 'failed') {
+    return {
+      mode: 'static-fallback',
+      status: 'failed',
+      assetId,
+      clip: null,
+      frameIndex: null,
+      fallbacks: fallbackCount,
+      target,
+    };
+  }
+  const selection = selectEnemyMotion(enemy, {
+    assetId,
+    clips: record.descriptor?.clips,
+    meleeStop: env?.meleeStop,
+    engagedId: env?.engagedId,
+    time: env?.t,
+    timestamp: env?.t,
+  });
+  const clip = record.descriptor?.clips?.[selection.clip];
+  if (!clip) {
+    return {
+      mode: 'static-fallback',
+      status: 'failed',
+      assetId,
+      clip: selection.clip,
+      frameIndex: null,
+      fallbacks: fallbackCount,
+      target,
+    };
+  }
+  return {
+    mode: 'motion',
+    status: 'ready',
+    assetId,
+    clip: selection.clip,
+    frameIndex: frameIndexForClip(clip, selection.value),
+    fallbacks: fallbackCount,
+    record,
+    target,
+  };
+}
+
+export function legacyCreatureKindForEnemy(
+  enemy,
+  packAssets = null,
+  assetStore = null,
+  env = null,
+) {
+  const motion = inspectEnemyMotion(enemy, packAssets, assetStore, env);
+  return motion.status === 'unmapped'
+    ? creatureKindFor(enemy, env?.zone ?? 0)
+    : null;
+}
+
+export function legacyCreatureKindForStage(
+  enemies,
+  packAssets = null,
+  assetStore = null,
+  env = null,
+) {
+  if (!Array.isArray(enemies)) return null;
+  for (const enemy of enemies) {
+    const onStage =
+      enemy?.hp > 0 ||
+      (Number.isFinite(enemy?.deathT) && enemy.deathT > 0);
+    if (!onStage) continue;
+    const kind = legacyCreatureKindForEnemy(
+      enemy,
+      packAssets,
+      assetStore,
+      env,
+    );
+    if (kind) return kind;
+  }
+  return null;
+}
+
+export function drawEnemy(ctx, e, gy, t, packAssets = null, assetStore = null, reducedMotion = false, fit = 1, env = null) {
   const x = e.displayX;
   const dying = e.deathT > 0 && e.killed;
   const isBoss = e.type === 'boss';
@@ -362,14 +485,59 @@ function drawEnemy(ctx, e, gy, t, packAssets = null, reducedMotion = false, fit 
   const frameName = enemyFrameFor(e);
   const frame = packAssets?.targetData?.frames?.[frameName];
   const footY = gy - 2;
+  const motionInfo = inspectEnemyMotion(e, packAssets, assetStore, {
+    ...env,
+    t,
+  });
 
-  // V3 vinyl creatures take the stage when their atlases are decoded; any gap
-  // falls straight back to the procedural feed-noise family.
-  const kind = env ? creatureKindFor(e, env.zone) : null;
-  const onStage =
-    kind &&
-    drawCreatureTarget(ctx, e, kind, { t, gy, size, reducedMotion, meleeStop: env.meleeStop, engagedId: env.engagedId });
-  if (!onStage) {
+  let onStage = false;
+  if (motionInfo.status === 'ready') {
+    let failureDetail = 'motion frame blit returned no drawable frame';
+    try {
+      onStage = !!drawMotionFrame(
+        ctx,
+        motionInfo.record,
+        motionInfo.clip,
+        motionInfo.frameIndex,
+        x,
+        footY,
+        size,
+      );
+    } catch (error) {
+      failureDetail = `motion frame blit failed: ${error?.message || String(error)}`;
+      onStage = false;
+    }
+    if (!onStage && assetStore?.motionStore) {
+      failMotionRecord(
+        assetStore.motionStore,
+        packAssets.pack.id,
+        motionInfo.assetId,
+        'decode',
+        failureDetail,
+      );
+    }
+  } else if (motionInfo.status === 'pending') {
+    onStage = true;
+  }
+
+  const kind = env
+    ? legacyCreatureKindForEnemy(e, packAssets, assetStore, env)
+    : null;
+  if (!onStage && motionInfo.status === 'unmapped') {
+    onStage = !!(
+      kind &&
+      drawCreatureTarget(ctx, e, kind, {
+        t,
+        gy,
+        size,
+        reducedMotion,
+        meleeStop: env.meleeStop,
+        engagedId: env.engagedId,
+        creatureStore: assetStore?.creatureStore,
+      })
+    );
+  }
+  if (!onStage && motionInfo.status !== 'pending') {
     drawTarget(ctx, e, {
       t,
       gy,
@@ -423,7 +591,9 @@ function drawEnemy(ctx, e, gy, t, packAssets = null, reducedMotion = false, fit 
   ctx.fillStyle = '#f3f7fb';
   ctx.font = `800 ${isBoss ? 11 : 10}px system-ui,sans-serif`;
   ctx.textAlign = 'center';
-  const labelSource = kind && CREATURES[kind] ? CREATURES[kind].label : e.label;
+  const labelSource = kind && CREATURES[kind]
+    ? CREATURES[kind].label
+    : motionInfo.target?.label || e.label;
   const label = enemyLabelForDisplay(labelSource, isBoss);
   if (compact) {
     // Short stages: the DOM stage-hud owns the sky, so the nameplate docks
@@ -500,7 +670,15 @@ function creatureSpawnScale(e, t) {
  * idle otherwise (loop).
  */
 function drawCreatureTarget(ctx, e, kind, o) {
-  const { t, gy, size, reducedMotion, meleeStop, engagedId } = o;
+  const {
+    t,
+    gy,
+    size,
+    reducedMotion,
+    meleeStop,
+    engagedId,
+    creatureStore,
+  } = o;
   const x = e.displayX;
   const dying = e.deathT > 0 && e.killed;
   const deathU = dying ? 1 - clamp(e.deathT / (e.deathMax || 0.5), 0, 1) : 0;
@@ -536,8 +714,10 @@ function drawCreatureTarget(ctx, e, kind, o) {
     clipT = t + phase;
   }
   // Missing atlas? Step down to a loop clip that exists, else bail out.
-  if (!creatureClipReady(kind, clip)) {
-    const fallback = ['idle', 'advance'].find((name) => creatureClipReady(kind, name));
+  if (!creatureClipReady(kind, clip, creatureStore)) {
+    const fallback = ['idle', 'advance'].find((name) =>
+      creatureClipReady(kind, name, creatureStore),
+    );
     if (!fallback) return false;
     clip = fallback;
     clipT = t + phase;
@@ -581,7 +761,7 @@ function drawCreatureTarget(ctx, e, kind, o) {
   ctx.translate(x + hurtOff, footY + dy);
   ctx.scale(sx || 0.01, sy);
 
-  drawCreature(ctx, kind, clip, clipT, 0, 0, size);
+  drawCreature(ctx, kind, clip, clipT, 0, 0, size, creatureStore);
 
   // white hit bloom (same overlay the procedural family gets)
   if (flashU > 0) {

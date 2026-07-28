@@ -1,5 +1,49 @@
 # APN Idle redesign V1 — QA report
 
+## 2026-07-28 authored-motion technical closure
+
+Status: offline technical acceptance approved. Production art acceptance remains
+open at the exact human identity, complete motion-set, Hero rig, and release
+gates.
+
+Current final evidence:
+
+- `node qa/run-tests.mjs` passes with 1,929 `OK` assertions, 12 terminal
+  `PASS` lines, and final `ALL PASS`;
+- `node scripts/assets/verify-sizes.mjs` passes with
+  `first-playable=779169` bytes and `hot=2`;
+- catalog, generated pack module, and asset manifest are byte-stable across two
+  consecutive generator runs; the asset manifest contains 221 entries;
+- direct Chrome verifies all waves 1–10 at `375×812`, `428×926`, and
+  `844×390` in both standard and effective reduced-motion modes: 60 wave cases,
+  zero console/network problems, zero document overflow, and correct role/boss
+  mapping;
+- the query-gated synthetic authored-motion path adds three viewport cases
+  through the same public store contract. Each selects exact `advance` frames
+  `0→1→2`, produces three distinct pixel hashes and a moving part centroid,
+  records zero fallback, survives `visible→hidden→visible`, and preserves one
+  saved-or-live-OS reduced-motion authority;
+- the normal page exposes none of `render_game_to_text`, `advanceTime`, or
+  `__APN_QA__`; the smoke page alone exposes those test hooks; and
+- the documentation contract rejects any active return to GLB-derived,
+  procedural-V2, biped, or one-batch-approval Hero authority while preserving
+  clearly labeled historical provenance; and
+- `git diff --check` plus JavaScript syntax checks pass.
+
+The deterministic creature and Hero builders reject stale GAF2D export dry-runs,
+legacy or incomplete approvals, mixed or uniformly shifted pivots, aliased
+logical frames, untrusted boss promotion, nonportable paths, unknown tool
+versions, and partial output. They build twice to identical hashes under the
+recorded ImageMagick 7.1.2-13 / `cwebp` 1.6.0 toolchain and publish complete
+directories atomically.
+
+This is deliberately not a production-art claim. `valorant/pack.json` still has
+no motion character map, so the six production creatures remain on the approved
+static atlas. `assets/mascot/v3/set.json` labels the current Hero bytes
+`historical`. The new legless Hero four-view sheet remains an unapproved
+candidate. No provider call, private upload, paid action, 3D pipeline, push,
+publish, or deploy was used for this closure.
+
 ## PR-5 checkpoint · Run hierarchy + placeholder Host contract
 
 Run now separates Route and ten-zone Pack context from Clear / Rank / Live

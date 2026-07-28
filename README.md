@@ -281,13 +281,14 @@ every doc + the source-of-truth table (which doc wins on which topic).
 | **Design system (`brand/`)** | |
 | [DESIGN-TOKENS.md](./brand/DESIGN-TOKENS.md) · [tokens.css](./brand/tokens.css) | Color / type / spacing / motion — one color, one job |
 | [COMPONENTS.md](./brand/COMPONENTS.md) | Component library specs + states |
-| [MASCOT-CANON.md](./brand/MASCOT-CANON.md) | GLB single-source mascot rules |
+| [MASCOT-CANON.md](./brand/MASCOT-CANON.md) | Legless Hero identity, motion, fallback, and approval authority |
 | [ART-DIRECTION.md](./brand/ART-DIRECTION.md) | 2D grammar, icons, enemies, backgrounds |
 | [NAMING.md](./brand/NAMING.md) | Copy & naming standard |
 | **Screens / production** | |
 | [SCREEN-SPECS.md](./docs/SCREEN-SPECS.md) | Mobile-first per-screen redesign |
 | [REDESIGN-PLAN.md](./docs/REDESIGN-PLAN.md) | Execution plan — sequenced issue backlog |
-| [ART-PIPELINE.md](./docs/ART-PIPELINE.md) | GLB → sprite → atlas → WebP |
+| [ART-PIPELINE.md](./docs/ART-PIPELINE.md) | Approved GAF2D identity/motion → deterministic runtime bundles |
+| [authored-motion design](./docs/superpowers/specs/2026-07-28-gaf2d-authored-motion-design.md) | Hero + creature clip, runtime, budget, QA, and human-gate contract |
 | [PERF-BUDGET.md](./docs/PERF-BUDGET.md) | Load + runtime budgets |
 | [QA-CHECKLIST.md](./docs/QA-CHECKLIST.md) | V1 quality gate |
 | **Engineering / governance** | |

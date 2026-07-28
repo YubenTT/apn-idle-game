@@ -1,6 +1,6 @@
 # ADR-0005 — GLB-locked hybrid Host rendering
 
-- Status: Accepted
+- Status: Superseded by ADR-0015
 - Date: 2026-07-15
 
 ## Context
@@ -42,3 +42,9 @@ silhouette/pivot QA before every Host atlas change.
 - the canonical GLB is intentionally superseded by a new accepted ADR, or
 - deterministic GLB renders cannot meet the measured silhouette and runtime size
   budgets without changing geometry.
+
+## Supersession
+
+ADR-0015 replaces this render lane for current Hero production. Its tools and
+outputs remain historical provenance; they cannot approve or generate a new
+runtime Hero body.

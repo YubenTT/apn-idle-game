@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import { createHash } from 'node:crypto';
 
 import {
   LOOP_CLIPS,
@@ -27,6 +28,12 @@ const assert = (condition, message) => {
 
 const valid = readJson('valid.json');
 const combinedInvalid = readJson('invalid-overlap.json');
+const browserFixtureRoot = new URL('./fixtures/browser-motion/', import.meta.url);
+const browserFixtureIntegrity = JSON.parse(
+  fs.readFileSync(new URL('integrity.json', browserFixtureRoot), 'utf8'),
+);
+const sha256Bytes = (bytes) =>
+  createHash('sha256').update(bytes).digest('hex');
 
 function addBrokenClip(bundle) {
   bundle.atlas.height = Math.max(bundle.atlas.height, 672);
@@ -43,9 +50,9 @@ function addBrokenClip(bundle) {
   return bundle;
 }
 
-function validSiteWarden() {
+function validBoss(assetId = 'site-warden') {
   const bundle = copy(valid);
-  bundle.assetId = 'site-warden';
+  bundle.assetId = assetId;
   return addBrokenClip(bundle);
 }
 
@@ -71,13 +78,13 @@ function bundleWithFrameCounts(counts) {
   return bundle;
 }
 
-function expectValid(bundle, expectedAssetId, message) {
-  const errors = validateMotionBundle(bundle, expectedAssetId);
+function expectValid(bundle, expectedAssetId, message, options) {
+  const errors = validateMotionBundle(bundle, expectedAssetId, options);
   assert(errors.length === 0, `${message} (${errors.join('; ')})`);
 }
 
-function expectInvalid(bundle, expectedAssetId, needle, message) {
-  const errors = validateMotionBundle(bundle, expectedAssetId);
+function expectInvalid(bundle, expectedAssetId, needle, message, options) {
+  const errors = validateMotionBundle(bundle, expectedAssetId, options);
   assert(
     errors.some((error) => error.includes(needle)),
     `${message} (${errors.join('; ')})`,
@@ -90,6 +97,39 @@ assert(
   'required clip vocabulary is exact',
 );
 expectValid(valid, 'entry-runner', 'valid common motion bundle accepted');
+assert(
+  browserFixtureIntegrity.grammar === 'apn-browser-motion-fixture-v1' &&
+    browserFixtureIntegrity.generator === 'generate.mjs' &&
+    browserFixtureIntegrity.encoder?.name === 'cwebp' &&
+    browserFixtureIntegrity.encoder?.version === '1.6.0' &&
+    JSON.stringify(browserFixtureIntegrity.encoder?.arguments) ===
+      JSON.stringify(['-exact', '-q', '90']),
+  'browser fixture integrity authority pins its generator and encoder',
+);
+for (const assetId of ['entry-runner', 'veil-operator']) {
+  const descriptorBytes = fs.readFileSync(
+    new URL(`${assetId}/motion.json`, browserFixtureRoot),
+  );
+  const atlasBytes = fs.readFileSync(
+    new URL(`${assetId}/motion.webp`, browserFixtureRoot),
+  );
+  const descriptor = JSON.parse(descriptorBytes.toString('utf8'));
+  const expected = browserFixtureIntegrity.assets?.[assetId];
+  assert(
+    expected?.descriptorSha256 === sha256Bytes(descriptorBytes) &&
+      expected?.atlasSha256 === sha256Bytes(atlasBytes),
+    `${assetId} browser fixture matches its checked-in integrity hashes`,
+  );
+  assert(
+    descriptor.atlas?.sha256 === sha256Bytes(atlasBytes),
+    `${assetId} browser descriptor binds its exact synthetic atlas`,
+  );
+  expectValid(
+    descriptor,
+    assetId,
+    `${assetId} browser fixture satisfies the production motion grammar`,
+  );
+}
 
 const commonAtDecodedLimit = copy(valid);
 commonAtDecodedLimit.atlas.width = 2048;
@@ -100,13 +140,20 @@ expectValid(
   'common atlas accepts exactly 6 MiB RGBA and a 2048px dimension',
 );
 
-const wardenAtDecodedLimit = validSiteWarden();
-wardenAtDecodedLimit.atlas.width = 2048;
-wardenAtDecodedLimit.atlas.height = 1024;
+const renamedBossAtDecodedLimit = validBoss('patch-overseer');
+renamedBossAtDecodedLimit.atlas.width = 2048;
+renamedBossAtDecodedLimit.atlas.height = 1024;
 expectValid(
-  wardenAtDecodedLimit,
+  renamedBossAtDecodedLimit,
+  'patch-overseer',
+  'trusted renamed boss accepts exactly 8 MiB RGBA with required broken clip',
+  { role: 'boss' },
+);
+expectInvalid(
+  validBoss('site-warden'),
   'site-warden',
-  'Site Warden accepts exactly 8 MiB RGBA with required broken clip',
+  '"broken" is forbidden for non-boss role',
+  'asset ID cannot self-promote into boss authority',
 );
 
 const tooManyInOneClip = bundleWithFrameCounts({ idle: 65 });
@@ -175,6 +222,32 @@ assert(
   adversarialErrors?.some((error) => error.includes('at most 64 frames')) &&
     adversarialErrors.some((error) => error.includes('at most 256 frames')),
   'adversarial validation reports both frame caps before the error ceiling',
+);
+
+const hugeClipMap = copy(valid);
+for (let index = 0; index < 1000; index += 1) {
+  Object.defineProperty(hugeClipMap.clips, `unexpected-${index}`, {
+    enumerable: true,
+    get() {
+      throw new Error(`validator touched unexpected clip ${index}`);
+    },
+  });
+}
+let hugeClipErrors = null;
+let hugeClipThrow = null;
+try {
+  hugeClipErrors = validateMotionBundle(hugeClipMap, 'entry-runner');
+} catch (error) {
+  hugeClipThrow = error;
+}
+assert(
+  hugeClipThrow === null,
+  `huge clip map is rejected without touching unexpected clip records (${hugeClipThrow?.message || ''})`,
+);
+assert(
+  Array.isArray(hugeClipErrors) &&
+    hugeClipErrors.some((error) => error.includes('clips: expected at most 6 entries')),
+  'huge clip map is rejected by bounded clip-key validation',
 );
 
 const mutations = [
@@ -260,6 +333,41 @@ const mutations = [
     needle: 'image:',
   },
   {
+    message: 'unknown top-level property rejected',
+    mutate: (bundle) => {
+      bundle.debug = true;
+    },
+    needle: 'bundle: unexpected property "debug"',
+  },
+  {
+    message: 'unknown atlas property rejected',
+    mutate: (bundle) => {
+      bundle.atlas.url = 'motion.webp';
+    },
+    needle: 'atlas: unexpected property "url"',
+  },
+  {
+    message: 'unknown frame-size property rejected',
+    mutate: (bundle) => {
+      bundle.frameSize.depth = 1;
+    },
+    needle: 'frameSize: unexpected property "depth"',
+  },
+  {
+    message: 'unknown trim property rejected',
+    mutate: (bundle) => {
+      bundle.trim.rotated = false;
+    },
+    needle: 'trim: unexpected property "rotated"',
+  },
+  {
+    message: 'unknown pivot property rejected',
+    mutate: (bundle) => {
+      bundle.pivot.unit = 'normalized';
+    },
+    needle: 'pivot: unexpected property "unit"',
+  },
+  {
     message: 'non-positive atlas dimension rejected',
     mutate: (bundle) => {
       bundle.atlas.width = 0;
@@ -289,9 +397,10 @@ const mutations = [
     needle: 'decoded RGBA bytes',
   },
   {
-    message: 'Site Warden atlas above 8 MiB RGBA rejected',
-    make: validSiteWarden,
-    expectedAssetId: 'site-warden',
+    message: 'trusted boss atlas above 8 MiB RGBA rejected',
+    make: () => validBoss('future-gatekeeper'),
+    expectedAssetId: 'future-gatekeeper',
+    options: { role: 'boss' },
     mutate: (bundle) => {
       bundle.atlas.width = 2048;
       bundle.atlas.height = 1025;
@@ -355,11 +464,25 @@ const mutations = [
     needle: 'lineage.rigApprovalSha256',
   },
   {
+    message: 'unknown lineage property rejected',
+    mutate: (bundle) => {
+      bundle.lineage.sourcePath = '/private/source.png';
+    },
+    needle: 'lineage: unexpected property "sourcePath"',
+  },
+  {
     message: 'missing encoder structure rejected',
     mutate: (bundle) => {
       bundle.encoder = null;
     },
     needle: 'encoder:',
+  },
+  {
+    message: 'unknown encoder version rejected',
+    mutate: (bundle) => {
+      bundle.encoder.version = '999.999.999';
+    },
+    needle: 'encoder.profile',
   },
   {
     message: 'non-string encoder argument rejected',
@@ -374,6 +497,90 @@ const mutations = [
       bundle.encoder.arguments = [];
     },
     needle: 'encoder:',
+  },
+  {
+    message: 'unknown encoder property rejected',
+    mutate: (bundle) => {
+      bundle.encoder.command = 'cwebp';
+    },
+    needle: 'encoder: unexpected property "command"',
+  },
+  {
+    message: 'wrong encoder argument order rejected',
+    mutate: (bundle) => {
+      bundle.encoder.arguments = ['-q', '90', '-exact'];
+    },
+    needle: 'encoder.profile',
+  },
+  {
+    message: 'wrong encoder quality rejected',
+    mutate: (bundle) => {
+      bundle.encoder.arguments = ['-exact', '-q', '89'];
+    },
+    needle: 'encoder.profile',
+  },
+  {
+    message: 'extra encoder argument rejected',
+    mutate: (bundle) => {
+      bundle.encoder.arguments = ['-exact', '-q', '90', '-quiet'];
+    },
+    needle: 'encoder.profile',
+  },
+  {
+    message: 'huge encoder argument vector rejected',
+    mutate: (bundle) => {
+      bundle.encoder.arguments = Array.from({ length: 65 }, () => '-exact');
+    },
+    needle: 'encoder:',
+  },
+  {
+    message: 'absolute encoder operand rejected',
+    mutate: (bundle) => {
+      bundle.encoder.arguments = ['-exact', '/private/source.png'];
+    },
+    needle: 'encoder.profile',
+  },
+  {
+    message: 'URL encoder operand rejected',
+    mutate: (bundle) => {
+      bundle.encoder.arguments = ['-exact', 'https://example.invalid/source'];
+    },
+    needle: 'encoder.profile',
+  },
+  {
+    message: 'secret-bearing encoder query rejected',
+    mutate: (bundle) => {
+      bundle.encoder.arguments = ['-exact', 'q=90&token=secret'];
+    },
+    needle: 'encoder.profile',
+  },
+  {
+    message: 'output operand flag rejected',
+    mutate: (bundle) => {
+      bundle.encoder.arguments = ['-exact', '-o'];
+    },
+    needle: 'encoder.profile',
+  },
+  {
+    message: 'raw secret-like encoder operand rejected',
+    mutate: (bundle) => {
+      bundle.encoder.arguments = ['-exact', 'credential-shaped-test-value'];
+    },
+    needle: 'encoder.profile',
+  },
+  {
+    message: 'unknown encoder option rejected',
+    mutate: (bundle) => {
+      bundle.encoder.arguments = ['-exact', '-future-magic'];
+    },
+    needle: 'encoder.profile',
+  },
+  {
+    message: 'duplicate encoder option rejected',
+    mutate: (bundle) => {
+      bundle.encoder.arguments = ['-exact', '-q', '90', '-q', '80'];
+    },
+    needle: 'encoder.profile',
   },
   {
     message: 'non-positive clip FPS rejected',
@@ -397,6 +604,20 @@ const mutations = [
     needle: 'clips.idle.fps',
   },
   {
+    message: 'fractional clip FPS rejected',
+    mutate: (bundle) => {
+      bundle.clips.idle.fps = 7.5;
+    },
+    needle: 'clips.idle.fps',
+  },
+  {
+    message: 'unknown clip property rejected',
+    mutate: (bundle) => {
+      bundle.clips.idle.reverse = false;
+    },
+    needle: 'clips.idle: unexpected property "reverse"',
+  },
+  {
     message: 'wrong semantic playback rejected',
     mutate: (bundle) => {
       bundle.clips.idle.playback = 'progress';
@@ -418,6 +639,13 @@ const mutations = [
     needle: 'clips.hit.frames',
   },
   {
+    message: 'wrong exact clip frame count rejected',
+    mutate: (bundle) => {
+      bundle.clips.hit.frames.pop();
+    },
+    needle: 'clips.hit.frames: expected exactly 4 frames',
+  },
+  {
     message: 'missing required clip rejected',
     mutate: (bundle) => {
       delete bundle.clips.engaged;
@@ -437,18 +665,19 @@ const mutations = [
     needle: 'unexpected clip "attack"',
   },
   {
-    message: 'broken clip forbidden for non-Warden asset',
+    message: 'broken clip forbidden for non-boss role',
     mutate: addBrokenClip,
-    needle: '"broken" is only allowed',
+    needle: '"broken" is forbidden for non-boss role',
   },
   {
-    message: 'broken clip required for Site Warden asset',
+    message: 'broken clip required for any trusted boss role',
     make: () => {
       const bundle = copy(valid);
-      bundle.assetId = 'site-warden';
+      bundle.assetId = 'future-gatekeeper';
       return bundle;
     },
-    expectedAssetId: 'site-warden',
+    expectedAssetId: 'future-gatekeeper',
+    options: { role: 'boss' },
     needle: 'missing required clip "broken"',
   },
   {
@@ -479,6 +708,13 @@ const mutations = [
     },
     needle: 'must match shared trim',
   },
+  {
+    message: 'unknown frame-rectangle property rejected',
+    mutate: (bundle) => {
+      bundle.clips.idle.frames[0].rotated = false;
+    },
+    needle: 'clips.idle.frames[0]: unexpected property "rotated"',
+  },
 ];
 
 for (const testCase of mutations) {
@@ -489,6 +725,7 @@ for (const testCase of mutations) {
     testCase.expectedAssetId || 'entry-runner',
     testCase.needle,
     testCase.message,
+    testCase.options,
   );
 }
 
@@ -510,6 +747,12 @@ assert(
   frameIndexForClip(valid.clips.death, -1) === 0,
   'progress clip clamps before its first frame',
 );
+assert(
+  [0, 0.249999, 0.25, 0.5, 0.75, 1].map((value) =>
+    frameIndexForClip(valid.clips.hit, value),
+  ).join('|') === '0|0|1|2|3|3',
+  'progress clip uses equal normalized bins and holds the final frame at one',
+);
 const hugeTimestampFrame = frameIndexForClip(
   valid.clips.idle,
   Number.MAX_VALUE,
@@ -521,13 +764,13 @@ assert(
   `huge finite loop timestamp stays in frame range (${hugeTimestampFrame})`,
 );
 
-const warden = validSiteWarden();
-const wardenContext = {
+const renamedBoss = validBoss('patch-overseer');
+const bossContext = {
   timestamp: 0.4,
   meleeStop: 120,
   engagedId: 'engaged-enemy',
-  assetId: 'site-warden',
-  clips: warden.clips,
+  assetId: 'patch-overseer',
+  clips: renamedBoss.clips,
 };
 const baseEnemy = {
   id: 'enemy',
@@ -551,7 +794,7 @@ const everyState = {
   hp: 20,
   x: 200,
 };
-const deathSelection = selectEnemyMotion(everyState, wardenContext);
+const deathSelection = selectEnemyMotion(everyState, bossContext);
 assert(deathSelection.clip === 'death', 'death outranks all colliding states');
 assert(deathSelection.value === 0.5, 'death uses deathT/deathMax progress');
 
@@ -560,7 +803,7 @@ const hitBrokenAdvanceEngaged = {
   killed: false,
   deathT: 0,
 };
-const hitSelection = selectEnemyMotion(hitBrokenAdvanceEngaged, wardenContext);
+const hitSelection = selectEnemyMotion(hitBrokenAdvanceEngaged, bossContext);
 assert(hitSelection.clip === 'hit', 'hit outranks broken, advance, and engaged');
 assert(hitSelection.value === 0.5, 'hit uses the existing hurt clock');
 
@@ -569,25 +812,25 @@ const brokenAdvanceEngaged = {
   hurt: 0,
 };
 assert(
-  selectEnemyMotion(brokenAdvanceEngaged, wardenContext).clip === 'broken',
-  'owned Site Warden broken clip outranks advance and engaged',
+  selectEnemyMotion(brokenAdvanceEngaged, bossContext).clip === 'broken',
+  'owned broken clip on a renamed boss outranks advance and engaged',
 );
 
 const brokenlessBossContext = {
-  ...wardenContext,
+  ...bossContext,
   clips: valid.clips,
 };
 assert(
   selectEnemyMotion(brokenAdvanceEngaged, brokenlessBossContext).clip ===
     'advance',
-  'Site Warden context without broken ownership never selects broken',
+  'boss context without broken ownership never selects broken',
 );
 assert(
   selectEnemyMotion(brokenAdvanceEngaged, {
-    ...wardenContext,
-    assetId: 'entry-runner',
-  }).clip === 'advance',
-  'broken clip ownership with the wrong asset identity never selects broken',
+    ...bossContext,
+    assetId: 'another-future-boss',
+  }).clip === 'broken',
+  'selector follows validated broken ownership instead of a hardcoded asset ID',
 );
 assert(
   selectEnemyMotion(brokenAdvanceEngaged, {
@@ -604,7 +847,7 @@ const advanceAndEngaged = {
   x: 121,
 };
 assert(
-  selectEnemyMotion(advanceAndEngaged, wardenContext).clip === 'advance',
+  selectEnemyMotion(advanceAndEngaged, bossContext).clip === 'advance',
   'advance outranks engaged when both states collide',
 );
 
@@ -613,17 +856,17 @@ const engaged = {
   id: 'engaged-enemy',
 };
 assert(
-  selectEnemyMotion(engaged, wardenContext).clip === 'engaged',
+  selectEnemyMotion(engaged, bossContext).clip === 'engaged',
   'stationary melee reaction uses engaged, not attack',
 );
 assert(
-  selectEnemyMotion(baseEnemy, wardenContext).clip === 'idle',
+  selectEnemyMotion(baseEnemy, bossContext).clip === 'idle',
   'unengaged stationary enemy idles',
 );
 
-const firstLoop = selectEnemyMotion(advanceAndEngaged, wardenContext);
+const firstLoop = selectEnemyMotion(advanceAndEngaged, bossContext);
 const laterLoop = selectEnemyMotion(advanceAndEngaged, {
-  ...wardenContext,
+  ...bossContext,
   timestamp: 0.65,
 });
 assert(

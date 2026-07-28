@@ -9,7 +9,7 @@ import {
   clamp,
   killsNeeded,
   nextGoLiveBoundary,
-} from './formulas.js?v=gaf2d-creatures-v1';
+} from './formulas.js?v=gaf2d-motion-v1';
 import {
   META,
   SKILLS,
@@ -17,9 +17,9 @@ import {
   TIPS,
   FEED_COPY,
   skillSpCost,
-} from './content.js?v=gaf2d-creatures-v1';
-import { packForRoute, packZoneDisplay } from './route.js?v=gaf2d-creatures-v1';
-import { GAME_PACKS } from './generated/game-packs.js?v=gaf2d-creatures-v1';
+} from './content.js?v=gaf2d-motion-v1';
+import { packForRoute, packZoneDisplay } from './route.js?v=gaf2d-motion-v1';
+import { GAME_PACKS } from './generated/game-packs.js?v=gaf2d-motion-v1';
 import {
   combatStats,
   allocSkill,
@@ -49,7 +49,7 @@ import {
   normalizeGear,
   HOTFIX_FOCUS_COST,
   PRIORITY_FOCUS_COST,
-} from './game.js?v=gaf2d-creatures-v1';
+} from './game.js?v=gaf2d-motion-v1';
 import {
   formatAffix,
   sellValue,
@@ -63,7 +63,7 @@ import {
   primaryStat,
   queryGearBag,
   toggleJunk,
-} from './loot.js?v=gaf2d-creatures-v1';
+} from './loot.js?v=gaf2d-motion-v1';
 import {
   DAILY_DEFS,
   WEEKLY_DEFS,
@@ -74,11 +74,12 @@ import {
   seasonLevel,
   SEASON_MILESTONES,
   formatReward,
-} from './hub.js?v=gaf2d-creatures-v1';
-import { skillIco, metaIco, hubIco, gearIcon } from './icons.js?v=gaf2d-creatures-v1';
-import { drawHeroV2 } from './hero-v2.js?v=gaf2d-creatures-v1';
-import { save, clear } from './save.js?v=gaf2d-creatures-v1';
-import { sfx, unlockAudio, setMuted, setReducedMotion } from './sfx.js?v=gaf2d-creatures-v1';
+} from './hub.js?v=gaf2d-motion-v1';
+import { skillIco, metaIco, hubIco, gearIcon } from './icons.js?v=gaf2d-motion-v1';
+import { drawHeroV2 } from './hero-v2.js?v=gaf2d-motion-v1';
+import { motionReduced } from './motion-preference.js?v=gaf2d-motion-v1';
+import { save, clear } from './save.js?v=gaf2d-motion-v1';
+import { sfx, unlockAudio, setMuted, setReducedMotion } from './sfx.js?v=gaf2d-motion-v1';
 
 const PANEL_TITLES = {
   skills: 'Build',
@@ -91,18 +92,6 @@ const PANEL_TITLES = {
 
 let lastPanel = null;
 const QA_METRICS = typeof location !== 'undefined' && new URLSearchParams(location.search).has('qa_metrics');
-
-function applyMotionPreference(value) {
-  setReducedMotion(value);
-  const osReduced = typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-  document.documentElement.classList.toggle('reduce-motion', !!value || osReduced);
-}
-
-/** In-app toggle OR OS setting — every Wave-2 effect gates on this. */
-function motionReduced(s) {
-  const osReduced = typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-  return !!s.settings.reducedMotion || osReduced;
-}
 
 /* —— Animated resource counters (V2 Wave 2) ————————————————————————
    rAF count-up tween on the two run-resource values. The displayed number
@@ -261,10 +250,11 @@ function mountGearHero(s) {
   gearHeroRaf = requestAnimationFrame(loop);
 }
 
-export function bindUI(s) {
+export function bindUI(s, motionPreference = null) {
   const $ = (id) => document.getElementById(id);
   setMuted(s.settings.sfx === false);
-  applyMotionPreference(s.settings.reducedMotion);
+  if (motionPreference?.refresh) motionPreference.refresh();
+  else setReducedMotion(motionReduced(s));
   const soundToggle = $('chk-sfx');
   if (soundToggle) soundToggle.checked = s.settings.sfx !== false;
 
@@ -376,8 +366,11 @@ export function bindUI(s) {
     location.reload();
   });
   $('chk-motion')?.addEventListener('change', (e) => {
-    s.settings.reducedMotion = e.target.checked;
-    applyMotionPreference(e.target.checked);
+    if (motionPreference?.setSaved) motionPreference.setSaved(e.target.checked);
+    else {
+      s.settings.reducedMotion = e.target.checked;
+      setReducedMotion(motionReduced(s));
+    }
     if (s.settings.sfx !== false) sfx('toggle');
     save(s);
   });

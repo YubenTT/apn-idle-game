@@ -213,7 +213,7 @@ wrap. All transforms remain inside their per-part maximum translation, rotation,
 For each frame, apply recipe transforms around normalized pivots, composite in fixed z-order with
 bicubic sampling, and write canonical RGBA PNG. Do not crop individual frames. Build one strict
 decoded-frame manifest whose frame IDs are `<clip>-<zero-padded-index>` and one
-`gaf2d-motion-set-v1` clip manifest assigning every frame exactly once.
+`gaf2d-motion-set-v2` clip manifest assigning every frame exactly once.
 
 - [ ] **Step 5: Run deterministic and mechanical QA**
 
@@ -294,15 +294,29 @@ rig approval if accepted.
 **Files in game worktree:**
 - Create: `scripts/assets/build-gaf2d-motion.mjs`
 - Create: `qa/check-gaf2d-motion-build.mjs`
+- Create: `scripts/assets/build-gaf2d-hero.mjs`
+- Create: `qa/check-gaf2d-hero-build.mjs`
 - Create only from approved exports: `assets/game-packs/valorant/characters/*/motion.webp`
 - Create only from approved exports: `assets/game-packs/valorant/characters/*/motion.json`
-- Replace only from approved Hero export: `assets/mascot/v3/*.{webp,json}`
+- Replace only from approved Hero export: `assets/mascot/v3/set.json` plus
+  the exact eight `{clip}.{webp,json}` pairs
 - Modify: `assets/game-packs/valorant/pack.json`
 - Modify: `assets/game-packs/valorant/gaf2d-sources.json`
 
 **Interfaces:**
 - Consumes: current GAF2D exports and the technical runtime contract
-- Produces: six `gaf2d-motion-bundle-v1` creature bundles and eight approved Hero clip files
+- Produces: six `gaf2d-motion-bundle-v1` creature bundles and one approved,
+  17-file Hero V3 set (`set.json` plus sixteen clip files)
+
+**Mechanical status (2026-07-28):** The separate zero-provider creature and
+Hero builders and their synthetic current-V2 export QA are complete. They prove
+GAF2D approval/normalization/atlas/export
+lineage, trusted pack-role clip requirements, alias expansion, pinned encoding,
+exact Hero identity+motion+rig lineage, canonical set/file hashes, atomic
+rollback, and same-toolchain double-build identity.
+Production bundle bytes and the production pack map remain blocked on the exact
+human identity/motion (and Hero rig) approvals below; synthetic evidence is not
+production art approval.
 
 - [ ] **Step 1: Run complete GAF2D QA and deterministic exports**
 
@@ -316,34 +330,48 @@ uv run --project ../gaf2d gaf2d export ASSET_ID --project . --json
 
 Run export twice and require identical manifest/file hashes.
 
-- [ ] **Step 2: Write failing game-builder lineage tests**
+- [x] **Step 2: Write failing game-builder lineage tests**
 
 The test rejects stale manifest/identity/motion/rig hashes, a single-cycle approval, missing clip,
-wrong playback/frame count, mixed transform, non-portable path, unknown tool version, oversized
-atlas, and changed source frame.
+wrong playback/frame count, non-integer/out-of-range FPS, variable-rate source timing, mixed
+transform, non-portable path, unsafe encoder arguments, unknown tool version, oversized atlas,
+aliased/overlapping runtime cells, WebP/descriptor dimension mismatch, and changed source frame.
 
-- [ ] **Step 3: Implement atomic matrix packing**
+- [x] **Step 3: Implement atomic matrix packing**
 
-The builder reads only current GAF2D export files, matrix-packs frames into `<=2048` dimensions,
-writes canonical `gaf2d-motion-bundle-v1` JSON, runs pinned `cwebp -exact` without `-pre` or `-mt`,
-and atomically replaces a complete character directory. It stores hashes and tool arguments, never
-the GAF2D root.
+Both builders require the exact live GAF2D export dry-run to match the release.
+The creature builder expands any generic GAF2D `duplicate_of` alias so
+every APN logical frame receives its own physical matrix cell, matrix-packs frames into `<=2048`
+dimensions, writes canonical `gaf2d-motion-bundle-v1` JSON, runs pinned `cwebp -exact` without
+`-pre` or `-mt`, and atomically replaces a complete character directory. It reads the output WebP
+header and requires exact descriptor dimensions. It stores hashes and an option-only canonical
+argument vector, never source/output operands or the GAF2D root. The separate
+Hero builder uses the shared validated source but preserves the eight-clip
+`hero-v3.js` interface, writes canonical approved clip descriptors plus
+`gaf2d-hero-set-v1`, and atomically replaces the complete 17-file V3 directory.
+Both pin and hash the exact ImageMagick operation profile as well as `cwebp`.
 
-- [ ] **Step 4: Prove same-toolchain double-build identity**
+- [ ] **Step 4: Prove production same-toolchain double-build identity**
 
-Build all outputs twice in fresh temporary directories and require identical JSON/WebP hashes.
-Then write the approved outputs into the game worktree and update portable source hashes.
+Synthetic current-V2 approved-export fixtures already build twice in fresh temporary directories
+with identical creature JSON/WebP hashes and identical Hero 17-file set hashes.
+After the human creative gates, repeat that proof against every
+production export, then write only those approved outputs into the game worktree and update
+portable source hashes.
 
 - [ ] **Step 5: Add the six-character motion map**
 
-`pack.json` maps each fixed ID to its `motion.webp` and `motion.json`. Regenerate catalog and asset
-manifest through their scripts; do not hand-edit generated files.
+`pack.json` maps each fixed ID to its `motion.webp`, `motion.json`, and descriptor SHA-256.
+Regenerate catalog and asset manifest through their scripts; do not hand-edit generated files.
 
 - [ ] **Step 6: Replace the old Hero runtime bytes**
 
-Keep the eight existing filenames/API, but replace their bytes and metadata only from the current
-approved legless Hero export. Remove no historical source from git in this step; mark old hot files
-cold through the honest first-playable contract where applicable.
+Keep the eight existing clip basenames/API, but transactionally replace
+`set.json` and all sixteen clip files only from the current approved legless
+Hero export. The approved set must carry exact identity, motion, rig, export,
+file, and toolchain hashes. Remove no historical source from git in this step;
+mark old hot files cold through the honest first-playable contract where
+applicable.
 
 ### Task 6: Real-game QA, docs, and release stop
 

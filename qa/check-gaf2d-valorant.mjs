@@ -6,27 +6,42 @@
  */
 import crypto from 'node:crypto';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { C } from '../js/formulas.js';
 
 import {
   createState,
   enemyTypesForPackWave,
   pickEnemyTypeForPackWave,
   spawnEnemy,
+  step,
 } from '../js/game.js';
 import { creatureKindFor, TIPS } from '../js/content.js';
 import {
   bossBannerFor,
+  drawEnemy,
   bossTimerYFor,
   enemyFrameFor,
   enemyLabelForDisplay,
+  inspectEnemyMotion,
 } from '../js/render.js';
 import {
   approvalMatchesCurrentManifest,
   eraseArgumentsForFrame,
 } from '../scripts/assets/build-gaf2d-targets.mjs';
+import {
+  MOTION_BUDGETS,
+  validatePackManifest,
+} from '../scripts/assets/lib.mjs';
+import { verifySizes } from '../scripts/assets/verify-sizes.mjs';
+import {
+  packWaveIdentityIds,
+  packWavePairIdentityUnion,
+  targetForEnemyType,
+} from '../js/wave-roster.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const packDir = path.join(root, 'assets/game-packs/valorant');
@@ -36,6 +51,12 @@ const assert = (condition, message) => {
 };
 const readJson = (file) => JSON.parse(fs.readFileSync(file, 'utf8'));
 const sha256 = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+
+assert(
+  MOTION_BUDGETS.bossCompressed === 240 * 1024 &&
+    MOTION_BUDGETS.bossDecoded === 8 * 1024 * 1024,
+  'reusable motion budgets are role-named and carry no current boss identity debt',
+);
 
 const sourcesPath = path.join(packDir, 'gaf2d-sources.json');
 assert(fs.existsSync(sourcesPath), 'portable GAF2D source mapping exists');
@@ -329,5 +350,570 @@ assert(
   enemyFrameFor({ type: 'boss', frame: 'boss', hp: 34, hpMax: 100 }) === 'boss',
   'boss keeps its normal frame at the 34% boundary',
 );
+
+const expectedIdentityPools = [
+  ['entry-runner'],
+  ['veil-operator'],
+  ['signal-hunter'],
+  ['entry-runner', 'veil-operator'],
+  ['site-sentinel'],
+  ['entry-runner', 'signal-hunter'],
+  ['veil-operator', 'site-sentinel'],
+  ['entry-runner', 'veil-operator', 'signal-hunter', 'site-sentinel'],
+  ['protocol-courier'],
+  ['site-warden'],
+];
+for (let wave = 1; wave <= 10; wave += 1) {
+assert(
+  packWaveIdentityIds(pack, wave).join('|') ===
+      expectedIdentityPools[wave - 1].join('|'),
+    `Wave ${wave} identity authority resolves the exact character union`,
+  );
+}
+
+const syntheticEnemy = {
+  id: 'motion-runner',
+  type: 'stale',
+  label: 'Entry Runner',
+  frame: 'common-a',
+  x: 220,
+  displayX: 220,
+  hp: 100,
+  hpMax: 100,
+  deathT: 0,
+  hurt: 0,
+  killed: false,
+  priorityTagRank: 0,
+};
+const syntheticMotionPack = structuredClone(pack);
+syntheticMotionPack.motion = {
+  grammar: 'gaf2d-motion-bundle-v1',
+  characters: {
+    'entry-runner': {
+      image: 'assets/game-packs/valorant/characters/entry-runner/motion.webp',
+      descriptor: 'assets/game-packs/valorant/characters/entry-runner/motion.json',
+      descriptorSha256: '1'.repeat(64),
+    },
+  },
+};
+const syntheticPackAssets = {
+  ready: true,
+  pack: syntheticMotionPack,
+  targets: { _ready: true, naturalWidth: 896, naturalHeight: 128 },
+  targetData: {
+    frames: {
+      'common-a': {
+        rect: { x: 0, y: 0, w: 128, h: 128 },
+      },
+    },
+  },
+};
+const syntheticEnv = {
+  zone: 0,
+  meleeStop: 170,
+  engagedId: null,
+  t: 1.25,
+};
+const syntheticRecord = {
+  status: 'ready',
+  image: { width: 128, height: 128 },
+  descriptor: {
+    clips: {
+      advance: {
+        playback: 'loop',
+        fps: 8,
+        frames: [{ x: 0, y: 0, width: 64, height: 64 }],
+      },
+      idle: {
+        playback: 'loop',
+        fps: 8,
+        frames: [{ x: 0, y: 0, width: 64, height: 64 }],
+      },
+    },
+    trim: { x: 0, y: 0, width: 64, height: 64 },
+    frameSize: { width: 64, height: 64 },
+    pivot: { x: 0.5, y: 1 },
+  },
+};
+const syntheticStore = {
+  motionStore: {
+    entries: new Map(),
+    diagnostics: new Map(),
+  },
+};
+const syntheticKey = `${syntheticMotionPack.id}/entry-runner`;
+syntheticStore.motionStore.entries.set(syntheticKey, { status: 'pending' });
+assert(
+  inspectEnemyMotion(syntheticEnemy, syntheticPackAssets, syntheticStore, syntheticEnv).status === 'pending',
+  'mapped current-wave identity reports pending while its bundle is warming',
+);
+syntheticStore.motionStore.entries.set(syntheticKey, { status: 'failed' });
+assert(
+  inspectEnemyMotion(syntheticEnemy, syntheticPackAssets, syntheticStore, syntheticEnv).status === 'failed',
+  'mapped current-wave identity reports failed when the bundle falls back',
+);
+syntheticStore.motionStore.entries.set(syntheticKey, syntheticRecord);
+const readyMotion = inspectEnemyMotion(syntheticEnemy, syntheticPackAssets, syntheticStore, syntheticEnv);
+assert(
+  readyMotion.status === 'ready' &&
+    readyMotion.assetId === 'entry-runner' &&
+    readyMotion.clip === 'advance',
+  'mapped current-wave identity resolves its authored motion clip before any static fallback',
+);
+function createCanvasProbe({ rejectFirstDraw = false } = {}) {
+  const calls = [];
+  let drawCount = 0;
+  const ctx = new Proxy({}, {
+    get(_target, key) {
+      if (key === 'drawImage') {
+        return (...args) => {
+          drawCount += 1;
+          if (rejectFirstDraw && drawCount === 1) {
+            throw new Error('synthetic ready blit failure');
+          }
+          calls.push(args);
+        };
+      }
+      if (key === 'createLinearGradient' || key === 'createRadialGradient') {
+        return () => ({ addColorStop() {} });
+      }
+      return () => {};
+    },
+    set() {
+      return true;
+    },
+  });
+  return { ctx, calls };
+}
+let probe = createCanvasProbe();
+syntheticStore.motionStore.entries.set(syntheticKey, { status: 'pending' });
+drawEnemy(probe.ctx, syntheticEnemy, 320, 1.25, syntheticPackAssets, syntheticStore, false, 1, syntheticEnv);
+assert(probe.calls.length === 0, 'pending mapped identity draws no static fallback body');
+probe = createCanvasProbe();
+syntheticStore.motionStore.entries.set(syntheticKey, { status: 'failed' });
+drawEnemy(probe.ctx, syntheticEnemy, 320, 1.25, syntheticPackAssets, syntheticStore, false, 1, syntheticEnv);
+assert(probe.calls.length > 0, 'failed mapped identity falls back to the static target atlas');
+probe = createCanvasProbe();
+syntheticStore.motionStore.entries.set(syntheticKey, syntheticRecord);
+drawEnemy(probe.ctx, syntheticEnemy, 320, 1.25, syntheticPackAssets, syntheticStore, false, 1, syntheticEnv);
+assert(probe.calls.length > 0, 'ready mapped identity renders the motion bundle');
+probe = createCanvasProbe({ rejectFirstDraw: true });
+syntheticStore.motionStore.entries.set(syntheticKey, {
+  ...syntheticRecord,
+  image: {
+    ...syntheticRecord.image,
+    closed: 0,
+    close() {
+      this.closed += 1;
+    },
+  },
+});
+let readyBlitThrew = false;
+try {
+  drawEnemy(
+    probe.ctx,
+    syntheticEnemy,
+    320,
+    1.25,
+    syntheticPackAssets,
+    syntheticStore,
+    false,
+    1,
+    syntheticEnv,
+  );
+} catch {
+  readyBlitThrew = true;
+}
+const rejectedBlitRecord =
+  syntheticStore.motionStore.entries.get(syntheticKey);
+assert(
+  !readyBlitThrew &&
+    rejectedBlitRecord?.status === 'failed' &&
+    rejectedBlitRecord.error?.reason === 'decode',
+  'ready blit rejection becomes an observable failed record without escaping render',
+);
+assert(
+  syntheticStore.motionStore.diagnostics.has(
+    `${syntheticMotionPack.id}/entry-runner/decode`,
+  ),
+  'ready blit rejection records one structured decode fallback diagnostic',
+);
+assert(
+  probe.calls.length > 0,
+  'ready blit rejection draws the static target fallback in the same frame',
+);
+
+const blockedSpawnState = createState();
+blockedSpawnState.route.zone = 0;
+blockedSpawnState.world.spawnCd = 0;
+step(blockedSpawnState, C.FIXED_DT, { allowSpawn: false });
+assert(
+  blockedSpawnState.world.enemies.length === 0,
+  'simulation blocks next spawn while the required current-wave motion set is still pending',
+);
+step(blockedSpawnState, C.FIXED_DT, { allowSpawn: true });
+assert(
+  blockedSpawnState.world.enemies.length === 1,
+  'simulation resumes spawning once the required current-wave motion set has settled',
+);
+assert(
+  targetForEnemyType(pack, 'patch')?.id === 'site-sentinel' &&
+    targetForEnemyType(pack, 'boss')?.id === 'site-warden',
+  'runtime target lookup shares the identity authority',
+);
+const futurePack = readJson(
+  path.join(root, 'assets/game-packs/fortnite/pack.json'),
+);
+const reorderedFuturePack = structuredClone(futurePack);
+reorderedFuturePack.targets.reverse();
+assert(
+  targetForEnemyType(reorderedFuturePack, 'stale')?.id ===
+    futurePack.targets.find(({ role }) => role === 'common-a')?.id &&
+    targetForEnemyType(reorderedFuturePack, 'patch')?.id ===
+      futurePack.targets.find(({ role }) => role === 'elite')?.id,
+  'future pack lookup follows declared roles instead of target array order',
+);
+assert(
+  [true, 1.5, '1'].every(
+    (invalidWave) =>
+      enemyTypesForPackWave('valorant', invalidWave) === null &&
+      packWaveIdentityIds(pack, invalidWave).length === 0,
+  ),
+  'wave authority rejects booleans, fractions, and numeric strings',
+);
+assert(
+  packWaveIdentityIds(futurePack, 1).join('|') ===
+    futurePack.targets.map((target) => target.id).join('|'),
+  'unknown future pack non-boss waves conservatively include every target',
+);
+assert(
+  packWaveIdentityIds(futurePack, 10).join('|') === futurePack.boss.id,
+  'unknown future pack boss wave resolves only its boss',
+);
+const boundaryUnion = packWavePairIdentityUnion(pack, 10, futurePack, 1);
+assert(
+  boundaryUnion.map(({ packId, assetId }) => `${packId}/${assetId}`).join('|') ===
+    [
+      'valorant/site-warden',
+      ...futurePack.targets.map((target) => `fortnite/${target.id}`),
+    ].join('|'),
+  '10→1 non-adjacent pack pairing preserves both pack-qualified identity sets',
+);
+const revisitUnion = packWavePairIdentityUnion(
+  futurePack,
+  10,
+  futurePack,
+  1,
+);
+assert(
+  revisitUnion.length === 6 &&
+    revisitUnion[0].assetId === futurePack.boss.id,
+  'revisit pairing keeps boss and next-wave identities without catalog assumptions',
+);
+
+const motionPack = structuredClone(pack);
+motionPack.motion = {
+  grammar: 'gaf2d-motion-bundle-v1',
+  characters: Object.fromEntries(
+    [...motionPack.targets.map((target) => target.id), motionPack.boss.id].map(
+      (assetId) => [
+        assetId,
+        {
+          image: `assets/game-packs/valorant/characters/${assetId}/motion.webp`,
+          descriptor: `assets/game-packs/valorant/characters/${assetId}/motion.json`,
+          descriptorSha256: 'a'.repeat(64),
+        },
+      ],
+    ),
+  ),
+};
+assert(
+  validatePackManifest(motionPack).length === 0,
+  'six-character authored motion map is a valid future pack fixture',
+);
+
+const budgetRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'apn-motion-budgets-'));
+const budgetManifest = path.join(budgetRoot, 'manifest.json');
+fs.writeFileSync(
+  budgetManifest,
+  JSON.stringify({ assets: [], packs: [{ id: 'valorant', hot: true }] }),
+);
+const descriptorFixture = readJson(
+  path.join(root, 'qa/fixtures/motion-bundle/valid.json'),
+);
+const decodedOverrides = new Map();
+const writeSized = (relative, bytes) => {
+  const file = path.join(budgetRoot, relative);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.closeSync(fs.openSync(file, 'w'));
+  fs.truncateSync(file, bytes);
+  return file;
+};
+const writeWebp = (relative, bytes, width, height) => {
+  const file = path.join(budgetRoot, relative);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  const output = Buffer.alloc(Math.max(bytes, 30));
+  output.write('RIFF', 0, 'ascii');
+  output.writeUInt32LE(output.length - 8, 4);
+  output.write('WEBP', 8, 'ascii');
+  output.write('VP8X', 12, 'ascii');
+  output.writeUInt32LE(10, 16);
+  const encodedWidth = width - 1;
+  const encodedHeight = height - 1;
+  output[24] = encodedWidth & 0xff;
+  output[25] = (encodedWidth >> 8) & 0xff;
+  output[26] = (encodedWidth >> 16) & 0xff;
+  output[27] = encodedHeight & 0xff;
+  output[28] = (encodedHeight >> 8) & 0xff;
+  output[29] = (encodedHeight >> 16) & 0xff;
+  fs.writeFileSync(file, output);
+  return file;
+};
+for (const [assetId, record] of Object.entries(motionPack.motion.characters)) {
+  const descriptor = structuredClone(descriptorFixture);
+  descriptor.assetId = assetId;
+  let imageWidth = 2048;
+  let imageHeight = 768;
+  if (assetId === 'site-warden') {
+    descriptor.clips.broken = {
+      playback: 'loop',
+      fps: 8,
+      frames: Array.from({ length: 8 }, (_, index) => ({
+        x: index * 96,
+        y: 560,
+        width: 96,
+        height: 112,
+      })),
+    };
+    descriptor.atlas.width = 2048;
+    descriptor.atlas.height = 1024;
+    imageHeight = 1025;
+  } else if (assetId === 'entry-runner') {
+    imageHeight = 1152;
+  }
+  const descriptorFile = path.join(budgetRoot, record.descriptor);
+  fs.mkdirSync(path.dirname(descriptorFile), { recursive: true });
+  fs.writeFileSync(descriptorFile, JSON.stringify(descriptor));
+  record.descriptorSha256 =
+    assetId === 'veil-operator'
+      ? 'f'.repeat(64)
+      : sha256(descriptorFile);
+  writeWebp(
+    record.image,
+    assetId === 'site-warden'
+      ? MOTION_BUDGETS.bossCompressed + 1
+      : MOTION_BUDGETS.commonCompressed + 64 * 1024,
+    imageWidth,
+    imageHeight,
+  );
+}
+let remainingHeroCompressed = MOTION_BUDGETS.heroCompressed + 1;
+for (const [index, clip] of [
+  'idle',
+  'run',
+  'attack',
+  'crit',
+  'sprint',
+  'hit',
+  'death',
+  'celebrate',
+].entries()) {
+  const clipsLeft = 8 - index;
+  const bytes = Math.ceil(remainingHeroCompressed / clipsLeft);
+  remainingHeroCompressed -= bytes;
+  const heroPath = `assets/mascot/v3/${clip}.webp`;
+  writeSized(heroPath, bytes);
+  writeSized(`assets/mascot/v3/${clip}.json`, 1);
+  decodedOverrides.set(path.join(budgetRoot, heroPath), 4);
+}
+for (const assetPath of Object.values(motionPack.assets)) {
+  if (assetPath.endsWith('.json')) {
+    writeSized(assetPath, 1);
+  } else {
+    const file = writeSized(assetPath, 1);
+    decodedOverrides.set(file, 4);
+  }
+}
+const middlePack = structuredClone(readJson(
+  path.join(root, 'assets/game-packs/league/pack.json'),
+));
+middlePack.motion = {
+  grammar: 'gaf2d-motion-bundle-v1',
+  characters: {
+    [middlePack.targets[0].id]: {
+      image: `assets/game-packs/${middlePack.id}/characters/${middlePack.targets[0].id}/motion.webp`,
+      descriptor: `assets/game-packs/${middlePack.id}/characters/${middlePack.targets[0].id}/motion.json`,
+      descriptorSha256: 'c'.repeat(64),
+    },
+  },
+};
+for (const [assetId, record] of Object.entries(middlePack.motion.characters)) {
+  const descriptor = structuredClone(descriptorFixture);
+  descriptor.assetId = assetId;
+  descriptor.debug = true;
+  const descriptorFile = path.join(budgetRoot, record.descriptor);
+  fs.mkdirSync(path.dirname(descriptorFile), { recursive: true });
+  fs.writeFileSync(descriptorFile, JSON.stringify(descriptor));
+  record.descriptorSha256 = sha256(descriptorFile);
+  writeWebp(record.image, 30, 768, 560);
+}
+const futureMotionPack = structuredClone(futurePack);
+futureMotionPack.motion = {
+  grammar: 'gaf2d-motion-bundle-v1',
+  characters: Object.fromEntries(
+    [
+      ...futureMotionPack.targets.slice(0, 2),
+      futureMotionPack.boss,
+    ].map(({ id: assetId }) => [
+      assetId,
+      {
+        image: `assets/game-packs/fortnite/characters/${assetId}/motion.webp`,
+        descriptor: `assets/game-packs/fortnite/characters/${assetId}/motion.json`,
+        descriptorSha256: 'b'.repeat(64),
+      },
+    ]),
+  ),
+};
+for (const [assetId, record] of Object.entries(
+  futureMotionPack.motion.characters,
+)) {
+  const descriptor = structuredClone(descriptorFixture);
+  descriptor.assetId = assetId;
+  const isBoss = assetId === futureMotionPack.boss.id;
+  if (isBoss) {
+    descriptor.atlas.width = 2048;
+    descriptor.atlas.height = 1024;
+    descriptor.clips.broken = {
+      playback: 'loop',
+      fps: 8,
+      frames: Array.from({ length: 8 }, (_, index) => ({
+        x: index * 96,
+        y: 560,
+        width: 96,
+        height: 112,
+      })),
+    };
+  }
+  const descriptorFile = path.join(budgetRoot, record.descriptor);
+  fs.mkdirSync(path.dirname(descriptorFile), { recursive: true });
+  fs.writeFileSync(descriptorFile, JSON.stringify(descriptor));
+  record.descriptorSha256 = sha256(descriptorFile);
+  writeWebp(
+    record.image,
+    isBoss ? MOTION_BUDGETS.commonCompressed + 1 : 30,
+    2048,
+    isBoss ? 1024 : 2048,
+  );
+}
+const budgetResult = verifySizes(budgetManifest, {
+  rootDir: budgetRoot,
+  packs: [motionPack, middlePack, futureMotionPack],
+  decodedImageBytes: (file) => decodedOverrides.get(file) ?? 4,
+});
+assert(
+  budgetResult.errors.some(
+    (error) =>
+      error.includes('entry-runner motion dimensions:') &&
+      error.includes('descriptor 768x560') &&
+      error.includes('WebP 2048x1152'),
+  ),
+  'forged small descriptor cannot hide the actual large WebP dimensions',
+);
+assert(
+  budgetResult.errors.some(
+    (error) =>
+      error.includes(`${middlePack.targets[0].id} motion descriptor:`) &&
+      error.includes('bundle: unexpected property "debug"'),
+  ),
+  'hash-correct malformed descriptor is rejected by the closed-world validator before budgeting',
+);
+assert(
+  budgetResult.errors.some(
+    (error) =>
+      error.includes('veil-operator motion descriptor SHA-256:') &&
+      error.includes('does not match'),
+  ),
+  'pack-owned descriptor hash is verified against descriptor bytes',
+);
+assert(
+  budgetResult.errors.some(
+    (error) =>
+      error.includes('entry-runner motion atlas SHA-256:') &&
+      error.includes('does not match'),
+  ),
+  'descriptor-owned atlas hash is verified against motion.webp bytes offline',
+);
+assert(
+  !budgetResult.errors.some(
+    (error) =>
+      error.includes(`${futureMotionPack.boss.id} motion descriptor:`) &&
+      error.includes('broken'),
+  ),
+  'offline verifier grants broken ownership to any pack-declared boss ID',
+);
+assert(
+  !budgetResult.errors.some(
+    (error) =>
+      error.includes(`${futureMotionPack.boss.id} motion compressed:`) ||
+      error.includes(`${futureMotionPack.boss.id} motion decoded:`),
+  ),
+  'offline verifier applies boss compressed and decoded caps to a future boss ID',
+);
+for (const [needle, message] of [
+  ['entry-runner motion compressed:', 'common motion compressed cap names the asset'],
+  ['entry-runner motion decoded:', 'common motion decoded cap names the asset'],
+  ['site-warden motion compressed:', 'Site Warden compressed cap names the asset'],
+  ['site-warden motion decoded:', 'Site Warden decoded cap names the asset'],
+  ['Hero motion compressed:', 'Hero aggregate compressed cap is enforced'],
+  ['new motion compressed:', 'new-motion aggregate compressed cap is enforced'],
+  ['valorant waves 8+9 motion decoded:', 'current and next wave decoded cap is enforced'],
+  [
+    'valorant wave 10 + fortnite wave 1 motion decoded:',
+    'non-adjacent scheduled boundary pair is budgeted',
+  ],
+]) {
+  assert(
+    budgetResult.errors.some(
+      (error) =>
+        error.includes(needle) &&
+        error.includes('bytes') &&
+        error.includes('exceeds'),
+    ),
+    message,
+  );
+}
+
+const hotRoot = path.join(budgetRoot, 'hot-equality');
+const hotPack = structuredClone(pack);
+for (const [index, assetPath] of Object.values(hotPack.assets).entries()) {
+  const file = writeSized(
+    path.relative(budgetRoot, path.join(hotRoot, assetPath)),
+    1,
+  );
+  decodedOverrides.set(
+    file,
+    index === 0 ? MOTION_BUDGETS.hotTextures : 0,
+  );
+}
+const hotManifest = path.join(hotRoot, 'manifest.json');
+fs.mkdirSync(path.dirname(hotManifest), { recursive: true });
+fs.writeFileSync(
+  hotManifest,
+  JSON.stringify({ assets: [], packs: [{ id: hotPack.id, hot: true }] }),
+);
+const hotResult = verifySizes(hotManifest, {
+  rootDir: hotRoot,
+  packs: [hotPack],
+  decodedImageBytes: (file) => decodedOverrides.get(file) ?? 0,
+});
+assert(
+  hotResult.errors.some(
+    (error) =>
+      error.includes(`hot textures: ${MOTION_BUDGETS.hotTextures} bytes`) &&
+      error.includes(`below ${MOTION_BUDGETS.hotTextures}`),
+  ),
+  'hot-texture total equal to the exclusive 64 MiB cap fails',
+);
+fs.rmSync(budgetRoot, { recursive: true, force: true });
 
 console.log('GAF2D VALORANT PASS');

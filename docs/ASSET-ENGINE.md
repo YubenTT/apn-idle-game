@@ -1,20 +1,28 @@
 # APN Idle — Character asset production
 
-APN Idle has two controlled build-time lanes.
-Both ship ordinary WebP/JSON into the same zero-dependency Canvas 2D runtime:
+APN Idle has three controlled build-time lanes.
+All ship ordinary WebP/JSON into the same zero-dependency Canvas 2D runtime:
 
 | Lane | Use it for | Source authority | Motion owner |
 |---|---|---|---|
-| Animated GLB atlas | Host/legacy characters that need authored clips | model + clip specs | exported atlas frames |
-| Static GAF2D pack atlas | approved pack targets whose motion is already supplied by Canvas | hash-locked GAF2D identity | `enemies-v2.js` transforms |
+| APN Hero clip set | The one Hero runtime identity | owner reference + one approved GAF2D named set | eight `hero-v3.js` clip atlases |
+| GAF2D character motion bundle | motion-enabled pack characters | identity + one approved named motion set | character-owned matrix atlas |
+| Static pack target | unmapped legacy packs and mapped-load failure only | pack atlas | presentation fallback, not authored motion |
 
-ADR-0013 authorizes the second lane for the six first-pack creatures.
-It does not change the APN Hero runtime or weaken the identity, rights, upload,
-budget, and release gates.
+ADR-0014 supersedes ADR-0013 for the six first-pack creatures. Canvas translation,
+bob, squash, and fade are presentation effects; they are not walking or authored
+acting. The APN Hero remains exclusively owned by `hero-v3.js`; its historical
+segmented V2 rig is not a fallback (ADR-0015). None of these lanes weakens
+identity, motion, rights, upload, budget, or release gates.
 
-## Animated GLB lane (settled decisions)
+## Historical GLB-derived tooling (maintenance only)
 
-- **Source of truth = real 3D models**, never still-image AI generation.
+The following tooling documents how existing legacy atlases were produced. It is
+not the default path for a new Hero or first-pack creature, and it cannot replace
+the current GAF2D identity/motion approval chain.
+
+- **For this retired lane, source of truth = its existing 3D model**, never
+  still-image AI generation.
   Single-image models drift proportions frame-to-frame (the "missing arm"
   incident, v2 rig) and strobe at low fps. A 3D scene cannot lose a limb.
 - **The engine is the animator.** Animation is declared as keyframe tracks over
@@ -27,30 +35,35 @@ budget, and release gates.
   palette/silhouette/props only. Original names, no trademark logos or outfits.
   Crimson (`--apn-red` family) is reserved for the Host.
 
-## Static GAF2D pack-target lane
+## GAF2D character-motion lane
 
-Use this lane only when shared Canvas transforms provide every required gameplay
-motion.
-It is not a shortcut for characters that need authored acting.
+Use one GAF2D asset per character. Never split clips into separate assets or treat
+one approved cycle as the complete gameplay delivery.
 
-1. Review the exact GAF2D identity evidence at actual runtime-relevant sizes.
-2. Record the human identity approval so the selected bytes and manifest version
-   are SHA-256 locked.
-3. Run GAF2D integrity QA and deterministic double export.
-4. Store portable asset/manifest paths, approval hashes, fixed crop recipes, and
-   the runtime derivative hash in the pack's `gaf2d-sources.json`.
-5. Build with `scripts/assets/build-gaf2d-targets.mjs --gaf2d-project <path>`.
-   The script rejects absolute mapping paths, stale approvals, changed bytes,
-   wrong manifest versions, invalid crops, and derivative-hash drift.
-   It also requires the recorded ImageMagick and cwebp versions so a toolchain
-   upgrade cannot silently rewrite checked-in pixels.
-6. Ship untrimmed `128×128` cells with the normalized foot-center pivot.
-7. Verify the 72 px common, 128 px boss, break-state, real-game composite, atlas
-   budget, first-playable budget, and muted browser matrix.
+1. Declare `--motion authored` before production work.
+2. Review and human-approve the exact identity at runtime-relevant sizes.
+3. Prepare one fixed-rate named set containing exact `idle`, `advance`,
+   `engaged`, `hit`, and `death` clips; the pack-declared boss also requires
+   `broken`. The trusted pack role—not an asset-name allowlist or descriptor
+   claim—owns that capability and its larger decoded budget.
+4. Inspect the complete temporal proof and obtain one human motion-set approval
+   over every ordered frame, clip membership, FPS, playback mode, and shared
+   normalization.
+5. Build one character-owned `motion.webp` plus `motion.json`. The descriptor is
+   closed-world, hash-locks lineage and atlas bytes, uses one bottom-center pivot,
+   and contains distinct non-overlapping physical cells.
+6. Record only portable runtime paths and hashes in pack metadata. The browser
+   verifies descriptor bytes before parse, then atlas bytes and decoded
+   dimensions before readiness.
+7. Run complete GAF2D QA plus APN descriptor, size, current/next-wave memory,
+   browser, and all-waves checks. Canonical wave 1–10 QA requires zero fallback.
 
-Live provider calls and source uploads remain outside repository builds.
-Changing selected identity bytes requires a new human identity approval.
-Runtime spawn/idle/hit/death transforms are not a GAF2D motion approval.
+The existing `targets.webp` remains failure resilience and an unmapped-pack
+compatibility path. It never outranks a ready motion bundle and cannot satisfy an
+authored-motion declaration.
+
+Live provider calls and source uploads remain outside repository builds. Changing
+identity or motion bytes requires new human approval and new hashes.
 
 ## Directory contract
 
@@ -89,7 +102,7 @@ Track values are **offsets added to the node's captured base transform**.
 Props: `rotation.x/y/z`, `position.x/y/z`, `scale.x/y/z`. Keys are frame
 numbers; linear interpolation, `ease:"sine"` optional.
 
-## The canon clip set
+## Historical GLB clip set
 
 | Character | locomotion clips | action clips |
 |---|---|---|
@@ -128,6 +141,10 @@ hotshot=orange, curator=pale navy-gold). This catches cross-contamination.
 - **Union-bbox trim is sacred.** pack.py trims every frame to the clip's union
   alpha box, so the feet anchor is identical across frames by construction.
   Never per-frame trim (that is what made v1 flipbooks wobble).
+- **Reconstruct the full-frame pivot after trim.** For a shared crop, paste at
+  `(trim - frameSize × anchor) × scale`; the anchor is not local to the trimmed
+  rectangle. Subtracting the trim twice shifts the character and lifts its
+  ground contact.
 - **Loop anchors**: lay the underglow disc flat (`rotation.x = -1.5708`) and
   pin it (`position.y = -0.35`) as constant tracks in every hero clip — it is
   the ground plane that locks bbox bottom.
@@ -135,7 +152,7 @@ hotshot=orange, curator=pale navy-gold). This catches cross-contamination.
   standing→flattened left-to-right, so runtime scrubs `progress = 1 - clock`.
 - **No wall-clock anywhere** — engine steps fixed dt; runtime loops by t*fps.
 
-## Adding a new animated GLB character (checklist)
+## Maintaining a legacy GLB-derived character (not a new-character path)
 
 1. Model `models/<name>.js` (primitives/lathes, MeshPhysicalMaterial clearcoat,
    named animatable parts, display base + signature underglow).
@@ -148,4 +165,6 @@ hotshot=orange, curator=pale navy-gold). This catches cross-contamination.
    `js/creatures.js` + `render.js` draw it; QA script contract entries.
 7. `node qa/run-tests.mjs` → ALL PASS. Commit assets + specs + evidence.
 
-For static pack targets, use the GAF2D checklist above instead.
+Every new or replacement Hero/pack character uses the GAF2D character-motion
+checklist above. This legacy checklist may repair already-shipped historical
+derivatives only; it must not register a new runtime owner.

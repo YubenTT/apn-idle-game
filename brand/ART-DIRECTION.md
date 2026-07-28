@@ -37,7 +37,9 @@ Every identity is reviewed together, hash-approved separately, and tested in the
 real Run surface at 72/128 px.
 No one-off generated sprite, mixed model family, copied character, official mark,
 or uncontrolled prompt variation qualifies.
-Canvas still supplies the common spawn/hit/death grammar around the sprites.
+Character-owned clips supply locomotion, engaged, hit, death, and boss-break acting.
+Canvas may add the shared shadow, impact particles, camera response, and UI feedback around those
+clips; whole-sprite transforms cannot satisfy authored-motion acceptance.
 
 ## Icon system
 
