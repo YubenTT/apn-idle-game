@@ -447,7 +447,7 @@ export function draw(
       ? actorGeometries.get(activeBoss.id)
       : null;
     const timerLayout = stageFunctionalLayout({
-      actorX: activeBoss ? activeBoss.displayX - scroll : w / 2,
+      actorX: activeBoss ? activeBoss.displayX : w / 2,
       geometry: bossGeometry,
       fit: stageFit,
       stageClearance,

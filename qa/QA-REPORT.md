@@ -159,9 +159,18 @@ preview overlay. Focused tests cover those contracts.
 The initial actionable review finding was the hidden-toast CSS precedence
 defect, fixed and regression-tested in `0f38cf8`. Fix-round review then found
 and closed the landscape plate/HUD overlap in `148cf05`; second fix-round
-review closed the boss timer/plate collision in `69a1b37`. No other blocking
-or actionable finding remains. No paid call, private-media upload, export,
-push, publish, deploy, or history rewrite occurred.
+review closed the zero-scroll boss timer/plate collision in `69a1b37`, but a
+final review pass found the timer collision probe still subtracting
+`scrollSmooth` while the real boss plate stays in actor screen space. The RED
+contract reproduced the 844×390 Wave 10 regression at `scroll=scrollSmooth=240`
+with the plate unchanged at `{x:274.12,y:105,w:91.76,h:30}` and the timer
+falling back to the overlapping centered lane
+`{x:151.92,y:108,w:540.16,h:24}`. The final fix keeps the collision layout in
+screen space, so the same scrolled scene now reuses the safe right lane
+`{x:377.88,y:108,w:450.12,h:24}` with the `SITE WARDEN` label centered at
+`(602.94,130)`. No other blocking or actionable finding remains. No paid call,
+private-media upload, export, push, publish, deploy, or history rewrite
+occurred.
 
 ## 2026-07-28 authored-motion technical closure
 

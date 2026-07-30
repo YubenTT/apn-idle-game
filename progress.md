@@ -276,6 +276,15 @@ Original prompt: Complete the APN Idle redesign autonomously, including QA, revi
   overlapping `{x:151.92,y:108,w:540.16,h:24}` rect to
   `{x:377.88,y:108,w:450.12,h:24}`. Portrait placement remains centered and
   unchanged.
+- Final review then found the boss timer collision probe still used
+  `activeBoss.displayX - scrollSmooth` while the real plate remains anchored to
+  `enemy.displayX` screen space. The new RED contract in
+  `qa/check-gaf2d-valorant.mjs` sets `scroll=scrollSmooth=240` on the 844×390
+  Wave 10 scene and reproduces the overlap with the timer falling back to the
+  centered `{x:151.92,y:108,w:540.16,h:24}` lane over the unchanged plate.
+  The fix keeps the timer collision layout in screen space, so the same
+  scrolled scene now reuses the safe right lane
+  `{x:377.88,y:108,w:450.12,h:24}` with the `SITE WARDEN` label still visible.
 - Two consecutive exact preview builds both reported
   `GAF2D PREVIEW 7/39/276
   2ec2659c795e6e298f86bd7d079a538e193139e546c4b335dd32d9e8a4c5b2e1`.
@@ -315,8 +324,9 @@ Original prompt: Complete the APN Idle redesign autonomously, including QA, revi
   `stage-presentation-844x390-wave10.png`, and
   `stage-presentation-wave10.png`. The Wave 10 capture is 428×926 and shows
   the real Site Warden `broken` clip at 33% HP with a clear plate; the new
-  844×390 Wave 10 capture proves the compact plate and labeled timer are both
-  visible in separate horizontal lanes.
+  844×390 Wave 10 capture plus the scrolled headless contract prove the compact
+  plate and labeled timer stay visible in separate horizontal lanes even after
+  substantial camera scroll.
 - The complete derivative remains `unapproved_preview` /
   `human_review_required`. No paid call, upload, push, publish, or deploy
   occurred. The only remaining gate is explicit human approval or rejection

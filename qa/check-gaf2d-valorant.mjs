@@ -882,6 +882,75 @@ assert(
     label: landscapeTimerLabelEvent?.args,
   })})`,
 );
+const scrolledLandscapeBossState = createState();
+scrolledLandscapeBossState.route.zone = 9;
+scrolledLandscapeBossState.route.currentPackId = 'valorant';
+scrolledLandscapeBossState.world.scroll = 240;
+scrolledLandscapeBossState.world.scrollSmooth = 240;
+scrolledLandscapeBossState.world.enemies = [
+  {
+    ...syntheticBoss,
+    id: 'scrolled-landscape-site-warden',
+    packId: 'valorant',
+    x: 320,
+    displayX: 320,
+  },
+];
+scrolledLandscapeBossState.world.bossActive = true;
+scrolledLandscapeBossState.world.bossTimer = C.BOSS_TIMER * 0.6;
+const scrolledLandscapeBossProbe = createStageAnchorProbe();
+draw(
+  scrolledLandscapeBossProbe.ctx,
+  844,
+  216,
+  scrolledLandscapeBossState,
+  null,
+  105,
+);
+const scrolledLandscapeBossPlateEvent = scrolledLandscapeBossProbe.events.find(
+  ({ method, pathWidth, pathHeight }) =>
+    method === 'fill' &&
+    Math.abs(pathWidth - compactBossPlateWidth) < 1e-9 &&
+    pathHeight === 30,
+);
+const scrolledLandscapeTimerBarEvent = scrolledLandscapeBossProbe.events
+  .filter(
+    ({ method, pathTop, pathHeight }) =>
+      method === 'fill' &&
+      pathTop === bossTimerYFor(216) &&
+      pathHeight === 10,
+  )
+  .sort((left, right) => right.pathWidth - left.pathWidth)[0];
+const scrolledLandscapeTimerLabelEvent = scrolledLandscapeBossProbe.events.find(
+  ({ method, args }) =>
+    method === 'fillText' && args[0] === 'SITE WARDEN',
+);
+const scrolledBossPlateRect = eventRect(scrolledLandscapeBossPlateEvent);
+const scrolledBossTimerRect =
+  scrolledLandscapeTimerBarEvent && scrolledLandscapeTimerLabelEvent
+    ? eventRect(
+        scrolledLandscapeTimerBarEvent,
+        scrolledLandscapeTimerLabelEvent.args[2] +
+          2 -
+          scrolledLandscapeTimerBarEvent.pathTop,
+      )
+    : null;
+assert(
+  rectInsideStage(scrolledBossPlateRect) &&
+    rectInsideStage(scrolledBossTimerRect) &&
+    !rectsOverlap(scrolledBossPlateRect, scrolledBossTimerRect) &&
+    scrolledLandscapeTimerLabelEvent.args[1] >= scrolledBossTimerRect.x &&
+    scrolledLandscapeTimerLabelEvent.args[1] <=
+      scrolledBossTimerRect.x + scrolledBossTimerRect.width,
+  `844x390 scrolled boss plate and labeled timer stay visible in screen space (${JSON.stringify({
+    scroll: scrolledLandscapeBossState.world.scroll,
+    scrollSmooth: scrolledLandscapeBossState.world.scrollSmooth,
+    fit: scrolledLandscapeBossState.world.stageFit,
+    plate: scrolledBossPlateRect,
+    timer: scrolledBossTimerRect,
+    label: scrolledLandscapeTimerLabelEvent?.args,
+  })})`,
+);
 const intermediateState = createState();
 intermediateState.world.enemies = [
   {
