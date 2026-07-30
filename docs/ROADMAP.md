@@ -31,6 +31,11 @@ Living plan — not a commitment calendar.
       contract enforced in headless QA
 - [x] Economy color de-collision — Notes use canonical rose and SP canonical
       violet across DOM + Canvas roles, with contrast and semantic-role QA
+- [x] CI hygiene — one public-repository job preserves deterministic headless
+      QA, entrypoint checks, both direct-Chrome smoke paths, and an always-running
+      final attempt to upload any smoke evidence already produced, while
+      canceling stale runs, enforcing a 15-minute timeout, and retaining
+      artifacts for 7 days
 
 ## Near term
 
