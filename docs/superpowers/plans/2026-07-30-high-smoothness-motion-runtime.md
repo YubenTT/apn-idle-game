@@ -30,7 +30,8 @@
 **Files:**
 - Modify: `/Users/talatongu/Code/kimi-projects/apn-idle-game-gaf2d/tools/test_build_offline_authored_motion.py`
 - Modify: `/Users/talatongu/Code/kimi-projects/apn-idle-game-gaf2d/tools/build_offline_authored_motion.py`
-- Modify: `/Users/talatongu/Code/kimi-projects/apn-idle-game-gaf2d/briefs/authored-semantic-v2/acting-contract.json`
+- Create: `/Users/talatongu/Code/kimi-projects/apn-idle-game-gaf2d/briefs/authored-semantic-v3/acting-contract.json`
+- Preserve read-only: `/Users/talatongu/Code/kimi-projects/apn-idle-game-gaf2d/briefs/authored-semantic-v2/acting-contract.json`
 
 **Interfaces:**
 - Consumes: current normalized identities, part masks, joint underpaints, key poses, and easing
@@ -245,6 +246,8 @@ git commit -m "feat: pack high cadence motion by clip"
 - Modify: `js/motion-preview.js`
 - Modify: `js/render.js`
 - Modify: `js/hero-v3.js`
+- Modify: `js/main.js`
+- Modify: `js/game.js`
 
 **Interfaces:**
 - Consumes: Task 3 set index and descriptors
@@ -264,6 +267,9 @@ assert.equal(idle.bitmap.closed, true);
 
 Add elapsed-time matrices for 60, 90, 120, and 144 Hz and progress tests that
 hold the terminal frame without using descriptor FPS as the gameplay clock.
+Add fixed-step simulation tests proving draw-time receives the residual
+accumulator and moving bodies render between previous/current root positions
+without changing gameplay state.
 
 - [ ] **Step 2: Run tests and verify RED**
 
@@ -290,6 +296,8 @@ preloadClip(pack, assetId, clipName)
 Validate before decode, abort cold in-flight work, close released
 `ImageBitmap`s, and retain V1 `acquire` compatibility.
 Use elapsed time for loops and normalized domain progress for progress clips.
+Interpolate only the gameplay body's previous/current root position at draw
+time; never tween, crossfade, or synthesize body-pose pixels at runtime.
 
 - [ ] **Step 4: Verify GREEN**
 
@@ -327,16 +335,19 @@ git commit -m "feat: stream high cadence motion clips"
 
 - [ ] **Step 1: Write failing browser assertions**
 
-At each refresh schedule, sample the active clip over one second and assert:
+At each refresh schedule, sample each complete clip cycle and assert:
 
 ```js
-assert.ok(uniquePoseCount >= 30);
-assert.ok(maximumUndeclaredHoldMs <= 1000 / 30 + 1);
+assert.ok(normalizedDistinctBodyPoseRate >= declaredCadenceFloor);
+assert.ok(maximumUndeclaredHoldMs <= declaredFramePeriodMs + 1);
 assert.equal(consoleErrors.length, 0);
 ```
 
 Capture Hero, one regular creature, and Site Warden at 64, 80, and 128 px plus
 real gameplay at 375×812, 390×844, 428×926, and 844×390.
+Declared terminal holds and the intentional loop closure are excluded from the
+distinct-pose-rate denominator. Root-only translation never counts as a new
+authored body pose.
 
 - [ ] **Step 2: Run browser QA and verify RED**
 
@@ -346,7 +357,8 @@ Serve the game locally and run:
 node qa/browser/chrome-motion-continuity.mjs
 ```
 
-Expected: the old low-rate preview fails the unique-pose threshold.
+Expected: the old low-rate preview fails the normalized authored-body-cadence
+threshold.
 
 - [ ] **Step 3: Complete the comparison and CI lane**
 
@@ -520,4 +532,3 @@ gh pr list --repo YubenTT/apn-web --state open
 Expected: no task-owned PR remains open; PR #40 is closed as superseded; all
 three remote `main` branches contain their release commits; the live deployment
 matches APN Web `main`.
-
