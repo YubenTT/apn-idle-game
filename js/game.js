@@ -68,6 +68,10 @@ import {
 } from './loot.js?v=gaf2d-motion-v1';
 import { createRouteState, nextSeasonBoundary, packForRoute } from './route.js?v=gaf2d-motion-v1';
 import { GAME_PACKS } from './generated/game-packs.js?v=gaf2d-motion-v1';
+
+const HERO_ATTACK_SECONDS = 8 / 16;
+const HERO_HIT_SECONDS = 4 / 16;
+const HERO_DEATH_SECONDS = 8 / 16;
 import {
   enemyTypesForPackWave as authoredEnemyTypesForPackWave,
   targetForEnemyType,
@@ -126,7 +130,11 @@ export function createState() {
         trackerOn: false,
         deepOn: false,
         trackerStacks: 0,
+        /** Authored strike clock: 1 at trigger, 0 after 8 frames at 16 fps. */
         attackAnim: 0,
+        attackCrit: false,
+        attackQueued: false,
+        queuedAttackCrit: false,
         hitRecoil: 0,
         /** Cosmetic clip clocks (Wave 3 juice) — read by hero-v2, never by combat math. */
         levelT: 0,
@@ -789,8 +797,15 @@ function dealDamage(s, e, amount, isCrit) {
   e.hitFlash = C.HIT_FLASH;
   e.hurt = 0.2;
   e.x += 6; // knockback target
-  s.run.hero.attackAnim = 1;
-  s.run.hero.hitRecoil = 1;
+  const hero = s.run.hero;
+  if ((hero.attackAnim || 0) > 0) {
+    hero.attackQueued = true;
+    hero.queuedAttackCrit =
+      hero.queuedAttackCrit === true || isCrit;
+  } else {
+    hero.attackAnim = 1;
+    hero.attackCrit = isCrit;
+  }
   s.stats.dpsAcc += amount;
   if (!motionReduced(s)) {
     s.world.shake = Math.max(s.world.shake, isCrit ? 4 : 2);
@@ -827,6 +842,11 @@ function dealDamage(s, e, amount, isCrit) {
   }
 }
 
+/** Trigger the cosmetic reaction for a hit received by the Hero. */
+export function triggerHeroHitReaction(s) {
+  s.run.hero.hitRecoil = 1;
+}
+
 export function step(s, dt, options = {}) {
   const allowSpawn = options.allowSpawn !== false;
   s.world.time += dt;
@@ -857,11 +877,27 @@ export function step(s, dt, options = {}) {
   const eRegenNow = sprintOn ? st.eRegen * 0.25 : st.eRegen;
   h.energy = clamp(h.energy + eRegenNow * dt, 0, st.eMax);
   h.focus = clamp(h.focus + st.fRegen * dt, 0, st.fMax);
-  h.attackAnim = Math.max(0, h.attackAnim - dt * 4);
-  h.hitRecoil = Math.max(0, h.hitRecoil - dt * 5);
+  h.attackAnim = Math.max(
+    0,
+    h.attackAnim - dt / HERO_ATTACK_SECONDS,
+  );
+  if (h.attackAnim === 0) {
+    if (h.attackQueued) {
+      h.attackAnim = 1;
+      h.attackCrit = h.queuedAttackCrit === true;
+      h.attackQueued = false;
+      h.queuedAttackCrit = false;
+    } else {
+      h.attackCrit = false;
+    }
+  }
+  h.hitRecoil = Math.max(0, h.hitRecoil - dt / HERO_HIT_SECONDS);
   // cosmetic clip clocks (Wave 3): rank jump, defeat buckle, loot reach-pull
   h.levelT = Math.max(0, (h.levelT || 0) - dt * 1.6);
-  h.defeatT = Math.max(0, (h.defeatT || 0) - dt * 1.4);
+  h.defeatT = Math.max(
+    0,
+    (h.defeatT || 0) - dt / HERO_DEATH_SECONDS,
+  );
   h.lootT = Math.max(0, (h.lootT || 0) - dt * 1.7);
 
   // tracker ramp
@@ -928,7 +964,7 @@ export function step(s, dt, options = {}) {
         // carries into the next cycle so every attack remains meaningful.
         toast(s, pick(BOSS_FAIL));
         // rare defeat beat: knees buckle + visor dims, then a quick recover
-        if (!motionReduced(s)) s.run.hero.defeatT = 1;
+        s.run.hero.defeatT = 1;
         if (s.settings.sfx !== false) sfx('deny');
       }
       s.world.bossTimer = C.BOSS_TIMER;

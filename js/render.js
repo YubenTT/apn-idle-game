@@ -4,6 +4,10 @@ import { C, clamp, easeOutCubic, easeOutQuad } from './formulas.js?v=gaf2d-motio
 import { getCurrentPackAssets } from './assets.js?v=gaf2d-motion-v1';
 import { HOST_PRESENTATION, resolveHostClip } from './host-contract.js?v=gaf2d-motion-v1';
 import { drawHeroV2 } from './hero-v2.js?v=gaf2d-motion-v1';
+import {
+  getV3Clip,
+  pickV3,
+} from './hero-v3.js?v=gaf2d-motion-v1';
 import { motionReduced } from './motion-preference.js?v=gaf2d-motion-v1';
 import {
   drawMotionFrame,
@@ -251,21 +255,73 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-function drawHero(ctx, x, gy, s, t, fit = 1) {
-  const h = s.run.hero;
-  const attack = easeOutCubic(h.attackAnim);
-  const sprinting = s.world.sprinting && h.energy > 0.5;
-  const mh = HOST_PRESENTATION.target;
-  const mhEff = mh * fit;
-  const overdrive = !!h.deepOn;
-  const tracker = h.trackerOn && h.trackerStacks > 0.04;
-  const hostPose = resolveHostClip({
-    hitRecoil: h.hitRecoil,
+export function heroRuntimeSemantics(s, t) {
+  const hero = s.run.hero;
+  const attackClock = clamp(hero.attackAnim, 0, 1);
+  // Keep the established 250 ms procedural lunge while the authored 8-frame
+  // strip advances uniformly over its full 500 ms (8 frames / 16 fps).
+  const attack = easeOutCubic(clamp(attackClock * 2 - 1, 0, 1));
+  const crit = hero.attackCrit === true;
+  const sprinting = s.world.sprinting && hero.energy > 0.5;
+  const overdrive = !!hero.deepOn;
+  const tracker = hero.trackerOn && hero.trackerStacks > 0.04;
+  const pose = resolveHostClip({
+    hitRecoil: hero.hitRecoil,
     attack,
+    crit,
     overdrive,
     sprinting,
     tracker,
   });
+  return {
+    hero,
+    attack,
+    sprinting,
+    overdrive,
+    tracker,
+    pose,
+    selector: {
+      t,
+      attack: attackClock,
+      crit,
+      recoil: hero.hitRecoil,
+      overdrive,
+      sprint: sprinting,
+      pose,
+      defeatT: hero.defeatT || 0,
+      levelT: hero.levelT || 0,
+      lootT: hero.lootT || 0,
+    },
+  };
+}
+
+export function inspectHeroMotion(s, t = s?.world?.time || 0) {
+  if (!s?.run?.hero || !s?.world) {
+    return { status: 'unavailable', clip: null, fps: null, frameIndex: null };
+  }
+  const selected = pickV3(heroRuntimeSemantics(s, t).selector);
+  if (!selected) {
+    return { status: 'pending', clip: null, fps: null, frameIndex: null };
+  }
+  const clip = getV3Clip(selected.clip);
+  return {
+    status: clip ? 'ready' : 'failed',
+    clip: selected.clip,
+    fps: clip?.fps ?? null,
+    frameIndex: selected.frame,
+  };
+}
+
+function drawHero(ctx, x, gy, s, t, fit = 1) {
+  const semantics = heroRuntimeSemantics(s, t);
+  const h = semantics.hero;
+  const attack = semantics.attack;
+  const sprinting = semantics.sprinting;
+  const mh = HOST_PRESENTATION.target;
+  const mhEff = mh * fit;
+  const overdrive = semantics.overdrive;
+  const tracker = semantics.tracker;
+  const hostPose = semantics.pose;
   const footY = gy - 2;
 
   // Soft skill auras UNDER the character (no hard ring lines)
@@ -310,7 +366,8 @@ function drawHero(ctx, x, gy, s, t, fit = 1) {
     height: mhEff,
     time: t,
     attack,
-    crit: hostPose === 'crit',
+    crit: semantics.selector.crit,
+    motionSelector: semantics.selector,
     hitRecoil: h.hitRecoil,
     overdrive,
     sprinting,
@@ -434,6 +491,7 @@ export function inspectEnemyMotion(enemy, packAssets = null, assetStore = null, 
     status: 'ready',
     assetId,
     clip: selection.clip,
+    fps: clip.fps,
     frameIndex: frameIndexForClip(clip, selection.value),
     fallbacks: fallbackCount,
     record,

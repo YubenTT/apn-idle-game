@@ -20,6 +20,8 @@
  *   reducedMotion gates squash amplitude and secondary motion
  *   pose         resolved semantic clip ('run'|'sprint'|'scan'|'crit'|
  *                'damage'|'overdrive'|'idle'|'level'|'defeat'|'loot')
+ *   motionSelector exact authored V3 selector from render.js; independent of
+ *                the shorter procedural attack envelope
  *   levelT/defeatT/lootT  optional 0..1 clip clocks (wired by later waves)
  */
 
@@ -45,8 +47,8 @@ const TAU = Math.PI * 2;
  * ground anchor at the local origin, head sphere at the top of the box
  * (canon: head ≈ 52% of height, visor band ≈ 36% down from the content top).
  */
-function drawV3Body(ctx, o, st) {
-  const sel = pickV3({
+export function selectHeroV3Frame(o, st, clips) {
+  const selector = o.motionSelector || {
     t: st.t,
     attack: st.attack,
     crit: st.crit,
@@ -57,7 +59,12 @@ function drawV3Body(ctx, o, st) {
     defeatT: o.defeatT || 0,
     levelT: o.levelT || 0,
     lootT: o.lootT || 0,
-  });
+  };
+  return pickV3(selector, clips);
+}
+
+function drawV3Body(ctx, o, st) {
+  const sel = selectHeroV3Frame(o, st);
   if (!sel) return;
   const H = o.height || T;
 
@@ -307,7 +314,7 @@ export function drawHeroV2(ctx, x, groundY, opts = {}) {
   const thrust = attack; // 1 at impact, decays to 0
   const lunge = (crit ? 16 : 10.5) * k * thrust;
   const hover = over ? (2.4 + Math.sin(t * 6.5) * 1.4 * motion) * k : 0;
-  const flinch = recoil * 7 * k;
+  const flinch = recoil * 7 * k * motion;
   const buckle = defeatT * 0.16;
   const jump = levelT > 0 ? Math.sin(levelT * Math.PI) * 12 * k : 0;
 

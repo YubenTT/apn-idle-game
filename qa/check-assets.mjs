@@ -78,7 +78,7 @@ for (const script of [
   const source = fs.readFileSync(path.join(root, script), 'utf8');
   const signedTokenPrefix = ['?token=', 'eyJ'].join('');
   assert(!source.includes('/opt/homebrew/bin/'), `${script} has no Homebrew-only tool path`);
-  assert(!source.includes('/Users/talatongu/'), `${script} has no developer-only tool path`);
+  assert(!source.includes('/Users/'), `${script} has no developer-only tool path`);
   assert(!source.includes(signedTokenPrefix), `${script} contains no signed source token`);
 }
 
@@ -251,11 +251,21 @@ assert(
   'legacy creature WebP and JSON files stay cold until an explicit fallback path requests them',
 );
 const mainSource = fs.readFileSync(path.join(root, 'js/main.js'), 'utf8');
+const motionPreviewSource = fs.readFileSync(
+  path.join(root, 'js/motion-preview.js'),
+  'utf8',
+);
 assert(
-  /\bloadHeroV3\(['"]assets\/mascot\/v3\/['"]\)/.test(mainSource) &&
+  /\bloadHeroV3\(motionPreview\.heroBasePath,\s*\{\s*allowUnapprovedPreview:\s*motionPreview\.active,\s*\}\)/.test(
+    mainSource,
+  ) &&
+    /const PRODUCTION_HERO_BASE = ['"]assets\/mascot\/v3\/['"]/.test(
+      motionPreviewSource,
+    ) &&
+    /heroBasePath:\s*PRODUCTION_HERO_BASE/.test(motionPreviewSource) &&
     !/\bloadCreatures\(\)/.test(mainSource) &&
     /\bpreloadRouteAssets\(assetStore,\s*s\.route\)/.test(mainSource),
-  'first-playable contract is gated by Hero V3 and pack-shell boot loaders only',
+  'first-playable contract is gated by fail-closed Hero V3 and pack-shell boot loaders only',
 );
 const bootSource = mainSource.match(
   /async function boot\(\) \{([\s\S]*?)\n\}/,

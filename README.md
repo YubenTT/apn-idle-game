@@ -230,6 +230,28 @@ Covers: combat kills, weapon upgrades, skills, publish, bosses, **endless zones 
 
 No browser required for domain tests. Visual checks use `qa/screenshots/` as human reference.
 
+### Local authored-motion review
+
+The current GAF2D motion candidate can be reviewed inside real gameplay without
+granting it production approval:
+
+```bash
+npm run preview:gaf2d -- \
+  --gaf2d-project /absolute/path/to/apn-idle-game-gaf2d \
+  --output .gaf2d-preview \
+  --json
+./serve.sh
+```
+
+Open
+[the local motion review](http://127.0.0.1:8790/?motion-preview=1&autostart=1&zone=1).
+The preview activates only on exact loopback hosts with
+`motion-preview=1`, displays a permanent `UNAPPROVED · LOCAL ONLY` banner,
+and fails closed to normal production-safe assets if any manifest, descriptor,
+or media hash is stale. The generated `.gaf2d-preview/` directory is ignored
+and disposable. The normal [local game](http://127.0.0.1:8790/) never requests
+preview media.
+
 ---
 
 ## Design pillars

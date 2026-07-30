@@ -139,6 +139,11 @@ process.stdout.write(
   })
 );
 process.stdout.write(
+  execFileSync(process.execPath, [fileURLToPath(new URL('./check-hero-motion-semantics.mjs', import.meta.url))], {
+    encoding: 'utf8',
+  })
+);
+process.stdout.write(
   execFileSync(process.execPath, [fileURLToPath(new URL('./check-gaf2d-motion-build.mjs', import.meta.url))], {
     encoding: 'utf8',
   })
@@ -160,6 +165,11 @@ process.stdout.write(
 );
 process.stdout.write(
   execFileSync(process.execPath, [fileURLToPath(new URL('./check-motion-preview.mjs', import.meta.url))], {
+    encoding: 'utf8',
+  })
+);
+process.stdout.write(
+  execFileSync(process.execPath, [fileURLToPath(new URL('./check-motion-preview-ui.mjs', import.meta.url))], {
     encoding: 'utf8',
   })
 );
@@ -249,8 +259,8 @@ ok(
   'Host render lock is defined once in code',
 );
 ok(resolveHostClip({ hitRecoil: 0.6 }) === 'damage', 'Host resolver prioritizes damage reaction');
-ok(resolveHostClip({ attack: 0.9 }) === 'crit', 'Host resolver maps peak attack to crit placeholder');
-ok(resolveHostClip({ attack: 0.4 }) === 'scan', 'Host resolver maps attack to scan placeholder');
+ok(resolveHostClip({ attack: 0.9, crit: true }) === 'crit', 'Host resolver maps actual crit to crit placeholder');
+ok(resolveHostClip({ attack: 0.9, crit: false }) === 'scan', 'Host resolver maps ordinary attack to scan placeholder');
 ok(resolveHostClip({ overdrive: true }) === 'overdrive', 'Host resolver maps Overclock to overdrive placeholder');
 ok(resolveHostClip({ sprinting: true }) === 'sprint', 'Host resolver maps Sprint to sprint placeholder');
 ok(resolveHostClip({}) === 'run', 'Host resolver defaults to run placeholder');

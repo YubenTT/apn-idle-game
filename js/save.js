@@ -61,7 +61,17 @@ export function save(s) {
     run: {
       bytes: s.run.bytes,
       patches: s.run.patches,
-      hero: { ...s.run.hero, attackAnim: 0, hitRecoil: 0, levelT: 0, defeatT: 0, lootT: 0 },
+      hero: {
+        ...s.run.hero,
+        attackAnim: 0,
+        attackCrit: false,
+        attackQueued: false,
+        queuedAttackCrit: false,
+        hitRecoil: 0,
+        levelT: 0,
+        defeatT: 0,
+        lootT: 0,
+      },
     },
     ui: { tips: s.ui.tips, seasonDone: s.ui.seasonDone },
     settings: {

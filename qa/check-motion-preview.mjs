@@ -12,6 +12,7 @@ import {
   HERO_PREVIEW_SET_GRAMMAR,
   HERO_PREVIEW_TOOLCHAIN_GRAMMAR,
   HERO_PREVIEW_TOOLCHAIN_OPERATIONS,
+  MAX_HERO_IMAGE_BYTES,
 } from '../js/hero-v3-contract.js';
 import { GAME_PACKS } from '../js/generated/game-packs.js';
 
@@ -27,6 +28,7 @@ const loopback = (search = '?motion-preview=1') => ({
   hostname: '127.0.0.1',
   search,
 });
+const COMMON_RUNTIME_MEDIA_MAX_BYTES = 6 * 1024 * 1024;
 
 assert(
   isMotionPreviewRequested(loopback()),
@@ -142,6 +144,11 @@ for (const [assetId, role] of creatureSpecs) {
     `.gaf2d-preview/characters/${assetId}/motion.json`;
   const imagePath =
     `.gaf2d-preview/characters/${assetId}/motion.webp`;
+  const imageRecord = put(
+    imagePath,
+    Buffer.from(`synthetic preview media fixture:${assetId}`),
+  );
+  descriptor.atlas.sha256 = imageRecord.sha256;
   const descriptorRecord = put(descriptorPath, descriptor);
   characters[assetId] = {
     authority: 'unapproved_preview',
@@ -164,10 +171,12 @@ const heroLineage = {
 const heroSetClips = {};
 const heroManifestClips = {};
 for (const [name, contract] of Object.entries(HERO_CLIP_CONTRACT)) {
-  const imageSha256 = crypto
-    .createHash('sha256')
-    .update(`image:${name}`)
-    .digest('hex');
+  const imagePath = `.gaf2d-preview/hero/${name}.webp`;
+  const imageRecord = put(
+    imagePath,
+    Buffer.from(`synthetic preview media fixture:apn-hero:${name}`),
+  );
+  const imageSha256 = imageRecord.sha256;
   const descriptor = {
     grammar: HERO_PREVIEW_CLIP_GRAMMAR,
     authority: 'unapproved_preview',
@@ -193,7 +202,6 @@ for (const [name, contract] of Object.entries(HERO_CLIP_CONTRACT)) {
     encoder: encoderFacts,
   };
   const descriptorPath = `.gaf2d-preview/hero/${name}.json`;
-  const imagePath = `.gaf2d-preview/hero/${name}.webp`;
   const descriptorRecord = put(descriptorPath, descriptor);
   heroSetClips[name] = {
     descriptor: `${name}.json`,
@@ -317,9 +325,60 @@ assert(
   JSON.stringify(GAME_PACKS) === productionProjection,
   'runtime overlay never mutates the frozen production pack catalog',
 );
-assert(
-  fetchCalls.length === 1 + 1 + 8 + 6,
-  'activation verifies manifest, Hero set, eight Hero descriptors, and six creature descriptors',
+const mediaPreflightFailures = [];
+const checkMediaPreflight = (condition, message) => {
+  if (!condition) {
+    mediaPreflightFailures.push(message);
+    return;
+  }
+  console.log(`OK ${message}`);
+};
+checkMediaPreflight(
+  fetchCalls.length === 1 + 1 + 8 + 8 + 6 + 6,
+  'activation verifies the manifest, every descriptor, and all fourteen referenced WebP files',
+);
+
+let concurrentMediaReads = 0;
+let maximumConcurrentMediaReads = 0;
+const latencyFetchImpl = async (url) => {
+  const clean = String(url).split('?')[0].replace(/^\.\//, '');
+  const bytes = files.get(clean);
+  if (!bytes) return { ok: false, status: 404 };
+  return {
+    ok: true,
+    status: 200,
+    headers: { get: () => String(bytes.byteLength) },
+    arrayBuffer: async () => {
+      const isMedia = clean.endsWith('.webp');
+      if (isMedia) {
+        concurrentMediaReads += 1;
+        maximumConcurrentMediaReads = Math.max(
+          maximumConcurrentMediaReads,
+          concurrentMediaReads,
+        );
+        await new Promise((resolve) => setTimeout(resolve, 2));
+      }
+      try {
+        return bytes.buffer.slice(
+          bytes.byteOffset,
+          bytes.byteOffset + bytes.byteLength,
+        );
+      } finally {
+        if (isMedia) concurrentMediaReads -= 1;
+      }
+    },
+  };
+};
+const sequentialMediaPreflight = await loadMotionPreview({
+  locationLike: loopback(),
+  packs: GAME_PACKS,
+  fetchImpl: latencyFetchImpl,
+  hashBytes,
+});
+checkMediaPreflight(
+  sequentialMediaPreflight.active === true &&
+    maximumConcurrentMediaReads === 1,
+  'media bodies are preflighted sequentially to bound transient memory',
 );
 
 const originalEntryBytes = files.get(
@@ -346,6 +405,103 @@ assert(
 files.set(
   '.gaf2d-preview/characters/entry-runner/motion.json',
   originalEntryBytes,
+);
+
+const productionSafeFallback = (result) =>
+  result.requested === true &&
+  result.active === false &&
+  result.authority === null &&
+  result.packs === GAME_PACKS &&
+  result.heroBasePath === 'assets/mascot/v3/' &&
+  result.manifest === null &&
+  result.batchSummarySha256 === null;
+
+const heroRunImagePath = '.gaf2d-preview/hero/run.webp';
+const originalHeroRunImage = files.get(heroRunImagePath);
+files.set(
+  heroRunImagePath,
+  encoder.encode('corrupted synthetic Hero preview media'),
+);
+const corruptedHeroMedia = await loadMotionPreview({
+  locationLike: loopback(),
+  packs: GAME_PACKS,
+  fetchImpl,
+  hashBytes,
+});
+checkMediaPreflight(
+  productionSafeFallback(corruptedHeroMedia) &&
+    corruptedHeroMedia.error?.includes(
+      'APN Hero/run preview image SHA-256 mismatch',
+    ) &&
+    !corruptedHeroMedia.error.includes('/Users/'),
+  'one corrupted Hero WebP blocks preview activation without exposing a private path',
+);
+files.set(heroRunImagePath, originalHeroRunImage);
+
+files.set(
+  heroRunImagePath,
+  Buffer.alloc(MAX_HERO_IMAGE_BYTES + 1, 0x68),
+);
+const oversizedHeroMedia = await loadMotionPreview({
+  locationLike: loopback(),
+  packs: GAME_PACKS,
+  fetchImpl,
+  hashBytes,
+});
+checkMediaPreflight(
+  productionSafeFallback(oversizedHeroMedia) &&
+    oversizedHeroMedia.error?.includes(
+      `APN Hero/run preview image exceeds ${MAX_HERO_IMAGE_BYTES} bytes`,
+    ),
+  'one oversized Hero WebP is rejected at the Hero runtime safety cap',
+);
+files.set(heroRunImagePath, originalHeroRunImage);
+
+const wardenImagePath =
+  '.gaf2d-preview/characters/site-warden/motion.webp';
+const originalWardenImage = files.get(wardenImagePath);
+files.delete(wardenImagePath);
+const missingCreatureMedia = await loadMotionPreview({
+  locationLike: loopback(),
+  packs: GAME_PACKS,
+  fetchImpl,
+  hashBytes,
+});
+checkMediaPreflight(
+  productionSafeFallback(missingCreatureMedia) &&
+    missingCreatureMedia.error?.includes(
+      'site-warden preview image fetch failed with status 404',
+    ) &&
+    !missingCreatureMedia.error.includes('/Users/'),
+  'one missing creature WebP blocks preview activation without exposing a private path',
+);
+files.set(wardenImagePath, originalWardenImage);
+
+const entryImagePath =
+  '.gaf2d-preview/characters/entry-runner/motion.webp';
+const originalEntryImage = files.get(entryImagePath);
+files.set(
+  entryImagePath,
+  Buffer.alloc(COMMON_RUNTIME_MEDIA_MAX_BYTES + 1, 0x65),
+);
+const oversizedCommonMedia = await loadMotionPreview({
+  locationLike: loopback(),
+  packs: GAME_PACKS,
+  fetchImpl,
+  hashBytes,
+});
+checkMediaPreflight(
+  productionSafeFallback(oversizedCommonMedia) &&
+    oversizedCommonMedia.error?.includes(
+      `entry-runner preview image exceeds ${COMMON_RUNTIME_MEDIA_MAX_BYTES} bytes`,
+    ),
+  'one oversized common creature WebP is rejected at its decoded runtime safety cap',
+);
+files.set(entryImagePath, originalEntryImage);
+
+assert(
+  mediaPreflightFailures.length === 0,
+  `all referenced preview media pass fail-closed preflight (${mediaPreflightFailures.join('; ')})`,
 );
 
 console.log('MOTION PREVIEW PASS');

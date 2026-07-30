@@ -3,6 +3,7 @@ import {
 } from './motion-bundle.js?v=gaf2d-motion-v1';
 import {
   HERO_V3_CLIPS,
+  MAX_HERO_IMAGE_BYTES,
   validateHeroClipDescriptor,
   validateHeroSetManifest,
 } from './hero-v3-contract.js?v=gaf2d-motion-v1';
@@ -12,6 +13,8 @@ const PRODUCTION_HERO_BASE = 'assets/mascot/v3/';
 const MAX_MANIFEST_BYTES = 512 * 1024;
 const MAX_SET_BYTES = 64 * 1024;
 const MAX_DESCRIPTOR_BYTES = 256 * 1024;
+const MAX_COMMON_MEDIA_BYTES = 6 * 1024 * 1024;
+const MAX_BOSS_MEDIA_BYTES = 8 * 1024 * 1024;
 const SHA256 = /^[a-f0-9]{64}$/;
 const fatalDecoder = new TextDecoder('utf-8', { fatal: true });
 const CHARACTER_ROLES = Object.freeze({
@@ -379,31 +382,50 @@ async function defaultHashBytes(bytes) {
     .join('');
 }
 
-async function fetchBytes(fetchImpl, url, maximumBytes) {
-  const response = await fetchImpl(url);
+async function fetchBytes(fetchImpl, url, maximumBytes, label) {
+  let response;
+  try {
+    response = await fetchImpl(url);
+  } catch {
+    fail(`${label} fetch failed`);
+  }
   if (!response?.ok) {
-    fail(`${url} fetch failed with ${response?.status ?? 'unknown'}`);
+    const status = Number.isInteger(response?.status)
+      ? response.status
+      : 'unknown';
+    fail(`${label} fetch failed with status ${status}`);
   }
   const declaredLength = Number(response.headers?.get?.('content-length'));
   if (Number.isFinite(declaredLength) && declaredLength > maximumBytes) {
-    fail(`${url} exceeds ${maximumBytes} bytes`);
+    fail(`${label} exceeds ${maximumBytes} bytes`);
   }
-  const buffer = await response.arrayBuffer();
-  if (buffer.byteLength === 0 || buffer.byteLength > maximumBytes) {
-    fail(`${url} is empty or exceeds ${maximumBytes} bytes`);
+  let buffer;
+  try {
+    buffer = await response.arrayBuffer();
+  } catch {
+    fail(`${label} response could not be read`);
   }
-  return new Uint8Array(buffer);
+  let bytes;
+  try {
+    bytes = new Uint8Array(buffer);
+  } catch {
+    fail(`${label} response is not binary data`);
+  }
+  if (bytes.byteLength === 0 || bytes.byteLength > maximumBytes) {
+    fail(`${label} is empty or exceeds ${maximumBytes} bytes`);
+  }
+  return bytes;
 }
 
 function parseJson(bytes, label) {
   try {
     return JSON.parse(fatalDecoder.decode(bytes));
-  } catch (error) {
-    fail(`${label} is invalid UTF-8 JSON: ${error.message}`);
+  } catch {
+    fail(`${label} is invalid UTF-8 JSON`);
   }
 }
 
-async function fetchHashLockedJson({
+async function fetchHashLockedBytes({
   fetchImpl,
   hashBytes,
   url,
@@ -411,12 +433,23 @@ async function fetchHashLockedJson({
   maximumBytes,
   label,
 }) {
-  const bytes = await fetchBytes(fetchImpl, url, maximumBytes);
-  const actualSha256 = await hashBytes(bytes);
+  const bytes = await fetchBytes(fetchImpl, url, maximumBytes, label);
+  let actualSha256;
+  try {
+    actualSha256 = await hashBytes(bytes);
+  } catch {
+    fail(`${label} SHA-256 could not be computed`);
+  }
   requireFact(
     actualSha256 === expectedSha256,
     `${label} SHA-256 mismatch`,
   );
+  return bytes;
+}
+
+async function fetchHashLockedJson(options) {
+  const bytes = await fetchHashLockedBytes(options);
+  const { label } = options;
   return parseJson(bytes, label);
 }
 
@@ -481,7 +514,7 @@ export async function loadMotionPreview(options = {}) {
     packs,
     heroBasePath: PRODUCTION_HERO_BASE,
     manifest: null,
-    candidateSha256: null,
+    batchSummarySha256: null,
     error: null,
   };
   if (!requested) return fallback;
@@ -493,6 +526,7 @@ export async function loadMotionPreview(options = {}) {
       fetchImpl,
       MANIFEST_PATH,
       MAX_MANIFEST_BYTES,
+      'preview manifest',
     );
     const manifest = parseJson(manifestBytes, 'preview manifest');
     validateManifest(manifest);
@@ -519,7 +553,7 @@ export async function loadMotionPreview(options = {}) {
       'APN Hero preview set lineage',
     );
 
-    await Promise.all(
+    const heroMedia = await Promise.all(
       HERO_V3_CLIPS.map(async (name) => {
         const record = manifest.hero.clips[name];
         const setRecord = set.clips[name];
@@ -558,10 +592,21 @@ export async function loadMotionPreview(options = {}) {
           'apn-hero',
           `APN Hero/${name} preview lineage`,
         );
+        return { name, record };
       }),
     );
+    for (const { name, record } of heroMedia) {
+      await fetchHashLockedBytes({
+        fetchImpl,
+        hashBytes,
+        url: record.image,
+        expectedSha256: record.imageSha256,
+        maximumBytes: MAX_HERO_IMAGE_BYTES,
+        label: `APN Hero/${name} preview image`,
+      });
+    }
 
-    await Promise.all(
+    const creatureMedia = await Promise.all(
       Object.entries(CHARACTER_ROLES).map(async ([assetId, role]) => {
         const record = manifest.characters[assetId];
         const descriptor = await fetchHashLockedJson({
@@ -591,8 +636,22 @@ export async function loadMotionPreview(options = {}) {
           assetId,
           `${assetId} preview lineage`,
         );
+        return { assetId, record, role };
       }),
     );
+    for (const { assetId, record, role } of creatureMedia) {
+      await fetchHashLockedBytes({
+        fetchImpl,
+        hashBytes,
+        url: record.image,
+        expectedSha256: record.imageSha256,
+        maximumBytes:
+          role === 'boss'
+            ? MAX_BOSS_MEDIA_BYTES
+            : MAX_COMMON_MEDIA_BYTES,
+        label: `${assetId} preview image`,
+      });
+    }
 
     return {
       requested: true,
@@ -601,13 +660,18 @@ export async function loadMotionPreview(options = {}) {
       packs: buildOverlay(packs, manifest),
       heroBasePath: manifest.hero.basePath,
       manifest,
-      candidateSha256: manifest.source.batchSummarySha256,
+      batchSummarySha256: manifest.source.batchSummarySha256,
       error: null,
     };
   } catch (error) {
+    const message =
+      error instanceof Error &&
+      error.message.startsWith('motion preview: ')
+        ? error.message
+        : 'motion preview: preview preflight failed';
     return {
       ...fallback,
-      error: error instanceof Error ? error.message : String(error),
+      error: message,
     };
   }
 }

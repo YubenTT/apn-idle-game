@@ -796,6 +796,19 @@ assert(
     frameIndexForClip(valid.clips.idle, 0.4),
   'loop frame selection uses simulation timestamp',
 );
+const repaintFrames = (refreshHz, seconds) =>
+  Array.from(
+    { length: refreshHz * seconds + 1 },
+    (_, tick) => frameIndexForClip(valid.clips.idle, tick / refreshHz),
+  );
+const framesAt60Hz = repaintFrames(60, 2);
+const framesAt120HzSampledAt60Hz = repaintFrames(120, 2).filter(
+  (_frame, tick) => tick % 2 === 0,
+);
+assert(
+  framesAt60Hz.join('|') === framesAt120HzSampledAt60Hz.join('|'),
+  '60 Hz and 120 Hz repaint schedules select identical frames at identical elapsed times',
+);
 assert(
   frameIndexForClip(valid.clips.death, 1) === 7,
   'progress clip holds its final frame',

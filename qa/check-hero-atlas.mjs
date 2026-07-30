@@ -79,8 +79,17 @@ assert(
   'identity-safe fallback implementation draws head/body/arms without leg geometry',
 );
 const mainSrc = fs.readFileSync(path.join(root, 'js/main.js'), 'utf8');
+const previewSrc = fs.readFileSync(
+  path.join(root, 'js/motion-preview.js'),
+  'utf8',
+);
 assert(mainSrc.includes('loadHeroV3'), 'main.js references loadHeroV3');
-assert(mainSrc.includes('assets/mascot/v3/'), 'main.js points at the V3 atlas dir');
+assert(
+  mainSrc.includes('loadHeroV3(motionPreview.heroBasePath') &&
+    previewSrc.includes("const PRODUCTION_HERO_BASE = 'assets/mascot/v3/';") &&
+    previewSrc.includes('heroBasePath: PRODUCTION_HERO_BASE'),
+  'normal mode points at the historical V3 atlas through the fail-closed preview boundary',
+);
 assert(
   !mainSrc.includes('setHeroRig') &&
     !mainSrc.includes('assets/mascot/v2/rig.'),

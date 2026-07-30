@@ -2,11 +2,14 @@
 
 import { C } from './formulas.js?v=gaf2d-motion-v1';
 import { createState, step, collectAlert, simulateOffline, setSprint, isSprinting, goLive, canGoLive, goLiveAvailableZone } from './game.js?v=gaf2d-motion-v1';
-import { sizeCanvas, draw, bossTimerYFor, enemyFrameFor, inspectEnemyMotion, legacyCreatureKindForStage } from './render.js?v=gaf2d-motion-v1';
+import { sizeCanvas, draw, bossTimerYFor, enemyFrameFor, inspectEnemyMotion, inspectHeroMotion, legacyCreatureKindForStage } from './render.js?v=gaf2d-motion-v1';
 import { createAssetStore, getCurrentPackAssets, preloadRouteAssets, packWindowForRoute } from './assets.js?v=gaf2d-motion-v1';
 import { bindUI, renderHUD } from './ui.js?v=gaf2d-motion-v1';
 import { save, load, apply } from './save.js?v=gaf2d-motion-v1';
-import { loadHeroV3 } from './hero-v3.js?v=gaf2d-motion-v1';
+import {
+  heroV3AuthorityStatus,
+  loadHeroV3,
+} from './hero-v3.js?v=gaf2d-motion-v1';
 import {
   createMotionPreferenceController,
   motionReduced,
@@ -42,6 +45,22 @@ const motionPreview = await loadMotionPreview({
   packs: GAME_PACKS,
 });
 const runtimePacks = motionPreview.packs;
+const banner = document.getElementById('motion-preview-banner');
+const bannerTitle = document.getElementById('motion-preview-title');
+const bannerDetail = document.getElementById('motion-preview-detail');
+if (motionPreview.requested && banner && bannerTitle && bannerDetail) {
+  const counts = motionPreview.manifest?.counts;
+  banner.hidden = false;
+  banner.dataset.state = motionPreview.active ? 'active' : 'failed';
+  if (motionPreview.active) {
+    bannerDetail.textContent =
+      `${counts.assets} assets · ${counts.clips} clips · ${counts.frames} frames`;
+  } else {
+    bannerTitle.textContent = 'LOCAL MOTION PREVIEW BLOCKED';
+    bannerDetail.textContent = 'SAFE FALLBACK · integrity check failed';
+    banner.title = String(motionPreview.error || 'Preview activation failed');
+  }
+}
 const assetStore = createAssetStore({
   catalog: runtimePacks,
   motionStore: createMotionStore({
@@ -214,7 +233,12 @@ let qaStepRemainderMs = 0;
 function renderGameToText() {
   const packId = assetStore.currentId || s.route.currentPackId;
   const packAssets = packId ? assetStore.packs.get(packId) : null;
-  const enemy = s.world.enemies.find((candidate) => candidate.hp > 0) || null;
+  const enemy =
+    s.world.enemies.find((candidate) => candidate.hp > 0) ||
+    s.world.enemies.find(
+      (candidate) => candidate.killed && candidate.deathT > 0,
+    ) ||
+    null;
   const frame = enemyFrameFor(enemy);
   const hpRatio = enemy?.hpMax > 0 ? enemy.hp / enemy.hpMax : null;
   const clientWidth = document.documentElement.clientWidth;
@@ -228,6 +252,7 @@ function renderGameToText() {
         t: s.world.time,
       })
     : null;
+  const heroMotion = inspectHeroMotion(s, s.world.time);
   return JSON.stringify({
     coordinateSystem: 'Canvas origin top-left; +x right; +y down; enemy x is its foot-center.',
     routeZone: (s.route.zone | 0) + 1,
@@ -253,17 +278,44 @@ function renderGameToText() {
       ? {
           assetId: motion.assetId,
           clip: motion.clip,
+          fps: motion.fps ?? null,
           frameIndex: motion.frameIndex,
           status: motion.status,
           fallbacks: motion.fallbacks,
+          authority: motion.record?.descriptor?.authority ?? null,
+          candidateSha256:
+            motion.record?.descriptor?.previewLineage?.candidateSha256 ?? null,
         }
       : {
           assetId: null,
           clip: null,
+          fps: null,
           frameIndex: null,
           status: null,
           fallbacks: motionDiagnostics(assetStore.motionStore).length,
+          authority: null,
+          candidateSha256: null,
         },
+    motionPreview: {
+      requested: motionPreview.requested,
+      active: motionPreview.active,
+      authority: motionPreview.authority,
+      batchSummarySha256: motionPreview.batchSummarySha256,
+      error: motionPreview.error,
+      heroStatus: heroV3AuthorityStatus(),
+      heroAuthority: motionPreview.active
+        ? motionPreview.manifest?.hero?.authority || null
+        : null,
+    },
+    heroMotion: {
+      ...heroMotion,
+      authority: motionPreview.active
+        ? motionPreview.manifest?.hero?.authority || null
+        : null,
+      candidateSha256: motionPreview.active
+        ? motionPreview.manifest?.assets?.['apn-hero']?.candidateSha256 || null
+        : null,
+    },
     bossBreak: frame === 'boss-break',
     bossTimerY: s.world.bossActive ? bossTimerYFor(view.h) : null,
     muted: s.settings.sfx === false,
@@ -302,10 +354,12 @@ if (qaEnabled) {
   window.__APN_QA__ = {
     state: s,
     assets: assetStore,
+    motionPreview,
     actions: {
       goLive: (id = null, opts = {}) => goLive(s, id, opts),
       canGoLive: () => canGoLive(s),
       goLiveAvailableZone: () => goLiveAvailableZone(s),
+      setReducedMotion: (value) => motionPreference.setSaved(value),
     },
   };
   window.render_game_to_text = renderGameToText;

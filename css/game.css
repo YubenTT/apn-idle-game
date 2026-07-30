@@ -59,6 +59,45 @@ canvas {
   border-bottom: 1px solid var(--compat-line-hud);
 }
 
+.motion-preview-banner {
+  flex: 0 0 auto;
+  min-height: var(--sp-6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: var(--sp-1) var(--sp-2);
+  border-bottom: var(--border-1);
+  background: var(--surface-900);
+  color: var(--text-high);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+.motion-preview-banner[hidden] {
+  display: none;
+}
+
+.motion-preview-banner strong {
+  color: var(--apn-primary-hi);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.motion-preview-banner span {
+  color: var(--text-mid);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.motion-preview-banner[data-state="failed"] span {
+  color: var(--apn-primary-hi);
+}
+
 .hud-brand {
   display: flex;
   align-items: center;

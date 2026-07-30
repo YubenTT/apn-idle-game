@@ -344,29 +344,38 @@ export function getV3Clip(name) {
  * recoil envelope are 1 at the trigger and decay to 0, so "progress" for
  * death/hit is (1 - clock) — the rendered strip plays FORWARD (frame 0 =
  * standing, last frame = collapsed/recovered) and clamps on the last frame.
- * Attack follows the established engine convention: attack = 1 at impact
- * shows the strike frame, decay plays the follow-through back to rest.
+ * Attack follows the engine's decaying clock: attack = 1 at trigger and
+ * approaches 0, so its authored forward progress is (1 - attack).
  */
-export function pickV3(st) {
-  if (!V3) return null;
+export function pickV3(st, clips = V3?.clips) {
+  if (!clips) return null;
   const loop = (name) => {
-    const c = V3.clips[name];
+    const c = clips[name];
     return { clip: name, frame: Math.floor(st.t * c.fps) % c.frames.length };
   };
-  const scrub = (name, progress) => {
-    const c = V3.clips[name];
+  const sequence = (name, progress) => {
+    const c = clips[name];
     const n = c.frames.length;
-    return { clip: name, frame: Math.min(n - 1, Math.round(clamp(progress, 0, 1) * (n - 1))) };
+    return {
+      clip: name,
+      frame: Math.min(n - 1, Math.floor(clamp(progress, 0, 1) * n)),
+    };
   };
 
   // defeat — death plays forward over the decaying clock, holds last frame
-  if ((st.defeatT || 0) > 0) return scrub('death', 1 - clamp(st.defeatT, 0, 1));
+  if ((st.defeatT || 0) > 0) {
+    return sequence('death', 1 - clamp(st.defeatT, 0, 1));
+  }
   // level-up / gear pull — celebrate loops for the whole window
   if ((st.levelT || 0) > 0 || (st.lootT || 0) > 0) return loop('celebrate');
   // damage flinch — hit plays forward as the recoil envelope decays
-  if ((st.recoil || 0) > 0.4) return scrub('hit', 1 - clamp(st.recoil, 0, 1));
-  // strike — crit/attack frame tracks the eased attack phase (windup→impact)
-  if ((st.attack || 0) > 0.02) return scrub(st.crit ? 'crit' : 'attack', st.attack);
+  if ((st.recoil || 0) > 0.02) {
+    return sequence('hit', 1 - clamp(st.recoil, 0, 1));
+  }
+  // strike — the decaying attack clock advances wind-up → impact → follow-through
+  if ((st.attack || 0) > 0.02) {
+    return sequence(st.crit ? 'crit' : 'attack', 1 - clamp(st.attack, 0, 1));
+  }
   // overdrive / sprint locomotion
   if (st.overdrive || st.sprint) return loop('sprint');
   // planted idle (Gear niche / overdrive idle pose)

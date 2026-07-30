@@ -62,13 +62,13 @@ export const HOST_CLIP_NAMES = Object.freeze(Object.keys(HOST_CLIPS));
 export function resolveHostClip({
   hitRecoil = 0,
   attack = 0,
+  crit = false,
   overdrive = false,
   sprinting = false,
   tracker = false,
 } = {}) {
   if (hitRecoil > 0.45) return 'damage';
-  if (attack > 0.78) return 'crit';
-  if (attack > 0.18) return 'scan';
+  if (attack > 0.18) return crit ? 'crit' : 'scan';
   if (overdrive) return HOST_CLIPS.overclock_loop.placeholderFrame;
   if (sprinting) return HOST_CLIPS.sprint.placeholderFrame;
   if (tracker) return HOST_CLIPS.tracker_loop.placeholderFrame;
