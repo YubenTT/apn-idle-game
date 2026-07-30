@@ -1,0 +1,96 @@
+{
+ "parts": {
+  "head": {
+   "rect": {
+    "x": 4,
+    "y": 4,
+    "w": 196,
+    "h": 194
+   },
+   "pivot": {
+    "x": 0.4967,
+    "y": 0.9985
+   }
+  },
+  "leg": {
+   "rect": {
+    "x": 204,
+    "y": 4,
+    "w": 69,
+    "h": 175
+   },
+   "pivot": {
+    "x": 0.215,
+    "y": 0.0
+   }
+  },
+  "leg-far": {
+   "rect": {
+    "x": 277,
+    "y": 4,
+    "w": 69,
+    "h": 175
+   },
+   "pivot": {
+    "x": 0.215,
+    "y": 0.0
+   }
+  },
+  "torso": {
+   "rect": {
+    "x": 350,
+    "y": 4,
+    "w": 82,
+    "h": 144
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 1
+   }
+  },
+  "arm": {
+   "rect": {
+    "x": 436,
+    "y": 4,
+    "w": 100,
+    "h": 114
+   },
+   "pivot": {
+    "x": 0.0,
+    "y": 0.0354
+   }
+  },
+  "arm-far": {
+   "rect": {
+    "x": 540,
+    "y": 4,
+    "w": 100,
+    "h": 114
+   },
+   "pivot": {
+    "x": 0.0,
+    "y": 0.0354
+   }
+  }
+ },
+ "skeleton": {
+  "designHeight": 512,
+  "rootX": 139.4,
+  "hipY": 176.8,
+  "shoulderY": 302.4,
+  "neckY": 319.4,
+  "neckCX": 4.4,
+  "shoulderX": 39.7,
+  "legHipX": 22.3,
+  "headR": 98.1
+ },
+ "visor": {
+  "x": 0.2834,
+  "y": 0.3556,
+  "w": 0.7166,
+  "h": 0.4104
+ },
+ "meta": {
+  "source": "refs/gen/rig-source-v1.png (gpt_image_2 A-pose, canon masters as refs)"
+ }
+}

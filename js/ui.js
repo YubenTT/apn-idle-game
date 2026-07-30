@@ -47,6 +47,8 @@ import {
   claimSeasonMilestone,
   ensureHub,
   normalizeGear,
+  HOTFIX_FOCUS_COST,
+  PRIORITY_FOCUS_COST,
 } from './game.js?v=golive-pr5';
 import {
   formatAffix,
@@ -74,6 +76,7 @@ import {
   formatReward,
 } from './hub.js?v=golive-pr5';
 import { skillIco, metaIco, hubIco, gearIcon } from './icons.js?v=golive-pr5';
+import { drawHeroV2 } from './hero-v2.js?v=golive-pr5';
 import { save, clear } from './save.js?v=golive-pr5';
 import { sfx, unlockAudio, setMuted, setReducedMotion } from './sfx.js?v=golive-pr5';
 
@@ -93,6 +96,169 @@ function applyMotionPreference(value) {
   setReducedMotion(value);
   const osReduced = typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   document.documentElement.classList.toggle('reduce-motion', !!value || osReduced);
+}
+
+/** In-app toggle OR OS setting — every Wave-2 effect gates on this. */
+function motionReduced(s) {
+  const osReduced = typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  return !!s.settings.reducedMotion || osReduced;
+}
+
+/* —— Animated resource counters (V2 Wave 2) ————————————————————————
+   rAF count-up tween on the two run-resource values. The displayed number
+   trails the domain value by a short ease-out glide; reduced-motion and the
+   first paint write through instantly. Cheap: one shared loop, text writes
+   only when the formatted string actually changes. */
+const counters = new Map(); // elementId → { shown, from, to, start }
+let counterRaf = 0;
+const COUNTER_MS = 520;
+
+function tweenCounter(s, id, target) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const c = counters.get(id);
+  if (!c || motionReduced(s)) {
+    counters.set(id, { shown: target, from: target, to: target, start: 0 });
+    set(el, formatNum(target));
+    return;
+  }
+  if (target === c.to) return;
+  c.from = c.shown;
+  c.to = target;
+  c.start = performance.now();
+  if (!counterRaf) counterRaf = requestAnimationFrame(tickCounters);
+}
+
+function tickCounters(now) {
+  counterRaf = 0;
+  let active = false;
+  for (const [id, c] of counters) {
+    if (c.shown === c.to) continue;
+    const u = c.start ? Math.min(1, (now - c.start) / COUNTER_MS) : 1;
+    const eased = 1 - (1 - u) ** 3; // ease-out cubic — settles fast, no bounce
+    c.shown = c.from + (c.to - c.from) * eased;
+    if (u >= 1) c.shown = c.to;
+    else active = true;
+    const el = document.getElementById(id);
+    if (el) set(el, formatNum(Math.round(c.shown)));
+  }
+  if (active) counterRaf = requestAnimationFrame(tickCounters);
+}
+
+/* —— Bottom-nav sliding active pill (V2 Wave 2) ———————————————————— */
+const NAV_PANELS = ['skills', 'ship', 'hub', 'meta', 'settings'];
+function syncNavPill(panel) {
+  const nav = document.querySelector('.hud-nav');
+  if (!nav) return;
+  const i = NAV_PANELS.indexOf(panel);
+  nav.classList.toggle('has-active', i >= 0);
+  if (i >= 0) nav.style.setProperty('--nav-i', String(i));
+}
+
+/* —— Toast banner (V2 Wave 2) ——————————————————————————————————————
+   One spring slide-down banner with an icon slot; tone comes from the domain
+   event (s.ui.toastTone), copy stays the single source in game.js/content.js. */
+const TOAST_ICONS = {
+  info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>',
+  rank: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L4.2 9.7l5.4-.8z"/></svg>',
+  zone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4h12l-2.5 4L17 12H5"/></svg>',
+  win: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 01-10 0z"/><path d="M7 6H4v2a3 3 0 003 3M17 6h3v2a3 3 0 01-3 3"/></svg>',
+  live: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>',
+};
+let toastOutTimer = 0;
+
+function updateToastBanner(s) {
+  const toast = document.getElementById('toast');
+  if (!toast) return;
+  if (s.ui.toast) {
+    if (toastOutTimer) {
+      clearTimeout(toastOutTimer);
+      toastOutTimer = 0;
+    }
+    const tone = TOAST_ICONS[s.ui.toastTone] ? s.ui.toastTone : 'info';
+    if (toast.dataset.msg !== s.ui.toast || toast.dataset.tone !== tone) {
+      toast.dataset.msg = s.ui.toast;
+      toast.dataset.tone = tone;
+      toast.className = `toast-banner t-${tone}`;
+      toast.innerHTML = '';
+      const ico = document.createElement('span');
+      ico.className = 'toast-ico';
+      ico.setAttribute('aria-hidden', 'true');
+      ico.innerHTML = TOAST_ICONS[tone];
+      const msg = document.createElement('span');
+      msg.className = 'toast-msg';
+      msg.textContent = s.ui.toast;
+      toast.append(ico, msg);
+      toast.hidden = false;
+      toast.classList.remove('in');
+      void toast.offsetWidth; // restart the entrance spring
+      toast.classList.add('in');
+    }
+    toast.classList.remove('out');
+    toast.hidden = false;
+  } else if (!toast.hidden && !toast.classList.contains('out')) {
+    toast.classList.remove('in');
+    toast.classList.add('out');
+    toastOutTimer = setTimeout(() => {
+      toast.hidden = true;
+      toast.classList.remove('out');
+      toast.dataset.msg = '';
+      toastOutTimer = 0;
+    }, 240);
+  }
+}
+
+/* —— Gear niche live Host (V2 Wave 2) ——————————————————————————————
+   The loadout niche renders the same procedural Host V2 as the run stage —
+   one brand character everywhere. ~10fps idle breathe while the Gear sheet is
+   open; a single static frame under reduced motion. */
+let gearHeroRaf = 0;
+let gearHeroLast = 0;
+
+function unmountGearHero() {
+  if (gearHeroRaf) cancelAnimationFrame(gearHeroRaf);
+  gearHeroRaf = 0;
+}
+
+function mountGearHero(s) {
+  const canvas = document.getElementById('gear-host-live');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  const dpr = Math.min(2, (typeof window !== 'undefined' && window.devicePixelRatio) || 1);
+  const cssSize = Math.max(56, canvas.clientWidth || 88);
+  const px = Math.round(cssSize * dpr);
+  if (canvas.width !== px || canvas.height !== px) {
+    canvas.width = px;
+    canvas.height = px;
+  }
+  const reduced = motionReduced(s);
+  const drawFrame = (now) => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    ctx.scale(dpr, dpr);
+    drawHeroV2(ctx, cssSize / 2, cssSize - 5, {
+      height: cssSize * 0.8,
+      time: now / 1000,
+      pose: 'idle',
+      energy: 100,
+      reducedMotion: reduced,
+    });
+    ctx.restore();
+  };
+  unmountGearHero();
+  if (reduced) {
+    drawFrame(1200); // one settled frame, no loop
+    return;
+  }
+  const loop = (now) => {
+    if (now - gearHeroLast >= 100) {
+      gearHeroLast = now;
+      drawFrame(now);
+    }
+    gearHeroRaf = requestAnimationFrame(loop);
+  };
+  gearHeroRaf = requestAnimationFrame(loop);
 }
 
 export function bindUI(s) {
@@ -127,8 +293,11 @@ export function bindUI(s) {
 
   $('btn-scanner')?.addEventListener('click', () => {
     unlockAudio();
-    if (buyScanner(s)) save(s);
-    else {
+    if (buyScanner(s)) {
+      // First purchase retires the coach hint forever (persisted in the tips map).
+      if (!s.ui.tips.coachUpgrade) s.ui.tips.coachUpgrade = true;
+      save(s);
+    } else {
       if (s.settings.sfx !== false) sfx('error');
       const el = $('btn-scanner');
       if (el) {
@@ -209,6 +378,7 @@ export function bindUI(s) {
   $('chk-motion')?.addEventListener('change', (e) => {
     s.settings.reducedMotion = e.target.checked;
     applyMotionPreference(e.target.checked);
+    if (s.settings.sfx !== false) sfx('toggle');
     save(s);
   });
   $('chk-sfx')?.addEventListener('change', (e) => {
@@ -216,7 +386,7 @@ export function bindUI(s) {
     setMuted(!e.target.checked);
     if (e.target.checked) {
       unlockAudio();
-      sfx('click');
+      sfx('toggle');
     }
     save(s);
   });
@@ -383,8 +553,16 @@ function openSheet(s, panel) {
     root.hidden = false;
     root.classList.add('is-open');
     root.dataset.panel = panel;
+    // Staggered card entrance — one shot per genuine open/switch, so dirty
+    // re-renders inside the same sheet never replay it.
+    if (lastPanel !== panel) {
+      root.classList.add('sheet-enter');
+      clearTimeout(root._enterTimer);
+      root._enterTimer = setTimeout(() => root.classList.remove('sheet-enter'), 700);
+    }
   }
   document.getElementById('app')?.classList.add('sheet-open');
+  syncNavPill(panel);
   document.querySelectorAll('.hud-nav button').forEach((b) => {
     b.classList.toggle('active', b.dataset.panel === panel);
     b.setAttribute('aria-expanded', String(b.dataset.panel === panel));
@@ -402,6 +580,7 @@ function openSheet(s, panel) {
   if (panel === 'meta') renderMeta(s);
   if (panel === 'ship') fillGoLive(s);
   if (panel === 'gear') renderGear(s);
+  else unmountGearHero();
   if (panel === 'hub') renderHub(s);
   if (panel === 'settings') {
     const sx = document.getElementById('chk-sfx');
@@ -425,13 +604,17 @@ function closeSheet(s) {
   s.ui.goLiveArmed = false;
   s.ui.goLiveReceipt = null;
   lastPanel = null;
+  unmountGearHero();
   const root = document.getElementById('sheet-root');
   if (root) {
     root.hidden = true;
     root.classList.remove('is-open');
+    root.classList.remove('sheet-enter');
+    clearTimeout(root._enterTimer);
     delete root.dataset.panel;
   }
   document.getElementById('app')?.classList.remove('sheet-open');
+  syncNavPill(null);
   document.querySelectorAll('.hud-nav button').forEach((b) => {
     b.classList.remove('active');
     b.setAttribute('aria-expanded', 'false');
@@ -815,7 +998,7 @@ function renderGear(s) {
   <div class="brand-loadout">
     <div class="brand-host">
       <span class="brand-host-label">HOST</span>
-      <img class="brand-mascot" src="./assets/mascot/apn-mascot-idle.webp" alt="APN Host" width="104" height="104" />
+      <canvas class="brand-mascot" id="gear-host-live" width="88" height="88" role="img" aria-label="APN Host"></canvas>
       <span class="brand-eq-n">${nEq}/4 READY</span>
     </div>
     <div class="brand-slots">
@@ -837,9 +1020,9 @@ function renderGear(s) {
   <div class="inv-cards">`;
 
   if (!fullBag.length) {
-    html += `<div class="inv-empty-state">Defeat Version Gates to collect gear.</div>`;
+    html += `<div class="inv-empty-state"><strong>No gear yet</strong><span>Clear a Version Gate — your first drop lands here.</span></div>`;
   } else if (!bag.length) {
-    html += `<div class="inv-empty-state">No items match this view.</div>`;
+    html += `<div class="inv-empty-state"><strong>Nothing in this view</strong><span>Try a different filter.</span></div>`;
   } else {
     for (const it of bag) {
       html += invCard(it, g, focusId);
@@ -891,6 +1074,7 @@ function renderGear(s) {
   }
 
   root.innerHTML = html;
+  mountGearHero(s);
 }
 
 /** Center-screen loot drop card — smooth fade in/out, icon + compact stats */
@@ -955,8 +1139,8 @@ export function renderHUD(s) {
   set($('feed-game'), pack?.title || 'Patchline');
   set($('feed-copy'), FEED_COPY[pack?.genre] || 'Update notes live');
 
-  set($('v-bytes'), formatNum(s.run.bytes));
-  set($('v-patches'), formatNum(s.run.patches));
+  tweenCounter(s, 'v-bytes', Math.floor(s.run.bytes));
+  tweenCounter(s, 'v-patches', Math.floor(s.run.patches));
   updateLootDrop(s);
   // resource chip pulse on gain
   const chips = document.querySelectorAll('.hud-res .chip');
@@ -1015,6 +1199,8 @@ export function renderHUD(s) {
     const eq = equippedCount(gear);
     bagBtn.classList.toggle('has-up', ups > 0);
     bagBtn.classList.toggle('active', s.ui.panel === 'gear');
+    // badge pop when a drop flies in (domain chipPulse.bag drives .pulse)
+    bagBtn.classList.toggle('pulse', !!(s.ui.chipPulse && s.ui.chipPulse.bag > 0));
     bagBtn.title =
       ups > 0
         ? `Gear · ${ups} better piece${ups > 1 ? 's' : ''} ready · ${eq}/4`
@@ -1053,7 +1239,12 @@ export function renderHUD(s) {
   // Sprint feedback on energy bar + button
   const sprinting = isSprinting(s);
   const eWrap = $('bar-energy-wrap');
-  if (eWrap) eWrap.classList.toggle('is-sprinting', sprinting);
+  if (eWrap) {
+    eWrap.classList.toggle('is-sprinting', sprinting);
+    eWrap.classList.toggle('full', h.energy >= st.eMax - 0.5);
+  }
+  const fWrap = $('bar-focus-wrap');
+  if (fWrap) fWrap.classList.toggle('full', h.focus >= st.fMax - 0.5);
   const eLab = $('v-energy-lab');
   if (eLab) {
     const energyPct = Math.round((h.energy / Math.max(1, st.eMax)) * 100);
@@ -1067,10 +1258,12 @@ export function renderHUD(s) {
     spBtn.classList.toggle('is-empty', h.energy < 1);
     spBtn.disabled = h.energy < 1;
     spBtn.classList.remove('is-auto');
+    // Energy-linked held fill: the button drains with the meter.
+    spBtn.style.setProperty('--en', `${Math.round((h.energy / Math.max(1, st.eMax)) * 100)}%`);
     const sub = spBtn.querySelector('.btn-sprint-sub');
     if (sub) set(sub, 'Hold · ×1.85');
   }
-  // Hub badge when claimable
+  // Hub badge when claimable — re-pop only when the count actually changes
   ensureHub(s);
   let hubReady = 0;
   for (const d of DAILY_DEFS) {
@@ -1080,48 +1273,71 @@ export function renderHUD(s) {
     if (hubDone(s.meta.hub, d, 'weekly') && !hubClaimed(s.meta.hub, d, 'weekly')) hubReady++;
   }
   document.querySelectorAll('.nav-btn[data-panel="hub"]').forEach((b) => {
+    const next = hubReady > 0 ? String(hubReady) : '';
+    if (next && b.dataset.badge !== next) {
+      b.classList.remove('has-badge');
+      void b.offsetWidth; // restart the badge pop
+    }
     b.classList.toggle('has-badge', hubReady > 0);
-    b.dataset.badge = hubReady > 0 ? String(hubReady) : '';
+    b.dataset.badge = next;
   });
   document.getElementById('app')?.classList.toggle('is-sprinting', sprinting);
 
   if (s.ui.pendingTip && TIPS[s.ui.pendingTip]) {
     s.ui.toast = TIPS[s.ui.pendingTip];
     s.ui.toastT = 3;
+    s.ui.toastTone = 'info';
     s.ui.pendingTip = null;
   }
-  const toast = $('toast');
-  if (toast) {
-    if (s.ui.toast) {
-      toast.hidden = false;
-      set(toast, s.ui.toast);
-    } else toast.hidden = true;
+  updateToastBanner(s);
+
+  // First-run coach hint: points at the Upgrade Scanner until the first buy.
+  const coach = $('coach-hint');
+  if (coach) {
+    coach.hidden = !!s.ui.tips.coachUpgrade || h.scanner > 0 || !!s.ui.panel;
   }
 
-  for (const [id, sk, on] of [
-    ['btn-hotfix', 'hotfix', false],
-    ['btn-summary', 'summary_burst', false],
-    ['btn-tracker', 'live_tracker', h.trackerOn],
-    ['btn-deep', 'deep_dive', h.deepOn],
+  for (const [id, sk, on, castCost] of [
+    ['btn-hotfix', 'hotfix', false, HOTFIX_FOCUS_COST],
+    ['btn-summary', 'summary_burst', false, PRIORITY_FOCUS_COST],
+    ['btn-tracker', 'live_tracker', h.trackerOn, 0],
+    ['btn-deep', 'deep_dive', h.deepOn, 0],
   ]) {
     const el = $(id);
     if (!el) continue;
-    const locked = skillLv(s, sk) < 1;
+    const lv = skillLv(s, sk);
+    const locked = lv < 1;
     el.hidden = false;
     el.disabled = locked;
     el.classList.toggle('locked', locked);
     el.classList.toggle('on', !!on);
     el.setAttribute('aria-pressed', on ? 'true' : 'false');
     const def = SKILLS[sk];
-    // Keep short labels stable; toggles expose their live state.
-    if (sk === 'deep_dive') {
-      const lab = on ? 'Overclock · ON' : def?.hud || def?.short || 'Overclock';
-      if (el.textContent !== lab) el.textContent = lab;
-    } else if (sk === 'live_tracker') {
-      const lab = on ? 'Tracker · ON' : def?.hud || def?.short || 'Tracker';
-      if (el.textContent !== lab) el.textContent = lab;
-    } else if ((def?.hud || def?.short) && el.textContent !== (def.hud || def.short)) {
-      el.textContent = def.hud || def.short;
+    // Structured chip: name · cost/state line · rank pips · charge fill.
+    const labEl = el.querySelector('.chip-lab');
+    const lab = def?.hud || def?.short || el.dataset.fallbackLab || '';
+    if (labEl && labEl.textContent !== lab) labEl.textContent = lab;
+    const subEl = el.querySelector('.chip-sub');
+    if (subEl) {
+      let sub = '';
+      let subState = '';
+      if (locked) sub = 'Build to unlock';
+      else if (castCost > 0) {
+        sub = `${castCost} Focus`;
+        subState = h.focus >= castCost ? 'ready' : 'wait';
+      } else sub = on ? 'Active' : 'Toggle';
+      if (subEl.textContent !== sub) subEl.textContent = sub;
+      subEl.classList.toggle('ready', subState === 'ready');
+      subEl.classList.toggle('wait', subState === 'wait');
+    }
+    // Charge fill: Focus gathered toward the next cast (active skills only).
+    const charge = castCost > 0 && !locked ? clamp(h.focus / castCost, 0, 1) : 0;
+    el.style.setProperty('--charge', charge.toFixed(3));
+    el.classList.toggle('charged', charge >= 1);
+    const pips = el.querySelectorAll('.chip-pips i');
+    if (pips.length) {
+      const filled = locked ? 0 : Math.max(1, Math.ceil((lv / (def?.max || 1)) * pips.length));
+      pips.forEach((pip, i) => pip.classList.toggle('fill', i < filled));
     }
   }
   document.getElementById('app')?.classList.toggle('is-overdrive', !!h.deepOn);

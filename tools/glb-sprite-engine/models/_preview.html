@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>preview-loading</title>
+<style>html,body{margin:0;height:100%;background:#262931;overflow:hidden}canvas{display:block}</style>
+<script type="importmap">
+{ "imports": { "three": "../vendor/three.module.js" } }
+</script>
+</head>
+<body>
+<script type="module">
+// Generic model preview for tools/glb-sprite-engine scene modules.
+//   ?module=./curator.js           module path (default ./curator.js)
+//   ?yaw=45&pitch=14&dist=2.9      turntable still mode (degrees)
+//   ?spec=../specs/foo.json        clip-strip mode (contract v1 semantics)
+// Sets document.title='render-ready' when the frame(s) are drawn.
+import * as THREE from 'three';
+import { RoomEnvironment } from '../vendor/environments/RoomEnvironment.js';
+
+const q = new URLSearchParams(location.search);
+const modulePath = q.get('module') || './curator.js';
+const specPath = q.get('spec') || null;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+
+const key = new THREE.DirectionalLight(0xffffff, 2.0); key.position.set(3, 5, 4); scene.add(key);
+const fill = new THREE.DirectionalLight(0xcfd8ff, 0.7); fill.position.set(-4, 2, 2); scene.add(fill);
+const rim = new THREE.DirectionalLight(0xfff2cc, 1.3); rim.position.set(-1, 3, -4); scene.add(rim);
+scene.add(new THREE.AmbientLight(0xffffff, 0.25));
+
+const grid = new THREE.GridHelper(4, 16, 0x555a66, 0x3a3f4b);
+scene.add(grid);
+
+const mod = await import(modulePath);
+const model = mod.build(THREE);
+scene.add(model);
+
+function makeCamera(fov, target) {
+  const cam = new THREE.PerspectiveCamera(fov, 1, 0.05, 100);
+  const yaw = THREE.MathUtils.degToRad(parseFloat(q.get('yaw') ?? '40'));
+  const pitch = THREE.MathUtils.degToRad(parseFloat(q.get('pitch') ?? '14'));
+  const dist = parseFloat(q.get('dist') ?? '2.9');
+  cam.position.set(
+    target.x + dist * Math.cos(pitch) * Math.sin(yaw),
+    target.y + dist * Math.sin(pitch),
+    target.z + dist * Math.cos(pitch) * Math.cos(yaw),
+  );
+  cam.lookAt(target);
+  return cam;
+}
+
+if (!specPath) {
+  // ---- turntable still mode ----
+  const S = 720;
+  renderer.setSize(S, S);
+  renderer.setClearColor(0x262931, 1);
+  const cam = makeCamera(parseFloat(q.get('fov') ?? '32'), new THREE.Vector3(0, 0.62, 0));
+  renderer.render(scene, cam);
+  document.title = 'render-ready';
+} else {
+  // ---- clip-strip mode (mirrors ENGINE CONTRACT v1 track semantics) ----
+  const spec = await (await fetch(specPath)).json();
+  const frames = spec.clip.frames;
+  const frameSize = (spec.output && spec.output.frame) || 256;
+  const named = new Set(spec.tracks.map(t => t.node));
+  const bases = new Map();
+  for (const n of named) {
+    const obj = model.getObjectByName(n);
+    if (!obj) { console.error('MISSING NODE: ' + n); continue; }
+    bases.set(n, { p: obj.position.clone(), r: obj.rotation.clone(), s: obj.scale.clone() });
+  }
+  const smooth = t => t * t * (3 - 2 * t);
+  function valueAt(track, f) {
+    const keys = track.keys;
+    if (f <= keys[0][0]) return keys[0][1];
+    if (f >= keys[keys.length - 1][0]) return keys[keys.length - 1][1];
+    for (let i = 0; i < keys.length - 1; i++) {
+      const [f0, v0] = keys[i], [f1, v1] = keys[i + 1];
+      if (f >= f0 && f <= f1) {
+        let t = (f - f0) / (f1 - f0);
+        if (track.ease === 'sine') t = smooth(t);
+        return v0 + (v1 - v0) * t;
+      }
+    }
+    return keys[keys.length - 1][1];
+  }
+  function apply(f) {
+    for (const track of spec.tracks) {
+      const obj = model.getObjectByName(track.node);
+      const base = bases.get(track.node);
+      if (!obj || !base) continue;
+      const v = valueAt(track, f);
+      const [prop, axis] = track.prop.split('.');
+      if (prop === 'rotation') obj.rotation[axis] = base.r[axis] + v;
+      else if (prop === 'position') obj.position[axis] = base.p[axis] + v;
+      else if (prop === 'scale' && axis) obj.scale[axis] = base.s[axis] + v;
+      else if (prop === 'scale') obj.scale.setScalar(base.s.x + v);
+    }
+  }
+  renderer.setSize(frames * frameSize, frameSize);
+  renderer.setScissorTest(true);
+  renderer.setClearColor(0x000000, 0);
+  const c = spec.camera || {};
+  const cam = new THREE.PerspectiveCamera(c.fov || 35, 1, 0.05, 100);
+  cam.position.set(...(c.pos || [2.2, 1.4, 3.0]));
+  cam.lookAt(...(c.lookAt || [0, 0.9, 0]));
+  grid.visible = false;
+  for (let f = 0; f < frames; f++) {
+    apply(f);
+    renderer.setViewport(f * frameSize, 0, frameSize, frameSize);
+    renderer.setScissor(f * frameSize, 0, frameSize, frameSize);
+    renderer.render(scene, cam);
+  }
+  document.title = 'render-ready';
+}
+</script>
+</body>
+</html>

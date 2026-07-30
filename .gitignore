@@ -36,3 +36,4 @@ coverage/
 # Keep qa screenshots intentional; ignore ad-hoc local dumps
 qa/screenshots/_local/
 assets/mascot/**/candidates/
+refs/ext/

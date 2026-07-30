@@ -1,0 +1,513 @@
+{
+  "name": "advance",
+  "source": {
+    "type": "scene",
+    "module": "./models/curator.js"
+  },
+  "camera": {
+    "pos": [
+      1.9,
+      1.0,
+      2.5
+    ],
+    "lookAt": [
+      0,
+      0.6,
+      0
+    ],
+    "fov": 34
+  },
+  "view": "three-quarter-front-right",
+  "clip": {
+    "fps": 24,
+    "frames": 16
+  },
+  "loop": true,
+  "tracks": [
+    {
+      "node": "torso",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          4,
+          -0.025
+        ],
+        [
+          8,
+          0
+        ],
+        [
+          12,
+          -0.025
+        ],
+        [
+          16,
+          0
+        ]
+      ],
+      "ease": "sine",
+      "comment": "two-step walk bob"
+    },
+    {
+      "node": "head",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          4,
+          -0.025
+        ],
+        [
+          8,
+          0
+        ],
+        [
+          12,
+          -0.025
+        ],
+        [
+          16,
+          0
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "shades",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          4,
+          -0.025
+        ],
+        [
+          8,
+          0
+        ],
+        [
+          12,
+          -0.025
+        ],
+        [
+          16,
+          0
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "arm_l",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          4,
+          -0.025
+        ],
+        [
+          8,
+          0
+        ],
+        [
+          12,
+          -0.025
+        ],
+        [
+          16,
+          0
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "arm_r",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          4,
+          -0.025
+        ],
+        [
+          8,
+          0
+        ],
+        [
+          12,
+          -0.025
+        ],
+        [
+          16,
+          0
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "coat_l",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          4,
+          -0.025
+        ],
+        [
+          8,
+          0
+        ],
+        [
+          12,
+          -0.025
+        ],
+        [
+          16,
+          0
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "coat_r",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          4,
+          -0.025
+        ],
+        [
+          8,
+          0
+        ],
+        [
+          12,
+          -0.025
+        ],
+        [
+          16,
+          0
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "cane",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          -0.005
+        ],
+        [
+          4,
+          0.03
+        ],
+        [
+          8,
+          -0.005
+        ],
+        [
+          12,
+          0.03
+        ],
+        [
+          16,
+          -0.005
+        ]
+      ],
+      "ease": "sine",
+      "comment": "cane lifts between plants"
+    },
+    {
+      "node": "torso",
+      "prop": "rotation.z",
+      "keys": [
+        [
+          0,
+          0.03
+        ],
+        [
+          4,
+          -0.03
+        ],
+        [
+          8,
+          0.03
+        ],
+        [
+          12,
+          -0.03
+        ],
+        [
+          16,
+          0.03
+        ]
+      ],
+      "ease": "sine",
+      "comment": "walk rock"
+    },
+    {
+      "node": "torso",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0.07
+        ],
+        [
+          16,
+          0.07
+        ]
+      ],
+      "comment": "menacing forward hunch"
+    },
+    {
+      "node": "head",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0.02
+        ],
+        [
+          16,
+          0.02
+        ]
+      ],
+      "comment": "head counters hunch, eyes on prey"
+    },
+    {
+      "node": "shades",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0.02
+        ],
+        [
+          16,
+          0.02
+        ]
+      ]
+    },
+    {
+      "node": "head",
+      "prop": "rotation.z",
+      "keys": [
+        [
+          0,
+          -0.02
+        ],
+        [
+          4,
+          0.02
+        ],
+        [
+          8,
+          -0.02
+        ],
+        [
+          12,
+          0.02
+        ],
+        [
+          16,
+          -0.02
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "shades",
+      "prop": "rotation.z",
+      "keys": [
+        [
+          0,
+          -0.02
+        ],
+        [
+          4,
+          0.02
+        ],
+        [
+          8,
+          -0.02
+        ],
+        [
+          12,
+          0.02
+        ],
+        [
+          16,
+          -0.02
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "arm_l",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0.28
+        ],
+        [
+          8,
+          -0.28
+        ],
+        [
+          16,
+          0.28
+        ]
+      ],
+      "ease": "sine",
+      "comment": "free arm swing"
+    },
+    {
+      "node": "arm_r",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0.06
+        ],
+        [
+          8,
+          -0.06
+        ],
+        [
+          16,
+          0.06
+        ]
+      ],
+      "ease": "sine",
+      "comment": "cane arm stays steady"
+    },
+    {
+      "node": "cane",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0.22
+        ],
+        [
+          8,
+          -0.22
+        ],
+        [
+          16,
+          0.22
+        ]
+      ],
+      "ease": "sine",
+      "comment": "walking-stick plant cycle"
+    },
+    {
+      "node": "coat_l",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          -0.1
+        ],
+        [
+          8,
+          -0.16
+        ],
+        [
+          16,
+          -0.1
+        ]
+      ],
+      "ease": "sine",
+      "comment": "coat trails the stride"
+    },
+    {
+      "node": "coat_r",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          -0.1
+        ],
+        [
+          8,
+          -0.16
+        ],
+        [
+          16,
+          -0.1
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "coat_l",
+      "prop": "rotation.z",
+      "keys": [
+        [
+          0,
+          -0.02
+        ],
+        [
+          8,
+          -0.06
+        ],
+        [
+          16,
+          -0.02
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "coat_r",
+      "prop": "rotation.z",
+      "keys": [
+        [
+          0,
+          0.02
+        ],
+        [
+          8,
+          0.06
+        ],
+        [
+          16,
+          0.02
+        ]
+      ],
+      "ease": "sine"
+    }
+  ],
+  "output": {
+    "frame": 256
+  },
+  "kind": "locomotion"
+}
