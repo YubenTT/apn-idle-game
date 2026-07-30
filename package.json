@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "node tools/dev-server.mjs",
+    "preview:gaf2d": "node scripts/assets/build-gaf2d-preview.mjs",
     "serve": "bash serve.sh",
     "test": "node qa/run-tests.mjs"
   }

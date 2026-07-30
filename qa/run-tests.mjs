@@ -144,6 +144,11 @@ process.stdout.write(
   })
 );
 process.stdout.write(
+  execFileSync(process.execPath, [fileURLToPath(new URL('./check-gaf2d-preview-build.mjs', import.meta.url))], {
+    encoding: 'utf8',
+  })
+);
+process.stdout.write(
   execFileSync(process.execPath, [fileURLToPath(new URL('./check-gaf2d-hero-build.mjs', import.meta.url))], {
     encoding: 'utf8',
   })

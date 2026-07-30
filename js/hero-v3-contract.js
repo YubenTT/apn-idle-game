@@ -11,12 +11,21 @@ export const HERO_APPROVED_CLIP_GRAMMAR = 'gaf2d-hero-clip-v1';
 export const HERO_PREVIEW_SET_GRAMMAR = 'gaf2d-hero-preview-set-v1';
 export const HERO_PREVIEW_CLIP_GRAMMAR = 'gaf2d-hero-preview-clip-v1';
 export const HERO_TOOLCHAIN_GRAMMAR = 'apn-gaf2d-hero-toolchain-v1';
+export const HERO_PREVIEW_TOOLCHAIN_GRAMMAR =
+  'apn-gaf2d-hero-preview-toolchain-v1';
 export const HERO_MATRIX_PROFILE_GRAMMAR =
   'apn-gaf2d-matrix-toolchain-v1';
 export const HERO_MATRIX_PROFILE_SHA256 =
   '79b3b980f7b360585605a491bf176f54adf264fb31ecade68c9f0e7348fb9a69';
+export const HERO_PREVIEW_MATRIX_PROFILE_SHA256 =
+  '71f50b2378a4a588d9e49fb2d29700becb2b4a5ae37078a2af3280284eaa8013';
 export const HERO_TOOLCHAIN_OPERATIONS = Object.freeze([
   'crop:normalized-png:shared-trim:repage:png32',
+  'montage:row-major:bounded-matrix:shared-cell:no-gap:transparent:alpha-on:png-color-type-6',
+]);
+export const HERO_PREVIEW_TOOLCHAIN_OPERATIONS = Object.freeze([
+  'crop:normalized-png:shared-trim:repage:png32',
+  'resize:lanczos:shared-scale:exact-cell:png32',
   'montage:row-major:bounded-matrix:shared-cell:no-gap:transparent:alpha-on:png-color-type-6',
 ]);
 
@@ -305,6 +314,40 @@ function validateToolchain(value, addError) {
   }
 }
 
+function validatePreviewToolchain(value, addError) {
+  if (!exactKeys(value, TOOLCHAIN_KEYS, 'toolchain', addError)) return;
+  if (value.grammar !== HERO_PREVIEW_TOOLCHAIN_GRAMMAR) {
+    addError(
+      `toolchain.grammar: expected "${HERO_PREVIEW_TOOLCHAIN_GRAMMAR}"`,
+    );
+  }
+  if (
+    exactKeys(
+      value.compositor,
+      COMPOSITOR_KEYS,
+      'toolchain.compositor',
+      addError,
+    ) &&
+    (
+      value.compositor.name !== 'ImageMagick' ||
+      value.compositor.version !== '7.1.2-13'
+    )
+  ) {
+    addError('toolchain.compositor: expected ImageMagick 7.1.2-13');
+  }
+  validateEncoder(value.encoder, 'toolchain.encoder', addError);
+  if (!arraysEqual(value.operations, HERO_PREVIEW_TOOLCHAIN_OPERATIONS)) {
+    addError(
+      'toolchain.operations: preview derivative operation profile is not canonical',
+    );
+  }
+  if (value.profileSha256 !== HERO_PREVIEW_MATRIX_PROFILE_SHA256) {
+    addError(
+      `toolchain.profileSha256: expected ${HERO_PREVIEW_MATRIX_PROFILE_SHA256}`,
+    );
+  }
+}
+
 export function validateHeroSetManifest(data, options = {}) {
   const errors = [];
   const addError = (message) => {
@@ -363,7 +406,7 @@ export function validateHeroSetManifest(data, options = {}) {
       'previewLineage',
       addError,
     );
-    validateToolchain(data.toolchain, addError);
+    validatePreviewToolchain(data.toolchain, addError);
   } else if (data.status === 'historical') {
     if (data.lineage !== null || data.toolchain !== null) {
       addError('historical set: lineage and toolchain must both be null');

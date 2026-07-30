@@ -8,7 +8,10 @@ import {
   HERO_CLIP_CONTRACT,
   HERO_MATRIX_PROFILE_SHA256,
   HERO_PREVIEW_CLIP_GRAMMAR,
+  HERO_PREVIEW_MATRIX_PROFILE_SHA256,
   HERO_PREVIEW_SET_GRAMMAR,
+  HERO_PREVIEW_TOOLCHAIN_GRAMMAR,
+  HERO_PREVIEW_TOOLCHAIN_OPERATIONS,
   HERO_SET_GRAMMAR,
   HERO_TOOLCHAIN_GRAMMAR,
   HERO_TOOLCHAIN_OPERATIONS,
@@ -247,7 +250,13 @@ const previewRuntimeSet = {
   authority: 'unapproved_preview',
   clips: previewRuntimeClips,
   previewLineage,
-  toolchain: approvedToolchain,
+  toolchain: {
+    grammar: HERO_PREVIEW_TOOLCHAIN_GRAMMAR,
+    compositor: { name: 'ImageMagick', version: '7.1.2-13' },
+    encoder: approvedEncoder,
+    operations: [...HERO_PREVIEW_TOOLCHAIN_OPERATIONS],
+    profileSha256: HERO_PREVIEW_MATRIX_PROFILE_SHA256,
+  },
 };
 previewRuntimeFiles.set(
   'assets/preview-v3/set.json',

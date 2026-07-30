@@ -23,6 +23,7 @@ APN-Idle-Package.zip
 
 # Optional local noise
 .cache/
+/.gaf2d-preview/
 .worktrees/
 tmp/
 *.log
