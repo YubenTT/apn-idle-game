@@ -250,3 +250,55 @@ Original prompt: Complete the APN Idle redesign autonomously, including QA, revi
 - No paid-provider call, network generation, private-media upload, creative
   approval, rig authoring, export, push, or deploy occurred. The remaining gate
   is the owner's approve/reject decision for the complete authored motion set.
+
+## 2026-07-30 stage-presentation browser closure
+
+- The stage-presentation implementation is the nine-commit chain
+  `a721467`, `f22d7a5`, `6a4f06d`, `932a13e`, `53d5f05`, `2cc131c`,
+  `b802ac9`, `d833c8e`, and `7ea5f83`. Browser review found one additional
+  CSS precedence defect: a toast whose DOM `hidden` property was true still
+  occupied layout because the component `display:flex` rule won. Commit
+  `0f38cf8` records the failing regression assertion and the narrow
+  `#toast.toast-banner[hidden] { display: none; }` fix.
+- Two consecutive exact preview builds both reported
+  `GAF2D PREVIEW 7/39/276
+  2ec2659c795e6e298f86bd7d079a538e193139e546c4b335dd32d9e8a4c5b2e1`.
+  Their sorted 30-file projections both hashed to
+  `3004d6b8b527b62456d6bcf50bdad58a14cadfeca352338e3b5b5e22928aa3c7`.
+  The source batch remains
+  `29d8137159038631dfc279bdd789def5dcdd31842fe21c6dced64feca623adb5`,
+  with zero network, provider, and provider-clip calls.
+- Focused checks for motion-preview UI, stage presentation, preview build,
+  Hero V3 runtime/semantics, Valorant motion, creatures, and documentation all
+  pass. The complete `node qa/run-tests.mjs` gate ends `ALL PASS`, and
+  `git diff --check` is clean.
+
+| Viewport | Canvas | Standard fit | Boss fit | Ground Y | Normal + reduced motion |
+|---|---:|---:|---:|---:|---|
+| 375×812 | 375×456 | 1 | 1 | 392.16 | pass |
+| 390×844 | 390×488 | 1 | 1 | 419.68 | pass |
+| 428×926 | 428×570 | 1 | 1 | 490.20 | pass |
+| 844×390 | 844×216 | 1 | 0.9407764 | 185.76 | pass |
+
+- At every viewport and in both motion modes, the Hero resolves to
+  `96 × fit` with a `6 × fit` neutral gap, a standard target resolves to
+  `72 × fit` with a `2 × fit` gap, and Site Warden resolves to `112 × fit`
+  with a `2 × fit` gap. Every shadow Y equals the measured ground Y. Entry
+  Runner `advance`, `hit`, and `death` and Site Warden `idle` and `broken`
+  retain one exact transform within each scene.
+- Browser-selected clips remained Hero `run` 16 FPS and `attack` 16 FPS;
+  Entry Runner `advance` 10 FPS, `hit` 16 FPS, and `death` 8 FPS; and Site
+  Warden `idle`/`broken` 8 FPS. The decoded Hero `idle` strip remains 8 frames
+  at 12 FPS. Priority rank 2, HP, floater, tracker aura, hit/shock, and loot
+  evidence consumed the resolved geometry anchors; motion diagnostics,
+  console errors, warnings, and horizontal/vertical overflow stayed at zero.
+- Visual evidence:
+  `.gaf2d-preview/qa-evidence/stage-presentation-375x812.png`,
+  `stage-presentation-390x844.png`, `stage-presentation-428x926.png`,
+  `stage-presentation-844x390.png`, and
+  `stage-presentation-wave10.png`. The Wave 10 capture is 428×926 and shows
+  the real Site Warden `broken` clip at 33% HP with a clear plate.
+- The complete derivative remains `unapproved_preview` /
+  `human_review_required`. No paid call, upload, push, publish, or deploy
+  occurred. The only remaining gate is explicit human approval or rejection
+  of the complete authored motion set.

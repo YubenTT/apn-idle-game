@@ -1,5 +1,136 @@
 # APN Idle redesign V1 — QA report
 
+## 2026-07-30 stage-presentation contract closure
+
+Status: offline implementation and browser evidence are green. This is not
+creative approval: the derivative remains `unapproved_preview` with
+`human_review_required`, and the complete authored motion set still requires an
+explicit human approve/reject decision.
+
+### Commits and deterministic source
+
+- Stage contract chain: `a721467`, `f22d7a5`, `6a4f06d`, `932a13e`,
+  `53d5f05`, `2cc131c`, `b802ac9`, `d833c8e`, `7ea5f83`.
+- Browser-found toast regression and fix: `0f38cf8`. RED was
+  `node qa/check-motion-preview-ui.mjs`, failing
+  `hidden toast overrides its component display declaration`; GREEN was the
+  same focused command plus the full gate. The fixed expired toast measures
+  `hidden=true`, `display=none`, and `0×0`.
+- The exact preview build command was run twice:
+
+  `node scripts/assets/build-gaf2d-preview.mjs --gaf2d-project /Users/talatongu/Code/kimi-projects/apn-idle-game-gaf2d --output .gaf2d-preview`
+
+  Both runs reported `GAF2D PREVIEW 7/39/276` and manifest SHA-256
+  `2ec2659c795e6e298f86bd7d079a538e193139e546c4b335dd32d9e8a4c5b2e1`.
+  Both sorted 30-file projections were
+  `3004d6b8b527b62456d6bcf50bdad58a14cadfeca352338e3b5b5e22928aa3c7`.
+  The manifest binds source batch
+  `29d8137159038631dfc279bdd789def5dcdd31842fe21c6dced64feca623adb5`,
+  `sourceFamily=authored-semantic-v2`, seven assets, 39 clips, 276 frames,
+  and zero network/provider/provider-clip calls.
+
+### Automated gate
+
+The following focused commands pass:
+
+```console
+node qa/check-motion-preview-ui.mjs
+node qa/check-stage-presentation.mjs
+node qa/check-gaf2d-preview-build.mjs
+node qa/check-hero-v3-runtime.mjs
+node qa/check-hero-motion-semantics.mjs
+node qa/check-gaf2d-valorant.mjs
+node qa/check-creatures.mjs
+node qa/check-doc-contracts.mjs
+```
+
+`node --check qa/check-motion-preview-ui.mjs` passes. The complete
+`node qa/run-tests.mjs` gate ends `ALL PASS`; `git diff --check` is clean.
+No test made a provider, paid, or external-network call.
+
+### Browser matrix
+
+The query-gated audit used
+`http://127.0.0.1:8790/?motion-preview=1&mute=1&autostart=1&zone=1&chrome-smoke=1&qa-manual=1`.
+The final human-review link omits QA-only hooks:
+`http://127.0.0.1:8790/?motion-preview=1&mute=1&autostart=1&zone=1`.
+
+| Viewport | Canvas | Standard fit | Boss fit | Ground Y | Hero body/gap | Standard body/gap | Boss body/gap | Normal/reduced | Overflow | Console / motion failures |
+|---|---:|---:|---:|---:|---:|---:|---:|---|---:|---|
+| 375×812 | 375×456 | 1 | 1 | 392.16 | 96/6 | 72/2 | 112/2 | pass/pass | 0/0 | 0 / 0 |
+| 390×844 | 390×488 | 1 | 1 | 419.68 | 96/6 | 72/2 | 112/2 | pass/pass | 0/0 | 0 / 0 |
+| 428×926 | 428×570 | 1 | 1 | 490.20 | 96/6 | 72/2 | 112/2 | pass/pass | 0/0 | 0 / 0 |
+| 844×390 | 844×216 | 1 | 0.9407764 | 185.76 | 96×fit/6×fit | 72/2 | 112×fit/2×fit | pass/pass | 0/0 | 0 / 0 |
+
+Every row measured `shadowY == groundY`. Normal and reduced motion produced the
+same geometry. Within each scene, Entry Runner `advance`, `hit`, and `death`
+used one identical role/scale/pivot/draw transform, and Site Warden `idle` and
+`broken` used one identical transform. In the 844×390 boss scene,
+`112×fit=105.3669571` and `2×fit=1.8815528`.
+
+Resolved standard-target anchor samples:
+
+| Viewport | HP Y | Floater Y | Aura / hit / loot center |
+|---|---:|---:|---|
+| 375×812 | 307.0691 | 297.0691 | 320.1818, 354.1600 |
+| 390×844 | 334.5891 | 324.5891 | 315.1818, 381.6800 |
+| 428×926 | 405.1091 | 395.1091 | 320.1818, 452.2000 |
+| 844×390 | 100.6691 | 90.6691 | 320.1818, 147.7600 |
+
+The action captures show the actual priority-rank-2 bracket, HP plate,
+`-42` floater, Hero tracker aura, hit/shock, and loot origins. The dedicated
+Wave 10 capture measured fit 1, body 112, gap 2,
+`shadowY=groundY=490.2`, `hpY=365.6563`, and selected Site Warden
+`broken` frame 5 at 8 FPS with 33% HP and zero fallbacks. The preceding
+normal-state audit selected Site Warden `idle` at 8 FPS with the exact same
+transform.
+
+Browser clip evidence and unchanged descriptor facts:
+
+- Hero: `idle` 8@12, `run` 10@16, `attack` 8@16, `crit` 8@16,
+  `hit` 4@16, `death` 8@16, `celebrate` 8@16, `sprint` 10@20.
+- Every non-boss creature: `idle` 8@8, `advance` 8@10,
+  `engaged` 6@12, `hit` 4@16, `death` 8@8.
+- Site Warden keeps that set and adds `broken` 8@8.
+- The live standard audit selected Hero `run` 16 FPS and `attack` 16 FPS,
+  Entry Runner `advance` 10 FPS, `hit` 16 FPS, and `death` 8 FPS.
+  Hero `idle` was separately decoded and rendered from its 8-frame, 12 FPS
+  strip; no FPS or frame-count contract changed.
+
+All observed resource responses were successful `127.0.0.1:8790` requests.
+The Playwright session reported zero console errors and zero warnings, and every
+motion-store diagnostic set was empty.
+
+### Screenshot evidence
+
+| File | Pixels | SHA-256 |
+|---|---:|---|
+| `.gaf2d-preview/qa-evidence/stage-presentation-375x812.png` | 375×812 | `66a5994634e31bcb340bfd71cbfbeb2a109e137a43b40308d63c9df8fa07d3d8` |
+| `.gaf2d-preview/qa-evidence/stage-presentation-390x844.png` | 390×844 | `496a9900b1fff3d13dc4dd48d9ce734ddd35fe96708c7431ca9c6cf92ca74072` |
+| `.gaf2d-preview/qa-evidence/stage-presentation-428x926.png` | 428×926 | `6ced5c7f575c42120416dba9d3e1f7ba06f9750929c5652a48d9a5d959532377` |
+| `.gaf2d-preview/qa-evidence/stage-presentation-844x390.png` | 844×390 | `169b86b754f3ec754bd4429bee47de51bc744afb52efdb77e8cfe3154d827dcf` |
+| `.gaf2d-preview/qa-evidence/stage-presentation-wave10.png` | 428×926 | `426bb228ae3fbbfa7c69dd4e2d05d87e8ca607cc7556797d8a8e7176912ea69d` |
+
+Each final file was visually inspected at original resolution. The expired boss
+toast is absent from all final evidence. The Wave 10 image shows the real
+broken-state body and a clear `1631/4940` HP plate.
+
+### Independent review
+
+The final review checked frame-by-frame grounding, duplicate role-size
+constants, identity-specific scaling, shadow movement, anchor bypasses,
+preview-authority leakage, and stale tests/docs. The role ladder exists only in
+`js/stage-presentation.js`; trusted enemy domain type selects a role while asset
+IDs never select scale; all frames share one asset presentation record and one
+resolved transform; shadows use resolved ground geometry; HP/floater/aura/hit/
+loot paths consume resolved anchors; and production mode remains closed to the
+preview overlay. Focused tests cover those contracts.
+
+The only actionable review finding was the hidden-toast CSS precedence defect,
+fixed and regression-tested in `0f38cf8`. No other blocking or actionable
+finding remains. No paid call, private-media upload, export, push, publish,
+deploy, or history rewrite occurred.
+
 ## 2026-07-28 authored-motion technical closure
 
 Status: offline technical acceptance approved. Production art acceptance remains
