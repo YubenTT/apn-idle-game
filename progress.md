@@ -2,6 +2,12 @@ Original prompt: Complete the APN Idle redesign autonomously, including QA, revi
 
 ## Current execution
 
+- 2026-07-31 CI right-sizing is documented in this worktree: one public-repo CI
+  job now preserves `node qa/run-tests.mjs`, both direct-Chrome smoke paths, and
+  a final always-running upload attempt for any smoke evidence already produced,
+  while stale-run cancellation, a 15-minute timeout, and 7-day artifact
+  retention reduce compute/storage/job overhead rather than billed
+  standard-runner minutes.
 - I-007 catalog renderer complete with muted direct-Chrome route evidence.
 - I-021 Gear implementation is complete: 5-column inventory, explicit compare/sort/filter/junk/scrap flows, canonical Host, persistence, and portrait/small/landscape Chrome evidence.
 - I-010–I-014 Run hero experience is implemented; integrated Run Chrome review is active.

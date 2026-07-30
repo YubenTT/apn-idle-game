@@ -62,6 +62,15 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Changed
 
+- On 2026-07-31, CI was right-sized into one public-repo job that keeps the
+  existing headless test suite, both direct-Chrome smoke paths, and failure
+  diagnostics in one checkout/setup path; an always-running final step attempts
+  to upload any smoke evidence produced before a failure. CI now cancels stale
+  in-progress runs, enforces a 15-minute job timeout, and bounds artifact
+  retention to 7 days. The upload step uses the current Node 24-compatible v7
+  action, eliminating the deprecated Node 20 runtime warning. Because this
+  repository is public, the change reduces compute, storage, and job overhead
+  rather than billed standard-runner minutes.
 - Reorganized Run into a two-tier Route/Pack then Clear/Rank/Live hierarchy,
   hid Focus until a Focus-spending skill exists, kept Patch Echo absent without
   real domain progress, scaled the Host to its 118–142px hero range, and moved
