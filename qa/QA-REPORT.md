@@ -45,7 +45,7 @@ node qa/check-doc-contracts.mjs
 ```
 
 `node --check qa/check-motion-preview-ui.mjs` passes. The complete
-`node qa/run-tests.mjs` gate exits 0 with 2,142 lines and ends `ALL PASS`;
+`node qa/run-tests.mjs` gate exits 0 with 2,143 lines and ends `ALL PASS`;
 `git diff --check` is clean.
 No test made a provider, paid, or external-network call.
 
@@ -57,10 +57,20 @@ motion envelope, and holds compact/full selection on one branch. GREEN measures
 fit `0.5376015474` and plate y `103..133`; the post-commit browser measures
 HUD bottom 103, safety line 105, and the final plate at `105..135`.
 
+Second fix-round review then reproduced the Wave 10 timer over that boss plate.
+The real Canvas RED captured plate `{x:274.12,y:105,w:91.76,h:30}` and labeled
+timer `{x:151.92,y:108,w:540.16,h:24}`. Commit `69a1b37` resolves both from
+one pure functional layout and moves the timer only when the rectangles
+collide. GREEN keeps the plate unchanged and places the timer at
+`{x:377.88,y:108,w:450.12,h:24}`, with `SITE WARDEN` centered at
+`(602.94,130)`. The 12 px horizontal gap keeps both components visible without
+hiding either or changing the minimum actor fit.
+
 ### Browser matrix
 
 The query-gated audit used
 `http://127.0.0.1:8790/?motion-preview=1&mute=1&autostart=1&zone=1&chrome-smoke=1&qa-manual=1`.
+The exact landscape boss proof used the same query with `zone=10`.
 The final human-review link omits QA-only hooks:
 `http://127.0.0.1:8790/?motion-preview=1&mute=1&autostart=1&zone=1`.
 
@@ -77,7 +87,13 @@ used one identical role/scale/pivot/draw transform, and Site Warden `idle` and
 `broken` used one identical transform. In the 844×390 standard scene, fit is
 `0.5428087167`, body/gap are `39.0822276/1.0856174`, and the plate remains
 fully below the HUD. In the 844×390 boss scene, fit is `0.5`, body/gap are
-`56/1`, and the same compact plate remains at y `105..135`.
+`56/1`, and the same compact plate remains at y `105..135`. Its plate occupies
+x `274.12..365.88`; the timer occupies x `377.88..828`, y `108..132`, and
+retains its visible `SITE WARDEN` label. Normal and reduced motion produce the
+same layout. At 428×926 the non-colliding timer remains at the original
+centered `{x:77.04,y:108,w:273.92,h:24}` placement.
+The post-commit landscape capture uses the real Site Warden at `3112/4940` HP,
+with authored `advance` frame 7 at 10 FPS and zero fallbacks.
 
 Resolved standard-target anchor samples:
 
@@ -120,11 +136,14 @@ motion-store diagnostic set was empty.
 | `.gaf2d-preview/qa-evidence/stage-presentation-390x844.png` | 390×844 | `496a9900b1fff3d13dc4dd48d9ce734ddd35fe96708c7431ca9c6cf92ca74072` |
 | `.gaf2d-preview/qa-evidence/stage-presentation-428x926.png` | 428×926 | `6ced5c7f575c42120416dba9d3e1f7ba06f9750929c5652a48d9a5d959532377` |
 | `.gaf2d-preview/qa-evidence/stage-presentation-844x390.png` | 844×390 | `0f2186416b968de9755a2884b0eac69f527df11800decb703baabf4bbc589bd6` |
+| `.gaf2d-preview/qa-evidence/stage-presentation-844x390-wave10.png` | 844×390 | `a4b8ecc956b1c640fd9363ec8cbcb3a2d3b3cf26889473c911768c7f746286dd` |
 | `.gaf2d-preview/qa-evidence/stage-presentation-wave10.png` | 428×926 | `426bb228ae3fbbfa7c69dd4e2d05d87e8ca607cc7556797d8a8e7176912ea69d` |
 
 Each final file was visually inspected at original resolution. The expired boss
-toast is absent from all final evidence. The Wave 10 image shows the real
-broken-state body and a clear `1631/4940` HP plate.
+toast is absent from all final evidence. The portrait Wave 10 image shows the
+real broken-state body and a clear `1631/4940` HP plate. The landscape Wave 10
+image shows the compact `Site Warden` HP/name plate and the uppercase
+`SITE WARDEN` timer label together without overlap.
 
 ### Independent review
 
@@ -139,9 +158,10 @@ preview overlay. Focused tests cover those contracts.
 
 The initial actionable review finding was the hidden-toast CSS precedence
 defect, fixed and regression-tested in `0f38cf8`. Fix-round review then found
-and closed the landscape plate/HUD overlap in `148cf05`. No other blocking or
-actionable finding remains. No paid call, private-media upload, export, push,
-publish, deploy, or history rewrite occurred.
+and closed the landscape plate/HUD overlap in `148cf05`; second fix-round
+review closed the boss timer/plate collision in `69a1b37`. No other blocking
+or actionable finding remains. No paid call, private-media upload, export,
+push, publish, deploy, or history rewrite occurred.
 
 ## 2026-07-28 authored-motion technical closure
 

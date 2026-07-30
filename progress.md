@@ -268,6 +268,14 @@ Original prompt: Complete the APN Idle redesign autonomously, including QA, revi
   measured plate y `81.2247..111.2247` against safe y 103; GREEN measures
   `103..133`, and the post-commit browser measures the final plate at
   `105..135` below the measured HUD bottom y 103.
+- Second fix-round review found the 844×390 boss timer was painted after and
+  across that now-correct plate. Commit `69a1b37` makes the plate and timer
+  consume one pure functional layout; only a real 2D collision moves the timer
+  into the wider horizontal lane. The boss plate remains
+  `{x:274.12,y:105,w:91.76,h:30}` while the labeled timer moves from the
+  overlapping `{x:151.92,y:108,w:540.16,h:24}` rect to
+  `{x:377.88,y:108,w:450.12,h:24}`. Portrait placement remains centered and
+  unchanged.
 - Two consecutive exact preview builds both reported
   `GAF2D PREVIEW 7/39/276
   2ec2659c795e6e298f86bd7d079a538e193139e546c4b335dd32d9e8a4c5b2e1`.
@@ -278,7 +286,7 @@ Original prompt: Complete the APN Idle redesign autonomously, including QA, revi
   with zero network, provider, and provider-clip calls.
 - Focused checks for motion-preview UI, stage presentation, preview build,
   Hero V3 runtime/semantics, Valorant motion, creatures, and documentation all
-  pass. The final complete `node qa/run-tests.mjs` gate exits 0 with 2,142
+  pass. The final complete `node qa/run-tests.mjs` gate exits 0 with 2,143
   lines and ends `ALL PASS`; `git diff --check` is clean.
 
 | Viewport | Canvas | Standard fit | Boss fit | Ground Y | Normal + reduced motion |
@@ -303,9 +311,12 @@ Original prompt: Complete the APN Idle redesign autonomously, including QA, revi
 - Visual evidence:
   `.gaf2d-preview/qa-evidence/stage-presentation-375x812.png`,
   `stage-presentation-390x844.png`, `stage-presentation-428x926.png`,
-  `stage-presentation-844x390.png`, and
+  `stage-presentation-844x390.png`,
+  `stage-presentation-844x390-wave10.png`, and
   `stage-presentation-wave10.png`. The Wave 10 capture is 428×926 and shows
-  the real Site Warden `broken` clip at 33% HP with a clear plate.
+  the real Site Warden `broken` clip at 33% HP with a clear plate; the new
+  844×390 Wave 10 capture proves the compact plate and labeled timer are both
+  visible in separate horizontal lanes.
 - The complete derivative remains `unapproved_preview` /
   `human_review_required`. No paid call, upload, push, publish, or deploy
   occurred. The only remaining gate is explicit human approval or rejection
