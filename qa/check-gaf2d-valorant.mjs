@@ -27,6 +27,7 @@ import {
   enemyFrameFor,
   enemyLabelForDisplay,
   inspectEnemyMotion,
+  stageRoleForEnemy,
 } from '../js/render.js';
 import {
   approvalMatchesCurrentManifest,
@@ -394,6 +395,11 @@ syntheticMotionPack.motion = {
       descriptor: 'assets/game-packs/valorant/characters/entry-runner/motion.json',
       descriptorSha256: '1'.repeat(64),
     },
+    'site-warden': {
+      image: 'assets/game-packs/valorant/characters/site-warden/motion.webp',
+      descriptor: 'assets/game-packs/valorant/characters/site-warden/motion.json',
+      descriptorSha256: '2'.repeat(64),
+    },
   },
 };
 const syntheticPackAssets = {
@@ -429,10 +435,36 @@ const syntheticRecord = {
         fps: 8,
         frames: [{ x: 0, y: 0, width: 64, height: 64 }],
       },
+      hit: {
+        playback: 'progress',
+        fps: 8,
+        frames: [{ x: 0, y: 0, width: 64, height: 64 }],
+      },
+      death: {
+        playback: 'progress',
+        fps: 8,
+        frames: [{ x: 0, y: 0, width: 64, height: 64 }],
+      },
+      broken: {
+        playback: 'loop',
+        fps: 8,
+        frames: [{ x: 0, y: 0, width: 64, height: 64 }],
+      },
     },
     trim: { x: 0, y: 0, width: 64, height: 64 },
     frameSize: { width: 64, height: 64 },
     pivot: { x: 0.5, y: 1 },
+    presentation: {
+      schemaVersion: 1,
+      scaleContract: 'visible-body',
+      reference: {
+        clip: 'idle',
+        frameIndex: 0,
+        sourceSha256: '3'.repeat(64),
+      },
+      visibleBounds: { x: 8, y: 5, width: 48, height: 52 },
+      motionBounds: { x: 2, y: 1, width: 60, height: 62 },
+    },
   },
 };
 const syntheticStore = {
@@ -485,6 +517,32 @@ function createCanvasProbe({ rejectFirstDraw = false } = {}) {
   });
   return { ctx, calls };
 }
+function createStageAnchorProbe() {
+  const events = [];
+  const ctx = new Proxy(
+    {},
+    {
+      get(_target, key) {
+        if (
+          key === 'createLinearGradient' ||
+          key === 'createRadialGradient'
+        ) {
+          return (...args) => {
+            events.push({ method: key, args });
+            return { addColorStop() {} };
+          };
+        }
+        return (...args) => {
+          events.push({ method: key, args });
+        };
+      },
+      set() {
+        return true;
+      },
+    },
+  );
+  return { ctx, events };
+}
 let probe = createCanvasProbe();
 syntheticStore.motionStore.entries.set(syntheticKey, { status: 'pending' });
 drawEnemy(probe.ctx, syntheticEnemy, 320, 1.25, syntheticPackAssets, syntheticStore, false, 1, syntheticEnv);
@@ -495,8 +553,153 @@ drawEnemy(probe.ctx, syntheticEnemy, 320, 1.25, syntheticPackAssets, syntheticSt
 assert(probe.calls.length > 0, 'failed mapped identity falls back to the static target atlas');
 probe = createCanvasProbe();
 syntheticStore.motionStore.entries.set(syntheticKey, syntheticRecord);
-drawEnemy(probe.ctx, syntheticEnemy, 320, 1.25, syntheticPackAssets, syntheticStore, false, 1, syntheticEnv);
-assert(probe.calls.length > 0, 'ready mapped identity renders the motion bundle');
+const entryGeometry = drawEnemy(
+  probe.ctx,
+  syntheticEnemy,
+  320,
+  1.25,
+  syntheticPackAssets,
+  syntheticStore,
+  false,
+  1,
+  syntheticEnv,
+);
+assert(
+  probe.calls.length > 0 &&
+    stageRoleForEnemy(syntheticEnemy) === 'standard' &&
+    entryGeometry.role === 'standard' &&
+    entryGeometry.body.height === 72 &&
+    entryGeometry.body.bottom === 318 &&
+    entryGeometry.visualGap === 2,
+  'authored Entry Runner resolves an exact 72 px body with a 2 px ground gap',
+);
+const bossKey = `${syntheticMotionPack.id}/site-warden`;
+const syntheticBoss = {
+  ...syntheticEnemy,
+  id: 'motion-warden',
+  type: 'boss',
+  label: 'Site Warden',
+  frame: 'boss',
+  x: 160,
+  displayX: 240,
+  hp: 100,
+  hpMax: 100,
+};
+syntheticStore.motionStore.entries.set(bossKey, syntheticRecord);
+const idleBossProbe = createCanvasProbe();
+const idleBossGeometry = drawEnemy(
+  idleBossProbe.ctx,
+  syntheticBoss,
+  320,
+  1.25,
+  syntheticPackAssets,
+  syntheticStore,
+  false,
+  1,
+  syntheticEnv,
+);
+const brokenBossProbe = createCanvasProbe();
+const brokenBossGeometry = drawEnemy(
+  brokenBossProbe.ctx,
+  { ...syntheticBoss, hp: 33 },
+  320,
+  1.25,
+  syntheticPackAssets,
+  syntheticStore,
+  false,
+  1,
+  syntheticEnv,
+);
+assert(
+  stageRoleForEnemy(syntheticBoss) === 'boss' &&
+    idleBossGeometry.role === 'boss' &&
+    brokenBossGeometry.role === 'boss' &&
+    idleBossGeometry.body.height === 112 &&
+    idleBossGeometry.body.bottom === 318 &&
+    idleBossGeometry.visualGap === 2 &&
+    JSON.stringify(idleBossGeometry) === JSON.stringify(brokenBossGeometry) &&
+    idleBossProbe.calls[0]?.slice(5).join('|') ===
+      brokenBossProbe.calls[0]?.slice(5).join('|'),
+  'Site Warden idle and broken clips keep one exact 112 px body transform with a 2 px gap',
+);
+globalThis.document = globalThis.document || { documentElement: {} };
+globalThis.getComputedStyle =
+  globalThis.getComputedStyle ||
+  (() => ({ getPropertyValue: () => '#6cb8ff' }));
+const anchorProbe = createStageAnchorProbe();
+const anchoredGeometry = drawEnemy(
+  anchorProbe.ctx,
+  {
+    ...syntheticEnemy,
+    priorityTagRank: 1,
+    hurt: 0.1,
+    hitFlash: 0.06,
+  },
+  320,
+  1.25,
+  syntheticPackAssets,
+  syntheticStore,
+  false,
+  1,
+  syntheticEnv,
+);
+const priorityStrokeIndex = anchorProbe.events.findIndex(
+  ({ method }) => method === 'stroke',
+);
+const priorityTop = anchorProbe.events.find(
+  ({ method }, index) => method === 'moveTo' && index < priorityStrokeIndex,
+)?.args?.[1];
+const hpTop = anchorProbe.events.find(
+  ({ method }, index) => method === 'moveTo' && index > priorityStrokeIndex,
+)?.args?.[1];
+const hitGradient = anchorProbe.events.find(
+  ({ method }) => method === 'createRadialGradient',
+)?.args;
+assert(
+  Math.abs(priorityTop - 240.46153846153845) < 1e-9 &&
+    Math.abs(hpTop - 176.46153846153845) < 1e-9 &&
+    hitGradient?.[0] === 220 &&
+    hitGradient?.[1] === 282 &&
+    anchoredGeometry.anchors.hitY === 282 &&
+    anchoredGeometry.anchors.lootY === 282,
+  `priority, HP, hit, and loot facts consume the authored motion envelope and body anchors (${JSON.stringify({
+    priorityTop,
+    hpTop,
+    hitGradient,
+    hitY: anchoredGeometry.anchors.hitY,
+    lootY: anchoredGeometry.anchors.lootY,
+  })})`,
+);
+const authoredDeathProbe = createStageAnchorProbe();
+const authoredDeathGeometry = drawEnemy(
+  authoredDeathProbe.ctx,
+  {
+    ...syntheticEnemy,
+    hp: 0,
+    killed: true,
+    deathT: 0.25,
+    deathMax: 0.5,
+  },
+  320,
+  1.25,
+  syntheticPackAssets,
+  syntheticStore,
+  false,
+  1,
+  syntheticEnv,
+);
+const deathShadow = authoredDeathProbe.events.find(
+  ({ method }) => method === 'ellipse',
+)?.args;
+assert(
+  authoredDeathGeometry.role === 'standard' &&
+    authoredDeathGeometry.body.height === 72 &&
+    deathShadow?.[0] === authoredDeathGeometry.anchors.shadowX &&
+    deathShadow?.[1] === authoredDeathGeometry.anchors.shadowY &&
+    authoredDeathProbe.events.some(({ method }) => method === 'drawImage') &&
+    !authoredDeathProbe.events.some(({ method }) => method === 'fillText'),
+  'ready authored death keeps shared role scale and shadow while hiding HP',
+);
 probe = createCanvasProbe({ rejectFirstDraw: true });
 syntheticStore.motionStore.entries.set(syntheticKey, {
   ...syntheticRecord,

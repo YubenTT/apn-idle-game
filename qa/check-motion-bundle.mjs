@@ -12,6 +12,7 @@ import {
   validateMotionBundle,
   validateMotionPreviewBundle,
 } from '../js/motion-bundle.js';
+import * as renderRuntime from '../js/render.js';
 
 const readJson = (name) =>
   JSON.parse(
@@ -27,6 +28,64 @@ const assert = (condition, message) => {
     console.log(`OK ${message}`);
   }
 };
+
+const stageRoleForEnemy = renderRuntime.stageRoleForEnemy;
+assert(
+  typeof stageRoleForEnemy === 'function' &&
+    stageRoleForEnemy({ type: 'stale' }) === 'standard' &&
+    stageRoleForEnemy({ type: 'patch' }) === 'standard' &&
+    stageRoleForEnemy({ type: 'boss' }) === 'boss',
+  'trusted enemy state resolves standard and boss stage roles',
+);
+
+const geometryProbeContext = new Proxy(
+  {},
+  {
+    get(_target, property) {
+      if (
+        property === 'createLinearGradient' ||
+        property === 'createRadialGradient'
+      ) {
+        return () => ({ addColorStop() {} });
+      }
+      return () => {};
+    },
+    set() {
+      return true;
+    },
+  },
+);
+const standardGeometry = renderRuntime.drawEnemy(
+  geometryProbeContext,
+  {
+    id: 'stage-standard',
+    type: 'stale',
+    label: 'Broken Link',
+    frame: 'common-a',
+    x: 200,
+    displayX: 200,
+    hp: 10,
+    hpMax: 10,
+    deathT: 0,
+    hurt: 0,
+    killed: false,
+    priorityTagRank: 0,
+  },
+  300,
+  1,
+  null,
+  null,
+  true,
+  1,
+  null,
+);
+assert(
+  standardGeometry?.role === 'standard' &&
+    standardGeometry.body.height === 72 &&
+    standardGeometry.body.bottom === 298 &&
+    standardGeometry.visualGap === 2,
+  'drawEnemy returns exact standard 72 px body geometry with a 2 px gap',
+);
 
 const valid = readJson('valid.json');
 const combinedInvalid = readJson('invalid-overlap.json');

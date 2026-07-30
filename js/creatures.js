@@ -192,7 +192,7 @@ export function creatureStoreDecodedBytes(store) {
 }
 
 /**
- * Blit one frame at foot pivot (x, footY) with drawn height `height`.
+ * Blit one frame at the resolved source pivot with the resolved trim height.
  * Loop clips read `time` as seconds; progress clips read `time` as 0..1.
  */
 export function drawCreature(
@@ -201,8 +201,8 @@ export function drawCreature(
   clip,
   time,
   x,
-  footY,
-  height,
+  pivotY,
+  drawTrimHeight,
   store,
 ) {
   const entry = store?.entries.get(keyOf(kind, clip));
@@ -218,7 +218,7 @@ export function drawCreature(
       );
   const frame = frames[frameIndex];
   const trim = meta.trim;
-  const scale = height / trim.h;
+  const scale = drawTrimHeight / trim.h;
   ctx.drawImage(
     image,
     frame.x,
@@ -226,7 +226,7 @@ export function drawCreature(
     frame.w,
     frame.h,
     x + (trim.x - meta.frameSize * meta.anchor[0]) * scale,
-    footY + (trim.y - meta.frameSize * meta.anchor[1]) * scale,
+    pivotY + (trim.y - meta.frameSize * meta.anchor[1]) * scale,
     trim.w * scale,
     trim.h * scale,
   );

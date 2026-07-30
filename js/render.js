@@ -13,6 +13,7 @@ import {
   STAGE_ROLE_PRESENTATION,
   legacySquarePresentation,
   resolveActorGeometry,
+  stageFitForActors,
 } from './stage-presentation.js?v=gaf2d-motion-v1';
 import { motionReduced } from './motion-preference.js?v=gaf2d-motion-v1';
 import {
@@ -31,7 +32,40 @@ import { CREATURES, creatureKindFor } from './content.js?v=gaf2d-motion-v1';
 import { creatureClipReady, drawCreature } from './creatures.js?v=gaf2d-motion-v1';
 import { targetForEnemyType } from './wave-roster.js?v=gaf2d-motion-v1';
 
-const enemyRenderSize = (enemy) => enemy.type === 'boss' ? 136 : enemy.type === 'patch' ? 100 : 96;
+const LEGACY_ENEMY_PRESENTATION = legacySquarePresentation({ sourceSize: 1 });
+const LEGACY_ENEMY_INTRINSICS = Object.freeze({
+  frameSize: Object.freeze({ width: 1, height: 1 }),
+  trim: Object.freeze({ x: 0, y: 0, width: 1, height: 1 }),
+  pivot: Object.freeze({ x: 0.5, y: 1 }),
+  presentation: LEGACY_ENEMY_PRESENTATION,
+});
+
+/** Enemy type is trusted game state; asset IDs never self-assign scale. */
+export function stageRoleForEnemy(enemy) {
+  return enemy?.type === 'boss' ? 'boss' : 'standard';
+}
+
+function enemyIntrinsicsForMotion(motionInfo) {
+  const descriptor =
+    motionInfo?.status === 'ready' ? motionInfo.record?.descriptor : null;
+  if (!descriptor?.presentation) return LEGACY_ENEMY_INTRINSICS;
+  return {
+    frameSize: descriptor.frameSize,
+    trim: descriptor.trim,
+    pivot: descriptor.pivot,
+    presentation: descriptor.presentation,
+  };
+}
+
+function resolveEnemyGeometry(enemy, groundY, fit, motionInfo) {
+  return resolveActorGeometry({
+    actorX: enemy.displayX,
+    groundY,
+    fit,
+    role: stageRoleForEnemy(enemy),
+    ...enemyIntrinsicsForMotion(motionInfo),
+  });
+}
 
 /** Resolve the exact pack-atlas frame used by both Canvas and deterministic QA. */
 export function enemyFrameFor(enemy) {
@@ -110,10 +144,42 @@ export function draw(ctx, w, h, s, assetStore = null) {
   const shakeX = s.world.shake ? (Math.random() - 0.5) * s.world.shake : 0;
   const shakeY = s.world.shake ? (Math.random() - 0.5) * s.world.shake : 0;
   const packAssets = assetStore ? getCurrentPackAssets(assetStore, s.route) : null;
-  // Fit combat cast + HP banners into short stages (landscape): scale the cast,
-  // never crop feet or heads. 78 = banner (62) + gap (10) + margin (6); 136 = boss.
-  const stageFit = clamp((gy - 78) / 136, 0.5, 1);
-  s.world.stageFit = stageFit; // game.js anchors hero floaters above the Host's head
+  const heroX = s.world.heroX;
+  const enemyEnv = {
+    zone: s.route?.zone ?? 0,
+    meleeStop: heroX + C.MELEE_RANGE - 8,
+    engagedId:
+      s.world.enemies.find((e) => e.hp > 0 && e.x <= heroX + C.MELEE_RANGE)?.id || null,
+  };
+  const show = s.world.enemies.filter(
+    (e) => e.hp > 0 || (e.deathT && e.deathT > 0),
+  );
+  const motionInfoByEnemyId = new Map(
+    show.map((enemy) => [
+      enemy.id,
+      inspectEnemyMotion(enemy, packAssets, assetStore, {
+        ...enemyEnv,
+        t,
+      }),
+    ]),
+  );
+  const stageFit = stageFitForActors({
+    groundY: gy,
+    bannerClearance: 78,
+    actors: [
+      {
+        role: 'hero',
+        presentation: heroIntrinsicGeometry().presentation,
+      },
+      ...show.map((enemy) => ({
+        role: stageRoleForEnemy(enemy),
+        presentation: enemyIntrinsicsForMotion(
+          motionInfoByEnemyId.get(enemy.id),
+        ).presentation,
+      })),
+    ],
+  });
+  s.world.stageFit = stageFit;
 
   ctx.save();
   ctx.translate(shakeX, shakeY);
@@ -133,30 +199,41 @@ export function draw(ctx, w, h, s, assetStore = null) {
 
   // enemies (living + dying) — env mirrors game.js melee targeting so V3
   // creature clips (advance / attack / hit / death / broken) track the domain
-  const heroX = s.world.heroX;
-  const enemyEnv = {
-    zone: s.route?.zone ?? 0,
-    meleeStop: heroX + C.MELEE_RANGE - 8,
-    engagedId:
-      s.world.enemies.find((e) => e.hp > 0 && e.x <= heroX + C.MELEE_RANGE)?.id || null,
-  };
-  const show = s.world.enemies.filter((e) => e.hp > 0 || (e.deathT && e.deathT > 0));
+  const actorGeometries = new Map();
   show.forEach((e) => {
-    drawEnemy(ctx, e, gy, t, packAssets, assetStore, motionReduced(s), stageFit, enemyEnv);
-    if (e.critFlash > 0) drawCritFlash(ctx, e, gy, stageFit);
+    const geometry = drawEnemy(
+      ctx,
+      e,
+      gy,
+      t,
+      packAssets,
+      assetStore,
+      motionReduced(s),
+      stageFit,
+      {
+        ...enemyEnv,
+        motionInfo: motionInfoByEnemyId.get(e.id),
+      },
+    );
+    actorGeometries.set(e.id, geometry);
   });
+  s.world.actorGeometries = actorGeometries;
 
   // hero
   drawHero(ctx, s.world.heroDisplayX, gy, s, t, stageFit);
 
   // particles
-  for (const p of s.world.particles) drawParticle(ctx, p);
+  for (const p of s.world.particles) drawParticle(ctx, p, actorGeometries);
 
   // shock rings (crit pops, death bursts, rank halo)
-  for (const sh of s.world.shocks || []) drawShock(ctx, sh);
+  for (const sh of s.world.shocks || []) {
+    drawShock(ctx, sh, actorGeometries);
+  }
 
   // Currency reward travels from the defeated target to its owning HUD chip.
-  for (const flight of s.world.lootFlights || []) drawLootFlight(ctx, flight, s, w, h, gy);
+  for (const flight of s.world.lootFlights || []) {
+    drawLootFlight(ctx, flight, w, h, actorGeometries);
+  }
 
   // confetti
   for (const c of s.world.confetti || []) drawConfettiBit(ctx, c);
@@ -164,13 +241,13 @@ export function draw(ctx, w, h, s, assetStore = null) {
   // floaters
   ctx.textAlign = 'center';
   for (const f of s.world.floaters) {
-    if (f.anchorId) {
-      const anchor = s.world.enemies.find((enemy) => enemy.id === f.anchorId);
-      if (anchor) {
-        f.x = anchor.displayX;
+    if (f.anchorId !== null && f.anchorId !== undefined) {
+      const geometry = actorGeometries.get(f.anchorId);
+      if (geometry) {
+        f.x = geometry.anchors.hitX;
         // Above the target's head, stacked by anchorLift — but never inside the
         // toast band (canvas y ≈112–162): short stages push text just under it.
-        const headY = gy - enemyRenderSize(anchor) * 0.82 * stageFit;
+        const headY = geometry.anchors.floaterY;
         const base = Math.max(headY, Math.min(170, gy - 32));
         f.y = base - (f.anchorLift || 0);
       }
@@ -636,15 +713,21 @@ export function drawEnemy(ctx, e, gy, t, packAssets = null, assetStore = null, r
   const x = e.displayX;
   const dying = e.deathT > 0 && e.killed;
   const isBoss = e.type === 'boss';
-  const size = enemyRenderSize(e) * fit;
   const atlas = packAssets?.ready && ready(packAssets.targets) ? packAssets.targets : null;
   const frameName = enemyFrameFor(e);
   const frame = packAssets?.targetData?.frames?.[frameName];
-  const footY = gy - 2;
-  const motionInfo = inspectEnemyMotion(e, packAssets, assetStore, {
-    ...env,
-    t,
-  });
+  const motionInfo =
+    env?.motionInfo ||
+    inspectEnemyMotion(e, packAssets, assetStore, {
+      ...env,
+      t,
+    });
+  const geometry = resolveEnemyGeometry(e, gy, fit, motionInfo);
+  const size = geometry.drawTrimHeight;
+  const footY = geometry.pivotY;
+  if (motionInfo.status !== 'pending') {
+    drawEnemyShadow(ctx, e, geometry);
+  }
 
   let onStage = false;
   if (motionInfo.status === 'ready') {
@@ -656,8 +739,8 @@ export function drawEnemy(ctx, e, gy, t, packAssets = null, assetStore = null, r
         motionInfo.clip,
         motionInfo.frameIndex,
         x,
-        footY,
-        size,
+        geometry.pivotY,
+        geometry.drawTrimHeight,
       );
     } catch (error) {
       failureDetail = `motion frame blit failed: ${error?.message || String(error)}`;
@@ -690,6 +773,7 @@ export function drawEnemy(ctx, e, gy, t, packAssets = null, assetStore = null, r
         meleeStop: env.meleeStop,
         engagedId: env.engagedId,
         creatureStore: assetStore?.creatureStore,
+        geometry,
       })
     );
   }
@@ -701,34 +785,34 @@ export function drawEnemy(ctx, e, gy, t, packAssets = null, assetStore = null, r
       atlas: atlas && frame?.rect ? atlas : null,
       frame: atlas && frame?.rect ? frame : null,
       reducedMotion,
+      geometry,
     });
   }
 
-  if (dying) return; // no HP bar while dying
+  drawEnemyHitFlash(ctx, e, geometry);
+  if (dying) return geometry; // no HP bar while dying
 
   if (e.priorityTagRank > 0) {
     const tagColor = resolveCanvasPaint({ tone: 'signal' });
-    const half = size * 0.43;
-    const top = footY - size * 0.88;
-    const bottom = footY - size * 0.08;
-    const arm = Math.max(7, size * 0.12);
+    const { left, top, right, bottom } = geometry.motionEnvelope;
+    const arm = Math.max(7, geometry.targetBodyHeight * 0.12);
     ctx.save();
     ctx.strokeStyle = tagColor;
     ctx.lineWidth = 2;
     ctx.globalAlpha = 0.72 + Math.sin(t * 6) * 0.16;
     ctx.beginPath();
-    ctx.moveTo(x - half + arm, top);
-    ctx.lineTo(x - half, top);
-    ctx.lineTo(x - half, top + arm);
-    ctx.moveTo(x + half - arm, top);
-    ctx.lineTo(x + half, top);
-    ctx.lineTo(x + half, top + arm);
-    ctx.moveTo(x - half, bottom - arm);
-    ctx.lineTo(x - half, bottom);
-    ctx.lineTo(x - half + arm, bottom);
-    ctx.moveTo(x + half, bottom - arm);
-    ctx.lineTo(x + half, bottom);
-    ctx.lineTo(x + half - arm, bottom);
+    ctx.moveTo(left + arm, top);
+    ctx.lineTo(left, top);
+    ctx.lineTo(left, top + arm);
+    ctx.moveTo(right - arm, top);
+    ctx.lineTo(right, top);
+    ctx.lineTo(right, top + arm);
+    ctx.moveTo(left, bottom - arm);
+    ctx.lineTo(left, bottom);
+    ctx.lineTo(left + arm, bottom);
+    ctx.moveTo(right, bottom - arm);
+    ctx.lineTo(right, bottom);
+    ctx.lineTo(right - arm, bottom);
     ctx.stroke();
     ctx.restore();
   }
@@ -736,7 +820,7 @@ export function drawEnemy(ctx, e, gy, t, packAssets = null, assetStore = null, r
   const barW = isBoss ? 148 : 124;
   const compact = fit < 0.92; // short stages (landscape): slim nameplate, no big card
   const bannerH = compact ? 30 : isBoss ? 62 : 54;
-  const barY = Math.max(compact ? 56 : 4, footY - size - bannerH - 8);
+  const barY = geometry.anchors.hpY - bannerH;
   const ratio = clamp(e.hp / e.hpMax, 0, 1);
   ctx.fillStyle = 'rgba(7,16,25,0.94)';
   roundRect(ctx, x - barW / 2, barY, barW, bannerH, 10);
@@ -756,7 +840,7 @@ export function drawEnemy(ctx, e, gy, t, packAssets = null, assetStore = null, r
     // under the target's feet — name + slim bar, always clear of overlays.
     const plateW = Math.max(64, barW * 0.62);
     const px = x - plateW / 2;
-    const py = footY + 7;
+    const py = geometry.body.bottom + 7;
     ctx.fillStyle = 'rgba(7,16,25,0.88)';
     roundRect(ctx, px, py, plateW, 22, 7);
     ctx.fill();
@@ -772,7 +856,7 @@ export function drawEnemy(ctx, e, gy, t, packAssets = null, assetStore = null, r
       roundRect(ctx, px + 7, py + 14, Math.max(3, (plateW - 14) * ratio), 4, 2);
       ctx.fill();
     }
-    return;
+    return geometry;
   }
   ctx.fillText(label, x, barY + 17);
   ctx.fillStyle = '#aab7c7';
@@ -786,6 +870,7 @@ export function drawEnemy(ctx, e, gy, t, packAssets = null, assetStore = null, r
     roundRect(ctx, x - barW / 2 + 9, barY + bannerH - 14, Math.max(4, (barW - 18) * ratio), 8, 4);
     ctx.fill();
   }
+  return geometry;
 }
 
 /* —— V3 vinyl creature stage ————————————————————————————————————————
@@ -834,6 +919,7 @@ function drawCreatureTarget(ctx, e, kind, o) {
     meleeStop,
     engagedId,
     creatureStore,
+    geometry,
   } = o;
   const x = e.displayX;
   const dying = e.deathT > 0 && e.killed;
@@ -842,7 +928,7 @@ function drawCreatureTarget(ctx, e, kind, o) {
   const flashU = Math.max(e.hitFlash > 0 && !dying ? clamp(e.hitFlash / 0.12, 0, 1) : 0, critU);
   const hurtOff = !dying && e.hurt > 0 ? Math.sin(t * 40) * 1.5 : 0;
   const isBoss = e.type === 'boss';
-  const footY = gy - 2;
+  const footY = geometry.pivotY;
   const phase = creaturePhase(e.id);
   // Broken phase swap — the exact Version Gate threshold (render + enemies-v2
   // both use hp/hpMax < 0.34); hit/death still outrank it, like the classic boss.
@@ -908,54 +994,23 @@ function drawCreatureTarget(ctx, e, kind, o) {
   ctx.save();
   ctx.globalAlpha = alpha;
 
-  // shadow shrinks on death
-  ctx.fillStyle = 'rgba(0,0,0,0.4)';
-  ctx.beginPath();
-  ctx.ellipse(x + hurtOff, gy + 3, size * 0.26 * Math.abs(sx), 4.5 * Math.max(0.2, sy), 0, 0, TAU2);
-  ctx.fill();
-
   ctx.translate(x + hurtOff, footY + dy);
   ctx.scale(sx || 0.01, sy);
 
   drawCreature(ctx, kind, clip, clipT, 0, 0, size, creatureStore);
-
-  // white hit bloom (same overlay the procedural family gets)
-  if (flashU > 0) {
-    ctx.save();
-    ctx.globalCompositeOperation = 'lighter';
-    ctx.globalAlpha = 0.5 * flashU * alpha;
-    const rg = ctx.createRadialGradient(0, -size * 0.48, 2, 0, -size * 0.48, size * 0.52);
-    rg.addColorStop(0, 'rgba(255,255,255,0.95)');
-    rg.addColorStop(0.35, 'rgba(255,190,200,0.4)');
-    rg.addColorStop(1, 'rgba(255,80,100,0)');
-    ctx.fillStyle = rg;
-    ctx.beginPath();
-    ctx.arc(0, -size * 0.48, size * 0.52, 0, TAU2);
-    ctx.fill();
-    ctx.restore();
-  }
-
-  // crit white-hot core
-  if (critU > 0) {
-    ctx.save();
-    ctx.globalCompositeOperation = 'lighter';
-    ctx.globalAlpha = 0.85 * critU * alpha;
-    ctx.fillStyle = '#fff';
-    ctx.beginPath();
-    ctx.arc(0, -size * 0.48, size * 0.3 * critU, 0, TAU2);
-    ctx.fill();
-    ctx.restore();
-  }
 
   ctx.restore();
   ctx.globalAlpha = 1;
   return true;
 }
 
-function drawLootFlight(ctx, flight, s, w, h, gy) {
-  const anchor = s.world.enemies.find((enemy) => enemy.id === flight.enemyId);
-  if (flight.y == null) flight.y = gy - (anchor ? enemyRenderSize(anchor) * 0.55 : 70);
-  if (anchor) flight.x = anchor.displayX;
+function drawLootFlight(ctx, flight, w, h, actorGeometries) {
+  const geometry = actorGeometries.get(flight.enemyId);
+  if (geometry) {
+    flight.x = geometry.anchors.lootX;
+    if (!Number.isFinite(flight.y)) flight.y = geometry.anchors.lootY;
+  }
+  if (!Number.isFinite(flight.x) || !Number.isFinite(flight.y)) return;
   const u = easeOutCubic(1 - clamp(flight.t / flight.life, 0, 1));
   // Gear drops dive to the in-stage bag FAB (bottom-left); currency to the top chips.
   const isGear = flight.target === 'gear';
@@ -996,8 +1051,17 @@ function drawLootFlight(ctx, flight, s, w, h, gy) {
 }
 
 /** Expanding shock ring (crit pop / death burst / rank halo). */
-function drawShock(ctx, sh) {
+function drawShock(ctx, sh, actorGeometries) {
   if (sh.delay > 0) return;
+  const geometry =
+    sh.anchorId !== null && sh.anchorId !== undefined
+      ? actorGeometries.get(sh.anchorId)
+      : null;
+  if (geometry && sh.anchorName === 'hit') {
+    if (!Number.isFinite(sh.x)) sh.x = geometry.anchors.hitX;
+    if (!Number.isFinite(sh.y)) sh.y = geometry.anchors.hitY;
+  }
+  if (!Number.isFinite(sh.x) || !Number.isFinite(sh.y)) return;
   const u = 1 - clamp(sh.t / (sh.life || 0.34), 0, 1);
   const r = 6 + easeOutCubic(u) * ((sh.r1 || 46) - 6);
   ctx.save();
@@ -1010,12 +1074,39 @@ function drawShock(ctx, sh) {
   ctx.restore();
 }
 
-/** White-hot crit frame on the target — brief additive flash + spark ticks. */
-function drawCritFlash(ctx, e, gy, fit) {
-  const u = clamp(e.critFlash / 0.16, 0, 1);
-  const size = enemyRenderSize(e) * fit;
-  const x = e.displayX;
-  const y = gy - 2 - size * 0.48;
+function drawEnemyShadow(ctx, enemy, geometry) {
+  const dying = enemy.deathT > 0 && enemy.killed;
+  const deathU = dying
+    ? 1 - clamp(enemy.deathT / (enemy.deathMax || 0.5), 0, 1)
+    : 0;
+  const shrink = dying ? Math.max(0.2, 1 - easeOutQuad(deathU) * 0.72) : 1;
+  ctx.save();
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.beginPath();
+  ctx.ellipse(
+    geometry.anchors.shadowX,
+    geometry.anchors.shadowY,
+    Math.max(8, geometry.body.width * 0.34) * shrink,
+    4.5 * shrink,
+    0,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+  ctx.restore();
+}
+
+/** Shared normal/critical hit flash for every body source. */
+function drawEnemyHitFlash(ctx, e, geometry) {
+  const dying = e.deathT > 0 && e.killed;
+  if (dying) return;
+  const critU = clamp((e.critFlash || 0) / 0.16, 0, 1);
+  const hitU = clamp((e.hitFlash || 0) / 0.12, 0, 1);
+  const u = Math.max(hitU, critU);
+  if (u <= 0) return;
+  const size = geometry.targetBodyHeight;
+  const x = geometry.anchors.hitX;
+  const y = geometry.anchors.hitY;
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
   const rg = ctx.createRadialGradient(x, y, 1, x, y, size * 0.66);
@@ -1026,14 +1117,22 @@ function drawCritFlash(ctx, e, gy, fit) {
   ctx.beginPath();
   ctx.arc(x, y, size * 0.66, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = `rgba(255,255,255,${0.85 * u})`;
-  ctx.lineWidth = 2;
-  for (let i = 0; i < 6; i++) {
-    const a = i * (Math.PI / 3) + 0.4;
-    ctx.beginPath();
-    ctx.moveTo(x + Math.cos(a) * size * 0.18 * u, y + Math.sin(a) * size * 0.18 * u);
-    ctx.lineTo(x + Math.cos(a) * size * (0.42 + 0.22 * u), y + Math.sin(a) * size * (0.42 + 0.22 * u));
-    ctx.stroke();
+  if (critU > 0) {
+    ctx.strokeStyle = `rgba(255,255,255,${0.85 * critU})`;
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 6; i++) {
+      const a = i * (Math.PI / 3) + 0.4;
+      ctx.beginPath();
+      ctx.moveTo(
+        x + Math.cos(a) * size * 0.18 * critU,
+        y + Math.sin(a) * size * 0.18 * critU,
+      );
+      ctx.lineTo(
+        x + Math.cos(a) * size * (0.42 + 0.22 * critU),
+        y + Math.sin(a) * size * (0.42 + 0.22 * critU),
+      );
+      ctx.stroke();
+    }
   }
   ctx.restore();
 }
@@ -1096,7 +1195,16 @@ function drawGoLiveFx(ctx, w, h, fx, reduced) {
   ctx.restore();
 }
 
-function drawParticle(ctx, p) {
+function drawParticle(ctx, p, actorGeometries) {
+  const geometry =
+    p.anchorId !== null && p.anchorId !== undefined
+      ? actorGeometries.get(p.anchorId)
+      : null;
+  if (geometry && p.anchorName === 'hit') {
+    if (!Number.isFinite(p.x)) p.x = geometry.anchors.hitX;
+    if (!Number.isFinite(p.y)) p.y = geometry.anchors.hitY;
+  }
+  if (!Number.isFinite(p.x) || !Number.isFinite(p.y)) return;
   const a = clamp(p.t / (p.life || 0.5), 0, 1);
   ctx.save();
   ctx.globalAlpha = a;

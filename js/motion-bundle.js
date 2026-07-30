@@ -639,8 +639,8 @@ export function drawMotionFrame(
   clipName,
   frameIndex,
   x,
-  footY,
-  height,
+  pivotY,
+  drawTrimHeight,
 ) {
   const descriptor = record?.descriptor;
   const clip = descriptor?.clips?.[clipName];
@@ -656,17 +656,17 @@ export function drawMotionFrame(
     !frameSize ||
     !pivot ||
     !Number.isFinite(x) ||
-    !Number.isFinite(footY) ||
-    !Number.isFinite(height) ||
-    height <= 0
+    !Number.isFinite(pivotY) ||
+    !Number.isFinite(drawTrimHeight) ||
+    drawTrimHeight <= 0
   ) {
     return null;
   }
 
-  const scale = height / trim.height;
+  const scale = drawTrimHeight / trim.height;
   const destination = {
     x: x + (trim.x - frameSize.width * pivot.x) * scale,
-    y: footY + (trim.y - frameSize.height * pivot.y) * scale,
+    y: pivotY + (trim.y - frameSize.height * pivot.y) * scale,
     width: trim.width * scale,
     height: trim.height * scale,
   };

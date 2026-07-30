@@ -163,6 +163,7 @@ export function createState() {
       sprinting: false,
       time: 0,
       groundY: 0,
+      actorGeometries: new Map(),
       shake: 0,
       /** Cosmetic timescale dips (Wave 3): consumed by the frame loop in main.js.
        *  hitStopT = kill freeze, slowMoT = Go Live beat. Never read by combat math. */
@@ -388,9 +389,10 @@ const tone = (role) => ({ tone: role });
 
 function floater(s, x, y, text, color, big = false, anchorId = null, opts = null) {
   const huge = !!opts?.huge;
+  const anchored = anchorId !== null && anchorId !== undefined;
   if (s.world.floaters.length > 40) s.world.floaters.shift(); // perf cap (PERF-BUDGET)
   s.world.floaters.push({
-    x: x + (Math.random() - 0.5) * 18,
+    x: anchored ? x : x + (Math.random() - 0.5) * 18,
     y,
     text,
     color,
@@ -401,17 +403,50 @@ function floater(s, x, y, text, color, big = false, anchorId = null, opts = null
     huge,
     center: !!opts?.center,
     anchorId,
+    anchorName: opts?.anchorName || (anchored ? 'floater' : null),
+    originX: anchored ? x : null,
+    originY: anchored ? y : null,
     anchorLift: opts?.lift || 0, // stacked lines above an anchored target
   });
+}
+
+function actorEffectAnchor(s, enemy, anchorName) {
+  const geometry =
+    s.world.actorGeometries instanceof Map
+      ? s.world.actorGeometries.get(enemy.id)
+      : null;
+  const anchors = geometry?.anchors;
+  const x =
+    anchorName === 'loot'
+      ? anchors?.lootX
+      : anchorName === 'shadow'
+        ? anchors?.shadowX
+        : anchors?.hitX;
+  const y =
+    anchorName === 'loot'
+      ? anchors?.lootY
+      : anchorName === 'floater'
+        ? anchors?.floaterY
+        : anchorName === 'shadow'
+          ? anchors?.shadowY
+          : anchors?.hitY;
+  return {
+    x: Number.isFinite(x) ? x : enemy.displayX,
+    y: Number.isFinite(y) ? y : null,
+    anchorId: enemy.id,
+    anchorName,
+  };
 }
 
 function lootFlight(s, enemy, target, color = null) {
   if (motionReduced(s)) return;
   if (s.world.lootFlights.length > 14) return; // perf cap
+  const origin = actorEffectAnchor(s, enemy, 'loot');
   s.world.lootFlights.push({
-    x: enemy.displayX,
-    y: null,
+    x: origin.x,
+    y: origin.y,
     enemyId: enemy.id,
+    anchorName: origin.anchorName,
     target,
     color,
     t: 0.72,
@@ -419,7 +454,15 @@ function lootFlight(s, enemy, target, color = null) {
   });
 }
 
-function particles(s, x, y, color, n = 10, kind = 'spark') {
+function particles(
+  s,
+  x,
+  y,
+  color,
+  n = 10,
+  kind = 'spark',
+  anchor = null,
+) {
   if (motionReduced(s)) return;
   // hard perf cap (PERF-BUDGET): trim the batch, never the sim
   if (s.world.particles.length + n > 260) n = Math.max(0, 260 - s.world.particles.length);
@@ -448,6 +491,10 @@ function particles(s, x, y, color, n = 10, kind = 'spark') {
       c: color,
       r: kind === 'coin' ? 3.5 + Math.random() * 2.5 : kind === 'shard' ? 3 + Math.random() * 3.5 : 2 + Math.random() * 3.5,
       kind,
+      anchorId: anchor?.anchorId ?? null,
+      anchorName: anchor?.anchorName || null,
+      originX: anchor ? x : null,
+      originY: anchor ? y : null,
       rot: Math.random() * Math.PI * 2,
       spin: (Math.random() - 0.5) * (kind === 'shard' ? 18 : 12),
     });
@@ -455,10 +502,34 @@ function particles(s, x, y, color, n = 10, kind = 'spark') {
 }
 
 /** Expanding shock ring — crit pops, death bursts, rank halo. Cosmetic only. */
-function shockRing(s, x, y, color, { r1 = 46, life = 0.34, delay = 0, width = 3 } = {}) {
+function shockRing(
+  s,
+  x,
+  y,
+  color,
+  {
+    r1 = 46,
+    life = 0.34,
+    delay = 0,
+    width = 3,
+    anchorId = null,
+    anchorName = null,
+  } = {},
+) {
   if (motionReduced(s)) return;
   if (s.world.shocks.length > 14) s.world.shocks.shift(); // perf cap
-  s.world.shocks.push({ x, y, c: color, r1, t: life, life, delay, w: width });
+  s.world.shocks.push({
+    x,
+    y,
+    c: color,
+    r1,
+    t: life,
+    life,
+    delay,
+    w: width,
+    anchorId,
+    anchorName,
+  });
 }
 
 /** Stage-aware effect origin: render.js stamps world.groundY every frame; the
@@ -483,16 +554,56 @@ function heroFloatY(s, extra = 0) {
 /** Token-colored shard spray + ring on kill; boss gets a slower multi-ring burst. */
 function deathBurst(s, e) {
   const boss = e.type === 'boss';
-  const ey = stageY(s, boss ? 68 : 46); // burst from the body, not the sky
+  const origin = actorEffectAnchor(s, e, 'hit');
   const n = boss ? 22 : 8 + Math.floor(Math.random() * 7); // 8–14 shards
-  particles(s, e.displayX, ey, e.color, n, 'shard');
+  particles(s, origin.x, origin.y, e.color, n, 'shard', origin);
   // white-hot accents so even gray feed-noise pops against the dark stage
-  particles(s, e.displayX, ey - 4, '#F5F6F8', boss ? 8 : 4, 'shard');
-  shockRing(s, e.displayX, ey, e.color, boss ? { r1: 92, life: 0.5, width: 4 } : { r1: 46, life: 0.32, width: 3.5 });
-  shockRing(s, e.displayX, ey, '#F5F6F8', { r1: boss ? 48 : 30, life: 0.24, width: 2 });
+  particles(
+    s,
+    origin.x,
+    origin.y,
+    '#F5F6F8',
+    boss ? 8 : 4,
+    'shard',
+    origin,
+  );
+  shockRing(
+    s,
+    origin.x,
+    origin.y,
+    e.color,
+    {
+      ...(boss
+        ? { r1: 92, life: 0.5, width: 4 }
+        : { r1: 46, life: 0.32, width: 3.5 }),
+      anchorId: origin.anchorId,
+      anchorName: origin.anchorName,
+    },
+  );
+  shockRing(s, origin.x, origin.y, '#F5F6F8', {
+    r1: boss ? 48 : 30,
+    life: 0.24,
+    width: 2,
+    anchorId: origin.anchorId,
+    anchorName: origin.anchorName,
+  });
   if (boss) {
-    shockRing(s, e.displayX, ey, '#FC1243', { r1: 66, life: 0.45, delay: 0.05, width: 2.5 });
-    shockRing(s, e.displayX, ey, '#e6b84d', { r1: 124, life: 0.64, delay: 0.12, width: 3 });
+    shockRing(s, origin.x, origin.y, '#FC1243', {
+      r1: 66,
+      life: 0.45,
+      delay: 0.05,
+      width: 2.5,
+      anchorId: origin.anchorId,
+      anchorName: origin.anchorName,
+    });
+    shockRing(s, origin.x, origin.y, '#e6b84d', {
+      r1: 124,
+      life: 0.64,
+      delay: 0.12,
+      width: 3,
+      anchorId: origin.anchorId,
+      anchorName: origin.anchorName,
+    });
   }
 }
 
@@ -644,6 +755,8 @@ function onKill(s, e) {
   const gb = gearBonuses(s.meta.gear);
   const eco = economyMult(s);
   const priorityReward = priorityTagRewardMultiplier(e);
+  const floaterOrigin = actorEffectAnchor(s, e, 'floater');
+  const hitOrigin = actorEffectAnchor(s, e, 'hit');
   const byteM =
     (1 + metaPer(s, 'byte_gain')) *
     (1 + (gb.signal_pct || 0) / 100) *
@@ -673,9 +786,26 @@ function onKill(s, e) {
     comboMult *
     (0.9 + Math.random() * 0.2);
   s.run.bytes += bytes;
-  floater(s, e.displayX, stageY(s, 64), `+${bytes | 0} Signal`, '#6cb8ff', false, e.id, { lift: 18 });
+  floater(
+    s,
+    floaterOrigin.x,
+    floaterOrigin.y,
+    `+${bytes | 0} Signal`,
+    '#6cb8ff',
+    false,
+    e.id,
+    { lift: 18, anchorName: 'floater' },
+  );
   lootFlight(s, e, 'signal');
-  particles(s, e.displayX, stageY(s, 46), '#6cb8ff', 10 + Math.min(14, s.stats.combo), 'coin');
+  particles(
+    s,
+    hitOrigin.x,
+    hitOrigin.y,
+    '#6cb8ff',
+    10 + Math.min(14, s.stats.combo),
+    'coin',
+    hitOrigin,
+  );
   s.ui.chipPulse = s.ui.chipPulse || {};
   s.ui.chipPulse.bytes = 0.35;
   if (s.settings.sfx !== false) sfx(e.type === 'patch' ? 'notes' : 'coin');
@@ -695,10 +825,18 @@ function onKill(s, e) {
   if (e.type === 'patch') {
     const p = C.PATCH_FROM_CHAMP * patchM;
     s.run.patches += p;
-    floater(s, e.displayX, stageY(s, 82), `+${p | 0} Notes`, tone('notes'), true, e.id, { lift: 36 });
+    floater(
+      s,
+      floaterOrigin.x,
+      floaterOrigin.y,
+      `+${p | 0} Notes`, tone('notes'),
+      true,
+      e.id,
+      { lift: 36, anchorName: 'floater' },
+    );
     lootFlight(s, e, 'notes');
-    particles(s, e.displayX, stageY(s, 46), tone('notes'), 20, 'coin');
-    confetti(s, e.displayX, stageY(s, 60), [tone('notes'), '#fff', '#e6b84d'], 24);
+    particles(s, hitOrigin.x, hitOrigin.y, tone('notes'), 20, 'coin', hitOrigin);
+    confetti(s, hitOrigin.x, hitOrigin.y, [tone('notes'), '#fff', '#e6b84d'], 24);
     tip(s, 'patch');
     s.ui.chipPulse.patches = 0.45;
   }
@@ -709,11 +847,29 @@ function onKill(s, e) {
     s.world.bossActive = false;
     s.world.bossTimer = 0;
     toast(s, pick(BOSS_WIN), 2.6, 'win');
-    floater(s, e.displayX, stageY(s, 100), 'GATE CLEARED', '#FF2F4B', true, e.id, { lift: 54 });
-    confetti(s, e.displayX, stageY(s, 60), ['#FC1243', '#FF2F4B', '#e6b84d', '#fff'], 40);
+    floater(
+      s,
+      floaterOrigin.x,
+      floaterOrigin.y,
+      'GATE CLEARED',
+      '#FF2F4B',
+      true,
+      e.id,
+      { lift: 54, anchorName: 'floater' },
+    );
+    confetti(s, hitOrigin.x, hitOrigin.y, ['#FC1243', '#FF2F4B', '#e6b84d', '#fff'], 40);
     s.ui.chipPulse.patches = 0.5;
   } else if (Math.random() < 0.35 || s.stats.combo <= 2) {
-    floater(s, e.displayX, stageY(s, 32), killLine(e.type), '#F5F6F8', false, e.id, { lift: -14 });
+    floater(
+      s,
+      floaterOrigin.x,
+      floaterOrigin.y,
+      killLine(e.type),
+      '#F5F6F8',
+      false,
+      e.id,
+      { lift: -14, anchorName: 'floater' },
+    );
   }
 
   // Gear drops — bosses guaranteed, elites/patch rare (all 6 slots)
@@ -743,7 +899,13 @@ function onKill(s, e) {
       t: 2.55,
       life: 2.55,
     };
-    confetti(s, e.displayX, stageY(s, 60), [rarityColor(item.rarity), '#fff', '#FC1243'], e.type === 'boss' ? 28 : 14);
+    confetti(
+      s,
+      hitOrigin.x,
+      hitOrigin.y,
+      [rarityColor(item.rarity), '#fff', '#FC1243'],
+      e.type === 'boss' ? 28 : 14,
+    );
     // Soft tip once; no item-name toast spam
     if (!s.ui.seenGearTip) {
       s.ui.seenGearTip = true;
@@ -819,18 +981,38 @@ function dealDamage(s, e, amount, isCrit) {
     if (isCrit) e.critFlash = 0.16; // white-hot flash frame on the target
   }
 
+  const floaterOrigin = actorEffectAnchor(s, e, 'floater');
+  const hitOrigin = actorEffectAnchor(s, e, 'hit');
   floater(
     s,
-    e.displayX,
-    stageY(s, 46 + Math.random() * 10), // fallback if the anchor is gone (zone-clear wipe)
+    floaterOrigin.x,
+    floaterOrigin.y,
     `${isCrit ? 'CRIT ' : ''}${Math.round(amount)}`,
     isCrit ? '#e6b84d' : '#F5F6F8',
     isCrit,
     e.id,
-    isCrit ? { huge: true } : null
+    isCrit
+      ? { huge: true, anchorName: 'floater' }
+      : { anchorName: 'floater' },
   );
-  particles(s, e.displayX, stageY(s, 46), isCrit ? '#FC1243' : '#F5F6F8', isCrit ? 8 : 4);
-  if (isCrit) shockRing(s, e.displayX, stageY(s, 46), '#e6b84d', { r1: 36, life: 0.26, width: 2.5 });
+  particles(
+    s,
+    hitOrigin.x,
+    hitOrigin.y,
+    isCrit ? '#FC1243' : '#F5F6F8',
+    isCrit ? 8 : 4,
+    'spark',
+    hitOrigin,
+  );
+  if (isCrit) {
+    shockRing(s, hitOrigin.x, hitOrigin.y, '#e6b84d', {
+      r1: 36,
+      life: 0.26,
+      width: 2.5,
+      anchorId: hitOrigin.anchorId,
+      anchorName: hitOrigin.anchorName,
+    });
+  }
   if (s.settings.sfx !== false) sfx(isCrit ? 'crit' : 'hit');
 
   if (e.hp <= 0 && !e.killed) {
@@ -1034,14 +1216,16 @@ export function step(s, dt, options = {}) {
   });
   s.world.floaters = s.world.floaters.filter((f) => {
     f.t -= dt;
-    f.y += f.vy * dt;
+    if (Number.isFinite(f.y)) f.y += f.vy * dt;
     f.vy *= 1 - 1.2 * dt;
     return f.t > 0;
   });
   s.world.particles = s.world.particles.filter((p) => {
     p.t -= dt;
-    p.x += p.vx * dt;
-    p.y += p.vy * dt;
+    if (Number.isFinite(p.x) && Number.isFinite(p.y)) {
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+    }
     p.vy += (p.kind === 'coin' ? 220 : 160) * dt;
     if (p.spin) p.rot = (p.rot || 0) + p.spin * dt;
     return p.t > 0;

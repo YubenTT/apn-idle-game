@@ -55,7 +55,7 @@ function spawnScale(e, t) {
  * opts: { t, gy, atlas (Image|null), frame (atlas frame|null), reducedMotion }
  */
 export function drawTarget(ctx, e, opts) {
-  const { t, gy, atlas, frame, reducedMotion } = opts;
+  const { t, atlas, frame, reducedMotion, geometry } = opts;
   const x = e.displayX;
   const dying = e.deathT > 0 && e.killed;
   const deathU = dying ? 1 - clamp(e.deathT / (e.deathMax || 0.5), 0, 1) : 0;
@@ -64,8 +64,8 @@ export function drawTarget(ctx, e, opts) {
   const hurtOff = !dying && e.hurt > 0 ? Math.sin(t * 40) * 1.5 : 0;
   const isBoss = e.type === 'boss';
   const isPatch = e.type === 'patch';
-  const size = opts.size || (e.type === 'boss' ? 136 : e.type === 'patch' ? 100 : 96);
-  const footY = gy - 2;
+  const size = geometry.drawTrimHeight;
+  const footY = geometry.pivotY;
   const breaking = isBoss && e.hp / e.hpMax < 0.34;
 
   // death transforms (ported 1:1 from the legacy renderer)
@@ -104,12 +104,6 @@ export function drawTarget(ctx, e, opts) {
   ctx.save();
   ctx.globalAlpha = alpha;
 
-  // shadow shrinks on death / jump
-  ctx.fillStyle = 'rgba(0,0,0,0.4)';
-  ctx.beginPath();
-  ctx.ellipse(x + hurtOff, gy + 3, size * 0.26 * Math.abs(sx), 4.5 * Math.max(0.2, sy), 0, 0, TAU);
-  ctx.fill();
-
   ctx.translate(x + hurtOff, footY + dy);
   ctx.rotate(rot);
   ctx.scale(sx || 0.01, sy);
@@ -124,34 +118,6 @@ export function drawTarget(ctx, e, opts) {
     ctx.translate(0, -size); // painters work in a top-left 128-design box
     ctx.scale(size / 128, size / 128);
     paint(ctx, t + phaseOf(e.id), { flashU, breaking, reducedMotion, dying });
-    ctx.restore();
-  }
-
-  // white hit bloom (both art paths)
-  if (flashU > 0) {
-    ctx.save();
-    ctx.globalCompositeOperation = 'lighter';
-    ctx.globalAlpha = 0.5 * flashU * alpha;
-    const rg = ctx.createRadialGradient(0, -size * 0.48, 2, 0, -size * 0.48, size * 0.52);
-    rg.addColorStop(0, 'rgba(255,255,255,0.95)');
-    rg.addColorStop(0.35, 'rgba(255,190,200,0.4)');
-    rg.addColorStop(1, 'rgba(255,80,100,0)');
-    ctx.fillStyle = rg;
-    ctx.beginPath();
-    ctx.arc(0, -size * 0.48, size * 0.52, 0, TAU);
-    ctx.fill();
-    ctx.restore();
-  }
-
-  // crit white-hot core (brighter, tighter than the normal bloom)
-  if (critU > 0) {
-    ctx.save();
-    ctx.globalCompositeOperation = 'lighter';
-    ctx.globalAlpha = 0.85 * critU * alpha;
-    ctx.fillStyle = '#fff';
-    ctx.beginPath();
-    ctx.arc(0, -size * 0.48, size * 0.3 * critU, 0, TAU);
-    ctx.fill();
     ctx.restore();
   }
 

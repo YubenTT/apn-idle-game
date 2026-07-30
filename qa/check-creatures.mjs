@@ -16,6 +16,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as creatureRuntime from '../js/creatures.js';
 import * as renderRuntime from '../js/render.js';
+import { CREATURES, creatureKindFor } from '../js/content.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const assert = (condition, message) => {
@@ -190,6 +191,68 @@ assert(
       200 + reconIdle.trim.y - reconIdle.frameSize * reconIdle.anchor[1],
   'legacy fallback blit reconstructs its full-frame foot pivot after union trimming',
 );
+const reconEnemyId = Array.from({ length: 60 }, (_, index) => `legacy-${index}`)
+  .find(
+    (id) =>
+      creatureKindFor({ type: 'lag', id, packId: 'league' }, 0) ===
+      'recon',
+  );
+let stagedCreatureDraw = null;
+const stagedCreatureContext = new Proxy(
+  {},
+  {
+    get(_target, key) {
+      if (key === 'drawImage') {
+        return (...arguments_) => {
+          stagedCreatureDraw = arguments_;
+        };
+      }
+      if (
+        key === 'createLinearGradient' ||
+        key === 'createRadialGradient'
+      ) {
+        return () => ({ addColorStop() {} });
+      }
+      return () => {};
+    },
+    set() {
+      return true;
+    },
+  },
+);
+const stagedCreatureGeometry = renderRuntime.drawEnemy(
+  stagedCreatureContext,
+  {
+    id: reconEnemyId,
+    type: 'lag',
+    packId: 'league',
+    label: 'Feed Noise',
+    frame: 'common-c',
+    x: 220,
+    displayX: 220,
+    hp: 10,
+    hpMax: 10,
+    deathT: 0,
+    hurt: 0,
+    killed: false,
+    priorityTagRank: 0,
+  },
+  300,
+  1,
+  null,
+  { creatureStore },
+  true,
+  1,
+  { zone: 0, meleeStop: 170, engagedId: null },
+);
+assert(
+  stagedCreatureGeometry.role === 'standard' &&
+    stagedCreatureGeometry.body.height === 72 &&
+    stagedCreatureGeometry.body.bottom === 298 &&
+    stagedCreatureGeometry.visualGap === 2 &&
+    stagedCreatureDraw?.[8] === 72,
+  'legacy creature atlas consumes the standard 72 px geometry without auto-assigning elite scale',
+);
 releaseColdCreatureKinds(creatureStore, new Set(['hotshot']));
 assert(
   creatureStoreDecodedBytes(creatureStore) === 0 &&
@@ -281,7 +344,6 @@ assert(
 );
 
 // runtime rotation contract (pure, deterministic)
-const { CREATURES, creatureKindFor } = await import('../js/content.js');
 assert(
   CREATURES.curator.role === 'boss' && CREATURES.recon.role === 'elite' && CREATURES.hotshot.role === 'elite',
   'creature roles locked (boss + two elites)'

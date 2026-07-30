@@ -34,6 +34,15 @@ const fakeClips = Object.fromEntries(
     },
   ]),
 );
+const effectGeometry = Object.freeze({
+  anchors: Object.freeze({
+    floaterY: 211,
+    hitX: 222,
+    hitY: 233,
+    lootX: 224,
+    lootY: 247,
+  }),
+});
 
 function stateAfterOutgoingAttack(randomValue) {
   const originalRandom = Math.random;
@@ -48,6 +57,7 @@ function stateAfterOutgoingAttack(randomValue) {
     enemy.x = state.world.heroX;
     enemy.displayX = enemy.x;
     state.world.enemies = [enemy];
+    state.world.actorGeometries = new Map([[enemy.id, effectGeometry]]);
     state.world.attackCd = 0;
     game.step(state, 1 / 60, { allowSpawn: false });
     return state;
@@ -85,8 +95,70 @@ check(
   'actual RNG critical hit records a critical authored strike',
 );
 check(
+  ordinaryState.world.floaters.at(-1)?.anchorId ===
+      ordinaryState.world.enemies[0]?.id &&
+    ordinaryState.world.floaters.at(-1)?.originX ===
+      effectGeometry.anchors.hitX &&
+    ordinaryState.world.floaters.at(-1)?.originY ===
+      effectGeometry.anchors.floaterY,
+  'ordinary damage floater snapshots the resolved enemy floater anchor',
+);
+check(
+  critState.world.shocks.at(-1)?.anchorId ===
+      critState.world.enemies[0]?.id &&
+    critState.world.shocks.at(-1)?.x === effectGeometry.anchors.hitX &&
+    critState.world.shocks.at(-1)?.y === effectGeometry.anchors.hitY,
+  'critical shock ring snapshots the resolved enemy hit anchor',
+);
+check(
   resolveHostClip({ attack: 1, crit: true }) === 'crit',
   'only an actual critical hit selects the crit Host pose',
+);
+
+function stateAfterEnemyKill() {
+  const originalRandom = Math.random;
+  Math.random = () => 1;
+  try {
+    const state = game.createState();
+    state.settings.sfx = false;
+    const enemy = game.spawnEnemy(state);
+    enemy.hp = 0.01;
+    enemy.hpMax = 1;
+    enemy.x = state.world.heroX;
+    enemy.displayX = enemy.x;
+    state.world.enemies = [enemy];
+    state.world.actorGeometries = new Map([[enemy.id, effectGeometry]]);
+    state.world.attackCd = 0;
+    game.step(state, 1 / 60, { allowSpawn: false });
+    return { state, enemy };
+  } finally {
+    Math.random = originalRandom;
+  }
+}
+const killedEnemyEffects = stateAfterEnemyKill();
+check(
+  killedEnemyEffects.state.world.lootFlights.some(
+    (flight) =>
+      flight.enemyId === killedEnemyEffects.enemy.id &&
+      flight.x === effectGeometry.anchors.lootX &&
+      flight.y === effectGeometry.anchors.lootY,
+  ),
+  'loot flight snapshots the resolved enemy loot anchor',
+);
+check(
+  killedEnemyEffects.state.world.particles.some(
+    (particle) =>
+      particle.anchorId === killedEnemyEffects.enemy.id &&
+      particle.originX === effectGeometry.anchors.hitX &&
+      particle.originY === effectGeometry.anchors.hitY,
+  ) &&
+    killedEnemyEffects.state.world.shocks.some(
+      (shock) =>
+        shock.anchorId === killedEnemyEffects.enemy.id &&
+        shock.x === effectGeometry.anchors.hitX &&
+        shock.y === effectGeometry.anchors.hitY,
+    ),
+  'death particles and rings share the resolved enemy hit anchor',
 );
 
 if (typeof render.heroRuntimeSemantics === 'function') {

@@ -113,7 +113,20 @@ try {
         context: rel('.stage-context'),
         hud: rel('.stage-hud'),
         toast: rel('#toast'),
-        enemyHeads: s.world.enemies.map((e) => +(s.world.groundY - (e.type === 'boss' ? 136 : e.type === 'patch' ? 100 : 96) * 0.82).toFixed(1)),
+        actors: s.world.enemies.map((enemy) => {
+          const geometry = s.world.actorGeometries?.get(enemy.id);
+          if (!geometry) return null;
+          return {
+            role: geometry.role,
+            bodyTop: +geometry.body.top.toFixed(1),
+            bodyBottom: +geometry.body.bottom.toFixed(1),
+            bodyHeight: +geometry.body.height.toFixed(1),
+            visualGap: +geometry.visualGap.toFixed(1),
+            motionTop: +geometry.motionEnvelope.top.toFixed(1),
+            hpY: +geometry.anchors.hpY.toFixed(1),
+            shadowY: +geometry.anchors.shadowY.toFixed(1),
+          };
+        }).filter(Boolean),
       };
     })())`));
     console.log(viewport.label, JSON.stringify(report));

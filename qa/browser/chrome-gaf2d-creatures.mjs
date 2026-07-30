@@ -441,15 +441,18 @@ async function observeSyntheticMotion(cdp, timestamp) {
     // logical canvas, so clientHeight may be cropped by flex layout. Canvas 2D
     // uses one uniform DPR transform; derive it from the uncropped width.
     const ratioY = ratioX;
-    const logicalX = enemy.displayX;
-    const logicalSize = 96 * state.world.stageFit;
-    const logicalY = state.world.groundY - 2 - logicalSize;
-    const x = Math.max(0, Math.round((logicalX - logicalSize / 2) * ratioX));
-    const y = Math.max(0, Math.round(logicalY * ratioY));
-    const width = Math.max(1, Math.round(logicalSize * ratioX));
+    const geometry = state.world.actorGeometries?.get(enemy.id);
+    if (!geometry) throw new Error('Synthetic motion geometry is missing');
+    const logicalBounds = geometry.motionEnvelope;
+    const x = Math.max(0, Math.round(logicalBounds.left * ratioX));
+    const y = Math.max(0, Math.round(logicalBounds.top * ratioY));
+    const width = Math.max(
+      1,
+      Math.round((logicalBounds.right - logicalBounds.left) * ratioX),
+    );
     const height = Math.max(1, Math.min(
       canvas.height - y,
-      Math.round(logicalSize * ratioY),
+      Math.round((logicalBounds.bottom - logicalBounds.top) * ratioY),
     ));
     const sampler = new OffscreenCanvas(width, height);
     const samplerContext = sampler.getContext('2d', { willReadFrequently: true });
@@ -508,6 +511,16 @@ async function observeSyntheticMotion(cdp, timestamp) {
     return {
       timestamp: state.world.time,
       motion: text.motion,
+      geometry: {
+        role: geometry.role,
+        bodyTop: geometry.body.top,
+        bodyBottom: geometry.body.bottom,
+        bodyHeight: geometry.body.height,
+        visualGap: geometry.visualGap,
+        motionTop: geometry.motionEnvelope.top,
+        hpY: geometry.anchors.hpY,
+        shadowY: geometry.anchors.shadowY,
+      },
       sample: {
         x,
         y,
@@ -731,8 +744,20 @@ async function validateSyntheticMotion(cdp, viewport, outputDir, port) {
       frame0.motion.clip === 'advance' &&
       frame0.motion.frameIndex === 0 &&
       frame0.motion.fallbacks === 0 &&
+      frame0.geometry.role === 'standard' &&
+      Math.abs(
+        frame0.geometry.visualGap / frame0.geometry.bodyHeight - 2 / 72,
+      ) < 1e-9 &&
+      Math.abs(
+        frame0.geometry.shadowY -
+          frame0.geometry.bodyBottom -
+          frame0.geometry.visualGap,
+      ) < 1e-9 &&
+      Math.abs(
+        frame0.geometry.hpY - frame0.geometry.motionTop + 10,
+      ) < 1e-9 &&
       frame0.sample.pose.pixels > 0,
-    `${viewport.label}: timestamp 0 did not select ready advance frame 0 with zero fallback (${JSON.stringify(frame0)})`,
+    `${viewport.label}: timestamp 0 did not select ready advance frame 0 with resolved standard geometry and zero fallback (${JSON.stringify(frame0)})`,
   );
   const frame1 = await observeSyntheticMotion(cdp, 0.13);
   assert(
