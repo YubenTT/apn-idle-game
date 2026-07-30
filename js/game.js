@@ -77,6 +77,7 @@ import {
   targetForEnemyType,
 } from './wave-roster.js?v=gaf2d-motion-v1';
 import { motionReduced } from './motion-preference.js?v=gaf2d-motion-v1';
+import { STAGE_ROLE_PRESENTATION } from './stage-presentation.js?v=gaf2d-motion-v1';
 
 export function createState() {
   return {
@@ -470,7 +471,13 @@ function stageY(s, lift = 0) {
  *  world.stageFit with world.groundY). Floaters must never spawn inside the
  *  toast band (canvas y ≈112–162 on every viewport). */
 function heroFloatY(s, extra = 0) {
-  return stageY(s, 130 * (s.world.stageFit || 1) + 24 + extra);
+  return stageY(
+    s,
+    STAGE_ROLE_PRESENTATION.hero.visibleBodyHeight *
+      (s.world.stageFit || 1) +
+      24 +
+      extra,
+  );
 }
 
 /** Token-colored shard spray + ring on kill; boss gets a slower multi-ring burst. */

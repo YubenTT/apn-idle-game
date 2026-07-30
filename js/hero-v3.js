@@ -56,6 +56,37 @@ function closeClipSet(set) {
   for (const clip of Object.values(set.clips)) closeImage(clip.image);
 }
 
+function stableJson(value) {
+  if (Array.isArray(value)) {
+    return `[${value.map((entry) => stableJson(entry)).join(',')}]`;
+  }
+  if (value === null || typeof value !== 'object') return JSON.stringify(value);
+  return `{${Object.keys(value)
+    .sort()
+    .map((key) => `${JSON.stringify(key)}:${stableJson(value[key])}`)
+    .join(',')}}`;
+}
+
+function assertConsistentModernSet(set) {
+  if (set?.status === 'historical') return;
+  const idle = set?.clips?.idle;
+  if (!idle) throw new Error('hero-v3: modern set is missing idle');
+  const sharedFields = [
+    ['full-frame size', 'frameSize'],
+    ['shared trim', 'trim'],
+    ['pivot', 'anchor'],
+    ['presentation', 'presentation'],
+  ];
+  for (const name of V3_CLIPS) {
+    const clip = set.clips[name];
+    for (const [label, field] of sharedFields) {
+      if (stableJson(clip?.[field]) !== stableJson(idle[field])) {
+        throw new Error(`hero-v3: ${name} ${label} differs from idle`);
+      }
+    }
+  }
+}
+
 async function defaultHashBytes(bytes) {
   const digest = await globalThis.crypto.subtle.digest('SHA-256', bytes);
   return [...new Uint8Array(digest)]
@@ -137,6 +168,7 @@ function runtimeClip(descriptor, image, status) {
     fps: descriptor.fps,
     frameSize: descriptor.frameSize,
     anchor: descriptor.anchor,
+    presentation: descriptor.presentation,
     trim: {
       x: descriptor.trim.x,
       y: descriptor.trim.y,
@@ -293,6 +325,7 @@ export async function loadHeroV3(basePath, options = {}) {
     candidate = { status: set.status, clips: entries };
     const failed = settled.find((result) => result.status === 'rejected');
     if (failed) throw failed.reason;
+    assertConsistentModernSet(candidate);
     if (
       generation !== loadGeneration ||
       activeLoadController !== controller ||
@@ -332,6 +365,10 @@ export function disposeHeroV3() {
 /** Raw clip access for the renderer (null when not loaded). */
 export function getV3Clip(name) {
   return V3 ? V3.clips[name] || null : null;
+}
+
+export function getV3Presentation() {
+  return V3?.clips?.idle?.presentation || null;
 }
 
 /**
@@ -385,17 +422,18 @@ export function pickV3(st, clips = V3?.clips) {
 }
 
 /**
- * Blit one V3 frame with its ground anchor at the current transform origin.
- * H = target body height in px. Returns the dest rect { dx, dy, dw, dh }
+ * Blit one V3 frame with its source pivot at the current transform origin.
+ * drawTrimHeight is the resolved shared-trim height in px. Returns the
+ * destination rect { dx, dy, dw, dh }
  * (content box, ground anchor at bottom-center) so callers can place overlays;
  * null when the clip is unavailable.
  */
-export function drawV3Frame(ctx, clipName, frame, H) {
+export function drawV3Frame(ctx, clipName, frame, drawTrimHeight) {
   const c = getV3Clip(clipName);
   if (!c) return null;
   const f = c.frames[frame] || c.frames[0];
   const tr = c.trim;
-  const scale = H / tr.h;
+  const scale = drawTrimHeight / tr.h;
   const frameWidth =
     typeof c.frameSize === 'number' ? c.frameSize : c.frameSize.width;
   const frameHeight =

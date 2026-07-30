@@ -2,12 +2,18 @@
 
 import { C, clamp, easeOutCubic, easeOutQuad } from './formulas.js?v=gaf2d-motion-v1';
 import { getCurrentPackAssets } from './assets.js?v=gaf2d-motion-v1';
-import { HOST_PRESENTATION, resolveHostClip } from './host-contract.js?v=gaf2d-motion-v1';
+import { resolveHostClip } from './host-contract.js?v=gaf2d-motion-v1';
 import { drawHeroV2 } from './hero-v2.js?v=gaf2d-motion-v1';
 import {
   getV3Clip,
+  getV3Presentation,
   pickV3,
 } from './hero-v3.js?v=gaf2d-motion-v1';
+import {
+  STAGE_ROLE_PRESENTATION,
+  legacySquarePresentation,
+  resolveActorGeometry,
+} from './stage-presentation.js?v=gaf2d-motion-v1';
 import { motionReduced } from './motion-preference.js?v=gaf2d-motion-v1';
 import {
   drawMotionFrame,
@@ -312,58 +318,132 @@ export function inspectHeroMotion(s, t = s?.world?.time || 0) {
   };
 }
 
-function drawHero(ctx, x, gy, s, t, fit = 1) {
+const LEGACY_HERO_PRESENTATION = legacySquarePresentation({ sourceSize: 1 });
+const LEGACY_HERO_INTRINSICS = Object.freeze({
+  frameSize: Object.freeze({ width: 1, height: 1 }),
+  trim: Object.freeze({ x: 0, y: 0, width: 1, height: 1 }),
+  pivot: Object.freeze({ x: 0.5, y: 1 }),
+  presentation: LEGACY_HERO_PRESENTATION,
+});
+
+function heroIntrinsicGeometry() {
+  const idle = getV3Clip('idle');
+  const presentation = getV3Presentation();
+  if (!idle || !presentation) return LEGACY_HERO_INTRINSICS;
+  const frameSize =
+    typeof idle.frameSize === 'number'
+      ? { width: idle.frameSize, height: idle.frameSize }
+      : idle.frameSize;
+  return {
+    frameSize,
+    trim: {
+      x: idle.trim.x,
+      y: idle.trim.y,
+      width: idle.trim.w,
+      height: idle.trim.h,
+    },
+    pivot: { x: idle.anchor[0], y: idle.anchor[1] },
+    presentation,
+  };
+}
+
+export function heroDrawOptions(actorX, groundY, fit = 1) {
+  const geometry = resolveActorGeometry({
+    actorX,
+    groundY,
+    fit,
+    role: 'hero',
+    ...heroIntrinsicGeometry(),
+  });
+  return Object.freeze({
+    drawTrimHeight: geometry.drawTrimHeight,
+    pivotY: geometry.pivotY,
+    geometry,
+  });
+}
+
+export function drawHero(ctx, x, gy, s, t, fit = 1) {
   const semantics = heroRuntimeSemantics(s, t);
   const h = semantics.hero;
   const attack = semantics.attack;
   const sprinting = semantics.sprinting;
-  const mh = HOST_PRESENTATION.target;
-  const mhEff = mh * fit;
   const overdrive = semantics.overdrive;
   const tracker = semantics.tracker;
   const hostPose = semantics.pose;
-  const footY = gy - 2;
+  const drawOptions = heroDrawOptions(x, gy, fit);
+  const geometry = drawOptions.geometry;
+  const bodyScale =
+    geometry.body.height / STAGE_ROLE_PRESENTATION.hero.visibleBodyHeight;
+  const auraX = geometry.anchors.auraX;
+  const auraY = geometry.anchors.auraY;
 
   // Soft skill auras UNDER the character (no hard ring lines)
-  const cy = footY - mhEff * 0.42;
   if (tracker) {
     const st = Math.min(1, h.trackerStacks);
-    const rg = ctx.createRadialGradient(x, cy, 4, x, cy, 36 + st * 22);
+    const radius = (36 + st * 22) * bodyScale;
+    const rg = ctx.createRadialGradient(
+      auraX,
+      auraY,
+      4 * bodyScale,
+      auraX,
+      auraY,
+      radius,
+    );
     rg.addColorStop(0, `rgba(62,207,142,${0.1 + st * 0.12})`);
     rg.addColorStop(0.55, `rgba(62,207,142,${0.05 + st * 0.06})`);
     rg.addColorStop(1, 'rgba(62,207,142,0)');
     ctx.fillStyle = rg;
     ctx.beginPath();
-    ctx.arc(x, cy, 36 + st * 22, 0, Math.PI * 2);
+    ctx.arc(auraX, auraY, radius, 0, Math.PI * 2);
     ctx.fill();
   }
   // Overdrive — clear crimson field + pulse rings (readable at a glance)
   if (overdrive) {
     const pulse = 0.5 + Math.sin(t * 7) * 0.5;
-    const rad = 52 + pulse * 10;
-    const rg = ctx.createRadialGradient(x, cy, 4, x, cy, rad);
+    const rad = (52 + pulse * 10) * bodyScale;
+    const rg = ctx.createRadialGradient(
+      auraX,
+      auraY,
+      4 * bodyScale,
+      auraX,
+      auraY,
+      rad,
+    );
     rg.addColorStop(0, `rgba(252,18,67,${0.28 + pulse * 0.1})`);
     rg.addColorStop(0.45, `rgba(252,18,67,${0.14 + pulse * 0.06})`);
     rg.addColorStop(1, 'rgba(252,18,67,0)');
     ctx.fillStyle = rg;
     ctx.beginPath();
-    ctx.arc(x, cy, rad, 0, Math.PI * 2);
+    ctx.arc(auraX, auraY, rad, 0, Math.PI * 2);
     ctx.fill();
     ctx.strokeStyle = `rgba(255,90,120,${0.22 + pulse * 0.18})`;
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 2 * bodyScale;
     ctx.beginPath();
-    ctx.arc(x, cy, 28 + pulse * 6, 0, Math.PI * 2);
+    ctx.arc(
+      auraX,
+      auraY,
+      (28 + pulse * 6) * bodyScale,
+      0,
+      Math.PI * 2,
+    );
     ctx.stroke();
     ctx.strokeStyle = `rgba(252,18,67,${0.12 + pulse * 0.1})`;
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 1.5 * bodyScale;
     ctx.beginPath();
-    ctx.arc(x, cy, 40 + pulse * 8, 0, Math.PI * 2);
+    ctx.arc(
+      auraX,
+      auraY,
+      (40 + pulse * 8) * bodyScale,
+      0,
+      Math.PI * 2,
+    );
     ctx.stroke();
   }
 
   // Procedural Host V2 — run_loop / scan / crit / sprint / overdrive / damage
-  drawHeroV2(ctx, x, footY, {
-    height: mhEff,
+  drawHeroV2(ctx, x, gy, {
+    height: geometry.targetBodyHeight,
+    ...drawOptions,
     time: t,
     attack,
     crit: semantics.selector.crit,
@@ -383,24 +463,34 @@ function drawHero(ctx, x, gy, s, t, fit = 1) {
   // Overdrive crown flare above head (readable status)
   if (overdrive) {
     const fl = 0.55 + Math.sin(t * 9) * 0.35;
+    const crownX = geometry.body.centerX;
+    const crownY = geometry.motionEnvelope.top;
     ctx.fillStyle = `rgba(252,18,67,${0.35 + fl * 0.35})`;
     ctx.beginPath();
-    ctx.moveTo(x, footY - mhEff - 4);
-    ctx.lineTo(x - 7, footY - mhEff + 8);
-    ctx.lineTo(x + 7, footY - mhEff + 8);
+    ctx.moveTo(crownX, crownY - 4 * bodyScale);
+    ctx.lineTo(crownX - 7 * bodyScale, crownY + 8 * bodyScale);
+    ctx.lineTo(crownX + 7 * bodyScale, crownY + 8 * bodyScale);
     ctx.closePath();
     ctx.fill();
     ctx.fillStyle = `rgba(255,200,210,${0.5 + fl * 0.4})`;
     ctx.beginPath();
-    ctx.arc(x, footY - mhEff - 2, 2.2, 0, Math.PI * 2);
+    ctx.arc(
+      crownX,
+      crownY - 2 * bodyScale,
+      2.2 * bodyScale,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
 
   // Combo chip in the overhead slot
   if (s.stats.combo >= 3) {
-    const cyOff = mhEff + 18 + (overdrive ? 10 : 0);
+    const chipX = geometry.body.centerX;
+    const chipY =
+      geometry.anchors.floaterY - (overdrive ? 10 * bodyScale : 0);
     ctx.fillStyle = 'rgba(12,16,20,0.82)';
-    roundRect(ctx, x - 19, footY - cyOff, 38, 15, 7);
+    roundRect(ctx, chipX - 19, chipY, 38, 15, 7);
     ctx.fill();
     ctx.strokeStyle = 'rgba(252,18,67,0.5)';
     ctx.lineWidth = 1;
@@ -408,18 +498,26 @@ function drawHero(ctx, x, gy, s, t, fit = 1) {
     ctx.fillStyle = '#fc1243';
     ctx.font = '800 11px system-ui,sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(`${s.stats.combo}×`, x, footY - cyOff + 11);
+    ctx.fillText(`${s.stats.combo}×`, chipX, chipY + 11);
     // slim time-to-decay meter under the chip (informational, like an HP bar)
     const frac = clamp((s.stats.comboT || 0) / 2.4, 0, 1);
     ctx.fillStyle = 'rgba(12,16,20,0.7)';
-    roundRect(ctx, x - 19, footY - cyOff + 18, 38, 4, 2);
+    roundRect(ctx, chipX - 19, chipY + 18, 38, 4, 2);
     ctx.fill();
     if (frac > 0.02) {
       ctx.fillStyle = frac > 0.35 ? '#fc1243' : '#e6b84d';
-      roundRect(ctx, x - 19, footY - cyOff + 18, Math.max(3, 38 * frac), 4, 2);
+      roundRect(
+        ctx,
+        chipX - 19,
+        chipY + 18,
+        Math.max(3, 38 * frac),
+        4,
+        2,
+      );
       ctx.fill();
     }
   }
+  return geometry;
 }
 
 export function inspectEnemyMotion(enemy, packAssets = null, assetStore = null, env = null) {

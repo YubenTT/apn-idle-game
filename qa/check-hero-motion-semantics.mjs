@@ -340,6 +340,130 @@ check(
   'death progress uses equal authored frame bins',
 );
 
+function captureHeroShadow(options) {
+  const stack = [];
+  const state = {
+    tx: 0,
+    ty: 0,
+    fillStyle: '',
+    strokeStyle: '',
+    globalAlpha: 1,
+  };
+  const shadows = [];
+  const gradient = { addColorStop() {} };
+  const ctx = {
+    save() {
+      stack.push({ ...state });
+    },
+    restore() {
+      Object.assign(state, stack.pop());
+    },
+    translate(x, y) {
+      state.tx += x;
+      state.ty += y;
+    },
+    rotate() {},
+    scale() {},
+    beginPath() {},
+    closePath() {},
+    moveTo() {},
+    lineTo() {},
+    arcTo() {},
+    arc() {},
+    clip() {},
+    fill() {},
+    stroke() {},
+    fillRect() {},
+    createLinearGradient() {
+      return gradient;
+    },
+    createRadialGradient() {
+      return gradient;
+    },
+    ellipse(x, y, radiusX, radiusY) {
+      if (state.fillStyle === 'rgba(4,8,12,0.2)') {
+        shadows.push({
+          x: state.tx + x,
+          y: state.ty + y,
+          radiusX,
+          radiusY,
+        });
+      }
+    },
+    get fillStyle() {
+      return state.fillStyle;
+    },
+    set fillStyle(value) {
+      state.fillStyle = value;
+    },
+    get strokeStyle() {
+      return state.strokeStyle;
+    },
+    set strokeStyle(value) {
+      state.strokeStyle = value;
+    },
+    get globalAlpha() {
+      return state.globalAlpha;
+    },
+    set globalAlpha(value) {
+      state.globalAlpha = value;
+    },
+  };
+  heroV2.drawHeroV2(ctx, 120, 300, {
+    drawTrimHeight: 96,
+    pivotY: 294,
+    geometry: {
+      anchors: { shadowX: 120, shadowY: 300 },
+    },
+    height: 96,
+    time: 0.25,
+    energy: 100,
+    ...options,
+  });
+  return shadows;
+}
+
+const neutralShadow = captureHeroShadow({
+  pose: 'run',
+  motionSelector: { t: 0.25, pose: 'run' },
+});
+const jumpShadow = captureHeroShadow({
+  pose: 'level',
+  levelT: 0.5,
+  motionSelector: { t: 0.25, levelT: 0.5, pose: 'level' },
+});
+const hoverShadow = captureHeroShadow({
+  pose: 'overdrive',
+  overdrive: true,
+  motionSelector: { t: 0.25, overdrive: true, pose: 'overdrive' },
+});
+const strikeShadow = captureHeroShadow({
+  pose: 'crit',
+  attack: 0.8,
+  crit: true,
+  motionSelector: { t: 0.25, attack: 0.8, crit: true, pose: 'crit' },
+});
+check(
+  [neutralShadow, jumpShadow, hoverShadow, strikeShadow].every(
+    (calls) => calls.length === 1,
+  ) &&
+    [jumpShadow, hoverShadow, strikeShadow].every(
+      (calls) => calls[0].y === neutralShadow[0].y,
+    ),
+  'renderer-owned Hero shadow keeps one fixed ground Y through jump, hover, and authored clip changes',
+);
+
+const floaterState = game.createState();
+floaterState.world.groundY = 300;
+floaterState.world.stageFit = 1;
+floaterState.run.bytes = 1_000_000;
+floaterState.settings.sfx = false;
+check(
+  game.buyScanner(floaterState) === true &&
+    floaterState.world.floaters.at(-1)?.y === 180,
+  'Hero floater clearance uses the 96 px role body plus the documented 24 px margin',
+);
+
 const sharedSelectorState = game.createState();
 sharedSelectorState.run.hero.attackAnim = 0.25;
 sharedSelectorState.run.hero.attackCrit = true;

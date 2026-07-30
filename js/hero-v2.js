@@ -66,7 +66,7 @@ export function selectHeroV3Frame(o, st, clips) {
 function drawV3Body(ctx, o, st) {
   const sel = selectHeroV3Frame(o, st);
   if (!sel) return;
-  const H = o.height || T;
+  const H = o.drawTrimHeight || o.height || T;
 
   // overdrive under-glow behind the body (identical to the flipbook path)
   const dh0 = H;
@@ -275,8 +275,9 @@ export function drawIdentitySafeFallback(ctx, k, t, st) {
 }
 
 /**
- * Draw the Host. (x, groundY) is the bottom-center ground anchor in canvas
- * space; height comes from opts (caller passes HOST_PRESENTATION.target).
+ * Draw the Host. (x, groundY) names the actor and scene ground anchors.
+ * Resolved callers pass drawTrimHeight, pivotY, and geometry together; legacy
+ * callers retain the bounded height/groundY compatibility path.
  */
 export function drawHeroV2(ctx, x, groundY, opts = {}) {
   const o = opts;
@@ -289,7 +290,7 @@ export function drawHeroV2(ctx, x, groundY, opts = {}) {
   const reduced = !!o.reducedMotion;
   const levelT = clamp(o.levelT || 0, 0, 1);
   const defeatT = clamp(o.defeatT || 0, 0, 1);
-  const k = (o.height || T) / T;
+  const k = (o.geometry?.body?.height || o.height || T) / T;
   const motion = reduced ? 0.45 : 1;
 
   // —— clip clocks ————————————————————————————————————————
@@ -318,15 +319,22 @@ export function drawHeroV2(ctx, x, groundY, opts = {}) {
   const buckle = defeatT * 0.16;
   const jump = levelT > 0 ? Math.sin(levelT * Math.PI) * 12 * k : 0;
 
-  ctx.save();
-  ctx.translate(x - flinch, groundY - hover - jump);
-
   // —— ground shadow: minimal oval, 18–22% opacity ————————————
   const shK = 1 - clamp((hover + jump) / (30 * k), 0, 0.45);
+  const shadowX = o.geometry?.anchors?.shadowX ?? x;
+  const shadowY = o.geometry?.anchors?.shadowY ?? groundY;
+  ctx.save();
+  ctx.translate(shadowX, shadowY);
   ctx.fillStyle = 'rgba(4,8,12,0.2)';
   ctx.beginPath();
   ctx.ellipse(0, 3 * k, 30 * k * shK, 6.4 * k * shK, 0, 0, TAU);
   ctx.fill();
+  ctx.restore();
+
+  // Body motion is isolated from the renderer-owned ground shadow.
+  const pivotY = o.pivotY ?? groundY;
+  ctx.save();
+  ctx.translate(x - flinch, pivotY - hover - jump);
 
   // Subtle sprint trail behind the floating silhouette.
   if (sprint && !reduced) {

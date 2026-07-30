@@ -21,11 +21,18 @@ import {
 import {
   disposeHeroV3,
   drawV3Frame,
+  getV3Clip,
+  getV3Presentation,
   heroV3AuthorityStatus,
   heroV3Ready,
   loadHeroV3,
 } from '../js/hero-v3.js';
+import * as renderRuntime from '../js/render.js';
+import { resolveActorGeometry } from '../js/stage-presentation.js';
 
+const versionedHeroV3 = await import(
+  '../js/hero-v3.js?v=gaf2d-motion-v1'
+);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const heroRoot = path.join(root, 'assets/mascot/v3');
 const encoder = new TextEncoder();
@@ -460,13 +467,223 @@ assert(
   heroV3AuthorityStatus() === 'preview',
   'Hero preview becomes active only through the explicit loader opt-in',
 );
+const presentation = getV3Presentation();
+assert(
+  presentation?.visibleBounds.height > 0 &&
+    presentation?.motionBounds.height >= presentation.visibleBounds.height,
+  'Hero runtime retains one validated presentation record',
+);
+const previewIdle = getV3Clip('idle');
+const geometry = resolveActorGeometry({
+  actorX: 120,
+  groundY: 300,
+  fit: 1,
+  role: 'hero',
+  frameSize: previewIdle.frameSize,
+  trim: {
+    x: previewIdle.trim.x,
+    y: previewIdle.trim.y,
+    width: previewIdle.trim.w,
+    height: previewIdle.trim.h,
+  },
+  pivot: { x: 0.5, y: 1 },
+  presentation,
+});
+assert(geometry.body.height === 96, 'Hero visible body resolves to 96 px');
+assert(geometry.body.bottom === 294, 'Hero keeps the approved 6 px hover');
+const rendererPreview = createHarness({ sourceFiles: previewRuntimeFiles });
+await versionedHeroV3.loadHeroV3('assets/preview-v3/', {
+  ...rendererPreview,
+  allowUnapprovedPreview: true,
+});
+const authoredDrawOptions = renderRuntime.heroDrawOptions?.(120, 300, 1);
+assert(
+  authoredDrawOptions?.drawTrimHeight === geometry.drawTrimHeight &&
+    authoredDrawOptions?.pivotY === geometry.pivotY &&
+    authoredDrawOptions?.geometry.body.height === 96 &&
+    authoredDrawOptions?.geometry.body.bottom === 294,
+  'renderer passes authored trim height, pivot, and resolved Hero geometry together',
+);
+const overlayCalls = {
+  gradients: [],
+  moves: [],
+  text: [],
+};
+const overlayGradient = { addColorStop() {} };
+const overlayContext = {
+  save() {},
+  restore() {},
+  translate() {},
+  rotate() {},
+  scale() {},
+  beginPath() {},
+  closePath() {},
+  lineTo() {},
+  arcTo() {},
+  arc() {},
+  ellipse() {},
+  fill() {},
+  stroke() {},
+  drawImage() {},
+  createLinearGradient() {
+    return overlayGradient;
+  },
+  createRadialGradient(...arguments_) {
+    overlayCalls.gradients.push(arguments_);
+    return overlayGradient;
+  },
+  moveTo(...arguments_) {
+    overlayCalls.moves.push(arguments_);
+  },
+  fillText(...arguments_) {
+    overlayCalls.text.push(arguments_);
+  },
+};
+const overlayState = {
+  run: {
+    hero: {
+      attackAnim: 0,
+      attackCrit: false,
+      energy: 100,
+      deepOn: true,
+      trackerOn: true,
+      trackerStacks: 1,
+      hitRecoil: 0,
+      levelT: 0,
+      defeatT: 0,
+      lootT: 0,
+    },
+  },
+  world: { sprinting: false },
+  stats: { combo: 3, comboT: 1 },
+  settings: { reducedMotion: false },
+};
+const drawnGeometry = renderRuntime.drawHero?.(
+  overlayContext,
+  120,
+  300,
+  overlayState,
+  0.25,
+  1,
+);
+assert(
+  drawnGeometry?.body.height === authoredDrawOptions.geometry.body.height &&
+    drawnGeometry?.body.bottom === authoredDrawOptions.geometry.body.bottom &&
+    overlayCalls.gradients[0]?.[0] === drawnGeometry.anchors.auraX &&
+    overlayCalls.gradients[0]?.[1] === drawnGeometry.anchors.auraY &&
+    overlayCalls.moves.some(
+      ([x, y]) =>
+        x === drawnGeometry.body.centerX &&
+        y === drawnGeometry.motionEnvelope.top - 4,
+    ) &&
+    overlayCalls.text.some(
+      ([text, x, y]) =>
+        text === '3×' &&
+        x === drawnGeometry.body.centerX &&
+        y === drawnGeometry.anchors.floaterY + 1,
+    ),
+  'Hero aura, crown, and combo overlay positions consume the resolved geometry',
+);
+
+function modernSetWithClipMutation(sourceFiles, base, clipName, mutate) {
+  const mutated = new Map(sourceFiles);
+  const descriptorPath = `${base}/${clipName}.json`;
+  const setPath = `${base}/set.json`;
+  const descriptor = JSON.parse(
+    Buffer.from(mutated.get(descriptorPath)).toString('utf8'),
+  );
+  mutate(descriptor);
+  const descriptorBytes = encoder.encode(canonical(descriptor));
+  const set = JSON.parse(Buffer.from(mutated.get(setPath)).toString('utf8'));
+  set.clips[clipName].descriptorSha256 = sha256(descriptorBytes);
+  mutated.set(descriptorPath, descriptorBytes);
+  mutated.set(setPath, encoder.encode(canonical(set)));
+  return mutated;
+}
+
+for (const testCase of [
+  {
+    label: 'full-frame size',
+    base: 'assets/preview-v3',
+    sourceFiles: previewRuntimeFiles,
+    mutate(descriptor) {
+      descriptor.frameSize.width += 1;
+    },
+  },
+  {
+    label: 'shared trim',
+    base: 'assets/preview-v3',
+    sourceFiles: previewRuntimeFiles,
+    mutate(descriptor) {
+      descriptor.trim.x -= 1;
+    },
+  },
+  {
+    label: 'pivot',
+    base: 'assets/preview-v3',
+    sourceFiles: previewRuntimeFiles,
+    mutate(descriptor) {
+      descriptor.anchor = [0.5, 0.99];
+    },
+  },
+  {
+    label: 'presentation',
+    base: 'assets/preview-v3',
+    sourceFiles: previewRuntimeFiles,
+    mutate(descriptor) {
+      descriptor.presentation.visibleBounds.x += 1;
+    },
+  },
+  {
+    label: 'approved full-frame size',
+    base: 'assets/approved-v3',
+    sourceFiles: approvedRuntimeFiles,
+    mutate(descriptor) {
+      descriptor.frameSize.width += 1;
+    },
+  },
+]) {
+  const mismatchedFiles = modernSetWithClipMutation(
+    testCase.sourceFiles,
+    testCase.base,
+    'run',
+    testCase.mutate,
+  );
+  const mismatched = createHarness({ sourceFiles: mismatchedFiles });
+  let rejected = false;
+  await loadHeroV3(`${testCase.base}/`, {
+    ...mismatched,
+    allowUnapprovedPreview: testCase.base.includes('preview'),
+  }).then(
+    () => {},
+    () => {
+      rejected = true;
+    },
+  );
+  assert(
+    rejected &&
+      heroV3AuthorityStatus() === 'preview' &&
+      mismatched.bitmaps.every((bitmap) => bitmap.closed === 1),
+    `modern Hero set rejects clip-local ${testCase.label} drift`,
+  );
+}
 
 disposeHeroV3();
+versionedHeroV3.disposeHeroV3();
+const legacyDrawOptions = renderRuntime.heroDrawOptions?.(120, 300, 1);
 assert(
   preview.bitmaps.every((bitmap) => bitmap.closed === 1) &&
+    rendererPreview.bitmaps.every((bitmap) => bitmap.closed === 1) &&
     !heroV3Ready() &&
     heroV3AuthorityStatus() === null,
   'explicit disposal closes the active set and clears its authority status',
+);
+assert(
+  legacyDrawOptions?.drawTrimHeight === 96 &&
+    legacyDrawOptions?.pivotY === 294 &&
+    legacyDrawOptions?.geometry.body.height === 96 &&
+    legacyDrawOptions?.geometry.body.bottom === 294,
+  'renderer safe fallback uses one explicit legacy Hero geometry adapter',
 );
 
 assert(
