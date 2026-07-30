@@ -3,14 +3,18 @@ import { createHash } from 'node:crypto';
 
 import {
   LOOP_CLIPS,
+  MOTION_CLIP_GRAMMAR,
   MOTION_GRAMMAR,
   MOTION_PREVIEW_GRAMMAR,
+  MOTION_SET_INDEX_GRAMMAR,
   REQUIRED_CLIPS,
   drawMotionFrame,
   frameIndexForClip,
   selectEnemyMotion,
   validateMotionBundle,
+  validateMotionClipDescriptor,
   validateMotionPreviewBundle,
+  validateMotionSetIndex,
 } from '../js/motion-bundle.js';
 import * as renderRuntime from '../js/render.js';
 
@@ -95,6 +99,161 @@ const browserFixtureIntegrity = JSON.parse(
 );
 const sha256Bytes = (bytes) =>
   createHash('sha256').update(bytes).digest('hex');
+
+function smoothSetIndex(role = 'character') {
+  const clips =
+    role === 'hero'
+      ? ['idle', 'run', 'attack', 'crit', 'sprint', 'hit', 'death', 'celebrate']
+      : role === 'boss'
+        ? ['idle', 'advance', 'engaged', 'hit', 'death', 'broken']
+        : ['idle', 'advance', 'engaged', 'hit', 'death'];
+  return {
+    grammar: MOTION_SET_INDEX_GRAMMAR,
+    authority: 'unapproved_preview',
+    status: 'human_review_required',
+    sourceFamily: 'authored-semantic-v3',
+    assetId:
+      role === 'hero'
+        ? 'apn-hero'
+        : role === 'boss'
+          ? 'site-warden'
+          : 'entry-runner',
+    role,
+    frameSize: { width: 128, height: 128 },
+    trim: { x: 16, y: 8, width: 96, height: 112 },
+    pivot: { x: 0.5, y: 1 },
+    presentation: {
+      schemaVersion: 1,
+      scaleContract: 'visible-body',
+      reference: {
+        clip: 'idle',
+        frameIndex: 0,
+        sourceSha256: '1'.repeat(64),
+      },
+      visibleBounds: { x: 8, y: 4, width: 64, height: 88 },
+      motionBounds: { x: 2, y: 1, width: 78, height: 96 },
+    },
+    clips: Object.fromEntries(
+      clips.map((name) => [
+        name,
+        {
+          descriptor: `${name}.json`,
+          descriptorSha256: 'a'.repeat(64),
+          image: `${name}.webp`,
+          imageSha256: 'b'.repeat(64),
+        },
+      ]),
+    ),
+    previewLineage: {
+      candidateId: `${
+        role === 'hero'
+          ? 'apn-hero'
+          : role === 'boss'
+            ? 'site-warden'
+            : 'entry-runner'
+      }-authored-semantic-v3`,
+      candidateSha256: 'c'.repeat(64),
+      temporalEvidenceSha256: 'd'.repeat(64),
+      qaSummarySha256: 'e'.repeat(64),
+      batchSummarySha256: 'f'.repeat(64),
+      sourceManifestVersion: 4,
+    },
+    toolchain: {
+      grammar: 'apn-gaf2d-preview-matrix-toolchain-v1',
+      compositor: { name: 'ImageMagick', version: '7.1.2-13' },
+      encoder: {
+        name: 'cwebp',
+        version: '1.6.0',
+        arguments: ['-exact', '-q', '90'],
+      },
+      operations: [
+        'crop:normalized-png:shared-trim:repage:png32',
+        'resize:lanczos:shared-scale:exact-cell:png32',
+        'montage:row-major:bounded-matrix:shared-cell:no-gap:transparent:alpha-on:png-color-type-6',
+      ],
+      profileSha256:
+        '71f50b2378a4a588d9e49fb2d29700becb2b4a5ae37078a2af3280284eaa8013',
+    },
+  };
+}
+
+function smoothClipDescriptor(set = smoothSetIndex(), name = 'idle') {
+  const contracts = {
+    character: {
+      idle: [30, 30, 'loop'],
+      advance: [24, 30, 'loop'],
+      engaged: [15, 30, 'loop'],
+      hit: [8, 32, 'progress'],
+      death: [30, 30, 'progress'],
+    },
+    boss: {
+      idle: [30, 30, 'loop'],
+      advance: [24, 30, 'loop'],
+      engaged: [15, 30, 'loop'],
+      hit: [8, 32, 'progress'],
+      death: [30, 30, 'progress'],
+      broken: [30, 30, 'loop'],
+    },
+    hero: {
+      idle: [20, 30, 'loop'],
+      run: [20, 32, 'loop'],
+      attack: [15, 30, 'progress'],
+      crit: [15, 30, 'progress'],
+      sprint: [15, 30, 'loop'],
+      hit: [8, 32, 'progress'],
+      death: [15, 30, 'progress'],
+      celebrate: [15, 30, 'loop'],
+    },
+  };
+  const [count, fps, playback] = contracts[set.role][name];
+  const frames = Array.from({ length: count }, (_, index) => {
+    const poseSha256 =
+      index === count - 1 && playback === 'loop'
+        ? String(1).padStart(64, '0')
+        : index === count - 1 && playback === 'progress'
+          ? String(count - 1).padStart(64, '0')
+          : String(index + 1).padStart(64, '0');
+    return {
+      x: (index % 10) * 96,
+      y: Math.floor(index / 10) * 112,
+      width: 96,
+      height: 112,
+      sourceSha256: poseSha256,
+      bodyPoseSha256: poseSha256,
+    };
+  });
+  return {
+    grammar: MOTION_CLIP_GRAMMAR,
+    authority: 'unapproved_preview',
+    sourceFamily: 'authored-semantic-v3',
+    assetId: set.assetId,
+    name,
+    playback,
+    fps,
+    sourceFps: 12,
+    cadenceProfile: 'continuous_30',
+    authoringMethod: 'deterministic_part_rig',
+    interpolationMethod: 'deterministic_part_transforms',
+    holds: playback === 'progress'
+      ? [{ startIndex: count - 2, endIndex: count - 1, reason: 'terminal' }]
+      : [],
+    markers: playback === 'loop'
+      ? { neutral: 0, maximum_excursion: Math.floor(count / 2), return: count - 1 }
+      : { anticipation: 0, contact: Math.floor(count / 2), terminal: count - 1 },
+    frames,
+    atlas: {
+      width: 960,
+      height: Math.ceil(count / 10) * 112,
+      bytes: 1024,
+      sha256: 'b'.repeat(64),
+    },
+    encoder: {
+      name: 'cwebp',
+      version: '1.6.0',
+      arguments: ['-exact', '-q', '90'],
+    },
+  };
+}
 
 function addBrokenClip(bundle) {
   bundle.atlas.height = Math.max(bundle.atlas.height, 672);
@@ -184,9 +343,139 @@ assert(
   'preview grammar is explicit and exact',
 );
 assert(
+  MOTION_SET_INDEX_GRAMMAR === 'gaf2d-motion-set-index-v2' &&
+    MOTION_CLIP_GRAMMAR === 'gaf2d-motion-clip-v2',
+  'high-cadence set and clip grammars are explicit and versioned',
+);
+assert(
   REQUIRED_CLIPS.join('|') === 'idle|advance|engaged|hit|death',
   'required clip vocabulary is exact',
 );
+{
+  const set = smoothSetIndex();
+  const descriptor = smoothClipDescriptor(set);
+  const setErrors = validateMotionSetIndex(set, 'entry-runner', {
+    role: 'character',
+  });
+  const descriptorErrors = validateMotionClipDescriptor(
+    descriptor,
+    'idle',
+    set,
+    {
+      role: 'character',
+      descriptorSha256: 'a'.repeat(64),
+      imageSha256: 'b'.repeat(64),
+    },
+  );
+  assert(
+    setErrors.length === 0,
+    `V2 per-clip set index accepts exact character vocabulary (${setErrors.join('; ')})`,
+  );
+  assert(
+    descriptorErrors.length === 0,
+    `V2 high-cadence clip accepts genuine deterministic-part provenance (${descriptorErrors.join('; ')})`,
+  );
+
+  const missing = copy(set);
+  delete missing.clips.engaged;
+  assert(
+    validateMotionSetIndex(missing, 'entry-runner', { role: 'character' })
+      .some((error) => error.includes('missing required clip "engaged"')),
+    'V2 set index rejects a missing required clip',
+  );
+
+  const unknown = copy(set);
+  unknown.clips.teleport = copy(unknown.clips.idle);
+  assert(
+    validateMotionSetIndex(unknown, 'entry-runner', { role: 'character' })
+      .some((error) => error.includes('unexpected clip "teleport"')),
+    'V2 set index rejects unknown clip keys',
+  );
+
+  const badHash = copy(descriptor);
+  badHash.atlas.sha256 = '9'.repeat(64);
+  assert(
+    validateMotionClipDescriptor(
+      badHash,
+      'idle',
+      set,
+      {
+        role: 'character',
+        descriptorSha256: 'a'.repeat(64),
+        imageSha256: 'b'.repeat(64),
+      },
+    ).some((error) => error.includes('image SHA-256')),
+    'V2 clip descriptor rejects an index/image hash mismatch',
+  );
+
+  const wrongResourceHash = validateMotionClipDescriptor(
+    descriptor,
+    'idle',
+    set,
+    {
+      role: 'character',
+      descriptorSha256: '8'.repeat(64),
+      imageSha256: 'b'.repeat(64),
+    },
+  );
+  assert(
+    wrongResourceHash.some((error) => error.includes('descriptor SHA-256')),
+    'V2 clip descriptor rejects fetched descriptor bytes not bound by the set index',
+  );
+
+  const overflow = copy(descriptor);
+  overflow.atlas.width = 2048;
+  overflow.atlas.height = 769;
+  assert(
+    validateMotionClipDescriptor(overflow, 'idle', set, {
+      role: 'character',
+    }).some((error) => error.includes('decoded RGBA bytes')),
+    'V2 common clip rejects per-clip decoded overflow',
+  );
+
+  const falseCadence = copy(descriptor);
+  falseCadence.frames[2].bodyPoseSha256 =
+    falseCadence.frames[1].bodyPoseSha256;
+  assert(
+    validateMotionClipDescriptor(falseCadence, 'idle', set, {
+      role: 'character',
+    }).some((error) => error.includes('undeclared repeated body pose')),
+    'V3 continuous cadence rejects repeated low-rate raster poses outside holds',
+  );
+
+  const fakeUplift = copy(descriptor);
+  fakeUplift.authoringMethod = 'native_frames';
+  fakeUplift.interpolationMethod = 'none';
+  assert(
+    validateMotionClipDescriptor(fakeUplift, 'idle', set, {
+      role: 'character',
+    }).some((error) => error.includes('deterministic part transforms')),
+    'V3 cadence uplift cannot be relabeled native low-rate frames',
+  );
+
+  const bossSet = smoothSetIndex('boss');
+  const bossBroken = smoothClipDescriptor(bossSet, 'broken');
+  bossBroken.atlas.bytes = 240 * 1024;
+  assert(
+    validateMotionClipDescriptor(
+      bossBroken,
+      'broken',
+      bossSet,
+      { role: 'boss' },
+    ).length === 0,
+    'V2 boss clip accepts the exact 240 KiB compressed budget',
+  );
+  bossBroken.atlas.bytes += 1;
+  assert(
+    validateMotionClipDescriptor(
+      bossBroken,
+      'broken',
+      bossSet,
+      { role: 'boss' },
+    ).some((error) => error.includes('245760 byte boss clip budget')),
+    'V2 boss clip rejects one byte above its compressed budget',
+  );
+}
 expectValid(valid, 'entry-runner', 'valid common motion bundle accepted');
 assert(
   !Object.hasOwn(valid, 'presentation') &&

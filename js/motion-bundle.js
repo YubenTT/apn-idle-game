@@ -10,6 +10,8 @@ import { validatePresentationRecord } from './stage-presentation.js?v=gaf2d-moti
 
 export const MOTION_GRAMMAR = 'gaf2d-motion-bundle-v1';
 export const MOTION_PREVIEW_GRAMMAR = 'gaf2d-motion-preview-v1';
+export const MOTION_SET_INDEX_GRAMMAR = 'gaf2d-motion-set-index-v2';
+export const MOTION_CLIP_GRAMMAR = 'gaf2d-motion-clip-v2';
 export const REQUIRED_CLIPS = Object.freeze([
   'idle',
   'advance',
@@ -102,6 +104,134 @@ const PREVIEW_LINEAGE_HASHES = Object.freeze([
 const ENCODER_KEYS = new Set(['name', 'version', 'arguments']);
 const EXACT_ENCODER_VERSION = '1.6.0';
 const EXACT_ENCODER_ARGUMENTS = Object.freeze(['-exact', '-q', '90']);
+const HIGH_CADENCE_SOURCE_FAMILY = 'authored-semantic-v3';
+const HIGH_CADENCE_CONTRACTS = Object.freeze({
+  character: Object.freeze({
+    idle: Object.freeze({ frames: 30, fps: 30, playback: 'loop' }),
+    advance: Object.freeze({ frames: 24, fps: 30, playback: 'loop' }),
+    engaged: Object.freeze({ frames: 15, fps: 30, playback: 'loop' }),
+    hit: Object.freeze({ frames: 8, fps: 32, playback: 'progress' }),
+    death: Object.freeze({ frames: 30, fps: 30, playback: 'progress' }),
+  }),
+  boss: Object.freeze({
+    idle: Object.freeze({ frames: 30, fps: 30, playback: 'loop' }),
+    advance: Object.freeze({ frames: 24, fps: 30, playback: 'loop' }),
+    engaged: Object.freeze({ frames: 15, fps: 30, playback: 'loop' }),
+    hit: Object.freeze({ frames: 8, fps: 32, playback: 'progress' }),
+    death: Object.freeze({ frames: 30, fps: 30, playback: 'progress' }),
+    broken: Object.freeze({ frames: 30, fps: 30, playback: 'loop' }),
+  }),
+  hero: Object.freeze({
+    idle: Object.freeze({ frames: 20, fps: 30, playback: 'loop' }),
+    run: Object.freeze({ frames: 20, fps: 32, playback: 'loop' }),
+    attack: Object.freeze({ frames: 15, fps: 30, playback: 'progress' }),
+    crit: Object.freeze({ frames: 15, fps: 30, playback: 'progress' }),
+    sprint: Object.freeze({ frames: 15, fps: 30, playback: 'loop' }),
+    hit: Object.freeze({ frames: 8, fps: 32, playback: 'progress' }),
+    death: Object.freeze({ frames: 15, fps: 30, playback: 'progress' }),
+    celebrate: Object.freeze({ frames: 15, fps: 30, playback: 'loop' }),
+  }),
+});
+const HIGH_CADENCE_SET_KEYS = new Set([
+  'grammar',
+  'authority',
+  'status',
+  'sourceFamily',
+  'assetId',
+  'role',
+  'frameSize',
+  'trim',
+  'pivot',
+  'presentation',
+  'clips',
+  'previewLineage',
+  'toolchain',
+]);
+const HIGH_CADENCE_CLIP_KEYS = new Set([
+  'grammar',
+  'authority',
+  'sourceFamily',
+  'assetId',
+  'name',
+  'playback',
+  'fps',
+  'sourceFps',
+  'cadenceProfile',
+  'authoringMethod',
+  'interpolationMethod',
+  'holds',
+  'markers',
+  'frames',
+  'atlas',
+  'encoder',
+]);
+const HIGH_CADENCE_SET_ENTRY_KEYS = new Set([
+  'descriptor',
+  'descriptorSha256',
+  'image',
+  'imageSha256',
+]);
+const HIGH_CADENCE_FRAME_KEYS = new Set([
+  'x',
+  'y',
+  'width',
+  'height',
+  'sourceSha256',
+  'bodyPoseSha256',
+]);
+const HIGH_CADENCE_ATLAS_KEYS = new Set([
+  'width',
+  'height',
+  'bytes',
+  'sha256',
+]);
+const HIGH_CADENCE_HOLD_KEYS = new Set([
+  'startIndex',
+  'endIndex',
+  'reason',
+]);
+const HIGH_CADENCE_MARKER_ROLES = new Set([
+  'neutral',
+  'anticipation',
+  'contact',
+  'maximum_excursion',
+  'recovery',
+  'return',
+  'terminal',
+]);
+const HIGH_CADENCE_HOLD_REASONS = new Set([
+  'anticipation',
+  'impact',
+  'acting',
+  'terminal',
+]);
+const HIGH_CADENCE_LINEAGE_KEYS = new Set([
+  'candidateId',
+  'candidateSha256',
+  'temporalEvidenceSha256',
+  'qaSummarySha256',
+  'batchSummarySha256',
+  'sourceManifestVersion',
+]);
+const HIGH_CADENCE_LINEAGE_HASHES = Object.freeze([
+  'candidateSha256',
+  'temporalEvidenceSha256',
+  'qaSummarySha256',
+  'batchSummarySha256',
+]);
+const HIGH_CADENCE_TOOLCHAIN_KEYS = new Set([
+  'grammar',
+  'compositor',
+  'encoder',
+  'operations',
+  'profileSha256',
+]);
+const HIGH_CADENCE_COMPOSITOR_KEYS = new Set(['name', 'version']);
+const HIGH_CADENCE_MAX_IMAGE_BYTES = Object.freeze({
+  character: 160 * 1024,
+  boss: 240 * 1024,
+  hero: 640 * 1024,
+});
 
 const isObject = (value) =>
   value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -533,6 +663,636 @@ export function validateMotionPreviewBundle(
   options = {},
 ) {
   return validateMotionDescriptor(data, expectedAssetId, options, 'preview');
+}
+
+function exactHighCadenceKeys(value, allowed, label, addError) {
+  if (!isObject(value)) {
+    addError(`${label}: must be an object`);
+    return false;
+  }
+  rejectUnknownProperties(value, allowed, label, addError);
+  for (const key of allowed) {
+    if (!Object.hasOwn(value, key)) {
+      addError(`${label}: missing required property "${key}"`);
+    }
+  }
+  return true;
+}
+
+function portableBasename(value, expected) {
+  return (
+    value === expected &&
+    !value.includes('/') &&
+    !value.includes('\\') &&
+    !value.includes('?') &&
+    !value.includes('#')
+  );
+}
+
+function highCadenceRole(options) {
+  return ['character', 'boss', 'hero'].includes(options?.role)
+    ? options.role
+    : 'character';
+}
+
+function highCadenceDecodedLimit(role) {
+  return role === 'character'
+    ? COMMON_DECODED_BYTES
+    : BOSS_DECODED_BYTES;
+}
+
+function validateHighCadenceEncoder(value, label, addError) {
+  if (!exactHighCadenceKeys(value, ENCODER_KEYS, label, addError)) return;
+  if (
+    value.name !== 'cwebp' ||
+    value.version !== EXACT_ENCODER_VERSION ||
+    !exactStringArrayEqual(value.arguments, EXACT_ENCODER_ARGUMENTS)
+  ) {
+    addError(
+      `${label}: must equal cwebp 1.6.0 with arguments ["-exact","-q","90"]`,
+    );
+  }
+}
+
+function validateHighCadenceToolchain(value, addError) {
+  if (
+    !exactHighCadenceKeys(
+      value,
+      HIGH_CADENCE_TOOLCHAIN_KEYS,
+      'toolchain',
+      addError,
+    )
+  ) {
+    return;
+  }
+  if (value.grammar !== 'apn-gaf2d-preview-matrix-toolchain-v1') {
+    addError(
+      'toolchain.grammar: expected "apn-gaf2d-preview-matrix-toolchain-v1"',
+    );
+  }
+  if (
+    exactHighCadenceKeys(
+      value.compositor,
+      HIGH_CADENCE_COMPOSITOR_KEYS,
+      'toolchain.compositor',
+      addError,
+    ) &&
+    (
+      value.compositor.name !== 'ImageMagick' ||
+      value.compositor.version !== '7.1.2-13'
+    )
+  ) {
+    addError('toolchain.compositor: expected ImageMagick 7.1.2-13');
+  }
+  validateHighCadenceEncoder(value.encoder, 'toolchain.encoder', addError);
+  if (
+    !exactStringArrayEqual(value.operations, [
+      'crop:normalized-png:shared-trim:repage:png32',
+      'resize:lanczos:shared-scale:exact-cell:png32',
+      'montage:row-major:bounded-matrix:shared-cell:no-gap:transparent:alpha-on:png-color-type-6',
+    ])
+  ) {
+    addError('toolchain.operations: preview derivative profile is not canonical');
+  }
+  if (
+    value.profileSha256 !==
+    '71f50b2378a4a588d9e49fb2d29700becb2b4a5ae37078a2af3280284eaa8013'
+  ) {
+    addError('toolchain.profileSha256: preview derivative profile is not pinned');
+  }
+}
+
+/**
+ * Validate the small hash-locked index for a high-cadence per-clip set.
+ *
+ * The trusted role comes from pack metadata; the document cannot promote
+ * itself into the larger boss/hero decoded budget.
+ */
+export function validateMotionSetIndex(
+  data,
+  expectedAssetId,
+  options = {},
+) {
+  const errors = [];
+  const addError = (message) => {
+    if (errors.length < MAX_VALIDATION_ERRORS) errors.push(message);
+  };
+  if (!isObject(data)) return ['set: must be an object'];
+  exactHighCadenceKeys(
+    data,
+    HIGH_CADENCE_SET_KEYS,
+    'set',
+    addError,
+  );
+  const role = highCadenceRole(options);
+  const contract = HIGH_CADENCE_CONTRACTS[role];
+
+  if (data.grammar !== MOTION_SET_INDEX_GRAMMAR) {
+    addError(`grammar: expected "${MOTION_SET_INDEX_GRAMMAR}"`);
+  }
+  if (data.authority !== 'unapproved_preview') {
+    addError('authority: expected "unapproved_preview"');
+  }
+  if (data.status !== 'human_review_required') {
+    addError('status: expected "human_review_required"');
+  }
+  if (data.sourceFamily !== HIGH_CADENCE_SOURCE_FAMILY) {
+    addError(`sourceFamily: expected "${HIGH_CADENCE_SOURCE_FAMILY}"`);
+  }
+  if (
+    typeof data.assetId !== 'string' ||
+    !ASSET_ID.test(data.assetId) ||
+    (typeof expectedAssetId === 'string' &&
+      data.assetId !== expectedAssetId)
+  ) {
+    addError(`assetId: expected "${String(expectedAssetId)}"`);
+  }
+  if (data.role !== role) {
+    addError(`role: expected trusted role "${role}"`);
+  }
+
+  const frameSize = data.frameSize;
+  exactHighCadenceKeys(frameSize, SIZE_KEYS, 'frameSize', addError);
+  const frameSizeValid =
+    isObject(frameSize) &&
+    isPositiveInteger(frameSize.width) &&
+    isPositiveInteger(frameSize.height);
+  if (!frameSizeValid) {
+    addError('frameSize: width and height must be positive integers');
+  }
+  const trim = data.trim;
+  exactHighCadenceKeys(trim, RECT_KEYS, 'trim', addError);
+  const trimValid =
+    isObject(trim) &&
+    Number.isInteger(trim.x) &&
+    trim.x >= 0 &&
+    Number.isInteger(trim.y) &&
+    trim.y >= 0 &&
+    isPositiveInteger(trim.width) &&
+    isPositiveInteger(trim.height);
+  if (!trimValid) {
+    addError('trim: must be a positive integer rectangle');
+  } else if (
+    frameSizeValid &&
+    (
+      trim.x + trim.width > frameSize.width ||
+      trim.y + trim.height > frameSize.height
+    )
+  ) {
+    addError('trim: must be inside the untrimmed frame size');
+  }
+  exactHighCadenceKeys(data.pivot, PIVOT_KEYS, 'pivot', addError);
+  if (data.pivot?.x !== 0.5 || data.pivot?.y !== 1) {
+    addError('pivot: must be the normalized bottom-center point (0.5, 1)');
+  }
+  const presentationErrors = validatePresentationRecord(data.presentation);
+  for (const error of presentationErrors) {
+    addError(`presentation: ${error}`);
+  }
+  if (presentationErrors.length === 0 && trimValid) {
+    for (const field of ['visibleBounds', 'motionBounds']) {
+      if (!boundsInsideTrim(data.presentation[field], trim)) {
+        addError(`presentation: ${field} is outside trim`);
+      }
+    }
+  }
+
+  if (!isObject(data.clips)) {
+    addError('clips: must be an object');
+  } else {
+    const expectedNames = Object.keys(contract);
+    const {
+      keys: clipNames,
+      overflow: clipOverflow,
+    } = boundedOwnKeys(data.clips, expectedNames.length + 1);
+    if (clipOverflow) {
+      addError(`clips: expected at most ${expectedNames.length} entries`);
+    }
+    for (const name of expectedNames) {
+      if (!Object.hasOwn(data.clips, name)) {
+        addError(`clips: missing required clip "${name}"`);
+      }
+    }
+    for (const name of clipNames) {
+      if (!Object.hasOwn(contract, name)) {
+        addError(`clips: unexpected clip "${name}"`);
+        continue;
+      }
+      const entry = data.clips[name];
+      if (
+        !exactHighCadenceKeys(
+          entry,
+          HIGH_CADENCE_SET_ENTRY_KEYS,
+          `clips.${name}`,
+          addError,
+        )
+      ) {
+        continue;
+      }
+      if (!portableBasename(entry.descriptor, `${name}.json`)) {
+        addError(`clips.${name}.descriptor: expected "${name}.json"`);
+      }
+      if (!portableBasename(entry.image, `${name}.webp`)) {
+        addError(`clips.${name}.image: expected "${name}.webp"`);
+      }
+      if (!SHA256.test(entry.descriptorSha256 || '')) {
+        addError(`clips.${name}.descriptorSha256: invalid SHA-256`);
+      }
+      if (!SHA256.test(entry.imageSha256 || '')) {
+        addError(`clips.${name}.imageSha256: invalid SHA-256`);
+      }
+    }
+  }
+
+  if (
+    exactHighCadenceKeys(
+      data.previewLineage,
+      HIGH_CADENCE_LINEAGE_KEYS,
+      'previewLineage',
+      addError,
+    )
+  ) {
+    const expectedCandidateId =
+      typeof expectedAssetId === 'string'
+        ? `${expectedAssetId}-${HIGH_CADENCE_SOURCE_FAMILY}`
+        : null;
+    if (data.previewLineage.candidateId !== expectedCandidateId) {
+      addError(
+        `previewLineage.candidateId: expected "${String(expectedCandidateId)}"`,
+      );
+    }
+    for (const field of HIGH_CADENCE_LINEAGE_HASHES) {
+      if (!SHA256.test(data.previewLineage[field] || '')) {
+        addError(`previewLineage.${field}: invalid SHA-256`);
+      }
+    }
+    if (!isPositiveInteger(data.previewLineage.sourceManifestVersion)) {
+      addError('previewLineage.sourceManifestVersion: must be a positive integer');
+    }
+  }
+  validateHighCadenceToolchain(data.toolchain, addError);
+  return errors;
+}
+
+function holdAllowsRepeatedTransition(holds, frameIndex) {
+  return holds.some(
+    (hold) =>
+      Number.isInteger(hold?.startIndex) &&
+      Number.isInteger(hold?.endIndex) &&
+      frameIndex > hold.startIndex &&
+      frameIndex <= hold.endIndex,
+  );
+}
+
+/**
+ * Validate one high-cadence descriptor against its already validated set.
+ *
+ * Callers may pass hashes/bytes computed from fetched resources. Omitting
+ * those optional facts still validates the closed descriptor grammar.
+ */
+export function validateMotionClipDescriptor(
+  data,
+  expectedClipName,
+  set,
+  options = {},
+) {
+  const errors = [];
+  const addError = (message) => {
+    if (errors.length < MAX_VALIDATION_ERRORS) errors.push(message);
+  };
+  if (!isObject(data)) return ['clip: must be an object'];
+  exactHighCadenceKeys(
+    data,
+    HIGH_CADENCE_CLIP_KEYS,
+    'clip',
+    addError,
+  );
+  const role = highCadenceRole(options);
+  const contract = HIGH_CADENCE_CONTRACTS[role]?.[expectedClipName];
+  const setEntry = set?.clips?.[expectedClipName];
+
+  if (data.grammar !== MOTION_CLIP_GRAMMAR) {
+    addError(`grammar: expected "${MOTION_CLIP_GRAMMAR}"`);
+  }
+  if (data.authority !== 'unapproved_preview') {
+    addError('authority: expected "unapproved_preview"');
+  }
+  if (data.sourceFamily !== HIGH_CADENCE_SOURCE_FAMILY) {
+    addError(`sourceFamily: expected "${HIGH_CADENCE_SOURCE_FAMILY}"`);
+  }
+  if (data.assetId !== set?.assetId) {
+    addError(`assetId: expected "${String(set?.assetId)}"`);
+  }
+  if (
+    typeof expectedClipName !== 'string' ||
+    !contract ||
+    data.name !== expectedClipName
+  ) {
+    addError(`name: expected exact ${role} clip "${String(expectedClipName)}"`);
+  }
+  if (contract) {
+    if (data.playback !== contract.playback) {
+      addError(
+        `playback: expected "${contract.playback}", got "${String(data.playback)}"`,
+      );
+    }
+    if (data.fps !== contract.fps) {
+      addError(`fps: expected exact ${contract.fps}`);
+    }
+  }
+  if (
+    !Number.isInteger(data.sourceFps) ||
+    data.sourceFps < 1 ||
+    data.sourceFps > MAX_CLIP_FPS
+  ) {
+    addError(`sourceFps: must be an integer within 1..${MAX_CLIP_FPS}`);
+  }
+  if (data.cadenceProfile !== 'continuous_30') {
+    addError('cadenceProfile: expected "continuous_30"');
+  }
+  if (
+    data.authoringMethod !== 'deterministic_part_rig' ||
+    data.interpolationMethod !== 'deterministic_part_transforms'
+  ) {
+    addError(
+      'cadence provenance: continuous-30 output requires deterministic part transforms',
+    );
+  }
+  if (
+    Number.isInteger(data.sourceFps) &&
+    Number.isInteger(data.fps) &&
+    data.sourceFps < data.fps &&
+    (
+      data.authoringMethod !== 'deterministic_part_rig' ||
+      data.interpolationMethod !== 'deterministic_part_transforms'
+    )
+  ) {
+    addError('cadence uplift requires deterministic part transforms');
+  }
+
+  const holds = Array.isArray(data.holds) ? data.holds : [];
+  if (!Array.isArray(data.holds)) {
+    addError('holds: must be an ordered array');
+  } else if (contract && data.holds.length > contract.frames) {
+    addError(`holds: expected at most ${contract.frames} ranges`);
+  }
+  const holdsToValidate = holds.slice(
+    0,
+    contract?.frames ?? MAX_FRAMES_PER_CLIP,
+  );
+  let heldFrames = 0;
+  let previousHoldEnd = -1;
+  for (
+    let index = 0;
+    index < holdsToValidate.length;
+    index += 1
+  ) {
+    const hold = holdsToValidate[index];
+    exactHighCadenceKeys(
+      hold,
+      HIGH_CADENCE_HOLD_KEYS,
+      `holds[${index}]`,
+      addError,
+    );
+    if (
+      !Number.isInteger(hold?.startIndex) ||
+      hold.startIndex < 0 ||
+      !Number.isInteger(hold?.endIndex) ||
+      hold.endIndex <= hold.startIndex ||
+      (contract && hold.endIndex >= contract.frames)
+    ) {
+      addError(`holds[${index}]: invalid inclusive clip range`);
+    }
+    if (hold?.startIndex <= previousHoldEnd) {
+      addError(`holds[${index}]: ranges must be ordered and non-overlapping`);
+    }
+    if (!HIGH_CADENCE_HOLD_REASONS.has(hold?.reason)) {
+      addError(`holds[${index}].reason: unsupported hold reason`);
+    }
+    if (
+      Number.isInteger(hold?.startIndex) &&
+      Number.isInteger(hold?.endIndex)
+    ) {
+      heldFrames += hold.endIndex - hold.startIndex + 1;
+      previousHoldEnd = hold.endIndex;
+    }
+  }
+  if (contract && heldFrames >= contract.frames) {
+    addError('holds: cannot cover the complete clip');
+  }
+
+  if (!isObject(data.markers)) {
+    addError('markers: must be an object');
+  } else {
+    const {
+      keys: markerRoles,
+      overflow: markerOverflow,
+    } = boundedOwnKeys(
+      data.markers,
+      HIGH_CADENCE_MARKER_ROLES.size + 1,
+    );
+    if (markerOverflow) {
+      addError(
+        `markers: expected at most ${HIGH_CADENCE_MARKER_ROLES.size} roles`,
+      );
+    }
+    for (const roleName of markerRoles) {
+      const frameIndex = data.markers[roleName];
+      if (!HIGH_CADENCE_MARKER_ROLES.has(roleName)) {
+        addError(`markers: unexpected role "${roleName}"`);
+      }
+      if (
+        !Number.isInteger(frameIndex) ||
+        frameIndex < 0 ||
+        (contract && frameIndex >= contract.frames)
+      ) {
+        addError(`markers.${roleName}: must identify a frame index`);
+      }
+    }
+    const required =
+      data.playback === 'loop'
+        ? ['neutral', 'maximum_excursion', 'return']
+        : ['anticipation', 'terminal'];
+    for (const roleName of required) {
+      if (!Object.hasOwn(data.markers, roleName)) {
+        addError(`markers: missing required role "${roleName}"`);
+      }
+    }
+    if (
+      data.playback === 'progress' &&
+      !Object.hasOwn(data.markers, 'contact') &&
+      !Object.hasOwn(data.markers, 'maximum_excursion')
+    ) {
+      addError('markers: progress clip needs contact or maximum_excursion');
+    }
+  }
+
+  const atlas = data.atlas;
+  exactHighCadenceKeys(
+    atlas,
+    HIGH_CADENCE_ATLAS_KEYS,
+    'atlas',
+    addError,
+  );
+  const atlasSizeValid =
+    isObject(atlas) &&
+    isPositiveInteger(atlas.width) &&
+    isPositiveInteger(atlas.height);
+  if (!atlasSizeValid) {
+    addError('atlas: width and height must be positive integers');
+  } else {
+    if (
+      atlas.width > MAX_ATLAS_DIMENSION ||
+      atlas.height > MAX_ATLAS_DIMENSION
+    ) {
+      addError(
+        `atlas: dimensions must be at most ${MAX_ATLAS_DIMENSION}x${MAX_ATLAS_DIMENSION}`,
+      );
+    }
+    const decodedBytes = atlas.width * atlas.height * 4;
+    const limit = highCadenceDecodedLimit(role);
+    if (decodedBytes > limit) {
+      addError(`atlas: decoded RGBA bytes ${decodedBytes} exceed ${limit}`);
+    }
+  }
+  if (
+    !isPositiveInteger(atlas?.bytes) ||
+    atlas.bytes > HIGH_CADENCE_MAX_IMAGE_BYTES[role]
+  ) {
+    addError(
+      `atlas.bytes: must fit the ${HIGH_CADENCE_MAX_IMAGE_BYTES[role]} byte ${role} clip budget`,
+    );
+  }
+  if (!SHA256.test(atlas?.sha256 || '')) {
+    addError('atlas.sha256: invalid SHA-256');
+  }
+  if (setEntry?.imageSha256 !== atlas?.sha256) {
+    addError('image SHA-256: descriptor differs from its set index');
+  }
+  if (
+    options.imageSha256 !== undefined &&
+    options.imageSha256 !== setEntry?.imageSha256
+  ) {
+    addError('image SHA-256: fetched image bytes differ from the set index');
+  }
+  if (
+    options.descriptorSha256 !== undefined &&
+    options.descriptorSha256 !== setEntry?.descriptorSha256
+  ) {
+    addError(
+      'descriptor SHA-256: fetched descriptor bytes differ from the set index',
+    );
+  }
+  if (
+    options.imageBytes !== undefined &&
+    options.imageBytes !== atlas?.bytes
+  ) {
+    addError('atlas.bytes: fetched image length differs from the descriptor');
+  }
+
+  const frames = Array.isArray(data.frames) ? data.frames : [];
+  if (!Array.isArray(data.frames)) {
+    addError('frames: must be an ordered array');
+  } else if (contract && frames.length !== contract.frames) {
+    addError(`frames: expected exactly ${contract.frames} frames`);
+  }
+  const rectangles = [];
+  for (
+    let index = 0;
+    index < Math.min(frames.length, MAX_FRAMES_PER_CLIP);
+    index += 1
+  ) {
+    const frame = frames[index];
+    const label = `frames[${index}]`;
+    exactHighCadenceKeys(
+      frame,
+      HIGH_CADENCE_FRAME_KEYS,
+      label,
+      addError,
+    );
+    const valid =
+      isObject(frame) &&
+      Number.isInteger(frame.x) &&
+      frame.x >= 0 &&
+      Number.isInteger(frame.y) &&
+      frame.y >= 0 &&
+      isPositiveInteger(frame.width) &&
+      isPositiveInteger(frame.height);
+    if (!valid) {
+      addError(`${label}: must be a positive integer rectangle`);
+      continue;
+    }
+    if (
+      frame.width !== set?.trim?.width ||
+      frame.height !== set?.trim?.height
+    ) {
+      addError(`${label}: must match the set-wide shared trim`);
+    }
+    if (
+      atlasSizeValid &&
+      (
+        frame.x + frame.width > atlas.width ||
+        frame.y + frame.height > atlas.height
+      )
+    ) {
+      addError(`${label}: outside atlas bounds`);
+    }
+    if (!SHA256.test(frame.sourceSha256 || '')) {
+      addError(`${label}.sourceSha256: invalid SHA-256`);
+    }
+    if (!SHA256.test(frame.bodyPoseSha256 || '')) {
+      addError(`${label}.bodyPoseSha256: invalid SHA-256`);
+    }
+    rectangles.push({ ...frame, label });
+  }
+  for (let left = 0; left < rectangles.length; left += 1) {
+    for (let right = left + 1; right < rectangles.length; right += 1) {
+      if (rectsOverlap(rectangles[left], rectangles[right])) {
+        addError(`${rectangles[right].label}: overlaps an earlier frame`);
+        break;
+      }
+    }
+  }
+  for (let index = 1; index < frames.length; index += 1) {
+    if (
+      frames[index]?.bodyPoseSha256 !==
+      frames[index - 1]?.bodyPoseSha256
+    ) {
+      continue;
+    }
+    if (!holdAllowsRepeatedTransition(holdsToValidate, index)) {
+      addError(`frames[${index}]: undeclared repeated body pose`);
+    }
+  }
+  for (const hold of holdsToValidate) {
+    if (
+      !Number.isInteger(hold?.startIndex) ||
+      !Number.isInteger(hold?.endIndex)
+    ) {
+      continue;
+    }
+    for (
+      let index = hold.startIndex + 1;
+      index <= Math.min(hold.endIndex, frames.length - 1);
+      index += 1
+    ) {
+      if (
+        frames[index]?.bodyPoseSha256 !==
+        frames[index - 1]?.bodyPoseSha256
+      ) {
+        addError(`frames[${index}]: declared hold changes body pose`);
+      }
+    }
+  }
+  if (
+    data.playback === 'loop' &&
+    frames.length > 1 &&
+    frames[0]?.bodyPoseSha256 !== frames.at(-1)?.bodyPoseSha256
+  ) {
+    addError('frames: loop must preserve the authored first/last closure');
+  }
+  validateHighCadenceEncoder(data.encoder, 'encoder', addError);
+  return errors;
 }
 
 /**

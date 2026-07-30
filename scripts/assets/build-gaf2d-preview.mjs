@@ -16,7 +16,13 @@ import {
   validateDerivativeTools,
   webpSize,
 } from './build-gaf2d-motion.mjs';
-import { validateMotionPreviewBundle } from '../../js/motion-bundle.js';
+import {
+  MOTION_CLIP_GRAMMAR,
+  MOTION_SET_INDEX_GRAMMAR,
+  validateMotionClipDescriptor,
+  validateMotionPreviewBundle,
+  validateMotionSetIndex,
+} from '../../js/motion-bundle.js';
 import {
   HERO_PREVIEW_CLIP_GRAMMAR,
   HERO_PREVIEW_MATRIX_PROFILE_SHA256,
@@ -28,9 +34,8 @@ import {
 } from '../../js/hero-v3-contract.js';
 
 const PREVIEW_MANIFEST_GRAMMAR = 'apn-gaf2d-motion-preview-manifest-v1';
-const SOURCE_FAMILY = 'authored-semantic-v2';
-const BATCH_RELATIVE =
-  `motion/${SOURCE_FAMILY}/batch-summary.json`;
+const LEGACY_SOURCE_FAMILY = 'authored-semantic-v2';
+const SMOOTH_SOURCE_FAMILY = 'authored-semantic-v3';
 const MAX_JSON_BYTES = 8 * 1024 * 1024;
 const MAX_FRAME_BYTES = 32 * 1024 * 1024;
 const MAX_REVIEW_HTML_BYTES = 48 * 1024 * 1024;
@@ -106,6 +111,103 @@ const EXPECTED_COUNTS = Object.freeze({
   assets: 7,
   clips: 39,
   frames: 276,
+});
+const SMOOTH_EXPECTED_COUNTS = Object.freeze({
+  assets: 7,
+  clips: 39,
+  frames: 795,
+});
+const SMOOTH_COMMON_CLIPS = Object.freeze([
+  Object.freeze({ name: 'idle', frames: 30, fps: 30, playback: 'loop' }),
+  Object.freeze({ name: 'advance', frames: 24, fps: 30, playback: 'loop' }),
+  Object.freeze({ name: 'engaged', frames: 15, fps: 30, playback: 'loop' }),
+  Object.freeze({ name: 'hit', frames: 8, fps: 32, playback: 'progress' }),
+  Object.freeze({ name: 'death', frames: 30, fps: 30, playback: 'progress' }),
+]);
+const SMOOTH_HERO_CLIPS = Object.freeze([
+  Object.freeze({ name: 'idle', frames: 20, fps: 30, playback: 'loop' }),
+  Object.freeze({ name: 'run', frames: 20, fps: 32, playback: 'loop' }),
+  Object.freeze({ name: 'attack', frames: 15, fps: 30, playback: 'progress' }),
+  Object.freeze({ name: 'crit', frames: 15, fps: 30, playback: 'progress' }),
+  Object.freeze({ name: 'sprint', frames: 15, fps: 30, playback: 'loop' }),
+  Object.freeze({ name: 'hit', frames: 8, fps: 32, playback: 'progress' }),
+  Object.freeze({ name: 'death', frames: 15, fps: 30, playback: 'progress' }),
+  Object.freeze({ name: 'celebrate', frames: 15, fps: 30, playback: 'loop' }),
+]);
+const SMOOTH_ASSET_SPECS = Object.freeze([
+  Object.freeze({
+    assetId: 'apn-hero',
+    role: 'hero',
+    clips: SMOOTH_HERO_CLIPS,
+  }),
+  Object.freeze({
+    assetId: 'entry-runner',
+    role: 'character',
+    clips: SMOOTH_COMMON_CLIPS,
+  }),
+  Object.freeze({
+    assetId: 'protocol-courier',
+    role: 'character',
+    clips: SMOOTH_COMMON_CLIPS,
+  }),
+  Object.freeze({
+    assetId: 'signal-hunter',
+    role: 'character',
+    clips: SMOOTH_COMMON_CLIPS,
+  }),
+  Object.freeze({
+    assetId: 'site-sentinel',
+    role: 'character',
+    clips: SMOOTH_COMMON_CLIPS,
+  }),
+  Object.freeze({
+    assetId: 'site-warden',
+    role: 'boss',
+    clips: Object.freeze([
+      ...SMOOTH_COMMON_CLIPS,
+      Object.freeze({
+        name: 'broken',
+        frames: 30,
+        fps: 30,
+        playback: 'loop',
+      }),
+    ]),
+  }),
+  Object.freeze({
+    assetId: 'veil-operator',
+    role: 'character',
+    clips: SMOOTH_COMMON_CLIPS,
+  }),
+]);
+const SOURCE_PROFILES = Object.freeze({
+  [LEGACY_SOURCE_FAMILY]: Object.freeze({
+    sourceFamily: LEGACY_SOURCE_FAMILY,
+    batchRelative:
+      `motion/${LEGACY_SOURCE_FAMILY}/batch-summary.json`,
+    candidateGrammar: 'gaf2d-motion-set-v2',
+    batchSchemaVersion: 1,
+    batchContract: 'apn-offline-authored-motion-v1',
+    clipManifestVersion: 2,
+    pathsRelativeToBatch: false,
+    qaSchemaVersion: 1,
+    counts: EXPECTED_COUNTS,
+    specs: ASSET_SPECS,
+    perClip: false,
+  }),
+  [SMOOTH_SOURCE_FAMILY]: Object.freeze({
+    sourceFamily: SMOOTH_SOURCE_FAMILY,
+    batchRelative:
+      `motion/${SMOOTH_SOURCE_FAMILY}/batch-summary.json`,
+    candidateGrammar: 'gaf2d-motion-set-v3',
+    batchSchemaVersion: 3,
+    batchContract: 'apn-offline-authored-motion-v3',
+    clipManifestVersion: 3,
+    pathsRelativeToBatch: true,
+    qaSchemaVersion: 3,
+    counts: SMOOTH_EXPECTED_COUNTS,
+    specs: SMOOTH_ASSET_SPECS,
+    perClip: true,
+  }),
 });
 
 function fail(message) {
@@ -220,14 +322,133 @@ function exactClipFacts(left, right, assetId, clipName) {
   requireFact(
     left?.fps === right?.fps &&
       left?.playback === right?.playback &&
-      arraysEqual(left?.frame_ids, right?.frame_ids),
+      arraysEqual(left?.frame_ids, right?.frame_ids) &&
+      (
+        left?.cadence_profile === undefined ||
+        (
+          left.cadence_profile === right?.cadence_profile &&
+          left.source_fps === right?.source_fps &&
+          left.authoring_method === right?.authoring_method &&
+          left.interpolation_method === right?.interpolation_method &&
+          JSON.stringify(left.holds) === JSON.stringify(right?.holds) &&
+          JSON.stringify(left.markers) === JSON.stringify(right?.markers)
+        )
+      ),
     `${assetId}/${clipName} candidate and clip manifest differ`,
   );
 }
 
-function verifyBatch(batch) {
-  requireFact(batch?.schema_version === 1, 'batch schema_version must be 1');
-  requireFact(batch?.contract === 'apn-offline-authored-motion-v1', 'batch contract is not the offline authored profile');
+function verifySmoothClipAuthority(assetId, expected, clip) {
+  requireFact(
+    clip?.fps === expected.fps &&
+      Number.isInteger(clip?.source_fps) &&
+      clip.source_fps >= 1 &&
+      clip.source_fps <= 60 &&
+      clip?.cadence_profile === 'continuous_30' &&
+      clip?.authoring_method === 'deterministic_part_rig' &&
+      clip?.interpolation_method === 'deterministic_part_transforms',
+    `${assetId}/${expected.name} V3 cadence requires deterministic part transforms`,
+  );
+  requireFact(
+    Array.isArray(clip.holds) && isObject(clip.markers),
+    `${assetId}/${expected.name} V3 holds/markers are missing`,
+  );
+  let previousEnd = -1;
+  let heldFrames = 0;
+  for (const hold of clip.holds) {
+    requireFact(
+      Number.isInteger(hold?.start_index) &&
+        hold.start_index >= 0 &&
+        Number.isInteger(hold?.end_index) &&
+        hold.end_index > hold.start_index &&
+        hold.end_index < expected.frames &&
+        hold.start_index > previousEnd &&
+        ['anticipation', 'impact', 'acting', 'terminal'].includes(hold.reason),
+      `${assetId}/${expected.name} V3 hold range is invalid`,
+    );
+    previousEnd = hold.end_index;
+    heldFrames += hold.end_index - hold.start_index + 1;
+  }
+  requireFact(
+    heldFrames < expected.frames,
+    `${assetId}/${expected.name} V3 holds cover the complete clip`,
+  );
+  const markerIds = Object.values(clip.markers);
+  requireFact(
+    markerIds.length > 0 &&
+      markerIds.every((frameId) => clip.frame_ids.includes(frameId)),
+    `${assetId}/${expected.name} V3 markers leave the exact clip`,
+  );
+  const markerRoles = new Set(Object.keys(clip.markers));
+  if (clip.playback === 'loop') {
+    requireFact(
+      ['neutral', 'maximum_excursion', 'return'].every((role) =>
+        markerRoles.has(role)),
+      `${assetId}/${expected.name} V3 loop markers are incomplete`,
+    );
+  } else {
+    requireFact(
+      markerRoles.has('anticipation') &&
+        markerRoles.has('terminal') &&
+        (
+          markerRoles.has('contact') ||
+          markerRoles.has('maximum_excursion')
+        ),
+      `${assetId}/${expected.name} V3 progress markers are incomplete`,
+    );
+  }
+}
+
+function holdAllowsRepeatedTransition(holds, frameIndex) {
+  return holds.some(
+    (hold) =>
+      frameIndex > hold.start_index &&
+      frameIndex <= hold.end_index,
+  );
+}
+
+function verifySmoothFrameCadence(source) {
+  for (const clipName of source.candidate.clip_order) {
+    const clip = source.candidate.clips[clipName];
+    const hashes = source.bodyPoseSha256.get(clipName);
+    requireFact(
+      Array.isArray(hashes) &&
+        hashes.length === clip.frame_ids.length,
+      `${source.assetId}/${clipName} body-pose evidence is incomplete`,
+    );
+    for (let index = 1; index < hashes.length; index += 1) {
+      if (hashes[index] !== hashes[index - 1]) continue;
+      requireFact(
+        holdAllowsRepeatedTransition(clip.holds, index),
+        `${source.assetId}/${clipName} has an undeclared repeated body pose at frame ${index}`,
+      );
+    }
+    if (clip.playback === 'loop') {
+      requireFact(
+        hashes.length > 1 && hashes[0] === hashes.at(-1),
+        `${source.assetId}/${clipName} does not preserve first/last loop closure`,
+      );
+    }
+  }
+}
+
+function verifyBatch(batch, profile) {
+  const { counts } = profile;
+  requireFact(
+    batch?.schema_version === profile.batchSchemaVersion,
+    `batch schema_version must be ${profile.batchSchemaVersion}`,
+  );
+  requireFact(
+    batch?.contract === profile.batchContract,
+    `batch contract must be "${profile.batchContract}"`,
+  );
+  if (profile.perClip) {
+    requireFact(
+      batch?.artifact_path_base === 'batch-summary-parent' &&
+        batch?.revision === profile.sourceFamily,
+      'V3 batch path base/revision is invalid',
+    );
+  }
   requireFact(batch?.passed === true, 'batch passed must be true');
   requireFact(batch?.mechanical_qa === 'passed', 'batch mechanical_qa must be "passed"');
   requireFact(
@@ -242,18 +463,18 @@ function verifyBatch(batch) {
     requireFact(batch?.[field] === 0, `batch ${field} must be 0`);
   }
   requireFact(
-    batch?.local_authored_clip_count === EXPECTED_COUNTS.clips,
-    `batch local_authored_clip_count must be ${EXPECTED_COUNTS.clips}`,
+    batch?.local_authored_clip_count === counts.clips,
+    `batch local_authored_clip_count must be ${counts.clips}`,
   );
   requireFact(
-    batch?.asset_count === EXPECTED_COUNTS.assets &&
-      batch?.clip_count === EXPECTED_COUNTS.clips &&
-      batch?.frame_count === EXPECTED_COUNTS.frames,
-    'batch must contain exactly 7 assets, 39 clips, and 276 frames',
+    batch?.asset_count === counts.assets &&
+      batch?.clip_count === counts.clips &&
+      batch?.frame_count === counts.frames,
+    `batch must contain exactly ${counts.assets} assets, ${counts.clips} clips, and ${counts.frames} frames`,
   );
   requireFact(
     Array.isArray(batch?.assets) &&
-      batch.assets.length === EXPECTED_COUNTS.assets,
+      batch.assets.length === counts.assets,
     'batch assets must contain exactly seven entries',
   );
   requireFact(
@@ -263,7 +484,14 @@ function verifyBatch(batch) {
   );
 }
 
-function verifySourceAsset(root, batchRecord, spec) {
+function batchArtifactPath(profile, relative, label) {
+  portableRelativePath(relative, label);
+  return profile.pathsRelativeToBatch
+    ? `motion/${profile.sourceFamily}/${relative}`
+    : relative;
+}
+
+function verifySourceAsset(root, batchRecord, spec, profile) {
   const { assetId } = spec;
   requireFact(ASSET_ID.test(assetId), `asset ID "${assetId}" is invalid`);
   requireFact(batchRecord?.asset_id === assetId, `${assetId} batch entry is missing`);
@@ -272,6 +500,16 @@ function verifySourceAsset(root, batchRecord, spec) {
     batchRecord?.provider_clip_count === 0,
     `${assetId} provider_clip_count must be 0`,
   );
+  if (profile.perClip) {
+    requireFact(
+      batchRecord?.network_calls === 0 &&
+        batchRecord?.provider_calls === 0 &&
+        batchRecord?.passed === true &&
+        Array.isArray(batchRecord?.reject_reasons) &&
+        batchRecord.reject_reasons.length === 0,
+      `${assetId} V3 batch safety/mechanical facts are invalid`,
+    );
+  }
   const expectedFrameCount = spec.clips.reduce(
     (total, clip) => total + clip.frames,
     0,
@@ -318,7 +556,7 @@ function verifySourceAsset(root, batchRecord, spec) {
   const candidateArtifact = assetManifest?.artifacts?.motion_set_candidate;
   const expectedCandidatePath =
     `assets/${assetId}/review/motion-set/` +
-    `${assetId}-${SOURCE_FAMILY}/candidate.json`;
+    `${assetId}-${profile.sourceFamily}/candidate.json`;
   requireFact(
     candidateArtifact?.kind === 'motion_set_candidate' &&
       candidateArtifact?.path === expectedCandidatePath,
@@ -332,9 +570,9 @@ function verifySourceAsset(root, batchRecord, spec) {
   );
   const candidate = candidateRecord.value;
   requireFact(
-    candidate?.grammar === 'gaf2d-motion-set-v2' &&
+    candidate?.grammar === profile.candidateGrammar &&
       candidate?.asset_id === assetId &&
-      candidate?.candidate_id === `${assetId}-${SOURCE_FAMILY}`,
+      candidate?.candidate_id === `${assetId}-${profile.sourceFamily}`,
     `${assetId} candidate identity/grammar is invalid`,
   );
   requireFact(
@@ -355,13 +593,17 @@ function verifySourceAsset(root, batchRecord, spec) {
   );
   const clipManifestRecord = readTrackedJson(
     root,
-    batchRecord.clip_manifest_path,
+    batchArtifactPath(
+      profile,
+      batchRecord.clip_manifest_path,
+      `${assetId} clip manifest path`,
+    ),
     batchRecord.clip_manifest_sha256,
     `${assetId} clip manifest`,
   );
   const clipManifest = clipManifestRecord.value;
   requireFact(
-    clipManifest?.schema_version === 2 &&
+    clipManifest?.schema_version === profile.clipManifestVersion &&
       clipManifest?.candidate_id === candidate.candidate_id &&
       arraysEqual(clipManifest?.clip_order, expectedClipOrder),
     `${assetId} clip manifest identity/order is invalid`,
@@ -375,54 +617,135 @@ function verifySourceAsset(root, batchRecord, spec) {
         candidateClip.frame_ids.length === expected.frames &&
         Number.isInteger(candidateClip?.fps) &&
         candidateClip.fps >= 1 &&
-        candidateClip.fps <= 60,
+        candidateClip.fps <= 60 &&
+        (!profile.perClip || candidateClip.fps === expected.fps),
       `${assetId}/${expected.name} clip contract is invalid`,
     );
+    if (profile.perClip) {
+      verifySmoothClipAuthority(assetId, expected, candidateClip);
+    }
     exactClipFacts(candidateClip, manifestClip, assetId, expected.name);
   }
 
   const qaRecord = readTrackedJson(
     root,
-    batchRecord.qa_summary_path,
+    batchArtifactPath(
+      profile,
+      batchRecord.qa_summary_path,
+      `${assetId} QA summary path`,
+    ),
     batchRecord.qa_summary_sha256,
     `${assetId} QA summary`,
   );
   const qa = qaRecord.value;
-  requireFact(
-    qa?.schema_version === 1 &&
-      qa?.asset_id === assetId &&
-      qa?.passed === true &&
-      qa?.mechanical_qa === 'passed' &&
-      qa?.creative_approval === 'human_required' &&
-      qa?.provider_clip_count === 0 &&
-      qa?.local_authored_clip_count === spec.clips.length &&
-      qa?.clip_count === spec.clips.length &&
-      qa?.frame_count === expectedFrameCount &&
-      arraysEqual(qa?.canvas, [640, 640]) &&
-      Array.isArray(qa?.reject_reasons) &&
-      qa.reject_reasons.length === 0,
-    `${assetId} mechanical QA boundary is invalid`,
-  );
-  const qaClips = new Map(
-    (Array.isArray(qa.clips) ? qa.clips : []).map((clip) => [
-      clip.clip,
-      clip,
-    ]),
-  );
+  const qaBodyPoseSha256 = new Map();
+  let qaClips;
+  if (profile.perClip) {
+    requireFact(
+      qa?.schema_version === profile.qaSchemaVersion &&
+        qa?.asset_id === assetId &&
+        qa?.passed === true &&
+        qa?.mechanical_qa === 'passed' &&
+        qa?.creative_approval === 'human_required' &&
+        qa?.network_calls === 0 &&
+        qa?.provider_calls === 0 &&
+        qa?.clip_count === spec.clips.length &&
+        qa?.frame_count === expectedFrameCount &&
+        isObject(qa?.clips) &&
+        Object.keys(qa.clips).length === spec.clips.length &&
+        Array.isArray(qa?.reject_reasons) &&
+        qa.reject_reasons.length === 0,
+      `${assetId} V3 mechanical QA boundary is invalid`,
+    );
+    qaClips = new Map(Object.entries(qa.clips));
+  } else {
+    requireFact(
+      qa?.schema_version === profile.qaSchemaVersion &&
+        qa?.asset_id === assetId &&
+        qa?.passed === true &&
+        qa?.mechanical_qa === 'passed' &&
+        qa?.creative_approval === 'human_required' &&
+        qa?.provider_clip_count === 0 &&
+        qa?.local_authored_clip_count === spec.clips.length &&
+        qa?.clip_count === spec.clips.length &&
+        qa?.frame_count === expectedFrameCount &&
+        arraysEqual(qa?.canvas, [640, 640]) &&
+        Array.isArray(qa?.reject_reasons) &&
+        qa.reject_reasons.length === 0,
+      `${assetId} mechanical QA boundary is invalid`,
+    );
+    qaClips = new Map(
+      (Array.isArray(qa.clips) ? qa.clips : []).map((clip) => [
+        clip.clip,
+        clip,
+      ]),
+    );
+  }
   for (const expected of spec.clips) {
     const sourceClip = candidate.clips[expected.name];
     const qaClip = qaClips.get(expected.name);
-    requireFact(
-      qaClip?.passed === true &&
-        qaClip?.semantic_checks_passed === true &&
-        qaClip?.authoring_mode === 'native-authored' &&
-        qaClip?.frame_count === expected.frames &&
-        qaClip?.playback === expected.playback &&
-        qaClip?.fps === sourceClip.fps &&
-        Array.isArray(qaClip?.reject_reasons) &&
-        qaClip.reject_reasons.length === 0,
-      `${assetId}/${expected.name} mechanical QA is invalid`,
-    );
+    if (profile.perClip) {
+      const declaredHoldTargets = sourceClip.holds.flatMap((hold) =>
+        Array.from(
+          { length: hold.end_index - hold.start_index },
+          (_, index) => hold.start_index + index + 1,
+        ),
+      );
+      requireFact(
+        qaClip?.passed === true &&
+          qaClip?.frame_count === expected.frames &&
+          qaClip?.playback === expected.playback &&
+          qaClip?.fps === sourceClip.fps &&
+          qaClip?.source_fps === sourceClip.source_fps &&
+          qaClip?.cadence_profile === sourceClip.cadence_profile &&
+          qaClip?.authoring_method === sourceClip.authoring_method &&
+          qaClip?.interpolation_method ===
+            sourceClip.interpolation_method &&
+          JSON.stringify(qaClip?.holds) ===
+            JSON.stringify(sourceClip.holds) &&
+          JSON.stringify(qaClip?.markers) ===
+            JSON.stringify(sourceClip.markers) &&
+          Array.isArray(qaClip?.body_pose_sha256) &&
+          qaClip.body_pose_sha256.length === expected.frames &&
+          qaClip.body_pose_sha256.every((hash) => SHA256.test(hash)) &&
+          arraysEqual(
+            qaClip?.declared_hold_transition_targets,
+            declaredHoldTargets,
+          ) &&
+          Number.isInteger(qaClip?.distinct_body_pose_count) &&
+          qaClip.distinct_body_pose_count > 0 &&
+          Number.isFinite(qaClip?.distinct_body_pose_rate) &&
+          qaClip.distinct_body_pose_rate >= 30 &&
+          (
+            expected.playback === 'loop'
+              ? qaClip?.loop_closure_exact === true
+              : qaClip?.loop_closure_exact === null
+          ) &&
+          Array.isArray(qaClip?.false_hold_targets) &&
+          qaClip.false_hold_targets.length === 0 &&
+          Array.isArray(qaClip?.undeclared_duplicate_targets) &&
+          qaClip.undeclared_duplicate_targets.length === 0 &&
+          Array.isArray(qaClip?.reject_reasons) &&
+          qaClip.reject_reasons.length === 0,
+        `${assetId}/${expected.name} V3 temporal/mechanical QA is invalid`,
+      );
+      qaBodyPoseSha256.set(
+        expected.name,
+        [...qaClip.body_pose_sha256],
+      );
+    } else {
+      requireFact(
+        qaClip?.passed === true &&
+          qaClip?.semantic_checks_passed === true &&
+          qaClip?.authoring_mode === 'native-authored' &&
+          qaClip?.frame_count === expected.frames &&
+          qaClip?.playback === expected.playback &&
+          qaClip?.fps === sourceClip.fps &&
+          Array.isArray(qaClip?.reject_reasons) &&
+          qaClip.reject_reasons.length === 0,
+        `${assetId}/${expected.name} mechanical QA is invalid`,
+      );
+    }
   }
 
   const reviewArtifact =
@@ -454,6 +777,37 @@ function verifySourceAsset(root, batchRecord, spec) {
     `${assetId} review HTML`,
     MAX_REVIEW_HTML_BYTES,
   );
+  let temporalEvidenceSha256 = null;
+  if (profile.perClip) {
+    const temporalArtifact =
+      assetManifest?.artifacts?.motion_set_temporal_evidence;
+    requireFact(
+      temporalArtifact?.kind === 'review_evidence' &&
+        temporalArtifact?.path === candidate.temporal_evidence_path &&
+        temporalArtifact?.sha256 === candidate.temporal_evidence_sha256,
+      `${assetId} V3 temporal evidence registration is stale`,
+    );
+    const temporalRecord = readTrackedJson(
+      root,
+      temporalArtifact.path,
+      temporalArtifact.sha256,
+      `${assetId} temporal evidence`,
+    );
+    requireFact(
+      temporalRecord.value?.grammar ===
+        'gaf2d-motion-set-temporal-evidence-v3' &&
+        temporalRecord.value?.asset_id === assetId &&
+        temporalRecord.value?.candidate_id === candidate.candidate_id &&
+        arraysEqual(
+          temporalRecord.value?.clip_order,
+          candidate.clip_order,
+        ) &&
+        Array.isArray(temporalRecord.value?.clips) &&
+        temporalRecord.value.clips.length === candidate.clip_order.length,
+      `${assetId} V3 temporal evidence does not bind its complete candidate`,
+    );
+    temporalEvidenceSha256 = temporalArtifact.sha256;
+  }
 
   requireFact(
     Array.isArray(candidate?.frames) &&
@@ -476,7 +830,13 @@ function verifySourceAsset(root, batchRecord, spec) {
   );
 
   const frameHashesRelative =
-    `motion/${SOURCE_FAMILY}/${assetId}/frame-hashes.json`;
+    profile.pathsRelativeToBatch
+      ? batchArtifactPath(
+          profile,
+          batchRecord.frame_hashes_path,
+          `${assetId} frame hash manifest path`,
+        )
+      : `motion/${profile.sourceFamily}/${assetId}/frame-hashes.json`;
   const frameHashesFile = resolveInside(
     root,
     frameHashesRelative,
@@ -490,7 +850,12 @@ function verifySourceAsset(root, batchRecord, spec) {
     frameHashes?.schema_version === 1 &&
       frameHashes?.algorithm === 'sha256' &&
       isObject(frameHashes?.frames) &&
-      Object.keys(frameHashes.frames).length === expectedFrameIds.length,
+      Object.keys(frameHashes.frames).length === expectedFrameIds.length &&
+      (
+        !profile.perClip ||
+        batchRecord.frame_hashes_sha256 ===
+          sha256Bytes(frameHashesBytes)
+      ),
     `${assetId} frame hash manifest is invalid`,
   );
   const frames = new Map();
@@ -505,7 +870,7 @@ function verifySourceAsset(root, batchRecord, spec) {
       `${assetId}/${expectedFrameId} candidate frame authority is invalid`,
     );
     const frameRelative =
-      `motion/${SOURCE_FAMILY}/${assetId}/frames/${expectedFrameId}.png`;
+      `motion/${profile.sourceFamily}/${assetId}/frames/${expectedFrameId}.png`;
     const record = readTracked(
       root,
       frameRelative,
@@ -519,7 +884,7 @@ function verifySourceAsset(root, batchRecord, spec) {
     });
   }
 
-  return {
+  const source = {
     assetId,
     role: spec.role,
     manifestVersion: assetManifest.manifest_version,
@@ -532,10 +897,16 @@ function verifySourceAsset(root, batchRecord, spec) {
     frameHashesSha256: sha256Bytes(frameHashesBytes),
     reviewEvidenceSha256: reviewArtifact.sha256,
     reviewHtmlSha256: sha256Bytes(reviewHtmlRecord.bytes),
+    temporalEvidenceSha256,
     frameSize: { width: 640, height: 640 },
     frameIds: expectedFrameIds,
     frames,
+    bodyPoseSha256: qaBodyPoseSha256,
   };
+  if (profile.perClip) {
+    verifySmoothFrameCadence(source);
+  }
+  return source;
 }
 
 function toolOutput(command, arguments_, label) {
@@ -911,6 +1282,260 @@ function encoderFacts(toolFacts, encoderArguments) {
   };
 }
 
+function smoothPreviewLineage(source, batchSummarySha256) {
+  requireFact(
+    SHA256.test(source.temporalEvidenceSha256 || ''),
+    `${source.assetId} V3 temporal evidence hash is missing`,
+  );
+  return {
+    candidateId: source.candidate.candidate_id,
+    candidateSha256: source.candidateSha256,
+    temporalEvidenceSha256: source.temporalEvidenceSha256,
+    qaSummarySha256: source.qaSummarySha256,
+    batchSummarySha256,
+    sourceManifestVersion: source.manifestVersion,
+  };
+}
+
+function markerIndices(sourceClip, assetId, clipName) {
+  return Object.fromEntries(
+    Object.entries(sourceClip.markers).map(([role, frameId]) => {
+      const index = sourceClip.frame_ids.indexOf(frameId);
+      requireFact(
+        index >= 0,
+        `${assetId}/${clipName} marker "${role}" leaves its clip`,
+      );
+      return [role, index];
+    }),
+  );
+}
+
+function buildPerClipMotionSet({
+  source,
+  staged,
+  batchSummarySha256,
+  derivatives,
+  magickPath,
+  cwebpPath,
+  encoderArguments,
+  toolFacts,
+}) {
+  const relativeDirectory =
+    source.role === 'hero'
+      ? 'hero'
+      : path.posix.join('characters', source.assetId);
+  const outputDirectory = path.join(
+    staged,
+    ...relativeDirectory.split('/'),
+  );
+  fs.mkdirSync(outputDirectory, { recursive: true });
+  const sourceTrim = inspectUnionTrim(
+    source,
+    derivatives.inspectFrame,
+    magickPath,
+  );
+  const maximumClipFrames = Math.max(
+    ...source.candidate.clip_order.map(
+      (clipName) => source.candidate.clips[clipName].frame_ids.length,
+    ),
+  );
+  const decodedLimit =
+    source.role === 'character'
+      ? COMMON_DECODED_BYTES
+      : BOSS_DECODED_BYTES;
+  const geometry = choosePreviewGeometry(
+    maximumClipFrames,
+    source.frameSize,
+    sourceTrim,
+    decodedLimit,
+  );
+  const { trim, frameSize, scalePpm } = geometry;
+  const encoder = encoderFacts(toolFacts, encoderArguments);
+  const clipBuilds = new Map();
+  const cellBounds = new Map();
+
+  for (const clipName of source.candidate.clip_order) {
+    const sourceClip = source.candidate.clips[clipName];
+    const matrix = chooseDerivativeMatrix(
+      sourceClip.frame_ids.length,
+      trim.width,
+      trim.height,
+      decodedLimit,
+    );
+    const image = derivatives.buildAtlas({
+      frameIds: sourceClip.frame_ids,
+      normalizationFacts: { frames: source.frames },
+      sourceTrim,
+      atlasFacts: { trim },
+      staged: outputDirectory,
+      matrix,
+      magickPath,
+      cwebpPath,
+      encoderArguments,
+      outputName: `${clipName}.webp`,
+      workPrefix: `${source.assetId}-${clipName}`,
+    });
+    const imageBytes = Buffer.from(image.webpBytes);
+    mergeCellBounds(
+      cellBounds,
+      sourceClip.frame_ids,
+      image.cellBounds,
+      `${source.assetId}/${clipName}`,
+    );
+    clipBuilds.set(clipName, { image, imageBytes, matrix });
+  }
+
+  const presentation = presentationRecord(source, cellBounds);
+  const descriptorBuilds = new Map();
+  const setClips = {};
+  const manifestClips = {};
+  for (const clipName of source.candidate.clip_order) {
+    const sourceClip = source.candidate.clips[clipName];
+    const { image, imageBytes, matrix } = clipBuilds.get(clipName);
+    const rectangles = frameRectangles(
+      sourceClip.frame_ids,
+      matrix,
+      trim,
+    );
+    const descriptor = {
+      grammar: MOTION_CLIP_GRAMMAR,
+      authority: 'unapproved_preview',
+      sourceFamily: SMOOTH_SOURCE_FAMILY,
+      assetId: source.assetId,
+      name: clipName,
+      playback: sourceClip.playback,
+      fps: sourceClip.fps,
+      sourceFps: sourceClip.source_fps,
+      cadenceProfile: sourceClip.cadence_profile,
+      authoringMethod: sourceClip.authoring_method,
+      interpolationMethod: sourceClip.interpolation_method,
+      holds: sourceClip.holds.map((hold) => ({
+        startIndex: hold.start_index,
+        endIndex: hold.end_index,
+        reason: hold.reason,
+      })),
+      markers: markerIndices(
+        sourceClip,
+        source.assetId,
+        clipName,
+      ),
+      frames: rectangles.map((rectangle, index) => ({
+        ...rectangle,
+        sourceSha256:
+          source.frames.get(sourceClip.frame_ids[index]).sha256,
+        bodyPoseSha256:
+          source.bodyPoseSha256.get(clipName)[index],
+      })),
+      atlas: {
+        width: image.webpDimensions.width,
+        height: image.webpDimensions.height,
+        bytes: imageBytes.length,
+        sha256: sha256Bytes(imageBytes),
+      },
+      encoder,
+    };
+    const descriptorBytes = writeCanonical(
+      path.join(outputDirectory, `${clipName}.json`),
+      descriptor,
+    );
+    const descriptorSha256 = sha256Bytes(descriptorBytes);
+    const imageSha256 = sha256Bytes(imageBytes);
+    setClips[clipName] = {
+      descriptor: `${clipName}.json`,
+      descriptorSha256,
+      image: `${clipName}.webp`,
+      imageSha256,
+    };
+    const publicBase =
+      `.gaf2d-preview/${relativeDirectory}`;
+    manifestClips[clipName] = {
+      descriptor: `${publicBase}/${clipName}.json`,
+      descriptorSha256,
+      image: `${publicBase}/${clipName}.webp`,
+      imageSha256,
+    };
+    descriptorBuilds.set(clipName, {
+      descriptor,
+      descriptorSha256,
+      imageSha256,
+      imageBytes: imageBytes.length,
+    });
+  }
+
+  const set = {
+    grammar: MOTION_SET_INDEX_GRAMMAR,
+    authority: 'unapproved_preview',
+    status: 'human_review_required',
+    sourceFamily: SMOOTH_SOURCE_FAMILY,
+    assetId: source.assetId,
+    role: source.role,
+    frameSize,
+    trim,
+    pivot: { x: 0.5, y: 1 },
+    presentation,
+    clips: setClips,
+    previewLineage: smoothPreviewLineage(
+      source,
+      batchSummarySha256,
+    ),
+    toolchain: {
+      grammar: PREVIEW_DERIVATIVE_TOOLCHAIN.grammar,
+      compositor: { ...DERIVATIVE_TOOLCHAIN.compositor },
+      encoder,
+      operations: [...PREVIEW_DERIVATIVE_TOOLCHAIN.operations],
+      profileSha256: HERO_PREVIEW_MATRIX_PROFILE_SHA256,
+    },
+  };
+  const setErrors = validateMotionSetIndex(
+    set,
+    source.assetId,
+    { role: source.role },
+  );
+  requireFact(
+    setErrors.length === 0,
+    `${source.assetId} V2 motion-set index failed runtime validation: ${setErrors.join('; ')}`,
+  );
+  for (const clipName of source.candidate.clip_order) {
+    const build = descriptorBuilds.get(clipName);
+    const descriptorErrors = validateMotionClipDescriptor(
+      build.descriptor,
+      clipName,
+      set,
+      {
+        role: source.role,
+        descriptorSha256: build.descriptorSha256,
+        imageSha256: build.imageSha256,
+        imageBytes: build.imageBytes,
+      },
+    );
+    requireFact(
+      descriptorErrors.length === 0,
+      `${source.assetId}/${clipName} V2 clip descriptor failed runtime validation: ${descriptorErrors.join('; ')}`,
+    );
+  }
+  const setBytes = writeCanonical(
+    path.join(outputDirectory, 'set.json'),
+    set,
+  );
+  const publicBase = `.gaf2d-preview/${relativeDirectory}/`;
+  return {
+    authority: 'unapproved_preview',
+    assetId: source.assetId,
+    role: source.role,
+    basePath: publicBase,
+    set: `${publicBase}set.json`,
+    setSha256: sha256Bytes(setBytes),
+    clips: manifestClips,
+    transform: {
+      scalePpm,
+      sourceFrameSize: source.frameSize,
+      sourceTrim,
+      runtimeFrameSize: frameSize,
+      runtimeTrim: trim,
+    },
+  };
+}
+
 function writeCanonical(file, value) {
   fs.writeFileSync(file, canonicalJson(value), {
     encoding: 'utf8',
@@ -1200,12 +1825,22 @@ function sourceManifestRecord(source) {
     reviewEvidenceSha256: source.reviewEvidenceSha256,
     reviewHtmlSha256: source.reviewHtmlSha256,
     sourceManifestVersion: source.manifestVersion,
+    ...(source.temporalEvidenceSha256
+      ? { temporalEvidenceSha256: source.temporalEvidenceSha256 }
+      : {}),
   };
 }
 
 export function buildGaf2dPreview(options = {}) {
   requireFact(options.gaf2dProjectRoot, 'GAF2D project root is required');
   requireFact(options.outputRoot, 'preview output root is required');
+  const sourceFamily =
+    options.sourceFamily ?? LEGACY_SOURCE_FAMILY;
+  const profile = SOURCE_PROFILES[sourceFamily];
+  requireFact(
+    profile,
+    `source family must be "${LEGACY_SOURCE_FAMILY}" or "${SMOOTH_SOURCE_FAMILY}"`,
+  );
   const sourceRoot = path.resolve(options.gaf2dProjectRoot);
   const outputRoot = path.resolve(options.outputRoot);
   const sourceStats = fs.lstatSync(sourceRoot);
@@ -1221,23 +1856,28 @@ export function buildGaf2dPreview(options = {}) {
 
   const batchFile = resolveInside(
     sourceRoot,
-    BATCH_RELATIVE,
+    profile.batchRelative,
     'batch summary',
   );
   const { bytes: batchBytes, value: batch } =
     readJsonBytes(batchFile, 'batch summary');
-  verifyBatch(batch);
+  verifyBatch(batch, profile);
   const batchSummarySha256 = sha256Bytes(batchBytes);
   const batchByAsset = new Map(
     batch.assets.map((record) => [record.asset_id, record]),
   );
   requireFact(
-    batchByAsset.size === EXPECTED_COUNTS.assets &&
-      ASSET_SPECS.every((spec) => batchByAsset.has(spec.assetId)),
+    batchByAsset.size === profile.counts.assets &&
+      profile.specs.every((spec) => batchByAsset.has(spec.assetId)),
     'batch asset membership differs from the exact APN preview cast',
   );
-  const sources = ASSET_SPECS.map((spec) =>
-    verifySourceAsset(sourceRoot, batchByAsset.get(spec.assetId), spec),
+  const sources = profile.specs.map((spec) =>
+    verifySourceAsset(
+      sourceRoot,
+      batchByAsset.get(spec.assetId),
+      spec,
+      profile,
+    ),
   );
 
   const encoderArguments =
@@ -1280,7 +1920,23 @@ export function buildGaf2dPreview(options = {}) {
     const characters = {};
     let hero;
     for (const source of sources) {
-      if (source.role === 'hero') {
+      if (profile.perClip) {
+        const result = buildPerClipMotionSet({
+          source,
+          staged,
+          batchSummarySha256,
+          derivatives,
+          magickPath,
+          cwebpPath,
+          encoderArguments,
+          toolFacts,
+        });
+        if (source.role === 'hero') {
+          hero = result;
+        } else {
+          characters[source.assetId] = result;
+        }
+      } else if (source.role === 'hero') {
         hero = buildHero({
           source,
           staged,
@@ -1309,9 +1965,9 @@ export function buildGaf2dPreview(options = {}) {
       grammar: PREVIEW_MANIFEST_GRAMMAR,
       authority: 'unapproved_preview',
       status: 'human_review_required',
-      sourceFamily: SOURCE_FAMILY,
+      sourceFamily,
       packId: 'valorant',
-      counts: { ...EXPECTED_COUNTS },
+      counts: { ...profile.counts },
       source: {
         batchSummarySha256,
         contract: batch.contract,
@@ -1355,7 +2011,7 @@ export function buildGaf2dPreview(options = {}) {
       passed: true,
       authority: 'unapproved_preview',
       status: 'human_review_required',
-      counts: { ...EXPECTED_COUNTS },
+      counts: { ...profile.counts },
       manifestSha256: sha256Bytes(manifestBytes),
       output: path.basename(outputRoot),
       warnings: publish.cleanupWarning ? [publish.cleanupWarning] : [],
@@ -1372,6 +2028,7 @@ function parseArguments(argv) {
   const allowed = new Set([
     '--gaf2d-project',
     '--output',
+    '--source-family',
     '--cwebp',
     '--magick',
   ]);
@@ -1403,6 +2060,9 @@ function main() {
     const result = buildGaf2dPreview({
       gaf2dProjectRoot: values['--gaf2d-project'],
       outputRoot: values['--output'],
+      ...(values['--source-family']
+        ? { sourceFamily: values['--source-family'] }
+        : {}),
       ...(values['--cwebp']
         ? { cwebpPath: values['--cwebp'] }
         : {}),
