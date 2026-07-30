@@ -247,8 +247,9 @@ const bossPresentation = {
   visibleBounds: { x: 8, y: 8, width: 40, height: 40 },
   motionBounds: { x: 3, y: 3, width: 50, height: 50 },
 };
+const heroPresentation = legacySquarePresentation();
 const actors = [
-  { role: 'hero', presentation: legacySquarePresentation() },
+  { role: 'hero', presentation: heroPresentation },
   { role: 'standard', presentation },
   { role: 'boss', presentation: bossPresentation },
 ];
@@ -259,9 +260,65 @@ assert(
       bannerClearance: 78,
       actors,
     }),
-    0.8,
+    0.875,
   ),
-  'actor-list stage fit uses the tallest role motion envelope',
+  'mixed-cast stage fit uses the greatest ground-to-envelope-top reach',
+);
+
+const heroFit = stageFitForActors({
+  groundY: 174,
+  bannerClearance: 78,
+  actors: [{ role: 'hero', presentation: heroPresentation }],
+});
+const fittedHero = resolveActorGeometry({
+  actorX: 100,
+  groundY: 174,
+  fit: heroFit,
+  role: 'hero',
+  frameSize: { width: 128, height: 128 },
+  trim: { x: 0, y: 0, width: 128, height: 128 },
+  pivot: { x: 0.5, y: 1 },
+  presentation: heroPresentation,
+});
+assert(
+  close(heroFit, 0.9411764705882353) &&
+    close(fittedHero.motionEnvelope.top, 78),
+  'Hero visual gap is included when fitting below stage chrome',
+);
+
+const asymmetricPresentation = {
+  schemaVersion: 1,
+  scaleContract: 'visible-body',
+  reference: {
+    clip: 'idle',
+    frameIndex: 0,
+    sourceSha256: 'c'.repeat(64),
+  },
+  visibleBounds: { x: 8, y: 10, width: 40, height: 40 },
+  motionBounds: { x: 3, y: 2, width: 50, height: 60 },
+};
+const asymmetricFit = stageFitForActors({
+  groundY: 148.72,
+  bannerClearance: 78,
+  actors: [
+    { role: 'standard', presentation: asymmetricPresentation },
+  ],
+});
+const fittedAsymmetricActor = resolveActorGeometry({
+  actorX: 100,
+  groundY: 148.72,
+  fit: asymmetricFit,
+  role: 'standard',
+  frameSize: { width: 64, height: 64 },
+  trim: { x: 0, y: 0, width: 64, height: 64 },
+  pivot: { x: 0.5, y: 1 },
+  presentation: asymmetricPresentation,
+});
+assert(
+  close(asymmetricFit, 0.8) &&
+    close(fittedAsymmetricActor.motionEnvelope.top, 78) &&
+    fittedAsymmetricActor.motionEnvelope.bottom > 148.72,
+  'asymmetric motion fit uses top reach without charging below-body extent',
 );
 assert(
   stageFitForActors({ groundY: 400, bannerClearance: 78, actors }) === 1 &&

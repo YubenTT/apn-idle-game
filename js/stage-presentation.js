@@ -437,11 +437,16 @@ export function stageFitForActors(options = {}) {
     actorErrors.push(...errors.map((error) => `actors[${index}]: ${error}`));
     if (errors.length) continue;
     const role = STAGE_ROLE_PRESENTATION[actor.role];
+    const visibleBottom =
+      actor.presentation.visibleBounds.y +
+      actor.presentation.visibleBounds.height;
+    const motionTop = actor.presentation.motionBounds.y;
     requiredHeight = Math.max(
       requiredHeight,
-      role.visibleBodyHeight *
-        (actor.presentation.motionBounds.height /
-          actor.presentation.visibleBounds.height),
+      role.visualGap +
+        role.visibleBodyHeight *
+          ((visibleBottom - motionTop) /
+            actor.presentation.visibleBounds.height),
     );
   }
   if (actorErrors.length) throw new Error(actorErrors.join('; '));
