@@ -87,7 +87,7 @@ const inlineRole = (role) => {
     `${role} ${visibleBodyHeight}/${visualGap} inline pair`,
     new RegExp(
       `\`${role}\`\\s+${visibleBodyHeight}(?:\\s*px)?\\s*\\/\\s*` +
-        `${visualGap}(?:\\s*px)?`,
+        `${visualGap}(?!\\d)(?:\\s*px)?`,
     ),
   );
 };
