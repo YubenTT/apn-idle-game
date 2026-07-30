@@ -105,7 +105,7 @@ const motionPreference = createMotionPreferenceController({
   state: s,
   applyReducedMotion: setReducedMotion,
   onEffectiveChange() {
-    draw(view.ctx, view.w, view.h, s, assetStore);
+    draw(view.ctx, view.w, view.h, s, assetStore, view.stageClearance);
     renderHUD(s, C.FIXED_DT);
   },
 });
@@ -343,7 +343,7 @@ function advanceQaTime(milliseconds) {
     syncMotionWindow();
     syncLegacyCreatureOwner();
   }
-  draw(view.ctx, view.w, view.h, s, assetStore);
+  draw(view.ctx, view.w, view.h, s, assetStore, view.stageClearance);
   renderHUD(s, Math.max(C.FIXED_DT, amount / 1000));
   return renderGameToText();
 }
@@ -579,7 +579,7 @@ function frame(now) {
   syncRouteAssets();
   syncMotionWindow();
   syncLegacyCreatureOwner();
-  draw(view.ctx, view.w, view.h, s, assetStore);
+  draw(view.ctx, view.w, view.h, s, assetStore, view.stageClearance);
 
   if (qaMetricsEnabled) {
     qaFrameCount += 1;
@@ -616,7 +616,7 @@ async function boot() {
   const currentRequests = currentMotionRequests();
   releaseColdMotion(assetStore.motionStore, motionKeepKeys(currentRequests));
   await warmMotionRequests(currentRequests);
-  draw(view.ctx, view.w, view.h, s, assetStore);
+  draw(view.ctx, view.w, view.h, s, assetStore, view.stageClearance);
   renderHUD(s, C.FIXED_DT);
   performance.mark?.('apn-first-playable');
   document.documentElement.dataset.firstPlayable = 'ready';

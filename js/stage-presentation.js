@@ -13,7 +13,7 @@ export const STAGE_ROLE_PRESENTATION = Object.freeze({
 const SHA256 = /^[a-f0-9]{64}$/;
 const MAX_ERRORS = 32;
 const MAX_ACTORS = 64;
-const OVERHEAD_GAP = 10;
+export const STAGE_OVERHEAD_GAP = 10;
 const PRESENTATION_KEYS = new Set([
   'schemaVersion',
   'scaleContract',
@@ -349,8 +349,8 @@ export function resolveActorGeometry(input = {}) {
   const anchors = Object.freeze({
     shadowX: body.centerX,
     shadowY: groundY,
-    hpY: motionEnvelope.top - OVERHEAD_GAP,
-    floaterY: motionEnvelope.top - OVERHEAD_GAP * 2,
+    hpY: motionEnvelope.top - STAGE_OVERHEAD_GAP,
+    floaterY: motionEnvelope.top - STAGE_OVERHEAD_GAP * 2,
     auraX: body.centerX,
     auraY: body.centerY,
     hitX: body.centerX,
@@ -426,7 +426,8 @@ export function stageFitForActors(options = {}) {
   if (optionErrors.length) throw new RangeError(optionErrors.join('; '));
   if (actors.length === 0) return maxFit;
 
-  let requiredHeight = 0;
+  const availableHeight = groundY - bannerClearance;
+  let fitLimit = maxFit;
   const actorErrors = [];
   for (const [index, actor] of actors.entries()) {
     if (!isObject(actor) || !Object.hasOwn(STAGE_ROLE_PRESENTATION, actor.role)) {
@@ -436,23 +437,31 @@ export function stageFitForActors(options = {}) {
     const errors = validatePresentationRecord(actor.presentation);
     actorErrors.push(...errors.map((error) => `actors[${index}]: ${error}`));
     if (errors.length) continue;
+    const overheadClearance = actor.overheadClearance ?? 0;
+    if (!finite(overheadClearance)) {
+      actorErrors.push(
+        `actors[${index}].overheadClearance: must be a finite non-negative number`,
+      );
+      continue;
+    }
     const role = STAGE_ROLE_PRESENTATION[actor.role];
     const visibleBottom =
       actor.presentation.visibleBounds.y +
       actor.presentation.visibleBounds.height;
     const motionTop = actor.presentation.motionBounds.y;
-    requiredHeight = Math.max(
-      requiredHeight,
+    const requiredHeight =
       role.visualGap +
-        role.visibleBodyHeight *
-          ((visibleBottom - motionTop) /
-            actor.presentation.visibleBounds.height),
+      role.visibleBodyHeight *
+        ((visibleBottom - motionTop) /
+          actor.presentation.visibleBounds.height);
+    fitLimit = Math.min(
+      fitLimit,
+      (availableHeight - overheadClearance) / requiredHeight,
     );
   }
   if (actorErrors.length) throw new Error(actorErrors.join('; '));
-  const availableHeight = groundY - bannerClearance;
   return Math.min(
     maxFit,
-    Math.max(minFit, availableHeight / requiredHeight),
+    Math.max(minFit, fitLimit),
   );
 }

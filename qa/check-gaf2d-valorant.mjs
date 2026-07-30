@@ -22,6 +22,7 @@ import {
 import { creatureKindFor, TIPS } from '../js/content.js';
 import {
   bossBannerFor,
+  draw,
   drawEnemy,
   bossTimerYFor,
   enemyFrameFor,
@@ -43,6 +44,10 @@ import {
   packWavePairIdentityUnion,
   targetForEnemyType,
 } from '../js/wave-roster.js';
+import {
+  legacySquarePresentation,
+  stageFitForActors,
+} from '../js/stage-presentation.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const packDir = path.join(root, 'assets/game-packs/valorant');
@@ -721,6 +726,92 @@ assert(
     Math.abs(compactLabel?.args?.[2] - 232.34615384615387) < 1e-9 &&
     Math.abs(compactTrack?.pathTop - 242.34615384615387) < 1e-9,
   'compact HP/name plate is one functional envelope-anchored component',
+);
+const landscapeGroundY = 216 * 0.86;
+const landscapeStageSafeTop = 103;
+const landscapeFit = stageFitForActors({
+  groundY: landscapeGroundY,
+  bannerClearance: landscapeStageSafeTop,
+  actors: [
+    {
+      role: 'hero',
+      presentation: legacySquarePresentation(),
+    },
+    {
+      role: 'standard',
+      presentation: syntheticRecord.descriptor.presentation,
+      overheadClearance: 40,
+    },
+  ],
+});
+const landscapePlateProbe = createStageAnchorProbe();
+drawEnemy(
+  landscapePlateProbe.ctx,
+  syntheticEnemy,
+  landscapeGroundY,
+  1.25,
+  syntheticPackAssets,
+  syntheticStore,
+  false,
+  landscapeFit,
+  {
+    ...syntheticEnv,
+    stageClearance: landscapeStageSafeTop,
+  },
+);
+const landscapePlate = landscapePlateProbe.events.find(
+  ({ method, pathHeight }) =>
+    method === 'fill' && pathHeight >= 20,
+);
+assert(
+  landscapePlate?.pathTop >= landscapeStageSafeTop &&
+    landscapePlate.pathTop + landscapePlate.pathHeight <= landscapeGroundY,
+  `844x390 functional HP/name plate stays inside the visible Canvas stage (${JSON.stringify({
+    landscapeFit,
+    safeTop: landscapeStageSafeTop,
+    plateTop: landscapePlate?.pathTop,
+    plateBottom:
+      landscapePlate?.pathTop === null ||
+      landscapePlate?.pathTop === undefined
+        ? null
+        : landscapePlate.pathTop + landscapePlate.pathHeight,
+    groundY: landscapeGroundY,
+  })})`,
+);
+const intermediateState = createState();
+intermediateState.world.enemies = [
+  {
+    ...syntheticEnemy,
+    id: 'intermediate-height-runner',
+  },
+];
+globalThis.document.createElement ??= () => ({
+  width: 0,
+  height: 0,
+  getContext: () => createStageAnchorProbe().ctx,
+});
+draw(
+  createStageAnchorProbe().ctx,
+  844,
+  260,
+  intermediateState,
+  null,
+  105,
+);
+const intermediateGeometry = intermediateState.world.actorGeometries.get(
+  'intermediate-height-runner',
+);
+assert(
+  intermediateState.world.stageFit < 0.92 &&
+    intermediateGeometry.anchors.hpY - 30 >= 105,
+  `compact recompute cannot cross back into the full-plate branch (${JSON.stringify({
+    fit: intermediateState.world.stageFit,
+    hpY: intermediateGeometry?.anchors.hpY,
+    compactPlateTop:
+      intermediateGeometry === undefined
+        ? null
+        : intermediateGeometry.anchors.hpY - 30,
+  })})`,
 );
 const authoredDeathProbe = createStageAnchorProbe();
 const authoredDeathGeometry = drawEnemy(

@@ -10,6 +10,7 @@ import {
   pickV3,
 } from './hero-v3.js?v=gaf2d-motion-v1';
 import {
+  STAGE_OVERHEAD_GAP,
   STAGE_ROLE_PRESENTATION,
   legacySquarePresentation,
   resolveActorGeometry,
@@ -39,6 +40,25 @@ const LEGACY_ENEMY_INTRINSICS = Object.freeze({
   pivot: Object.freeze({ x: 0.5, y: 1 }),
   presentation: LEGACY_ENEMY_PRESENTATION,
 });
+const STAGE_CLEARANCE_FALLBACK = 78;
+const STAGE_CLEARANCE_MARGIN = 2;
+const ENEMY_PLATE_COMPACT_FIT = 0.92;
+const ENEMY_PLATE_HEIGHT = Object.freeze({
+  compact: 30,
+  standard: 54,
+  boss: 62,
+});
+
+function enemyPlateHeight(role, fit) {
+  if (fit < ENEMY_PLATE_COMPACT_FIT) return ENEMY_PLATE_HEIGHT.compact;
+  return role === 'boss'
+    ? ENEMY_PLATE_HEIGHT.boss
+    : ENEMY_PLATE_HEIGHT.standard;
+}
+
+function enemyPlateClearance(role, fit) {
+  return STAGE_OVERHEAD_GAP + enemyPlateHeight(role, fit);
+}
 
 /** Enemy type is trusted game state; asset IDs never self-assign scale. */
 export function stageRoleForEnemy(enemy) {
@@ -133,10 +153,24 @@ export function sizeCanvas(canvas) {
   canvas.style.height = `${h}px`;
   const ctx = canvas.getContext('2d');
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  return { w, h, ctx };
+  const stageHud = parent.querySelector?.('.stage-hud');
+  const stageClearance =
+    Number.isFinite(stageHud?.offsetTop) &&
+    Number.isFinite(stageHud?.offsetHeight)
+      ? Math.ceil(stageHud.offsetTop + stageHud.offsetHeight) +
+        STAGE_CLEARANCE_MARGIN
+      : STAGE_CLEARANCE_FALLBACK;
+  return { w, h, ctx, stageClearance };
 }
 
-export function draw(ctx, w, h, s, assetStore = null) {
+export function draw(
+  ctx,
+  w,
+  h,
+  s,
+  assetStore = null,
+  stageClearance = STAGE_CLEARANCE_FALLBACK,
+) {
   const gy = h * 0.86;
   s.world.groundY = gy;
   const t = s.world.time;
@@ -163,22 +197,37 @@ export function draw(ctx, w, h, s, assetStore = null) {
       }),
     ]),
   );
-  const stageFit = stageFitForActors({
-    groundY: gy,
-    bannerClearance: 78,
-    actors: [
-      {
-        role: 'hero',
-        presentation: heroIntrinsicGeometry().presentation,
-      },
-      ...show.map((enemy) => ({
-        role: stageRoleForEnemy(enemy),
+  const heroStageActor = {
+    role: 'hero',
+    presentation: heroIntrinsicGeometry().presentation,
+  };
+  const enemyStageActors = (plateFit) =>
+    show.map((enemy) => {
+      const role = stageRoleForEnemy(enemy);
+      return {
+        role,
         presentation: enemyIntrinsicsForMotion(
           motionInfoByEnemyId.get(enemy.id),
         ).presentation,
-      })),
-    ],
-  });
+        overheadClearance: enemyPlateClearance(role, plateFit),
+      };
+    });
+  const fitForPlateMode = (plateFit) =>
+    stageFitForActors({
+      groundY: gy,
+      bannerClearance: stageClearance,
+      actors: [
+        heroStageActor,
+        ...enemyStageActors(plateFit),
+      ],
+    });
+  let stageFit = fitForPlateMode(1);
+  if (show.length && stageFit < ENEMY_PLATE_COMPACT_FIT) {
+    stageFit = Math.min(
+      fitForPlateMode(ENEMY_PLATE_COMPACT_FIT - Number.EPSILON),
+      ENEMY_PLATE_COMPACT_FIT - Number.EPSILON,
+    );
+  }
   s.world.stageFit = stageFit;
 
   ctx.save();
@@ -212,6 +261,7 @@ export function draw(ctx, w, h, s, assetStore = null) {
       stageFit,
       {
         ...enemyEnv,
+        stageClearance,
         motionInfo: motionInfoByEnemyId.get(e.id),
       },
     );
@@ -818,11 +868,18 @@ export function drawEnemy(ctx, e, gy, t, packAssets = null, assetStore = null, r
   }
 
   const barW = isBoss ? 148 : 124;
-  const compact = fit < 0.92; // short stages (landscape): slim nameplate, no big card
-  const bannerH = compact ? 30 : isBoss ? 62 : 54;
+  const compact = fit < ENEMY_PLATE_COMPACT_FIT;
+  const bannerH = enemyPlateHeight(geometry.role, fit);
   const plateW = compact ? Math.max(64, barW * 0.62) : barW;
   const plateX = x - plateW / 2;
-  const barY = geometry.anchors.hpY - bannerH;
+  const anchoredBarY = geometry.anchors.hpY - bannerH;
+  const stageSafeTop = Number.isFinite(env?.stageClearance)
+    ? env.stageClearance
+    : anchoredBarY;
+  const barY = Math.min(
+    geometry.anchors.shadowY - bannerH,
+    Math.max(anchoredBarY, stageSafeTop),
+  );
   const ratio = clamp(e.hp / e.hpMax, 0, 1);
   ctx.fillStyle = compact ? 'rgba(7,16,25,0.88)' : 'rgba(7,16,25,0.94)';
   roundRect(ctx, plateX, barY, plateW, bannerH, compact ? 7 : 10);

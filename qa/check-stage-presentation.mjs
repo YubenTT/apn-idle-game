@@ -320,6 +320,27 @@ assert(
     fittedAsymmetricActor.motionEnvelope.bottom > 148.72,
   'asymmetric motion fit uses top reach without charging below-body extent',
 );
+const overheadFit = stageFitForActors({
+  groundY: 185.76,
+  bannerClearance: 103,
+  actors: [
+    {
+      role: 'standard',
+      presentation,
+      overheadClearance: 40,
+    },
+  ],
+});
+const fittedOverheadActor = resolveActorGeometry({
+  ...geometryInput,
+  groundY: 185.76,
+  fit: overheadFit,
+});
+assert(
+  close(overheadFit, 42.76 / 81.2) &&
+    close(fittedOverheadActor.motionEnvelope.top - 40, 103),
+  'stage fit reserves fixed overhead clearance without scaling it twice',
+);
 assert(
   stageFitForActors({ groundY: 400, bannerClearance: 78, actors }) === 1 &&
     stageFitForActors({ groundY: 90, bannerClearance: 78, actors }) === 0.5 &&
@@ -338,6 +359,22 @@ rejects(
   () => stageFitForActors({ groundY: Number.NaN, actors }),
   'stage fit rejects non-finite stage geometry',
 );
+for (const overheadClearance of [-1, Number.POSITIVE_INFINITY]) {
+  rejects(
+    () =>
+      stageFitForActors({
+        groundY: 200,
+        actors: [
+          {
+            role: 'standard',
+            presentation,
+            overheadClearance,
+          },
+        ],
+      }),
+    `stage fit rejects invalid overhead clearance ${overheadClearance}`,
+  );
+}
 
 if (failures) {
   console.error(`STAGE PRESENTATION FAIL (${failures})`);

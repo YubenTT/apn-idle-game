@@ -280,7 +280,7 @@ const currentWarmIndex = bootSource.indexOf(
   'await warmMotionRequests(currentRequests)',
 );
 const firstDrawIndex = bootSource.indexOf(
-  'draw(view.ctx, view.w, view.h, s, assetStore)',
+  'draw(view.ctx, view.w, view.h, s, assetStore, view.stageClearance)',
 );
 const readyMarkerIndex = bootSource.indexOf(
   "dataset.firstPlayable = 'ready'",
