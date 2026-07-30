@@ -195,3 +195,58 @@ Original prompt: Complete the APN Idle redesign autonomously, including QA, revi
   CSS classing, and audio/haptics gating.
 - Deterministic QA added at `qa/check-motion-preference.mjs` and wired into
   `qa/run-tests.mjs`; focused check and full `node qa/run-tests.mjs` end green.
+
+## 2026-07-30 localhost authored-motion gameplay proof
+
+- Added a separate `unapproved_preview` runtime authority that activates only
+  on exact `127.0.0.1` or `localhost` plus `motion-preview=1`. Normal gameplay
+  keeps the unchanged production catalog, makes zero preview requests, and
+  shows no preview banner.
+- The ignored `.gaf2d-preview/` derivative binds the current mechanically
+  passing, creatively unapproved GAF2D batch: 7 assets, 39 clips, 276 frames,
+  batch SHA-256
+  `29d8137159038631dfc279bdd789def5dcdd31842fe21c6dced64feca623adb5`.
+  Its portable manifest SHA-256 is
+  `f4671b39ee56e45c091d00645dc3b02893f2790ab5d640595e5b497d8dc8c0a2`.
+- The builder verifies current GAF2D manifests, candidates, QA evidence,
+  descriptors, and every frame hash before a pinned ImageMagick 7.1.2-13 /
+  cwebp 1.6.0 transform. Two sequential rebuilds produced the same 30-file
+  projection SHA-256
+  `ee203b4d89ac3507dd6ae219bf23f5b832547be26dc89e5b2c2dba7c86e18b71`.
+- Runtime activation verifies the root manifest, Hero set, eight Hero
+  descriptors, six creature descriptors, and every media hash. Any stale or
+  corrupt member blocks the entire overlay and visibly reports a safe
+  fallback.
+- Browser evidence covered Hero `run`, `sprint`, `attack`, `crit`, `hit`,
+  `death`, and `celebrate`; all six Wave 1/2/3/5/9/10 identities; and Site
+  Warden `advance`, `engaged`, `hit`, `broken`, and `death`. Active asset,
+  candidate hash, authority, clip, clip FPS, and frame index were observable;
+  changed-frame evidence was present and fallback count stayed zero.
+- Portrait 390×844 and live landscape 844×390 gameplay have zero horizontal
+  overflow. Preview media returned 200, the browser console stayed at zero
+  errors, and reduced-motion preserved one timestamp loop and one progress
+  clip while suppressing nonessential effects.
+- A fixed 60 Hz simulation sampled under 60 Hz and 120 Hz repaint schedules
+  selects identical authored frames. Clip FPS, not display refresh rate,
+  controls playback, and fixed-duration clips use equal frame-time bins.
+- Independent reviews caught and closed every release-blocking timing and trust
+  defect before handoff: outgoing Hero strikes no longer masquerade as incoming
+  damage, preview activation verifies all eight Hero and six creature WebP
+  bodies, continuous combat cannot truncate a clip, and fixed-duration frames
+  own equal time bins.
+- Hero combat semantics now keep actual RNG crit state separate from ordinary
+  attack and incoming hit state. The visible V3 renderer and diagnostics share
+  the same selector; attack/crit (8 frames at 16 FPS), hit (4 at 16 FPS), and
+  death (8 at 16 FPS) each advance forward through their complete authored
+  sequence at both 60 Hz and 120 Hz.
+- Continuous base and sprint combat use a single-slot visual queue: the current
+  attack/crit clip reaches its final frame before the latest pending strike
+  begins, with crit state latched and combat math unchanged. Reduced-motion
+  keeps essential hit/death semantics while suppressing secondary transforms.
+- Preview media preflight reads image bodies sequentially, enforces bounded
+  runtime safety caps, and fails the entire overlay closed on a missing,
+  oversized, or SHA-mismatched WebP. Normal mode still performs zero preview
+  fetches.
+- No paid-provider call, network generation, private-media upload, creative
+  approval, rig authoring, export, push, or deploy occurred. The remaining gate
+  is the owner's approve/reject decision for the complete authored motion set.

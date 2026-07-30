@@ -39,7 +39,7 @@
 - Produces: `loadHeroV3(basePath, { allowUnapprovedPreview })`.
 - Preserves: `validateMotionBundle`, approved Hero contracts, and every existing default call.
 
-- [ ] **Step 1: Write failing preview-validator tests**
+- [x] **Step 1: Write failing preview-validator tests**
 
 Add fixtures whose top level contains:
 
@@ -59,7 +59,7 @@ Add fixtures whose top level contains:
 
 Assert that the preview validator accepts exact geometry/clip data, the production validator rejects it, unknown/approval fields are rejected, and a normal motion store rejects preview data unless `allowUnapprovedPreview: true` and the pack record also declares `authority: 'unapproved_preview'`.
 
-- [ ] **Step 2: Run focused tests and confirm red**
+- [x] **Step 2: Run focused tests and confirm red**
 
 Run:
 
@@ -71,11 +71,11 @@ node qa/check-hero-v3-runtime.mjs
 
 Expected: failure because the preview grammar and opt-in loader interfaces do not exist.
 
-- [ ] **Step 3: Implement separate preview validators**
+- [x] **Step 3: Implement separate preview validators**
 
 Refactor shared bounded geometry/clip validation behind an internal mode object, while keeping production lineage and encoder checks byte-for-byte equivalent. Preview mode must require the exact preview lineage fields and reject production approval lineage.
 
-- [ ] **Step 4: Gate loader consumption**
+- [x] **Step 4: Gate loader consumption**
 
 Select the preview validator only when both conditions are true:
 
@@ -86,11 +86,11 @@ source.authority === 'unapproved_preview'
 
 Apply the same double opt-in to Hero preview set/clip descriptors. Preserve historical and approved Hero behavior when the option is absent.
 
-- [ ] **Step 5: Run focused tests and confirm green**
+- [x] **Step 5: Run focused tests and confirm green**
 
 Run the three focused commands from Step 2. Expected: all pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add js/motion-bundle.js js/motion-store.js js/hero-v3-contract.js js/hero-v3.js qa/check-motion-bundle.mjs qa/check-motion-store.mjs qa/check-hero-v3-runtime.mjs
@@ -112,7 +112,7 @@ git commit -m "feat: isolate unapproved motion preview authority"
 - Consumes existing exports: `canonicalJson`, `validateDerivativeTools`, `chooseDerivativeMatrix`, `buildDerivativeAtlas`, and `atomicPublishDirectory`.
 - Produces `.gaf2d-preview/manifest.json`, six `characters/<assetId>/motion.{json,webp}` bundles, and Hero `hero/set.json` plus eight clip descriptor/WebP pairs.
 
-- [ ] **Step 1: Write a failing deterministic fixture test**
+- [x] **Step 1: Write a failing deterministic fixture test**
 
 Build a temporary GAF project with seven canonical candidates and tiny transparent PNG frame fixtures. Assert:
 
@@ -126,13 +126,13 @@ assert.deepEqual(secondBuildHashes, firstBuildHashes);
 
 Also assert hard rejection for stale candidate hashes, failed mechanical QA, any status other than `human_required`, nonzero provider/network calls, and a partial seven-asset set.
 
-- [ ] **Step 2: Run the builder test and confirm red**
+- [x] **Step 2: Run the builder test and confirm red**
 
 Run: `node qa/check-gaf2d-preview-build.mjs`
 
 Expected: module-not-found for `scripts/assets/build-gaf2d-preview.mjs`.
 
-- [ ] **Step 3: Implement source verification**
+- [x] **Step 3: Implement source verification**
 
 For each batch asset:
 
@@ -150,11 +150,11 @@ const candidatePath = path.join(
 
 Verify canonical batch references, candidate bytes, QA summary bytes, clip manifest bytes, every listed frame byte hash, 640×640 canvas, clip order, playback, authored FPS, and candidate/source-manifest identity.
 
-- [ ] **Step 4: Implement deterministic atlases and atomic publish**
+- [x] **Step 4: Implement deterministic atlases and atomic publish**
 
 Compute one alpha-union trim per character across all source frames. Use bottom-center pivot `{ x: 0.5, y: 1 }`, canonical frame order, existing pinned ImageMagick/cwebp tool validation, canonical JSON, and one sibling staging directory followed by `atomicPublishDirectory`.
 
-- [ ] **Step 5: Wire the local command and ignore boundary**
+- [x] **Step 5: Wire the local command and ignore boundary**
 
 Add:
 
@@ -164,7 +164,7 @@ Add:
 
 Add `/.gaf2d-preview/` to `.gitignore`, and add the builder test to `qa/run-tests.mjs`.
 
-- [ ] **Step 6: Run focused tests twice**
+- [x] **Step 6: Run focused tests twice**
 
 Run:
 
@@ -175,7 +175,7 @@ node qa/check-assets.mjs
 
 Expected: all pass and no tracked production manifest contains `.gaf2d-preview`.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add .gitignore package.json scripts/assets/build-gaf2d-preview.mjs qa/check-gaf2d-preview-build.mjs qa/run-tests.mjs
@@ -198,7 +198,7 @@ git commit -m "feat: build deterministic local motion previews"
 - Changes: `createAssetStore({ catalog })` and `packWindowForRoute(route, catalog = GAME_PACKS)`.
 - Preserves: default production catalog and current static fallback when preview is absent or invalid.
 
-- [ ] **Step 1: Write failing activation and overlay tests**
+- [x] **Step 1: Write failing activation and overlay tests**
 
 Assert the exact matrix:
 
@@ -212,7 +212,7 @@ false // http://127.0.0.2/?motion-preview=1
 
 Mock fetch/hash and assert all-or-nothing validation, a cloned Valorant pack only, six preview motion records with descriptor hashes, preview Hero base path, and unchanged frozen input packs.
 
-- [ ] **Step 2: Run focused tests and confirm red**
+- [x] **Step 2: Run focused tests and confirm red**
 
 Run:
 
@@ -223,19 +223,19 @@ node qa/check-asset-loader.mjs
 
 Expected: missing preview module and catalog-injection behavior.
 
-- [ ] **Step 3: Implement the pure preview loader**
+- [x] **Step 3: Implement the pure preview loader**
 
 Load `.gaf2d-preview/manifest.json` only after the loopback/query gate passes. Verify manifest grammar, authority, exact counts, descriptor hashes, asset IDs, Hero clip membership, and portable `.gaf2d-preview/` relative paths before cloning the Valorant pack.
 
-- [ ] **Step 4: Thread the runtime catalog**
+- [x] **Step 4: Thread the runtime catalog**
 
 Store `catalog` on the asset store. Pass it to route window, current pack, wave union, warm, and release paths. In `main.js`, await the preview decision before creating the asset store and Hero load; enable preview validators only when the full manifest succeeds.
 
-- [ ] **Step 5: Run focused tests and confirm green**
+- [x] **Step 5: Run focused tests and confirm green**
 
 Run the two commands from Step 2. Expected: all pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add js/motion-preview.js js/assets.js js/main.js qa/check-motion-preview.mjs qa/check-asset-loader.mjs qa/run-tests.mjs
@@ -254,27 +254,27 @@ git commit -m "feat: overlay local motion previews in gameplay"
 **Interfaces:**
 - Produces DOM id `motion-preview-banner`.
 - Produces exact active copy `UNAPPROVED MOTION PREVIEW · LOCAL ONLY`.
-- Extends `render_game_to_text()` with `motionPreview: { requested, active, authority, candidateSha256, error }` and active `fps`, `frameIndex`.
+- Extends `render_game_to_text()` with `motionPreview: { requested, active, authority, batchSummarySha256, error, heroStatus, heroAuthority }` and active asset `authority`, `candidateSha256`, `fps`, `frameIndex`.
 
-- [ ] **Step 1: Write failing DOM/text-state tests**
+- [x] **Step 1: Write failing DOM/text-state tests**
 
 Assert the banner is hidden in markup by default, uses the exact warning copy, cannot cover the game control strip, and `main.js` exposes preview status plus clip-owned FPS through the query-gated QA state.
 
-- [ ] **Step 2: Run the UI test and confirm red**
+- [x] **Step 2: Run the UI test and confirm red**
 
 Run: `node qa/check-motion-preview-ui.mjs`
 
 Expected: missing banner and preview text-state fields.
 
-- [ ] **Step 3: Add the compact persistent banner**
+- [x] **Step 3: Add the compact persistent banner**
 
 Insert the banner directly below the app root, use only existing design tokens, reserve its height without overlaying Canvas/buttons, and toggle `hidden`/error copy from the resolved preview state.
 
-- [ ] **Step 4: Add deterministic QA evidence**
+- [x] **Step 4: Add deterministic QA evidence**
 
 Report requested/active/fail-closed state, source candidate hash, active asset, semantic clip, authored FPS, selected frame, and fallback count without exposing file-system paths.
 
-- [ ] **Step 5: Run focused UI/cache tests**
+- [x] **Step 5: Run focused UI/cache tests**
 
 Run:
 
@@ -285,7 +285,7 @@ node qa/check-runtime-cache.mjs
 
 Expected: all pass; every new runtime import uses the current cache token.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add index.html css/game.css js/main.js qa/check-motion-preview-ui.mjs qa/run-tests.mjs
@@ -297,27 +297,27 @@ git commit -m "feat: expose local motion preview evidence"
 **Files:**
 - Generate ignored: `.gaf2d-preview/**`
 - Modify: `progress.md`
-- Create: `qa/screenshots/_local/motion-preview-portrait.png`
-- Create: `qa/screenshots/_local/motion-preview-landscape.png`
+- Generate ignored: `.gaf2d-preview/qa-evidence/motion-preview-portrait.png`
+- Generate ignored: `.gaf2d-preview/qa-evidence/motion-preview-landscape.png`
 
 **Interfaces:**
-- Consumes GAF project: `/Users/talatongu/Code/kimi-projects/apn-idle-game-gaf2d`.
+- Consumes a caller-supplied absolute GAF project root.
 - Produces preview URL: `http://127.0.0.1:8790/?motion-preview=1&mute=1`.
 
-- [ ] **Step 1: Build the exact real package**
+- [x] **Step 1: Build the exact real package**
 
 Run:
 
 ```bash
 npm run preview:gaf2d -- \
-  --gaf2d-project /Users/talatongu/Code/kimi-projects/apn-idle-game-gaf2d \
+  --gaf2d-project <absolute-gaf2d-project-root> \
   --output .gaf2d-preview \
   --json
 ```
 
 Expected JSON: `passed: true`, `authority: unapproved_preview`, 7 assets, 39 clips, 276 frames, provider/network calls 0.
 
-- [ ] **Step 2: Verify generated bytes and production isolation**
+- [x] **Step 2: Verify generated bytes and production isolation**
 
 Run the builder a second time and compare the complete file/hash projection. Confirm:
 
@@ -328,11 +328,11 @@ git diff -- assets/game-packs/valorant/pack.json js/generated/game-packs.js asse
 
 Expected: no preview output tracked and no production asset diff.
 
-- [ ] **Step 3: Run deterministic 60/120 Hz selection checks**
+- [x] **Step 3: Run deterministic 60/120 Hz selection checks**
 
 Use equal elapsed durations with 60 and 120 repaint timestamps. Assert every loop resolves the same authored frame at each sampled elapsed time and progress clips hold their terminal frame.
 
-- [ ] **Step 4: Run real browser QA**
+- [x] **Step 4: Run real browser QA**
 
 Use the project’s `web_game_playwright_client.js` against:
 
@@ -346,11 +346,11 @@ Repeat one loop and one progress clip with effective reduced motion enabled.
 Require semantic state and authored frame timing to remain correct while
 nonessential motion effects stay suppressed.
 
-- [ ] **Step 5: Append the truthful progress record**
+- [x] **Step 5: Append the truthful progress record**
 
 Record the preview boundary, exact counts, browser evidence, remaining human creative-approval gate, and that no paid call/upload/approval/export/push/deploy occurred.
 
-- [ ] **Step 6: Commit tracked evidence/docs**
+- [x] **Step 6: Commit tracked evidence/docs**
 
 ```bash
 git add progress.md
@@ -365,7 +365,7 @@ git commit -m "docs: record local motion gameplay proof"
 **Interfaces:**
 - Produces one working localhost URL and a truthful approval boundary.
 
-- [ ] **Step 1: Run focused regression**
+- [x] **Step 1: Run focused regression**
 
 Run:
 
@@ -381,20 +381,65 @@ node qa/check-gaf2d-valorant.mjs
 
 Expected: all pass.
 
-- [ ] **Step 2: Run the full suite**
+- [x] **Step 2: Run the full suite**
 
 Run: `npm test`
 
 Expected: exit 0.
 
-- [ ] **Step 3: Review authority and production isolation**
+- [x] **Step 3: Review authority and production isolation**
 
 Search for `unapproved_preview`, `.gaf2d-preview`, and every approval field. Confirm preview data has no production approval authority and no tracked production manifest points at the disposable boundary.
 
-- [ ] **Step 4: Verify the server and final URL**
+- [x] **Step 4: Verify the server and final URL**
 
 Request the preview URL, reload it once, inspect the persistent banner and QA state, and confirm the normal URL still omits the preview.
 
-- [ ] **Step 5: Finish**
+- [x] **Step 5: Finish**
 
 Report the exact localhost link, what is visibly testable, test/browser evidence, and the single remaining owner decision: approve or reject the complete authored motion set.
+
+### Task 7: Independent-review blocker hardening
+
+**Files:**
+- Modify: `js/game.js`
+- Modify: `js/hero-v2.js`
+- Modify: `js/hero-v3.js`
+- Modify: `js/host-contract.js`
+- Modify: `js/motion-preview.js`
+- Modify: `js/render.js`
+- Modify: `js/save.js`
+- Create: `qa/check-hero-motion-semantics.mjs`
+- Modify: `qa/check-motion-preview.mjs`
+
+- [x] **Step 1: Separate outgoing attack, actual crit, and incoming-hit state**
+
+Ordinary attacks select `attack`, actual RNG critical hits select `crit`, and
+only the explicit incoming-damage entry point selects `hit`.
+
+- [x] **Step 2: Make visible and diagnostic Hero selectors identical**
+
+Keep the procedural lunge independent while the visible V3 renderer and
+`inspectHeroMotion()` consume the same authored selector object.
+
+- [x] **Step 3: Lock complete authored progress timing**
+
+Prove attack/crit (8 frames at 16 FPS), hit (4 at 16 FPS), and death (8 at
+16 FPS) advance forward through equal-duration bins under a fixed 60 Hz
+simulation sampled at both 60 Hz and 120 Hz repaint schedules. Continuous base
+and sprint combat must complete the current visual sequence through its final
+frame before consuming one latched pending strike; combat math is unchanged.
+Reduced-motion must preserve essential hit/death selection while suppressing
+secondary transforms.
+
+- [x] **Step 4: Preflight every referenced media body**
+
+Fetch and SHA-256 verify all eight Hero and six creature WebP files before
+returning `active: true`. Read media sequentially and fail closed for missing,
+oversized, or corrupt bytes without exposing private paths.
+
+- [x] **Step 5: Repeat focused, full-suite, and browser QA**
+
+Require exact authority/candidate evidence, zero fallback, zero console errors,
+normal-mode zero preview fetches, and changed-frame proof for Hero and creature
+motion.
