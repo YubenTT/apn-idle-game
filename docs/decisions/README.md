@@ -24,6 +24,7 @@
 | [0014](./ADR-0014-gaf2d-character-owned-motion.md) | GAF2D character-owned motion is the pack-creature authority | Accepted |
 | [0015](./ADR-0015-legless-hero-runtime-authority.md) | Hero V3 owns approved clips; failure fallback is explicitly legless | Accepted |
 | [0016](./ADR-0016-motion-ready-identity-seeds.md) | Image-conditioned motion starts from one approved, platform-free subject | Accepted |
+| [0017](./ADR-0017-visible-body-stage-presentation.md) | Neutral visible-body bounds set game role scale; one transform preserves acting | Accepted |
 
 ## When to write one
 

@@ -66,6 +66,38 @@ authored-motion declaration.
 Live provider calls and source uploads remain outside repository builds. Changing
 identity or motion bytes requires new human approval and new hashes.
 
+## Intrinsic geometry and stage presentation
+
+[ADR-0017](./decisions/ADR-0017-visible-body-stage-presentation.md) separates
+asset truth from game staging:
+
+- GAF2D owns the source canvas, bottom-center pivot, shared trim, optional body
+  mask, clip timing, lineage, and one transform shared by the complete motion
+  set.
+- APN owns the explicit role, target neutral body height, visual gap, responsive
+  fit, shadow, and actor-relative overlays.
+
+`STAGE_ROLE_PRESENTATION` is the runtime authority:
+
+| Role | Neutral visible body | Visual gap at `fit = 1` |
+|------|---------------------:|------------------------:|
+| `hero` | 96 px | 6 px |
+| `standard` | 72 px | 2 px |
+| `elite` | 84 px | 2 px |
+| `boss` | 112 px | 2 px |
+
+Every authored character integration declares a neutral reference frame and
+hash-binds its body-visible bounds plus the body-only union motion envelope to
+the exact descriptor and source lineage.
+Neutral body bounds choose scale; motion-envelope bounds protect labels and
+viewport clearance.
+The importer fails closed on missing, malformed, stale, zero-area, or
+out-of-trim geometry and applies the resolved scale and pivot translation to
+every frame without per-frame grounding.
+Mechanical geometry may reject an invalid handoff, but it never grants identity,
+motion, or release approval.
+This game-owned integration record does not change GAF2D schema version 1.
+
 ## Directory contract
 
 ```

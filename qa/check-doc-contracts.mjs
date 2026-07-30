@@ -1,6 +1,11 @@
 import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 
-const read = (path) => fs.readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
+const read = (relativePath) =>
+  fs.readFileSync(new URL(`../${relativePath}`, import.meta.url), 'utf8');
+const readIfPresent = (filePath) =>
+  fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : '';
 
 const route = read('docs/GAME-PACK-ROUTE.md');
 const vision = read('docs/VISION.md');
@@ -13,6 +18,45 @@ const assetBible = read('docs/GAME-PACK-ASSET-BIBLE.md');
 const components = read('brand/COMPONENTS.md');
 const progress = read('progress.md');
 const roadmap = read('docs/ROADMAP.md');
+const stageDoctrine = [
+  read('brand/ART-DIRECTION.md'),
+  read('brand/MASCOT-CANON.md'),
+  read('docs/ASSET-ENGINE.md'),
+  read('docs/ART-PIPELINE.md'),
+  read('docs/ARCHITECTURE.md'),
+  read('docs/decisions/README.md'),
+  readIfPresent(
+    new URL(
+      '../docs/decisions/ADR-0017-visible-body-stage-presentation.md',
+      import.meta.url,
+    ),
+  ),
+  read('docs/SCREEN-SPECS.md'),
+  read('docs/QA-CHECKLIST.md'),
+  read('docs/DEFINITION-OF-DONE.md'),
+].join('\n');
+const gaf2dRoot =
+  process.env.GAF2D_ROOT ?? path.join(os.homedir(), 'Documents', 'gaf2d');
+const checkGaf2dGuidance =
+  process.env.GAF2D_ROOT !== undefined || fs.existsSync(gaf2dRoot);
+const gaf2dGuidance = checkGaf2dGuidance
+  ? [
+      [
+        'runtime integration',
+        readIfPresent(path.join(gaf2dRoot, 'docs', 'runtime-integration.md')),
+      ],
+      [
+        'repository skill',
+        readIfPresent(path.join(gaf2dRoot, 'skills', 'gaf2d', 'SKILL.md')),
+      ],
+      [
+        'installed skill',
+        readIfPresent(
+          path.join(os.homedir(), '.codex', 'skills', 'gaf2d', 'SKILL.md'),
+        ),
+      ],
+    ]
+  : [];
 const failures = [];
 
 if (!route.includes('20 distinct clean Game Packs')) {
@@ -64,6 +108,33 @@ if (progress.includes('Next user gate: approve the Host V2 motion proof')) {
 }
 if (roadmap.includes('Production asset pipeline, canonical Host atlas')) {
   failures.push('roadmap historical Hero authority');
+}
+for (const phrase of [
+  'visible-body height',
+  'motion envelope',
+  'one shared transform',
+  'Hero 96',
+  'standard 72',
+  'boss 112',
+  'frame-by-frame grounding is forbidden',
+]) {
+  if (!stageDoctrine.includes(phrase)) {
+    failures.push(`stage presentation doctrine: ${phrase}`);
+  }
+}
+for (const [label, guidance] of gaf2dGuidance) {
+  for (const phrase of [
+    'GAF2D owns intrinsic geometry',
+    'the game owns role scale',
+    'declare one neutral reference frame',
+    'hash-bind visible and union motion bounds',
+    'never ground each frame independently',
+    'mechanical geometry does not approve motion',
+  ]) {
+    if (!guidance.includes(phrase)) {
+      failures.push(`GAF2D ${label}: ${phrase}`);
+    }
+  }
 }
 
 if (failures.length) {

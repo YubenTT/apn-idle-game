@@ -112,12 +112,27 @@ flowchart TB
 
 ### `host-contract.js`
 
-- Sole code owner for the 118–142px Run presentation gate and the semantic clip
-  vocabulary (`resolveHostClip`), plus the historical GLB path/render-lock
-  constants (superseded as runtime inputs — ADR-0012).
-- `render.js` (via `hero-v2.js`) and contract QA import this module. Any future
-  Host surface must import it too rather than retyping a parallel vocabulary.
+- Sole code owner for the semantic clip vocabulary (`resolveHostClip`) and the
+  approved Hero source/render-lock metadata.
+- `render.js` (via `hero-v2.js`) and contract QA import this module.
+  Hero stage size comes from `stage-presentation.js`, not a parallel trim-height
+  gate in this module.
 - Contains presentation/asset metadata only. It never owns combat or economy.
+
+### `stage-presentation.js`
+
+- Pure bridge between intrinsic character geometry and APN-owned role
+  presentation ([ADR-0017](./decisions/ADR-0017-visible-body-stage-presentation.md)).
+- `STAGE_ROLE_PRESENTATION` owns exact `hero` 96/6, `standard` 72/2, `elite`
+  84/2, and `boss` 112/2 visible-body-height/visual-gap pairs at `fit = 1`.
+- Validates the hash-bound neutral visible bounds and body-only union motion
+  envelope, then resolves one immutable draw transform, body, envelope, and
+  actor-anchor set.
+- Neutral bounds choose role scale; the motion envelope protects labels and
+  short-stage clearance.
+  Every clip/frame keeps the same scale and pivot translation.
+- Resolves responsive cast fit from motion envelopes without owning combat,
+  asset identity, clip selection, or creative approval.
 
 ### `render.js`
 
@@ -131,6 +146,9 @@ flowchart TB
 - A motion-enabled pack uses character-owned, hash-verified GAF2D bundles.
   `targets.webp` is failure-only for mapped identities and remains the normal
   path for unmapped packs.
+- Hero, creature, shadow, HP, floater, aura, hit, and loot drawing consume the
+  shared resolved actor geometry rather than guessing from atlas cells or
+  grounding individual frames.
 - Never grant currency.
 
 ### `hero-v2.js` · `hero-v3.js` · `enemies-v2.js` · `scenery-v2.js`

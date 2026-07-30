@@ -27,6 +27,10 @@
       shadow, underglow, or review fixture is baked into character pixels.
 - [ ] **Creative gates are real** — automated QA may reject identity, motion, rig,
       or release bytes, but never records the required human approval.
+- [ ] **Stage geometry is shared** — neutral visible bounds choose the named role
+      scale, the body-only motion envelope protects labels, and the complete
+      motion set keeps one scale/pivot transform; no frame is independently
+      resized or grounded.
 - [ ] **Domain purity kept** — combat/economy math stays in `formulas.js` /
       `game.js`; UI/render don't invent balance ([ARCHITECTURE](./ARCHITECTURE.md)).
 - [ ] **No framework creep** — still zero-npm, static-file playable

@@ -65,6 +65,19 @@ generation.
 Reduced motion removes secondary camera, trail, squash, flash, and hover intensity.
 It does not substitute a different body or bypass approved authored frames.
 
+## Stage presentation
+
+The `hero` role presents the neutral visible body at 96 px with a deliberate
+6 px hover gap when stage fit is 1.
+Hash-bound neutral body bounds choose that scale; the body-only union motion
+envelope protects the HP plate, floaters, priority brackets, and viewport
+clearance.
+Every Hero clip keeps the same source pivot, scale, and translation so authored
+hops, recoil, compression, and collapse survive.
+The renderer-owned oval shadow remains on the game ground and never follows the
+body vertically or participates in body bounds.
+Do not crop, resize, or ground individual frames to enforce the neutral pose.
+
 ## Approval order
 
 1. Register the owner reference in GAF2D without uploading it to a provider.

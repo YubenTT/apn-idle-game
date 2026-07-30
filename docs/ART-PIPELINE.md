@@ -39,6 +39,31 @@ Static: pack target atlas ──▶ failure-only fallback or unmapped legacy pac
 atlas JSON must keep per-frame pivot/anchor. Canvas 2D `drawImage` blits from the
 atlas rect and offsets by pivot — same JSON contract whether or not a library reads it.
 
+## Runtime presentation handoff
+
+Every future GAF2D character handoff follows one deterministic checklist:
+
+1. Preserve the source canvas, bottom-center pivot, shared trim, optional body
+   mask, clip timing, and lineage.
+2. Declare one neutral reference frame in the gameplay camera.
+3. Measure neutral body-visible bounds and the body-only union motion envelope,
+   then hash-bind both to the reference bytes and descriptor lineage.
+4. Fail closed before decode or draw when a binding is stale, a bound is empty or
+   outside the shared trim, or the motion envelope does not contain the neutral
+   body.
+5. Assign the game role from `STAGE_ROLE_PRESENTATION`: `hero` 96 px/6 px,
+   `standard` 72 px/2 px, `elite` 84 px/2 px, or `boss` 112 px/2 px at
+   `fit = 1`.
+6. Let the neutral body choose scale and apply one shared transform to every
+   clip and frame.
+   Never remeasure, resize, or ground the current frame.
+7. Inspect actual-size proof and verify the separate shadow, HP plate, priority
+   brackets, floaters, auras, hit/loot anchors, and viewport clearance against
+   the neutral body and motion envelope.
+
+This handoff creates deterministic runtime evidence, not creative approval.
+Identity, motion, rig quality when applicable, and release remain human gates.
+
 ## Shipped development scripts
 
 Mirror the layout the research proposed, scoped to this repo:

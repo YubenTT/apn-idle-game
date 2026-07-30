@@ -21,6 +21,8 @@
 | **Memory QA** | Atlas load/unload works; no leak across sheet open/close and season transitions. |
 | **Motion QA** | Every mapped identity draws a ready owned bundle; pending never flashes static; canonical waves 1–10 report zero fallback. |
 | **Lineage QA** | Descriptor and atlas hashes, exact frame vocabulary, encoder profile, dimensions, and current identity/motion approvals all match. |
+| **Stage geometry QA** | At `fit = 1`, neutral visible bodies resolve to `hero` 96 px/6 px gap, `standard` 72 px/2 px, `elite` 84 px/2 px, and `boss` 112 px/2 px; one scale/pivot transform is shared by every frame. |
+| **Actor clearance QA** | Body-only motion envelopes contain neutral bounds and keep HP plates, priority brackets, floaters, and fixed HUD bands clear; shadows stay renderer-owned and grounded. |
 | **A11y QA** | Reduced-motion toggle + `prefers-reduced-motion`, SFX toggle, safe tap spacing all work. |
 | **Regression QA** | Portrait/landscape screenshot diff approved vs. `qa/screenshots/`. |
 | **Domain QA** | `node qa/run-tests.mjs` → ALL PASS (kills, upgrades, ship, boss, zone>20, HP scale). |
