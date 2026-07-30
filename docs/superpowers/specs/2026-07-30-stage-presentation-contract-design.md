@@ -291,6 +291,10 @@ displays do not affect scale or playback speed.
 - Historical assets without presentation metadata continue through an explicit
   legacy adapter; they are never misrepresented as authored visible-body
   metadata.
+- Every modern approved or preview Hero clip in one set must have identical
+  full-frame size, trim, pivot, and presentation geometry. Historical Hero
+  clips keep their explicit compatibility path because their old descriptors
+  were authored independently.
 - An authored motion record with malformed/stale presentation metadata fails
   that motion record and uses the existing safe fallback.
 - Normal gameplay must not load ignored `.gaf2d-preview` files unless the
@@ -374,8 +378,11 @@ Implementation updates:
 - `brand/ART-DIRECTION.md` for the role ladder and shared shadow;
 - `brand/MASCOT-CANON.md` for the Hero hover and shadow separation;
 - `docs/ASSET-ENGINE.md` for intrinsic versus game presentation geometry;
+- `docs/ART-PIPELINE.md` for the required neutral reference and body-only motion
+  envelope;
 - `docs/SCREEN-SPECS.md` for stage actor/HP clearance;
 - `docs/ARCHITECTURE.md` for the central geometry module and consumers;
+- a new ADR for visible-body stage presentation ownership;
 - `docs/QA-CHECKLIST.md` and `docs/DEFINITION-OF-DONE.md` for reusable gates;
 - `progress.md` and `qa/QA-REPORT.md` for verified implementation evidence;
 - GAF2D guidance/installed skill for the future integration checklist.
