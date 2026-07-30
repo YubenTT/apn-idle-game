@@ -820,10 +820,12 @@ export function drawEnemy(ctx, e, gy, t, packAssets = null, assetStore = null, r
   const barW = isBoss ? 148 : 124;
   const compact = fit < 0.92; // short stages (landscape): slim nameplate, no big card
   const bannerH = compact ? 30 : isBoss ? 62 : 54;
+  const plateW = compact ? Math.max(64, barW * 0.62) : barW;
+  const plateX = x - plateW / 2;
   const barY = geometry.anchors.hpY - bannerH;
   const ratio = clamp(e.hp / e.hpMax, 0, 1);
-  ctx.fillStyle = 'rgba(7,16,25,0.94)';
-  roundRect(ctx, x - barW / 2, barY, barW, bannerH, 10);
+  ctx.fillStyle = compact ? 'rgba(7,16,25,0.88)' : 'rgba(7,16,25,0.94)';
+  roundRect(ctx, plateX, barY, plateW, bannerH, compact ? 7 : 10);
   ctx.fill();
   ctx.strokeStyle = 'rgba(44,67,94,0.95)';
   ctx.lineWidth = 1;
@@ -836,24 +838,25 @@ export function drawEnemy(ctx, e, gy, t, packAssets = null, assetStore = null, r
     : motionInfo.target?.label || e.label;
   const label = enemyLabelForDisplay(labelSource, isBoss);
   if (compact) {
-    // Short stages: the DOM stage-hud owns the sky, so the nameplate docks
-    // under the target's feet — name + slim bar, always clear of overlays.
-    const plateW = Math.max(64, barW * 0.62);
-    const px = x - plateW / 2;
-    const py = geometry.body.bottom + 7;
-    ctx.fillStyle = 'rgba(7,16,25,0.88)';
-    roundRect(ctx, px, py, plateW, 22, 7);
-    ctx.fill();
+    // Short stages keep one slim envelope-anchored component.
     ctx.fillStyle = '#f3f7fb';
     ctx.font = '800 9px system-ui,sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(label, x, py + 10);
+    ctx.fillText(label, x, barY + 12);
+    const trackY = barY + bannerH - 8;
     ctx.fillStyle = '#22364c';
-    roundRect(ctx, px + 7, py + 14, plateW - 14, 4, 2);
+    roundRect(ctx, plateX + 7, trackY, plateW - 14, 4, 2);
     ctx.fill();
     ctx.fillStyle = ratio > 0.3 ? '#fc1243' : '#e6b84d';
     if (ratio > 0.01) {
-      roundRect(ctx, px + 7, py + 14, Math.max(3, (plateW - 14) * ratio), 4, 2);
+      roundRect(
+        ctx,
+        plateX + 7,
+        trackY,
+        Math.max(3, (plateW - 14) * ratio),
+        4,
+        2,
+      );
       ctx.fill();
     }
     return geometry;
@@ -863,11 +866,18 @@ export function drawEnemy(ctx, e, gy, t, packAssets = null, assetStore = null, r
   ctx.font = '700 9px system-ui,sans-serif';
   ctx.fillText(`${Math.ceil(e.hp)}/${e.hpMax}`, x, barY + 32);
   ctx.fillStyle = '#22364c';
-  roundRect(ctx, x - barW / 2 + 9, barY + bannerH - 14, barW - 18, 8, 4);
+  roundRect(ctx, plateX + 9, barY + bannerH - 14, plateW - 18, 8, 4);
   ctx.fill();
   ctx.fillStyle = ratio > 0.3 ? '#fc1243' : '#e6b84d';
   if (ratio > 0.01) {
-    roundRect(ctx, x - barW / 2 + 9, barY + bannerH - 14, Math.max(4, (barW - 18) * ratio), 8, 4);
+    roundRect(
+      ctx,
+      plateX + 9,
+      barY + bannerH - 14,
+      Math.max(4, (plateW - 18) * ratio),
+      8,
+      4,
+    );
     ctx.fill();
   }
   return geometry;

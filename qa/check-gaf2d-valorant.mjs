@@ -519,6 +519,8 @@ function createCanvasProbe({ rejectFirstDraw = false } = {}) {
 }
 function createStageAnchorProbe() {
   const events = [];
+  let pathTop = null;
+  let pathHeight = null;
   const ctx = new Proxy(
     {},
     {
@@ -533,7 +535,24 @@ function createStageAnchorProbe() {
           };
         }
         return (...args) => {
-          events.push({ method: key, args });
+          if (key === 'beginPath') {
+            pathTop = null;
+            pathHeight = null;
+          }
+          if (key === 'moveTo' && pathTop === null) pathTop = args[1];
+          if (
+            key === 'arcTo' &&
+            pathTop !== null &&
+            pathHeight === null
+          ) {
+            pathHeight = args[3] - pathTop;
+          }
+          events.push({
+            method: key,
+            args,
+            pathTop,
+            pathHeight,
+          });
         };
       },
       set() {
@@ -669,6 +688,39 @@ assert(
     hitY: anchoredGeometry.anchors.hitY,
     lootY: anchoredGeometry.anchors.lootY,
   })})`,
+);
+const compactProbe = createStageAnchorProbe();
+const compactGeometry = drawEnemy(
+  compactProbe.ctx,
+  syntheticEnemy,
+  320,
+  1.25,
+  syntheticPackAssets,
+  syntheticStore,
+  false,
+  0.75,
+  syntheticEnv,
+);
+const compactPanels = compactProbe.events.filter(
+  ({ method, pathHeight }) =>
+    method === 'fill' && pathHeight >= 20,
+);
+const compactLabel = compactProbe.events.find(
+  ({ method, args }) =>
+    method === 'fillText' && args[0] === syntheticEnemy.label,
+);
+const compactTrack = compactProbe.events.find(
+  ({ method, pathHeight }) =>
+    method === 'fill' && pathHeight === 4,
+);
+assert(
+  Math.abs(compactGeometry.anchors.hpY - 250.34615384615387) < 1e-9 &&
+    Math.abs(compactGeometry.body.bottom - 318.5) < 1e-9 &&
+    compactPanels.length === 1 &&
+    Math.abs(compactPanels[0].pathTop - 220.34615384615387) < 1e-9 &&
+    Math.abs(compactLabel?.args?.[2] - 232.34615384615387) < 1e-9 &&
+    Math.abs(compactTrack?.pathTop - 242.34615384615387) < 1e-9,
+  'compact HP/name plate is one functional envelope-anchored component',
 );
 const authoredDeathProbe = createStageAnchorProbe();
 const authoredDeathGeometry = drawEnemy(
