@@ -524,8 +524,11 @@ function createCanvasProbe({ rejectFirstDraw = false } = {}) {
 }
 function createStageAnchorProbe() {
   const events = [];
+  let pathLeft = null;
   let pathTop = null;
+  let pathWidth = null;
   let pathHeight = null;
+  let pathMoveX = null;
   const ctx = new Proxy(
     {},
     {
@@ -541,21 +544,31 @@ function createStageAnchorProbe() {
         }
         return (...args) => {
           if (key === 'beginPath') {
+            pathLeft = null;
             pathTop = null;
+            pathWidth = null;
             pathHeight = null;
+            pathMoveX = null;
           }
-          if (key === 'moveTo' && pathTop === null) pathTop = args[1];
+          if (key === 'moveTo' && pathTop === null) {
+            pathMoveX = args[0];
+            pathTop = args[1];
+          }
           if (
             key === 'arcTo' &&
             pathTop !== null &&
             pathHeight === null
           ) {
+            pathLeft = pathMoveX - args[4];
+            pathWidth = args[0] - pathLeft;
             pathHeight = args[3] - pathTop;
           }
           events.push({
             method: key,
             args,
+            pathLeft,
             pathTop,
+            pathWidth,
             pathHeight,
           });
         };
@@ -778,6 +791,97 @@ assert(
     groundY: landscapeGroundY,
   })})`,
 );
+const landscapeBossState = createState();
+landscapeBossState.route.zone = 9;
+landscapeBossState.route.currentPackId = 'valorant';
+landscapeBossState.world.enemies = [
+  {
+    ...syntheticBoss,
+    id: 'landscape-site-warden',
+    packId: 'valorant',
+    x: 320,
+    displayX: 320,
+  },
+];
+landscapeBossState.world.bossActive = true;
+landscapeBossState.world.bossTimer = C.BOSS_TIMER * 0.6;
+globalThis.document.createElement ??= () => ({
+  width: 0,
+  height: 0,
+  getContext: () => createStageAnchorProbe().ctx,
+});
+const landscapeBossProbe = createStageAnchorProbe();
+draw(
+  landscapeBossProbe.ctx,
+  844,
+  216,
+  landscapeBossState,
+  null,
+  105,
+);
+const compactBossPlateWidth = 148 * 0.62;
+const landscapeBossPlateEvent = landscapeBossProbe.events.find(
+  ({ method, pathWidth, pathHeight }) =>
+    method === 'fill' &&
+    Math.abs(pathWidth - compactBossPlateWidth) < 1e-9 &&
+    pathHeight === 30,
+);
+const landscapeTimerBarEvent = landscapeBossProbe.events
+  .filter(
+    ({ method, pathTop, pathHeight }) =>
+      method === 'fill' &&
+      pathTop === bossTimerYFor(216) &&
+      pathHeight === 10,
+  )
+  .sort((left, right) => right.pathWidth - left.pathWidth)[0];
+const landscapeTimerLabelEvent = landscapeBossProbe.events.find(
+  ({ method, args }) =>
+    method === 'fillText' && args[0] === 'SITE WARDEN',
+);
+const eventRect = (event, height = event?.pathHeight) =>
+  event
+    ? {
+        x: event.pathLeft,
+        y: event.pathTop,
+        width: event.pathWidth,
+        height,
+      }
+    : null;
+const bossPlateRect = eventRect(landscapeBossPlateEvent);
+const bossTimerRect =
+  landscapeTimerBarEvent && landscapeTimerLabelEvent
+    ? eventRect(
+        landscapeTimerBarEvent,
+        landscapeTimerLabelEvent.args[2] +
+          2 -
+          landscapeTimerBarEvent.pathTop,
+      )
+    : null;
+const rectInsideStage = (rect) =>
+  rect !== null &&
+  rect.x >= 0 &&
+  rect.y >= 105 &&
+  rect.x + rect.width <= 844 &&
+  rect.y + rect.height <= 216 * 0.86;
+const rectsOverlap = (left, right) =>
+  left.x < right.x + right.width &&
+  left.x + left.width > right.x &&
+  left.y < right.y + right.height &&
+  left.y + left.height > right.y;
+assert(
+  rectInsideStage(bossPlateRect) &&
+    rectInsideStage(bossTimerRect) &&
+    !rectsOverlap(bossPlateRect, bossTimerRect) &&
+    landscapeTimerLabelEvent.args[1] >= bossTimerRect.x &&
+    landscapeTimerLabelEvent.args[1] <=
+      bossTimerRect.x + bossTimerRect.width,
+  `844x390 boss plate and labeled timer occupy non-overlapping safe-stage lanes (${JSON.stringify({
+    fit: landscapeBossState.world.stageFit,
+    plate: bossPlateRect,
+    timer: bossTimerRect,
+    label: landscapeTimerLabelEvent?.args,
+  })})`,
+);
 const intermediateState = createState();
 intermediateState.world.enemies = [
   {
@@ -785,11 +889,6 @@ intermediateState.world.enemies = [
     id: 'intermediate-height-runner',
   },
 ];
-globalThis.document.createElement ??= () => ({
-  width: 0,
-  height: 0,
-  getContext: () => createStageAnchorProbe().ctx,
-});
 draw(
   createStageAnchorProbe().ctx,
   844,

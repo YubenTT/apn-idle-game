@@ -48,6 +48,10 @@ const ENEMY_PLATE_HEIGHT = Object.freeze({
   standard: 54,
   boss: 62,
 });
+const BOSS_TIMER_BAR_HEIGHT = 10;
+const BOSS_TIMER_FUNCTION_HEIGHT = 24;
+const BOSS_TIMER_EDGE_MARGIN = 16;
+const BOSS_TIMER_PLATE_GAP = 12;
 
 function enemyPlateHeight(role, fit) {
   if (fit < ENEMY_PLATE_COMPACT_FIT) return ENEMY_PLATE_HEIGHT.compact;
@@ -58,6 +62,92 @@ function enemyPlateHeight(role, fit) {
 
 function enemyPlateClearance(role, fit) {
   return STAGE_OVERHEAD_GAP + enemyPlateHeight(role, fit);
+}
+
+function rectsOverlap(left, right) {
+  return (
+    left.x < right.x + right.width &&
+    left.x + left.width > right.x &&
+    left.y < right.y + right.height &&
+    left.y + left.height > right.y
+  );
+}
+
+function stageFunctionalLayout({
+  actorX,
+  geometry,
+  fit,
+  stageClearance,
+  stageWidth,
+  stageHeight,
+  includeBossTimer = false,
+}) {
+  let plate = null;
+  if (geometry) {
+    const compact = fit < ENEMY_PLATE_COMPACT_FIT;
+    const baseWidth = geometry.role === 'boss' ? 148 : 124;
+    const height = enemyPlateHeight(geometry.role, fit);
+    const width = compact ? Math.max(64, baseWidth * 0.62) : baseWidth;
+    const anchoredY = geometry.anchors.hpY - height;
+    const safeTop = Number.isFinite(stageClearance)
+      ? stageClearance
+      : anchoredY;
+    plate = Object.freeze({
+      x: actorX - width / 2,
+      y: Math.min(
+        geometry.anchors.shadowY - height,
+        Math.max(anchoredY, safeTop),
+      ),
+      width,
+      height,
+    });
+  }
+
+  if (!includeBossTimer) {
+    return Object.freeze({ plate, timer: null });
+  }
+
+  const timerY = bossTimerYFor(stageHeight);
+  const defaultTimer = {
+    x: stageWidth * 0.18,
+    y: timerY,
+    width: stageWidth * 0.64,
+    height: BOSS_TIMER_FUNCTION_HEIGHT,
+    barHeight: BOSS_TIMER_BAR_HEIGHT,
+    labelX: stageWidth / 2,
+    labelY: timerY + 22,
+  };
+  let timer = defaultTimer;
+  if (plate && rectsOverlap(plate, defaultTimer)) {
+    const rightX = plate.x + plate.width + BOSS_TIMER_PLATE_GAP;
+    const lanes = [
+      {
+        x: BOSS_TIMER_EDGE_MARGIN,
+        width: Math.max(
+          0,
+          plate.x - BOSS_TIMER_PLATE_GAP - BOSS_TIMER_EDGE_MARGIN,
+        ),
+      },
+      {
+        x: rightX,
+        width: Math.max(
+          0,
+          stageWidth - BOSS_TIMER_EDGE_MARGIN - rightX,
+        ),
+      },
+    ];
+    const lane = lanes[1].width >= lanes[0].width ? lanes[1] : lanes[0];
+    timer = {
+      ...defaultTimer,
+      x: lane.x,
+      width: lane.width,
+      labelX: lane.x + lane.width / 2,
+    };
+  }
+  return Object.freeze({
+    plate,
+    timer: Object.freeze(timer),
+  });
 }
 
 /** Enemy type is trusted game state; asset IDs never self-assign scale. */
@@ -350,28 +440,42 @@ export function draw(
   // boss timer (below stage Zone/Rank HUD)
   if (s.world.bossActive) {
     const ratio = clamp(s.world.bossTimer / C.BOSS_TIMER, 0, 1);
-    const bx = w * 0.18;
-    const bw = w * 0.64;
-    const by = bossTimerYFor(h);
+    const activeBoss = s.world.enemies.find(
+      (e) => e.type === 'boss' && e.hp > 0,
+    );
+    const bossGeometry = activeBoss
+      ? actorGeometries.get(activeBoss.id)
+      : null;
+    const timerLayout = stageFunctionalLayout({
+      actorX: activeBoss ? activeBoss.displayX - scroll : w / 2,
+      geometry: bossGeometry,
+      fit: stageFit,
+      stageClearance,
+      stageWidth: w,
+      stageHeight: h,
+      includeBossTimer: true,
+    }).timer;
+    const bx = timerLayout.x;
+    const bw = timerLayout.width;
+    const by = timerLayout.y;
     ctx.fillStyle = 'rgba(10,14,19,0.8)';
-    roundRect(ctx, bx, by, bw, 10, 5);
+    roundRect(ctx, bx, by, bw, timerLayout.barHeight, 5);
     ctx.fill();
     const g = ctx.createLinearGradient(bx, 0, bx + bw, 0);
     g.addColorStop(0, '#A3072F');
     g.addColorStop(1, '#FC1243');
     ctx.fillStyle = g;
-    roundRect(ctx, bx, by, bw * ratio, 10, 5);
+    roundRect(ctx, bx, by, bw * ratio, timerLayout.barHeight, 5);
     ctx.fill();
     ctx.fillStyle = 'rgba(245,246,248,0.85)';
     ctx.font = '700 10px system-ui,sans-serif';
     ctx.textAlign = 'center';
     // Zone-boss variant: the banner names whichever boss is actually on stage
-    const activeBoss = s.world.enemies.find((e) => e.type === 'boss' && e.hp > 0);
     const banner = bossBannerFor(activeBoss, s.route?.zone ?? 0);
     ctx.lineWidth = 3;
     ctx.strokeStyle = 'rgba(6,10,16,0.92)';
-    ctx.strokeText(banner, w / 2, by + 22);
-    ctx.fillText(banner, w / 2, by + 22);
+    ctx.strokeText(banner, timerLayout.labelX, timerLayout.labelY);
+    ctx.fillText(banner, timerLayout.labelX, timerLayout.labelY);
   }
 
   ctx.restore();
@@ -867,19 +971,17 @@ export function drawEnemy(ctx, e, gy, t, packAssets = null, assetStore = null, r
     ctx.restore();
   }
 
-  const barW = isBoss ? 148 : 124;
   const compact = fit < ENEMY_PLATE_COMPACT_FIT;
-  const bannerH = enemyPlateHeight(geometry.role, fit);
-  const plateW = compact ? Math.max(64, barW * 0.62) : barW;
-  const plateX = x - plateW / 2;
-  const anchoredBarY = geometry.anchors.hpY - bannerH;
-  const stageSafeTop = Number.isFinite(env?.stageClearance)
-    ? env.stageClearance
-    : anchoredBarY;
-  const barY = Math.min(
-    geometry.anchors.shadowY - bannerH,
-    Math.max(anchoredBarY, stageSafeTop),
-  );
+  const plate = stageFunctionalLayout({
+    actorX: x,
+    geometry,
+    fit,
+    stageClearance: env?.stageClearance,
+  }).plate;
+  const bannerH = plate.height;
+  const plateW = plate.width;
+  const plateX = plate.x;
+  const barY = plate.y;
   const ratio = clamp(e.hp / e.hpMax, 0, 1);
   ctx.fillStyle = compact ? 'rgba(7,16,25,0.88)' : 'rgba(7,16,25,0.94)';
   roundRect(ctx, plateX, barY, plateW, bannerH, compact ? 7 : 10);
