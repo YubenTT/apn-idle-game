@@ -260,6 +260,14 @@ Original prompt: Complete the APN Idle redesign autonomously, including QA, revi
   occupied layout because the component `display:flex` rule won. Commit
   `0f38cf8` records the failing regression assertion and the narrow
   `#toast.toast-banner[hidden] { display: none; }` fix.
+- Fix-round review found that the 844×390 standard-target plate was still
+  painted behind the two-row DOM stage HUD. Commit `148cf05` replaces the
+  stale fixed 78 px reservation with the measured HUD edge, reserves each
+  enemy plate as fixed overhead above its scaled motion envelope, and keeps
+  compact/full plate selection branch-consistent. The component-bound RED
+  measured plate y `81.2247..111.2247` against safe y 103; GREEN measures
+  `103..133`, and the post-commit browser measures the final plate at
+  `105..135` below the measured HUD bottom y 103.
 - Two consecutive exact preview builds both reported
   `GAF2D PREVIEW 7/39/276
   2ec2659c795e6e298f86bd7d079a538e193139e546c4b335dd32d9e8a4c5b2e1`.
@@ -270,15 +278,15 @@ Original prompt: Complete the APN Idle redesign autonomously, including QA, revi
   with zero network, provider, and provider-clip calls.
 - Focused checks for motion-preview UI, stage presentation, preview build,
   Hero V3 runtime/semantics, Valorant motion, creatures, and documentation all
-  pass. The complete `node qa/run-tests.mjs` gate ends `ALL PASS`, and
-  `git diff --check` is clean.
+  pass. The final complete `node qa/run-tests.mjs` gate exits 0 with 2,142
+  lines and ends `ALL PASS`; `git diff --check` is clean.
 
 | Viewport | Canvas | Standard fit | Boss fit | Ground Y | Normal + reduced motion |
 |---|---:|---:|---:|---:|---|
 | 375×812 | 375×456 | 1 | 1 | 392.16 | pass |
 | 390×844 | 390×488 | 1 | 1 | 419.68 | pass |
 | 428×926 | 428×570 | 1 | 1 | 490.20 | pass |
-| 844×390 | 844×216 | 1 | 0.9407764 | 185.76 | pass |
+| 844×390 | 844×216 | 0.5428087 | 0.5 | 185.76 | pass |
 
 - At every viewport and in both motion modes, the Hero resolves to
   `96 × fit` with a `6 × fit` neutral gap, a standard target resolves to

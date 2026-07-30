@@ -45,8 +45,17 @@ node qa/check-doc-contracts.mjs
 ```
 
 `node --check qa/check-motion-preview-ui.mjs` passes. The complete
-`node qa/run-tests.mjs` gate ends `ALL PASS`; `git diff --check` is clean.
+`node qa/run-tests.mjs` gate exits 0 with 2,142 lines and ends `ALL PASS`;
+`git diff --check` is clean.
 No test made a provider, paid, or external-network call.
+
+Fix-round review reproduced the 844×390 standard HP/name plate behind the
+two-row stage HUD. The component-bound RED measured fit `0.8113725490` and
+plate y `81.2247..111.2247` against safe y 103. Commit `148cf05` now measures
+the DOM HUD edge, reserves the fixed plate height separately from the scaled
+motion envelope, and holds compact/full selection on one branch. GREEN measures
+fit `0.5376015474` and plate y `103..133`; the post-commit browser measures
+HUD bottom 103, safety line 105, and the final plate at `105..135`.
 
 ### Browser matrix
 
@@ -60,13 +69,15 @@ The final human-review link omits QA-only hooks:
 | 375×812 | 375×456 | 1 | 1 | 392.16 | 96/6 | 72/2 | 112/2 | pass/pass | 0/0 | 0 / 0 |
 | 390×844 | 390×488 | 1 | 1 | 419.68 | 96/6 | 72/2 | 112/2 | pass/pass | 0/0 | 0 / 0 |
 | 428×926 | 428×570 | 1 | 1 | 490.20 | 96/6 | 72/2 | 112/2 | pass/pass | 0/0 | 0 / 0 |
-| 844×390 | 844×216 | 1 | 0.9407764 | 185.76 | 96×fit/6×fit | 72/2 | 112×fit/2×fit | pass/pass | 0/0 | 0 / 0 |
+| 844×390 | 844×216 | 0.5428087 | 0.5 | 185.76 | 96×fit/6×fit | 72×fit/2×fit | 112×fit/2×fit | pass/pass | 0/0 | 0 / 0 |
 
 Every row measured `shadowY == groundY`. Normal and reduced motion produced the
 same geometry. Within each scene, Entry Runner `advance`, `hit`, and `death`
 used one identical role/scale/pivot/draw transform, and Site Warden `idle` and
-`broken` used one identical transform. In the 844×390 boss scene,
-`112×fit=105.3669571` and `2×fit=1.8815528`.
+`broken` used one identical transform. In the 844×390 standard scene, fit is
+`0.5428087167`, body/gap are `39.0822276/1.0856174`, and the plate remains
+fully below the HUD. In the 844×390 boss scene, fit is `0.5`, body/gap are
+`56/1`, and the same compact plate remains at y `105..135`.
 
 Resolved standard-target anchor samples:
 
@@ -75,7 +86,7 @@ Resolved standard-target anchor samples:
 | 375×812 | 307.0691 | 297.0691 | 320.1818, 354.1600 |
 | 390×844 | 334.5891 | 324.5891 | 315.1818, 381.6800 |
 | 428×926 | 405.1091 | 395.1091 | 320.1818, 452.2000 |
-| 844×390 | 100.6691 | 90.6691 | 320.1818, 147.7600 |
+| 844×390 | 135.0000 | 125.0000 | 320.0987, 165.1333 |
 
 The action captures show the actual priority-rank-2 bracket, HP plate,
 `-42` floater, Hero tracker aura, hit/shock, and loot origins. The dedicated
@@ -108,7 +119,7 @@ motion-store diagnostic set was empty.
 | `.gaf2d-preview/qa-evidence/stage-presentation-375x812.png` | 375×812 | `66a5994634e31bcb340bfd71cbfbeb2a109e137a43b40308d63c9df8fa07d3d8` |
 | `.gaf2d-preview/qa-evidence/stage-presentation-390x844.png` | 390×844 | `496a9900b1fff3d13dc4dd48d9ce734ddd35fe96708c7431ca9c6cf92ca74072` |
 | `.gaf2d-preview/qa-evidence/stage-presentation-428x926.png` | 428×926 | `6ced5c7f575c42120416dba9d3e1f7ba06f9750929c5652a48d9a5d959532377` |
-| `.gaf2d-preview/qa-evidence/stage-presentation-844x390.png` | 844×390 | `169b86b754f3ec754bd4429bee47de51bc744afb52efdb77e8cfe3154d827dcf` |
+| `.gaf2d-preview/qa-evidence/stage-presentation-844x390.png` | 844×390 | `0f2186416b968de9755a2884b0eac69f527df11800decb703baabf4bbc589bd6` |
 | `.gaf2d-preview/qa-evidence/stage-presentation-wave10.png` | 428×926 | `426bb228ae3fbbfa7c69dd4e2d05d87e8ca607cc7556797d8a8e7176912ea69d` |
 
 Each final file was visually inspected at original resolution. The expired boss
@@ -126,10 +137,11 @@ resolved transform; shadows use resolved ground geometry; HP/floater/aura/hit/
 loot paths consume resolved anchors; and production mode remains closed to the
 preview overlay. Focused tests cover those contracts.
 
-The only actionable review finding was the hidden-toast CSS precedence defect,
-fixed and regression-tested in `0f38cf8`. No other blocking or actionable
-finding remains. No paid call, private-media upload, export, push, publish,
-deploy, or history rewrite occurred.
+The initial actionable review finding was the hidden-toast CSS precedence
+defect, fixed and regression-tested in `0f38cf8`. Fix-round review then found
+and closed the landscape plate/HUD overlap in `148cf05`. No other blocking or
+actionable finding remains. No paid call, private-media upload, export, push,
+publish, deploy, or history rewrite occurred.
 
 ## 2026-07-28 authored-motion technical closure
 
