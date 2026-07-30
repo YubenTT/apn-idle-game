@@ -513,7 +513,10 @@ function verifySourceAsset(root, batchRecord, spec) {
       `${assetId}/${expectedFrameId} frame`,
       MAX_FRAME_BYTES,
     );
-    frames.set(expectedFrameId, record);
+    frames.set(expectedFrameId, {
+      ...record,
+      sha256: frame.sha256,
+    });
   }
 
   return {
@@ -686,6 +689,7 @@ function buildScaledPreviewAtlas({
   const cellsDirectory = path.join(staged, `.${workPrefix}-cells`);
   fs.mkdirSync(cellsDirectory);
   const cellFiles = [];
+  const cellBounds = new Map();
   for (let index = 0; index < frameIds.length; index += 1) {
     const frameId = frameIds[index];
     const source = normalizationFacts.frames.get(frameId)?.absolute;
@@ -713,18 +717,27 @@ function buildScaledPreviewAtlas({
       ],
       `ImageMagick preview transform for "${frameId}"`,
     );
-    const dimensions = toolOutput(
-      magickPath,
-      ['identify', '-format', '%w %h', cell],
-      `ImageMagick preview cell probe for "${frameId}"`,
-    )
-      .split(/\s+/)
-      .map(Number);
+    const cellFacts = defaultInspectFrame(cell, magickPath);
     requireFact(
-      dimensions[0] === atlasFacts.trim.width &&
-        dimensions[1] === atlasFacts.trim.height,
+      cellFacts.width === atlasFacts.trim.width &&
+        cellFacts.height === atlasFacts.trim.height,
       `preview cell "${frameId}" changed shared geometry`,
     );
+    const bounds = cellFacts.trim;
+    requireFact(
+      Number.isInteger(bounds?.x) &&
+        bounds.x >= 0 &&
+        Number.isInteger(bounds?.y) &&
+        bounds.y >= 0 &&
+        Number.isInteger(bounds?.width) &&
+        bounds.width > 0 &&
+        Number.isInteger(bounds?.height) &&
+        bounds.height > 0 &&
+        bounds.x + bounds.width <= atlasFacts.trim.width &&
+        bounds.y + bounds.height <= atlasFacts.trim.height,
+      `preview cell "${frameId}" alpha bounds are invalid`,
+    );
+    cellBounds.set(frameId, { ...bounds });
     cellFiles.push(cell);
   }
   const atlasPng = path.join(staged, `.${workPrefix}.png`);
@@ -781,7 +794,7 @@ function buildScaledPreviewAtlas({
   );
   fs.rmSync(cellsDirectory, { recursive: true });
   fs.unlinkSync(atlasPng);
-  return { webp, webpBytes, webpDimensions };
+  return { webp, webpBytes, webpDimensions, cellBounds };
 }
 
 function frameRectangles(frameIds, matrix, trim) {
@@ -791,6 +804,93 @@ function frameRectangles(frameIds, matrix, trim) {
     width: trim.width,
     height: trim.height,
   }));
+}
+
+function validCellBounds(bounds) {
+  return (
+    Number.isInteger(bounds?.x) &&
+    bounds.x >= 0 &&
+    Number.isInteger(bounds?.y) &&
+    bounds.y >= 0 &&
+    Number.isInteger(bounds?.width) &&
+    bounds.width > 0 &&
+    Number.isInteger(bounds?.height) &&
+    bounds.height > 0
+  );
+}
+
+function unionBounds(boundsRecords) {
+  requireFact(boundsRecords.length > 0, 'preview alpha bounds are empty');
+  let left = Number.POSITIVE_INFINITY;
+  let top = Number.POSITIVE_INFINITY;
+  let right = 0;
+  let bottom = 0;
+  for (const bounds of boundsRecords) {
+    requireFact(validCellBounds(bounds), 'preview alpha bounds are invalid');
+    left = Math.min(left, bounds.x);
+    top = Math.min(top, bounds.y);
+    right = Math.max(right, bounds.x + bounds.width);
+    bottom = Math.max(bottom, bounds.y + bounds.height);
+  }
+  return {
+    x: left,
+    y: top,
+    width: right - left,
+    height: bottom - top,
+  };
+}
+
+function presentationRecord(source, cellBounds) {
+  const idle = source.candidate.clips.idle;
+  requireFact(
+    idle && idle.frame_ids.length > 0,
+    `${source.assetId} has no idle reference`,
+  );
+  requireFact(
+    cellBounds instanceof Map &&
+      cellBounds.size === source.frameIds.length,
+    `${source.assetId} preview cell bounds differ from its exact frame set`,
+  );
+  const orderedBounds = source.frameIds.map((frameId) => {
+    const bounds = cellBounds.get(frameId);
+    requireFact(
+      validCellBounds(bounds),
+      `${source.assetId}/${frameId} preview alpha bounds are invalid`,
+    );
+    return bounds;
+  });
+  const referenceId = idle.frame_ids[0];
+  const referenceFrame = source.frames.get(referenceId);
+  requireFact(
+    referenceFrame && cellBounds.has(referenceId),
+    `${source.assetId} idle reference frame is missing`,
+  );
+  return {
+    schemaVersion: 1,
+    scaleContract: 'visible-body',
+    reference: {
+      clip: 'idle',
+      frameIndex: 0,
+      sourceSha256: referenceFrame.sha256,
+    },
+    visibleBounds: { ...cellBounds.get(referenceId) },
+    motionBounds: unionBounds(orderedBounds),
+  };
+}
+
+function mergeCellBounds(target, frameIds, sourceBounds, label) {
+  requireFact(
+    sourceBounds instanceof Map && sourceBounds.size === frameIds.length,
+    `${label} derivative cell bounds differ from its exact frame set`,
+  );
+  for (const frameId of frameIds) {
+    const bounds = sourceBounds.get(frameId);
+    requireFact(
+      validCellBounds(bounds) && !target.has(frameId),
+      `${label}/${frameId} derivative alpha bounds are invalid or duplicated`,
+    );
+    target.set(frameId, bounds);
+  }
 }
 
 function previewLineage(source, batchSummarySha256) {
@@ -859,6 +959,7 @@ function buildCreature({
     workPrefix: source.assetId,
   });
   const imageBytes = Buffer.from(image.webpBytes);
+  const presentation = presentationRecord(source, image.cellBounds);
   const rectangles = frameRectangles(source.frameIds, matrix, trim);
   let cursor = 0;
   const clips = {};
@@ -888,6 +989,7 @@ function buildCreature({
     trim,
     pivot: { x: 0.5, y: 1 },
     clips,
+    presentation,
     previewLineage: previewLineage(source, batchSummarySha256),
     encoder: encoderFacts(toolFacts, encoderArguments),
   };
@@ -956,6 +1058,8 @@ function buildHero({
   const encoder = encoderFacts(toolFacts, encoderArguments);
   const setClips = {};
   const manifestClips = {};
+  const clipBuilds = new Map();
+  const cellBounds = new Map();
   for (const clipName of source.candidate.clip_order) {
     const sourceClip = source.candidate.clips[clipName];
     const matrix = chooseDerivativeMatrix(
@@ -978,6 +1082,18 @@ function buildHero({
       workPrefix: `hero-${clipName}`,
     });
     const imageBytes = Buffer.from(image.webpBytes);
+    mergeCellBounds(
+      cellBounds,
+      sourceClip.frame_ids,
+      image.cellBounds,
+      `${source.assetId}/${clipName}`,
+    );
+    clipBuilds.set(clipName, { image, imageBytes, matrix });
+  }
+  const presentation = presentationRecord(source, cellBounds);
+  for (const clipName of source.candidate.clip_order) {
+    const sourceClip = source.candidate.clips[clipName];
+    const { image, imageBytes, matrix } = clipBuilds.get(clipName);
     const descriptor = {
       grammar: HERO_PREVIEW_CLIP_GRAMMAR,
       authority: 'unapproved_preview',
@@ -994,6 +1110,7 @@ function buildHero({
         bytes: imageBytes.length,
         sha256: sha256Bytes(imageBytes),
       },
+      presentation,
       previewLineage: lineage,
       encoder,
     };

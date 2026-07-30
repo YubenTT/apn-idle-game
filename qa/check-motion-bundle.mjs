@@ -97,6 +97,17 @@ function asPreview(bundle, assetId = bundle.assetId) {
   const preview = copy(bundle);
   preview.grammar = MOTION_PREVIEW_GRAMMAR;
   preview.authority = 'unapproved_preview';
+  preview.presentation = {
+    schemaVersion: 1,
+    scaleContract: 'visible-body',
+    reference: {
+      clip: 'idle',
+      frameIndex: 0,
+      sourceSha256: 'd'.repeat(64),
+    },
+    visibleBounds: { x: 8, y: 4, width: 64, height: 88 },
+    motionBounds: { x: 2, y: 1, width: 78, height: 96 },
+  };
   preview.previewLineage = {
     candidateId: `${assetId}-authored-semantic-v2`,
     candidateSha256: 'a'.repeat(64),
@@ -118,6 +129,11 @@ assert(
   'required clip vocabulary is exact',
 );
 expectValid(valid, 'entry-runner', 'valid common motion bundle accepted');
+assert(
+  !Object.hasOwn(valid, 'presentation') &&
+    validateMotionBundle(valid, 'entry-runner').length === 0,
+  'unchanged production V1 bundle remains valid without preview presentation metadata',
+);
 {
   const preview = asPreview(valid);
   const previewErrors = validateMotionPreviewBundle(
@@ -153,6 +169,81 @@ expectValid(valid, 'entry-runner', 'valid common motion bundle accepted');
     ),
     'preview candidate identity is bound to the expected asset',
   );
+  const presentationMutations = [
+    {
+      message: 'preview descriptor requires presentation metadata',
+      mutate: (bundle) => {
+        delete bundle.presentation;
+      },
+      needle: 'presentation:',
+    },
+    {
+      message: 'preview presentation reference is the neutral idle clip',
+      mutate: (bundle) => {
+        bundle.presentation.reference.clip = 'advance';
+      },
+      needle: 'presentation.reference.clip',
+    },
+    {
+      message: 'preview presentation reference is the current neutral frame',
+      mutate: (bundle) => {
+        bundle.presentation.reference.frameIndex = 1;
+      },
+      needle: 'presentation.reference.frameIndex',
+    },
+    {
+      message: 'preview presentation bounds stay inside the shared trim',
+      mutate: (bundle) => {
+        bundle.presentation.motionBounds.width = 95;
+      },
+      needle: 'outside trim',
+    },
+    {
+      message: 'preview motion envelope contains the neutral body',
+      mutate: (bundle) => {
+        bundle.presentation.motionBounds = {
+          x: 9,
+          y: 5,
+          width: 63,
+          height: 87,
+        };
+      },
+      needle: 'must contain',
+    },
+    {
+      message: 'preview presentation rejects zero visible body height',
+      mutate: (bundle) => {
+        bundle.presentation.visibleBounds.height = 0;
+      },
+      needle: 'finite positive number',
+    },
+    {
+      message: 'preview presentation binds a lowercase source SHA-256',
+      mutate: (bundle) => {
+        bundle.presentation.reference.sourceSha256 = 'D'.repeat(64);
+      },
+      needle: 'sourceSha256',
+    },
+    {
+      message: 'preview presentation is closed to unknown properties',
+      mutate: (bundle) => {
+        bundle.presentation.sourcePath = '/private/frame.png';
+      },
+      needle: 'unexpected property "sourcePath"',
+    },
+  ];
+  for (const { message, mutate, needle } of presentationMutations) {
+    const invalidPresentation = copy(preview);
+    mutate(invalidPresentation);
+    const errors = validateMotionPreviewBundle(
+      invalidPresentation,
+      'entry-runner',
+    );
+    assert(
+      errors.some((error) => error.includes(needle)),
+      `${message} (${errors.join('; ')})`,
+    );
+  }
 }
 assert(
   browserFixtureIntegrity.grammar === 'apn-browser-motion-fixture-v1' &&

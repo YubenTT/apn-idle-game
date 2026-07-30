@@ -202,6 +202,17 @@ const previewLineage = {
   batchSummarySha256: 'c'.repeat(64),
   sourceManifestVersion: 2,
 };
+const previewPresentation = {
+  schemaVersion: 1,
+  scaleContract: 'visible-body',
+  reference: {
+    clip: 'idle',
+    frameIndex: 0,
+    sourceSha256: 'd'.repeat(64),
+  },
+  visibleBounds: { x: 8, y: 4, width: 48, height: 88 },
+  motionBounds: { x: 2, y: 1, width: 60, height: 95 },
+};
 const previewRuntimeFiles = new Map();
 const previewRuntimeClips = {};
 for (const [name, contract] of Object.entries(HERO_CLIP_CONTRACT)) {
@@ -228,6 +239,7 @@ for (const [name, contract] of Object.entries(HERO_CLIP_CONTRACT)) {
       bytes: imageBytes.byteLength,
       sha256: imageSha256,
     },
+    presentation: structuredClone(previewPresentation),
     previewLineage,
     encoder: approvedEncoder,
   };

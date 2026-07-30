@@ -6,6 +6,8 @@
  * selector and one-call blitter from simulation state.
  */
 
+import { validatePresentationRecord } from './stage-presentation.js?v=gaf2d-motion-v1';
+
 export const MOTION_GRAMMAR = 'gaf2d-motion-bundle-v1';
 export const MOTION_PREVIEW_GRAMMAR = 'gaf2d-motion-preview-v1';
 export const REQUIRED_CLIPS = Object.freeze([
@@ -72,6 +74,7 @@ const PREVIEW_TOP_LEVEL_KEYS = new Set([
   'trim',
   'pivot',
   'clips',
+  'presentation',
   'previewLineage',
   'encoder',
 ]);
@@ -111,6 +114,13 @@ function rectsOverlap(left, right) {
     left.x + left.width > right.x &&
     left.y < right.y + right.height &&
     left.y + left.height > right.y
+  );
+}
+
+function boundsInsideTrim(bounds, trim) {
+  return (
+    bounds.x + bounds.width <= trim.width &&
+    bounds.y + bounds.height <= trim.height
   );
 }
 
@@ -256,6 +266,20 @@ function validateMotionDescriptor(
       trim.y + trim.height > frameSize.height)
   ) {
     addError('trim: must be inside the untrimmed frame size');
+  }
+
+  if (isPreview) {
+    const presentationErrors = validatePresentationRecord(data.presentation);
+    for (const error of presentationErrors) {
+      addError(`presentation: ${error}`);
+    }
+    if (presentationErrors.length === 0 && trimValid) {
+      for (const field of ['visibleBounds', 'motionBounds']) {
+        if (!boundsInsideTrim(data.presentation[field], trim)) {
+          addError(`presentation: ${field} is outside trim`);
+        }
+      }
+    }
   }
 
   rejectUnknownProperties(data.pivot, PIVOT_KEYS, 'pivot', addError);

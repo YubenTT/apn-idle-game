@@ -6,6 +6,8 @@
  * motion set, rig, export, and pinned derivative toolchain are all present.
  */
 
+import { validatePresentationRecord } from './stage-presentation.js?v=gaf2d-motion-v1';
+
 export const HERO_SET_GRAMMAR = 'gaf2d-hero-set-v1';
 export const HERO_APPROVED_CLIP_GRAMMAR = 'gaf2d-hero-clip-v1';
 export const HERO_PREVIEW_SET_GRAMMAR = 'gaf2d-hero-preview-set-v1';
@@ -138,6 +140,7 @@ const PREVIEW_DESCRIPTOR_KEYS = new Set([
   'anchor',
   'trim',
   'atlas',
+  'presentation',
   'previewLineage',
   'encoder',
 ]);
@@ -155,6 +158,13 @@ const LEGACY_ATLAS_KEYS = new Set(['w', 'h', 'bytes']);
 const isObject = (value) =>
   value !== null && typeof value === 'object' && !Array.isArray(value);
 const positiveInteger = (value) => Number.isInteger(value) && value > 0;
+
+function boundsInsideTrim(bounds, trim) {
+  return (
+    bounds.x + bounds.width <= trim.width &&
+    bounds.y + bounds.height <= trim.height
+  );
+}
 
 function exactKeys(value, expected, label, addError) {
   if (!isObject(value)) {
@@ -565,14 +575,19 @@ function validateModernHeroDescriptor(
   if (!contract) {
     return [`${authorityMode} clip: unknown name "${String(clipName)}"`];
   }
-  if (
-    !exactKeys(
-      data,
-      isPreview ? PREVIEW_DESCRIPTOR_KEYS : APPROVED_DESCRIPTOR_KEYS,
-      label,
-      addError,
-    )
-  ) {
+  const descriptorKeysValid = exactKeys(
+    data,
+    isPreview ? PREVIEW_DESCRIPTOR_KEYS : APPROVED_DESCRIPTOR_KEYS,
+    label,
+    addError,
+  );
+  const presentationErrors = isPreview
+    ? validatePresentationRecord(isObject(data) ? data.presentation : undefined)
+    : [];
+  for (const error of presentationErrors) {
+    addError(`presentation: ${error}`);
+  }
+  if (!descriptorKeysValid) {
     return errors;
   }
   const expectedGrammar = isPreview
@@ -623,6 +638,13 @@ function validateModernHeroDescriptor(
     data.trim.y + data.trim.height > data.frameSize?.height
   ) {
     addError(`${label}.trim: outside frameSize`);
+  }
+  if (isPreview && presentationErrors.length === 0 && validRect(data.trim)) {
+    for (const field of ['visibleBounds', 'motionBounds']) {
+      if (!boundsInsideTrim(data.presentation[field], data.trim)) {
+        addError(`presentation: ${field} is outside trim`);
+      }
+    }
   }
   if (
     !exactKeys(

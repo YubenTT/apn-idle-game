@@ -504,11 +504,12 @@ try {
       dimensions.width === descriptor.atlas.width &&
       dimensions.height === descriptor.atlas.height &&
       new Set(rectKeys).size === rectKeys.length &&
+      !Object.hasOwn(descriptor, 'presentation') &&
       !descriptorText.includes(fixture.gaf2dProject);
   }
   check(
     everyClipValid,
-    'all eight Hero clips have exact counts/playback, unique cells, hashes, dimensions, and portable metadata',
+    'all eight production Hero clips preserve exact V1 keys, counts, cells, hashes, dimensions, and portable metadata',
   );
   check(
     first.webpBytes <= 640 * 1024,

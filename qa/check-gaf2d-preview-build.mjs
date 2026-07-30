@@ -69,6 +69,17 @@ const assert = (condition, message) => {
   if (!condition) throw new Error(`GAF2D preview build: ${message}`);
   console.log(`OK ${message}`);
 };
+const boundsInsideTrim = (bounds, trim) =>
+  Number.isInteger(bounds?.x) &&
+  bounds.x >= 0 &&
+  Number.isInteger(bounds?.y) &&
+  bounds.y >= 0 &&
+  Number.isInteger(bounds?.width) &&
+  bounds.width > 0 &&
+  Number.isInteger(bounds?.height) &&
+  bounds.height > 0 &&
+  bounds.x + bounds.width <= trim.width &&
+  bounds.y + bounds.height <= trim.height;
 const write = (root, relative, bytes) => {
   const file = path.join(root, relative);
   fs.mkdirSync(path.dirname(file), { recursive: true });
@@ -301,16 +312,34 @@ function fakeDerivatives() {
           '79b3b980f7b360585605a491bf176f54adf264fb31ecade68c9f0e7348fb9a69',
       };
     },
-    buildAtlas({ frameIds, staged, matrix, outputName }) {
+    buildAtlas({ frameIds, atlasFacts, staged, matrix, outputName }) {
       const webpBytes = Buffer.from(
         `synthetic-webp:${frameIds.join(',')}:${matrix.width}x${matrix.height}`,
       );
       const webp = path.join(staged, outputName);
       fs.writeFileSync(webp, webpBytes);
+      const referenceBounds = {
+        x: 8,
+        y: 4,
+        width: atlasFacts.trim.width - 16,
+        height: atlasFacts.trim.height - 8,
+      };
+      const motionBounds = {
+        x: 2,
+        y: 1,
+        width: atlasFacts.trim.width - 4,
+        height: atlasFacts.trim.height - 2,
+      };
       return {
         webp,
         webpBytes,
         webpDimensions: { width: matrix.width, height: matrix.height },
+        cellBounds: new Map(
+          frameIds.map((frameId, index) => [
+            frameId,
+            index === 0 ? referenceBounds : motionBounds,
+          ]),
+        ),
       };
     },
   };
@@ -353,6 +382,10 @@ try {
     JSON.stringify(firstProjection) === JSON.stringify(secondProjection),
     'unchanged source produces byte-identical preview output',
   );
+  assert(
+    first.manifestSha256 === second.manifestSha256,
+    'unchanged source produces the same preview manifest hash',
+  );
   const manifestText = fs.readFileSync(
     path.join(outputRoot, 'manifest.json'),
     'utf8',
@@ -372,6 +405,54 @@ try {
     !manifestText.includes(temporaryRoot) &&
       !manifestText.includes('ApprovalSha256'),
     'preview output contains no machine path or production approval field',
+  );
+  const creatureDescriptors = Object.keys(manifest.characters).map(
+    (assetId) => ({
+      assetId,
+      descriptor: JSON.parse(
+        fs.readFileSync(
+          path.join(outputRoot, 'characters', assetId, 'motion.json'),
+          'utf8',
+        ),
+      ),
+    }),
+  );
+  const heroDescriptors = Object.keys(manifest.hero.clips).map((clipName) =>
+    JSON.parse(
+      fs.readFileSync(
+        path.join(outputRoot, 'hero', `${clipName}.json`),
+        'utf8',
+      ),
+    ),
+  );
+  const allSevenAssets = [
+    { assetId: 'apn-hero', descriptor: heroDescriptors[0] },
+    ...creatureDescriptors,
+  ];
+  assert(
+    allSevenAssets.length === 7 &&
+      allSevenAssets.every(({ assetId, descriptor }) => {
+        const presentation = descriptor.presentation;
+        return (
+          presentation?.scaleContract === 'visible-body' &&
+          presentation.reference.clip === 'idle' &&
+          presentation.reference.frameIndex === 0 &&
+          presentation.reference.sourceSha256 ===
+            sha256(Buffer.from(`synthetic-frame:${assetId}:idle-000`)) &&
+          boundsInsideTrim(presentation.visibleBounds, descriptor.trim) &&
+          boundsInsideTrim(presentation.motionBounds, descriptor.trim)
+        );
+      }),
+    'all seven preview assets bind bounded neutral and union presentation geometry',
+  );
+  assert(
+    heroDescriptors.length === 8 &&
+      heroDescriptors.every(
+        (descriptor) =>
+          JSON.stringify(descriptor.presentation) ===
+          JSON.stringify(heroDescriptors[0].presentation),
+      ),
+    'every Hero clip descriptor binds the same asset-level presentation record',
   );
 
   const batchPath = path.join(

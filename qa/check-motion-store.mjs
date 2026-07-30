@@ -134,6 +134,17 @@ function buildPack(assetIds, options = {}) {
     if (options.preview) {
       descriptor.grammar = 'gaf2d-motion-preview-v1';
       descriptor.authority = 'unapproved_preview';
+      descriptor.presentation = {
+        schemaVersion: 1,
+        scaleContract: 'visible-body',
+        reference: {
+          clip: 'idle',
+          frameIndex: 0,
+          sourceSha256: 'd'.repeat(64),
+        },
+        visibleBounds: { x: 8, y: 4, width: 64, height: 88 },
+        motionBounds: { x: 2, y: 1, width: 78, height: 96 },
+      };
       descriptor.previewLineage = {
         candidateId: `${assetId}-authored-semantic-v2`,
         candidateSha256: 'a'.repeat(64),

@@ -106,6 +106,28 @@ const sourceAssets = Object.fromEntries([
   ]),
 ]);
 const batchSummarySha256 = '7'.repeat(64);
+const creaturePresentation = {
+  schemaVersion: 1,
+  scaleContract: 'visible-body',
+  reference: {
+    clip: 'idle',
+    frameIndex: 0,
+    sourceSha256: 'd'.repeat(64),
+  },
+  visibleBounds: { x: 8, y: 4, width: 64, height: 88 },
+  motionBounds: { x: 2, y: 1, width: 78, height: 96 },
+};
+const heroPresentation = {
+  schemaVersion: 1,
+  scaleContract: 'visible-body',
+  reference: {
+    clip: 'idle',
+    frameIndex: 0,
+    sourceSha256: 'e'.repeat(64),
+  },
+  visibleBounds: { x: 8, y: 4, width: 48, height: 88 },
+  motionBounds: { x: 2, y: 1, width: 60, height: 95 },
+};
 
 const validMotion = JSON.parse(
   fs.readFileSync(
@@ -119,6 +141,7 @@ for (const [assetId, role] of creatureSpecs) {
   descriptor.grammar = 'gaf2d-motion-preview-v1';
   descriptor.authority = 'unapproved_preview';
   descriptor.assetId = assetId;
+  descriptor.presentation = structuredClone(creaturePresentation);
   descriptor.previewLineage = {
     candidateId: sourceAssets[assetId].candidateId,
     candidateSha256: sourceAssets[assetId].candidateSha256,
@@ -198,6 +221,7 @@ for (const [name, contract] of Object.entries(HERO_CLIP_CONTRACT)) {
       bytes: 1024,
       sha256: imageSha256,
     },
+    presentation: structuredClone(heroPresentation),
     previewLineage: heroLineage,
     encoder: encoderFacts,
   };
