@@ -15,9 +15,9 @@ export const HOST_RENDER_LOCK = Object.freeze({
 });
 
 export const HOST_PRESENTATION = Object.freeze({
-  min: 118,
-  target: 130,
-  max: 142,
+  role: 'hero',
+  visibleBodyHeight: 96,
+  visualGap: 6,
 });
 
 export const HOST_PLACEHOLDER_FRAMES = Object.freeze([

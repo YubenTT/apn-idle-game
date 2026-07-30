@@ -139,6 +139,11 @@ process.stdout.write(
   })
 );
 process.stdout.write(
+  execFileSync(process.execPath, [fileURLToPath(new URL('./check-stage-presentation.mjs', import.meta.url))], {
+    encoding: 'utf8',
+  })
+);
+process.stdout.write(
   execFileSync(process.execPath, [fileURLToPath(new URL('./check-hero-motion-semantics.mjs', import.meta.url))], {
     encoding: 'utf8',
   })
@@ -251,8 +256,13 @@ ok(
   'Every semantic clip resolves to a shipped placeholder frame',
 );
 ok(
-  HOST_PRESENTATION.min === 118 && HOST_PRESENTATION.target === 130 && HOST_PRESENTATION.max === 142,
-  'Run Host presentation is locked to the 118–142 CSS px gate',
+  JSON.stringify(HOST_PRESENTATION) ===
+    JSON.stringify({
+      role: 'hero',
+      visibleBodyHeight: 96,
+      visualGap: 6,
+    }),
+  'Run Host presentation is locked to the exact Hero visible-body contract',
 );
 ok(
   HOST_RENDER_LOCK.cameraY === 18 && HOST_RENDER_LOCK.cameraX === 9 && HOST_RENDER_LOCK.pivot === 'foot-center',
@@ -322,7 +332,6 @@ ok(
 ok(shellMarkup.includes('id="patch-echo-chip"') && shellMarkup.includes('id="v-echo-progress"'), 'Run reserves one data-bound Patch Echo chip');
 ok(uiSource.includes("skillLv(s, 'hotfix') > 0 || skillLv(s, 'summary_burst') > 0"), 'Focus appears only after a Focus-spending skill is learned');
 ok(uiSource.includes("echoProgressByPack?.[pack?.id]"), 'Patch Echo chip reads optional Route domain state without inventing progress');
-ok(/const mh = HOST_PRESENTATION\.target;/.test(readFileSync(new URL('../js/render.js', import.meta.url), 'utf8')), 'Canvas uses the canonical 130px Host target');
 ok(uiSource.includes("spBtn.disabled = h.energy < 1"), 'Sprint empty state uses native disabled semantics');
 ok(/\.btn-chip\s*\{[^}]*min-height:\s*calc\(var\(--touch-min\) \+ var\(--sp-1\)\)/s.test(cssSource), 'Run skills preserve touch targets');
 ok((shellMarkup.match(/class="nav-btn"/g) || []).length === 5, 'Navigation keeps exactly five tabs');
