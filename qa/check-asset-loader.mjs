@@ -3,6 +3,7 @@ import { createRouteState } from '../js/route.js';
 import { firstPlayableAssetPaths } from '../scripts/assets/first-playable.mjs';
 import { LEGACY_CREATURE_BOOT_ASSET_PATHS } from '../js/creatures.js';
 import { packWavePairIdentityUnion } from '../js/wave-roster.js';
+import { GAME_PACKS } from '../js/generated/game-packs.js';
 
 const assert = (condition, message) => {
   if (!condition) throw new Error(`Asset loader: ${message}`);
@@ -22,6 +23,33 @@ const loadJson = async (src) => {
 const warn = [];
 const store = createAssetStore({ loadImage, loadJson, warn: (message) => warn.push(message) });
 const route = createRouteState();
+
+const injectedValorant = {
+  ...GAME_PACKS.find((pack) => pack.id === 'valorant'),
+  previewAuthority: 'unapproved_preview',
+};
+const injectedCatalog = GAME_PACKS.map((pack) =>
+  pack.id === 'valorant' ? injectedValorant : pack,
+);
+const injectedWarn = [];
+const injectedStore = createAssetStore({
+  catalog: injectedCatalog,
+  loadImage,
+  loadJson,
+  warn: (message) => injectedWarn.push(message),
+});
+assert(
+  packWindowForRoute(route, injectedCatalog)[0]?.previewAuthority ===
+    'unapproved_preview',
+  'route window honors an explicitly injected runtime catalog',
+);
+await preloadRouteAssets(injectedStore, route);
+assert(
+  injectedStore.catalog === injectedCatalog &&
+    getCurrentPackAssets(injectedStore, route)?.pack?.previewAuthority ===
+      'unapproved_preview',
+  'asset store owns and resolves the injected runtime pack without touching defaults',
+);
 
 const firstWindow = packWindowForRoute(route);
 assert(firstWindow.map((pack) => pack.id).join(',') === 'valorant,league', 'current and next pack window');

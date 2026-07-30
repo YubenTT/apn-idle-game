@@ -22,6 +22,7 @@ export function createAssetStore(options = {}) {
     pending: new Map(),
     currentId: null,
     nextId: null,
+    catalog: options.catalog || GAME_PACKS,
     motionStore: options.motionStore || null,
     creatureStore: options.creatureStore || null,
     loadImage: options.loadImage || browserImage,
@@ -30,9 +31,9 @@ export function createAssetStore(options = {}) {
   };
 }
 
-export function packWindowForRoute(route) {
-  const current = packForRoute(route, GAME_PACKS);
-  const next = packForRoute({ ...route, zone: Math.max(0, route?.zone || 0) + 10 }, GAME_PACKS);
+export function packWindowForRoute(route, catalog = GAME_PACKS) {
+  const current = packForRoute(route, catalog);
+  const next = packForRoute({ ...route, zone: Math.max(0, route?.zone || 0) + 10 }, catalog);
   return [current, next].filter((pack, index, packs) => pack && packs.findIndex((item) => item.id === pack.id) === index);
 }
 
@@ -84,7 +85,7 @@ export function releaseColdPacks(store, keep) {
 }
 
 export async function preloadRouteAssets(store, route) {
-  const window = packWindowForRoute(route);
+  const window = packWindowForRoute(route, store.catalog);
   store.currentId = window[0]?.id || null;
   store.nextId = window[1]?.id || null;
   await Promise.all(window.map((pack) => ensurePack(store, pack)));
@@ -93,6 +94,6 @@ export async function preloadRouteAssets(store, route) {
 }
 
 export function getCurrentPackAssets(store, route) {
-  const current = packForRoute(route, GAME_PACKS);
+  const current = packForRoute(route, store.catalog);
   return current ? store.packs.get(current.id) || null : null;
 }

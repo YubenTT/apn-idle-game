@@ -30,14 +30,25 @@ import {
   releaseColdCreatureKinds,
   warmCreatureKind,
 } from './creatures.js?v=gaf2d-motion-v1';
+import {
+  loadMotionPreview,
+} from './motion-preview.js?v=gaf2d-motion-v1';
 
 const canvas = document.getElementById('game');
 const s = createState();
+const qaParams = new URLSearchParams(location.search);
+const motionPreview = await loadMotionPreview({
+  locationLike: location,
+  packs: GAME_PACKS,
+});
+const runtimePacks = motionPreview.packs;
 const assetStore = createAssetStore({
-  motionStore: createMotionStore(),
+  catalog: runtimePacks,
+  motionStore: createMotionStore({
+    allowUnapprovedPreview: motionPreview.active,
+  }),
   creatureStore: createCreatureStore(),
 });
-const qaParams = new URLSearchParams(location.search);
 const qaMetricsEnabled = qaParams.has('qa_metrics');
 const qaEnabled = qaParams.has('chrome-smoke');
 const qaManualMode = qaEnabled && qaParams.has('qa-manual');
@@ -84,7 +95,7 @@ bindUI(s, motionPreference);
 let assetWindowKey = '';
 let assetSyncPromise = Promise.resolve();
 function syncRouteAssets() {
-  const key = packWindowForRoute(s.route).map((pack) => pack.id).join(',');
+  const key = packWindowForRoute(s.route, runtimePacks).map((pack) => pack.id).join(',');
   if (key === assetWindowKey) return assetSyncPromise;
   assetWindowKey = key;
   assetSyncPromise = preloadRouteAssets(assetStore, s.route).catch(() => []);
@@ -113,7 +124,7 @@ function groupMotionRequests(requests) {
 }
 
 function currentMotionRequests(route = s.route) {
-  const [current] = routeWaveWindow(route, GAME_PACKS);
+  const [current] = routeWaveWindow(route, runtimePacks);
   if (!current?.pack) return [];
   return motionAssetIdsForPackWave(current.pack, current.wave).map((assetId) => ({
     pack: current.pack,
@@ -122,9 +133,9 @@ function currentMotionRequests(route = s.route) {
 }
 
 function routeMotionRequests(route = s.route) {
-  return routeWaveIdentityUnion(route, GAME_PACKS)
+  return routeWaveIdentityUnion(route, runtimePacks)
     .map(({ packId, assetId }) => ({
-      pack: GAME_PACKS.find((candidate) => candidate.id === packId),
+      pack: runtimePacks.find((candidate) => candidate.id === packId),
       assetId,
     }))
     .filter(
@@ -303,7 +314,9 @@ if (qaEnabled) {
 
 // Canon Host V3 is primary. A load failure stays on the explicit legless,
 // identity-safe Canvas silhouette owned by hero-v2.js.
-const heroV3Load = loadHeroV3('assets/mascot/v3/')
+const heroV3Load = loadHeroV3(motionPreview.heroBasePath, {
+  allowUnapprovedPreview: motionPreview.active,
+})
   .catch(() => null); // identity-safe Canvas silhouette remains active
 
 function pos(ev) {

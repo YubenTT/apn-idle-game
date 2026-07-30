@@ -159,6 +159,11 @@ process.stdout.write(
   })
 );
 process.stdout.write(
+  execFileSync(process.execPath, [fileURLToPath(new URL('./check-motion-preview.mjs', import.meta.url))], {
+    encoding: 'utf8',
+  })
+);
+process.stdout.write(
   execFileSync(process.execPath, [fileURLToPath(new URL('./check-motion-preference.mjs', import.meta.url))], {
     encoding: 'utf8',
   })
