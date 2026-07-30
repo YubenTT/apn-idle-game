@@ -41,6 +41,18 @@ assert(
   /\.motion-preview-banner\[hidden\]\s*\{[^}]*display:\s*none/.test(gameCss),
   'hidden preview banner cannot be revealed by its flex declaration',
 );
+for (const [selector, label] of [
+  ['#toast\\.toast-banner', 'toast'],
+  ['\\.coach-hint', 'coach hint'],
+  ['\\.motion-preview-banner', 'preview banner'],
+]) {
+  assert(
+    new RegExp(`${selector}\\[hidden\\]\\s*\\{[^}]*display:\\s*none`).test(
+      gameCss,
+    ),
+    `hidden ${label} overrides its component display declaration`,
+  );
+}
 
 for (const signal of [
   'motionPreview.requested',

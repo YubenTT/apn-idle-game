@@ -6424,6 +6424,10 @@ button[hidden] {
   pointer-events: none;
 }
 
+#toast.toast-banner[hidden] {
+  display: none;
+}
+
 #toast.toast-banner .toast-ico {
   flex: 0 0 auto;
   width: var(--sp-4);
