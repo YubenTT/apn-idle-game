@@ -111,7 +111,7 @@ function parseJson(bytes, label, parseJson) {
 }
 
 function atlasFacts(descriptor, status) {
-  return status === 'approved'
+  return status !== 'historical'
     ? {
         width: descriptor.atlas.width,
         height: descriptor.atlas.height,
@@ -154,6 +154,7 @@ async function loadClip({
   decodeImage,
   hashBytes,
   parseJsonImpl,
+  allowUnapprovedPreview,
   signal,
 }) {
   const record = set.clips[name];
@@ -178,7 +179,12 @@ async function loadClip({
     `${name} descriptor`,
     parseJsonImpl,
   );
-  const descriptorErrors = validateHeroClipDescriptor(descriptor, name, set);
+  const descriptorErrors = validateHeroClipDescriptor(
+    descriptor,
+    name,
+    set,
+    { allowUnapprovedPreview },
+  );
   if (descriptorErrors.length > 0) {
     throw new Error(
       `hero-v3: ${name} descriptor rejected: ${descriptorErrors.join('; ')}`,
@@ -239,6 +245,8 @@ export async function loadHeroV3(basePath, options = {}) {
   const decodeImage = options.decodeImage || defaultDecodeImage;
   const hashBytes = options.hashBytes || defaultHashBytes;
   const parseJsonImpl = options.parseJson || JSON.parse;
+  const allowUnapprovedPreview =
+    options.allowUnapprovedPreview === true;
   const AbortControllerImpl =
     options.AbortController || globalThis.AbortController;
   const generation = ++loadGeneration;
@@ -254,7 +262,9 @@ export async function loadHeroV3(basePath, options = {}) {
       controller.signal,
     );
     const set = parseJson(setBytes, 'set descriptor', parseJsonImpl);
-    const setErrors = validateHeroSetManifest(set);
+    const setErrors = validateHeroSetManifest(set, {
+      allowUnapprovedPreview,
+    });
     if (setErrors.length > 0) {
       throw new Error(`hero-v3: set descriptor rejected: ${setErrors.join('; ')}`);
     }
@@ -268,6 +278,7 @@ export async function loadHeroV3(basePath, options = {}) {
           decodeImage,
           hashBytes,
           parseJsonImpl,
+          allowUnapprovedPreview,
           signal: controller.signal,
         }),
       ),

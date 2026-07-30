@@ -7,6 +7,7 @@
  */
 
 export const MOTION_GRAMMAR = 'gaf2d-motion-bundle-v1';
+export const MOTION_PREVIEW_GRAMMAR = 'gaf2d-motion-preview-v1';
 export const REQUIRED_CLIPS = Object.freeze([
   'idle',
   'advance',
@@ -61,6 +62,19 @@ const TOP_LEVEL_KEYS = new Set([
   'lineage',
   'encoder',
 ]);
+const PREVIEW_TOP_LEVEL_KEYS = new Set([
+  'grammar',
+  'authority',
+  'assetId',
+  'image',
+  'atlas',
+  'frameSize',
+  'trim',
+  'pivot',
+  'clips',
+  'previewLineage',
+  'encoder',
+]);
 const ATLAS_KEYS = new Set(['width', 'height', 'sha256']);
 const SIZE_KEYS = new Set(['width', 'height']);
 const RECT_KEYS = new Set(['x', 'y', 'width', 'height']);
@@ -69,6 +83,18 @@ const CLIP_KEYS = new Set(['playback', 'fps', 'frames']);
 const LINEAGE_KEYS = new Set([
   ...REQUIRED_LINEAGE_HASHES,
   'rigApprovalSha256',
+]);
+const PREVIEW_LINEAGE_KEYS = new Set([
+  'candidateId',
+  'candidateSha256',
+  'qaSummarySha256',
+  'batchSummarySha256',
+  'sourceManifestVersion',
+]);
+const PREVIEW_LINEAGE_HASHES = Object.freeze([
+  'candidateSha256',
+  'qaSummarySha256',
+  'batchSummarySha256',
 ]);
 const ENCODER_KEYS = new Set(['name', 'version', 'arguments']);
 const EXACT_ENCODER_VERSION = '1.6.0';
@@ -128,17 +154,31 @@ function boundedOwnKeys(value, maxKeys) {
  * contents never select the trusted boss byte class or boss-only clip grammar.
  * Omitting options preserves the conservative non-boss contract.
  */
-export function validateMotionBundle(data, expectedAssetId, options = {}) {
+function validateMotionDescriptor(
+  data,
+  expectedAssetId,
+  options = {},
+  authorityMode = 'production',
+) {
   const errors = [];
   const addError = (message) => {
     if (errors.length < MAX_VALIDATION_ERRORS) errors.push(message);
   };
   const isBoss = options?.role === 'boss';
+  const isPreview = authorityMode === 'preview';
   if (!isObject(data)) return ['bundle: must be an object'];
-  rejectUnknownProperties(data, TOP_LEVEL_KEYS, 'bundle', addError);
+  rejectUnknownProperties(
+    data,
+    isPreview ? PREVIEW_TOP_LEVEL_KEYS : TOP_LEVEL_KEYS,
+    'bundle',
+    addError,
+  );
 
-  if (data.grammar !== MOTION_GRAMMAR) {
-    addError(`grammar: expected "${MOTION_GRAMMAR}"`);
+  const expectedGrammar = isPreview
+    ? MOTION_PREVIEW_GRAMMAR
+    : MOTION_GRAMMAR;
+  if (data.grammar !== expectedGrammar) {
+    addError(`grammar: expected "${expectedGrammar}"`);
   }
 
   if (typeof data.assetId !== 'string' || !ASSET_ID.test(data.assetId)) {
@@ -227,7 +267,46 @@ export function validateMotionBundle(data, expectedAssetId, options = {}) {
     addError('pivot: must be the normalized bottom-center point (0.5, 1)');
   }
 
-  if (!isObject(data.lineage)) {
+  if (isPreview) {
+    if (data.authority !== 'unapproved_preview') {
+      addError('authority: expected "unapproved_preview"');
+    }
+    if (!isObject(data.previewLineage)) {
+      addError('previewLineage: must be an object');
+    } else {
+      rejectUnknownProperties(
+        data.previewLineage,
+        PREVIEW_LINEAGE_KEYS,
+        'previewLineage',
+        addError,
+      );
+      const expectedCandidateId =
+        typeof expectedAssetId === 'string'
+          ? `${expectedAssetId}-authored-semantic-v2`
+          : null;
+      if (
+        typeof data.previewLineage.candidateId !== 'string' ||
+        (expectedCandidateId !== null &&
+          data.previewLineage.candidateId !== expectedCandidateId)
+      ) {
+        addError(
+          `previewLineage.candidateId: expected "${String(expectedCandidateId)}"`,
+        );
+      }
+      for (const field of PREVIEW_LINEAGE_HASHES) {
+        if (!SHA256.test(data.previewLineage[field] || '')) {
+          addError(
+            `previewLineage.${field}: must be a 64-character lowercase SHA-256`,
+          );
+        }
+      }
+      if (!isPositiveInteger(data.previewLineage.sourceManifestVersion)) {
+        addError(
+          'previewLineage.sourceManifestVersion: must be a positive integer',
+        );
+      }
+    }
+  } else if (!isObject(data.lineage)) {
     addError('lineage: must be an object');
   } else {
     rejectUnknownProperties(data.lineage, LINEAGE_KEYS, 'lineage', addError);
@@ -413,6 +492,23 @@ export function validateMotionBundle(data, expectedAssetId, options = {}) {
   }
 
   return errors;
+}
+
+export function validateMotionBundle(data, expectedAssetId, options = {}) {
+  return validateMotionDescriptor(
+    data,
+    expectedAssetId,
+    options,
+    'production',
+  );
+}
+
+export function validateMotionPreviewBundle(
+  data,
+  expectedAssetId,
+  options = {},
+) {
+  return validateMotionDescriptor(data, expectedAssetId, options, 'preview');
 }
 
 /**

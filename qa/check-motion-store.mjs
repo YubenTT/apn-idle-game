@@ -131,6 +131,18 @@ function buildPack(assetIds, options = {}) {
         })),
       };
     }
+    if (options.preview) {
+      descriptor.grammar = 'gaf2d-motion-preview-v1';
+      descriptor.authority = 'unapproved_preview';
+      descriptor.previewLineage = {
+        candidateId: `${assetId}-authored-semantic-v2`,
+        candidateSha256: 'a'.repeat(64),
+        qaSummarySha256: 'b'.repeat(64),
+        batchSummarySha256: 'c'.repeat(64),
+        sourceManifestVersion: 3,
+      };
+      delete descriptor.lineage;
+    }
     descriptor.atlas.sha256 = '0'.repeat(64);
     const imageBytes = encoder.encode(`atlas:${assetId}`);
     descriptor.atlas.sha256 = sha256Hex(imageBytes);
@@ -140,6 +152,7 @@ function buildPack(assetIds, options = {}) {
       image: `assets/game-packs/valorant/characters/${assetId}/motion.webp`,
       descriptor: `assets/game-packs/valorant/characters/${assetId}/motion.json`,
       descriptorSha256,
+      ...(options.preview ? { authority: 'unapproved_preview' } : {}),
     };
     descriptorBytesById.set(assetId, descriptorBytes);
     imageBytesById.set(assetId, imageBytes);
@@ -278,6 +291,7 @@ function createHarness(options = {}) {
     clearTimeout: clock.clearTimeout,
     AbortController: FakeAbortController,
     deadlineMs: options.deadlineMs,
+    allowUnapprovedPreview: options.allowUnapprovedPreview,
   });
 
   return {
@@ -292,6 +306,55 @@ function createHarness(options = {}) {
     pendingDecodes,
     parseCount: () => parseCount,
   };
+}
+
+{
+  const harness = createHarness({ preview: true });
+  const [record] = await warmMotionSet(
+    harness.store,
+    harness.pack,
+    ['entry-runner'],
+  );
+  assert(
+    record.status === 'failed' &&
+      record.error?.reason === 'descriptor',
+    'preview descriptor fails closed when the motion store lacks explicit opt-in',
+  );
+}
+
+{
+  const harness = createHarness({
+    preview: true,
+    allowUnapprovedPreview: true,
+  });
+  const [record] = await warmMotionSet(
+    harness.store,
+    harness.pack,
+    ['entry-runner'],
+  );
+  assert(
+    record.status === 'ready' &&
+      record.descriptor.authority === 'unapproved_preview',
+    'preview descriptor loads only when source authority and store opt-in agree',
+  );
+}
+
+{
+  const harness = createHarness({
+    preview: true,
+    allowUnapprovedPreview: true,
+  });
+  delete harness.pack.motion.characters['entry-runner'].authority;
+  const [record] = await warmMotionSet(
+    harness.store,
+    harness.pack,
+    ['entry-runner'],
+  );
+  assert(
+    record.status === 'failed' &&
+      record.error?.reason === 'descriptor',
+    'store opt-in alone cannot promote an unowned preview descriptor',
+  );
 }
 
 {

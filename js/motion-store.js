@@ -1,4 +1,7 @@
-import { validateMotionBundle } from './motion-bundle.js?v=gaf2d-motion-v1';
+import {
+  validateMotionBundle,
+  validateMotionPreviewBundle,
+} from './motion-bundle.js?v=gaf2d-motion-v1';
 
 export const DEFAULT_MOTION_DEADLINE_MS = 10_000;
 export const MAX_DESCRIPTOR_BYTES = 256 * 1024;
@@ -179,7 +182,13 @@ async function loadMotionEntry(store, entry, pack, source) {
   } catch (error) {
     throw createFailure('descriptor', `descriptor JSON invalid: ${error.message}`);
   }
-  const validationErrors = validateMotionBundle(descriptor, entry.assetId, {
+  const previewOwned =
+    store.allowUnapprovedPreview === true &&
+    source.authority === 'unapproved_preview';
+  const validateDescriptor = previewOwned
+    ? validateMotionPreviewBundle
+    : validateMotionBundle;
+  const validationErrors = validateDescriptor(descriptor, entry.assetId, {
     role: pack?.boss?.id === entry.assetId ? 'boss' : 'character',
   });
   if (validationErrors.length > 0) {
@@ -302,6 +311,7 @@ export function createMotionStore(options = {}) {
     decodeImage: options.decodeImage || defaultDecodeImage,
     hashBytes: options.hashBytes || defaultHashBytes,
     parseJson: options.parseJson || JSON.parse,
+    allowUnapprovedPreview: options.allowUnapprovedPreview === true,
     setTimeout:
       options.setTimeout || globalThis.setTimeout.bind(globalThis),
     clearTimeout:

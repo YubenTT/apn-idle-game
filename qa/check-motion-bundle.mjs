@@ -4,11 +4,13 @@ import { createHash } from 'node:crypto';
 import {
   LOOP_CLIPS,
   MOTION_GRAMMAR,
+  MOTION_PREVIEW_GRAMMAR,
   REQUIRED_CLIPS,
   drawMotionFrame,
   frameIndexForClip,
   selectEnemyMotion,
   validateMotionBundle,
+  validateMotionPreviewBundle,
 } from '../js/motion-bundle.js';
 
 const readJson = (name) =>
@@ -91,12 +93,67 @@ function expectInvalid(bundle, expectedAssetId, needle, message, options) {
   );
 }
 
+function asPreview(bundle, assetId = bundle.assetId) {
+  const preview = copy(bundle);
+  preview.grammar = MOTION_PREVIEW_GRAMMAR;
+  preview.authority = 'unapproved_preview';
+  preview.previewLineage = {
+    candidateId: `${assetId}-authored-semantic-v2`,
+    candidateSha256: 'a'.repeat(64),
+    qaSummarySha256: 'b'.repeat(64),
+    batchSummarySha256: 'c'.repeat(64),
+    sourceManifestVersion: 3,
+  };
+  delete preview.lineage;
+  return preview;
+}
+
 assert(MOTION_GRAMMAR === 'gaf2d-motion-bundle-v1', 'grammar is exact');
+assert(
+  MOTION_PREVIEW_GRAMMAR === 'gaf2d-motion-preview-v1',
+  'preview grammar is explicit and exact',
+);
 assert(
   REQUIRED_CLIPS.join('|') === 'idle|advance|engaged|hit|death',
   'required clip vocabulary is exact',
 );
 expectValid(valid, 'entry-runner', 'valid common motion bundle accepted');
+{
+  const preview = asPreview(valid);
+  const previewErrors = validateMotionPreviewBundle(
+    preview,
+    'entry-runner',
+  );
+  assert(
+    previewErrors.length === 0,
+    `preview descriptor accepts bounded motion geometry (${previewErrors.join('; ')})`,
+  );
+  expectInvalid(
+    preview,
+    'entry-runner',
+    'grammar',
+    'production validator rejects the unapproved preview grammar',
+  );
+  const approvalLeak = copy(preview);
+  approvalLeak.lineage = copy(valid.lineage);
+  assert(
+    validateMotionPreviewBundle(approvalLeak, 'entry-runner').some(
+      (error) =>
+        error.includes('unexpected property "lineage"') ||
+        error.includes('expected at most'),
+    ),
+    'preview grammar rejects production approval lineage',
+  );
+  const wrongCandidate = copy(preview);
+  wrongCandidate.previewLineage.candidateId =
+    'another-character-authored-semantic-v2';
+  assert(
+    validateMotionPreviewBundle(wrongCandidate, 'entry-runner').some(
+      (error) => error.includes('candidateId'),
+    ),
+    'preview candidate identity is bound to the expected asset',
+  );
+}
 assert(
   browserFixtureIntegrity.grammar === 'apn-browser-motion-fixture-v1' &&
     browserFixtureIntegrity.generator === 'generate.mjs' &&

@@ -7,6 +7,8 @@ import {
   HERO_APPROVED_CLIP_GRAMMAR,
   HERO_CLIP_CONTRACT,
   HERO_MATRIX_PROFILE_SHA256,
+  HERO_PREVIEW_CLIP_GRAMMAR,
+  HERO_PREVIEW_SET_GRAMMAR,
   HERO_SET_GRAMMAR,
   HERO_TOOLCHAIN_GRAMMAR,
   HERO_TOOLCHAIN_OPERATIONS,
@@ -190,6 +192,80 @@ approvedRuntimeFiles.set(
   encoder.encode(canonical(approvedRuntimeSet)),
 );
 
+const previewLineage = {
+  candidateId: 'apn-hero-authored-semantic-v2',
+  candidateSha256: 'a'.repeat(64),
+  qaSummarySha256: 'b'.repeat(64),
+  batchSummarySha256: 'c'.repeat(64),
+  sourceManifestVersion: 2,
+};
+const previewRuntimeFiles = new Map();
+const previewRuntimeClips = {};
+for (const [name, contract] of Object.entries(HERO_CLIP_CONTRACT)) {
+  const imageBytes = encoder.encode(`preview-image-${name}`);
+  const imageSha256 = sha256(imageBytes);
+  const descriptor = {
+    grammar: HERO_PREVIEW_CLIP_GRAMMAR,
+    authority: 'unapproved_preview',
+    name,
+    playback: contract.playback,
+    fps: name === 'sprint' ? 20 : 12,
+    frameSize: { width: 128, height: 128 },
+    frames: Array.from({ length: contract.frames }, (_, index) => ({
+      x: index * 64,
+      y: 0,
+      width: 64,
+      height: 96,
+    })),
+    anchor: [0.5, 1],
+    trim: { x: 32, y: 32, width: 64, height: 96 },
+    atlas: {
+      width: contract.frames * 64,
+      height: 96,
+      bytes: imageBytes.byteLength,
+      sha256: imageSha256,
+    },
+    previewLineage,
+    encoder: approvedEncoder,
+  };
+  const descriptorBytes = encoder.encode(canonical(descriptor));
+  previewRuntimeClips[name] = {
+    descriptor: `${name}.json`,
+    descriptorSha256: sha256(descriptorBytes),
+    image: `${name}.webp`,
+    imageSha256,
+  };
+  previewRuntimeFiles.set(
+    `assets/preview-v3/${name}.json`,
+    descriptorBytes,
+  );
+  previewRuntimeFiles.set(`assets/preview-v3/${name}.webp`, imageBytes);
+}
+const previewRuntimeSet = {
+  grammar: HERO_PREVIEW_SET_GRAMMAR,
+  status: 'preview',
+  authority: 'unapproved_preview',
+  clips: previewRuntimeClips,
+  previewLineage,
+  toolchain: approvedToolchain,
+};
+previewRuntimeFiles.set(
+  'assets/preview-v3/set.json',
+  encoder.encode(canonical(previewRuntimeSet)),
+);
+assert(
+  validateHeroSetManifest(previewRuntimeSet).some(
+    (error) => error.includes('preview') || error.includes('status'),
+  ),
+  'Hero preview set is rejected without explicit validator opt-in',
+);
+assert(
+  validateHeroSetManifest(previewRuntimeSet, {
+    allowUnapprovedPreview: true,
+  }).length === 0,
+  'Hero preview set validates under its separate explicit authority',
+);
+
 function response(bytes) {
   return {
     ok: true,
@@ -226,7 +302,7 @@ function createHarness({ tamperDescriptor = null, sourceFiles = files } = {}) {
   };
   const decodeImage = async (_bytes, context) => {
     const atlas =
-      context.status === 'approved'
+      context.status !== 'historical'
         ? {
             width: context.descriptor.atlas.width,
             height: context.descriptor.atlas.height,
@@ -340,9 +416,33 @@ assert(
   'approved width/height descriptors reconstruct the same full-frame pivot contract',
 );
 
+const previewWithoutOptIn = createHarness({
+  sourceFiles: previewRuntimeFiles,
+});
+await loadHeroV3('assets/preview-v3/', previewWithoutOptIn).then(
+  () => {
+    throw new Error('preview Hero unexpectedly loaded without opt-in');
+  },
+  () => {},
+);
+assert(
+  heroV3AuthorityStatus() === 'approved',
+  'rejected preview Hero cannot replace the active approved set',
+);
+
+const preview = createHarness({ sourceFiles: previewRuntimeFiles });
+await loadHeroV3('assets/preview-v3/', {
+  ...preview,
+  allowUnapprovedPreview: true,
+});
+assert(
+  heroV3AuthorityStatus() === 'preview',
+  'Hero preview becomes active only through the explicit loader opt-in',
+);
+
 disposeHeroV3();
 assert(
-  approved.bitmaps.every((bitmap) => bitmap.closed === 1) &&
+  preview.bitmaps.every((bitmap) => bitmap.closed === 1) &&
     !heroV3Ready() &&
     heroV3AuthorityStatus() === null,
   'explicit disposal closes the active set and clears its authority status',

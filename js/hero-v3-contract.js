@@ -8,6 +8,8 @@
 
 export const HERO_SET_GRAMMAR = 'gaf2d-hero-set-v1';
 export const HERO_APPROVED_CLIP_GRAMMAR = 'gaf2d-hero-clip-v1';
+export const HERO_PREVIEW_SET_GRAMMAR = 'gaf2d-hero-preview-set-v1';
+export const HERO_PREVIEW_CLIP_GRAMMAR = 'gaf2d-hero-preview-clip-v1';
 export const HERO_TOOLCHAIN_GRAMMAR = 'apn-gaf2d-hero-toolchain-v1';
 export const HERO_MATRIX_PROFILE_GRAMMAR =
   'apn-gaf2d-matrix-toolchain-v1';
@@ -48,6 +50,14 @@ const TOP_KEYS = new Set([
   'lineage',
   'toolchain',
 ]);
+const PREVIEW_TOP_KEYS = new Set([
+  'grammar',
+  'status',
+  'authority',
+  'clips',
+  'previewLineage',
+  'toolchain',
+]);
 const SET_CLIP_KEYS = new Set([
   'descriptor',
   'descriptorSha256',
@@ -62,6 +72,18 @@ const LINEAGE_KEYS = new Set([
   'rigApprovalSha256',
   'sourceManifestSha256',
   'exportArtifactSha256',
+]);
+const PREVIEW_LINEAGE_KEYS = new Set([
+  'candidateId',
+  'candidateSha256',
+  'qaSummarySha256',
+  'batchSummarySha256',
+  'sourceManifestVersion',
+]);
+const PREVIEW_LINEAGE_HASHES = Object.freeze([
+  'candidateSha256',
+  'qaSummarySha256',
+  'batchSummarySha256',
 ]);
 const TOOLCHAIN_KEYS = new Set([
   'grammar',
@@ -94,6 +116,20 @@ const APPROVED_DESCRIPTOR_KEYS = new Set([
   'trim',
   'atlas',
   'lineage',
+  'encoder',
+]);
+const PREVIEW_DESCRIPTOR_KEYS = new Set([
+  'grammar',
+  'authority',
+  'name',
+  'playback',
+  'fps',
+  'frameSize',
+  'frames',
+  'anchor',
+  'trim',
+  'atlas',
+  'previewLineage',
   'encoder',
 ]);
 const LEGACY_RECT_KEYS = new Set(['x', 'y', 'w', 'h']);
@@ -214,6 +250,23 @@ function validateLineage(value, label, addError) {
   }
 }
 
+function validatePreviewLineage(value, assetId, label, addError) {
+  if (!exactKeys(value, PREVIEW_LINEAGE_KEYS, label, addError)) return;
+  if (value.candidateId !== `${assetId}-authored-semantic-v2`) {
+    addError(
+      `${label}.candidateId: expected "${assetId}-authored-semantic-v2"`,
+    );
+  }
+  for (const key of PREVIEW_LINEAGE_HASHES) {
+    if (!SHA256.test(value[key] || '')) {
+      addError(`${label}.${key}: must be a lowercase SHA-256`);
+    }
+  }
+  if (!positiveInteger(value.sourceManifestVersion)) {
+    addError(`${label}.sourceManifestVersion: must be a positive integer`);
+  }
+}
+
 function validateEncoder(value, label, addError) {
   if (!exactKeys(value, ENCODER_KEYS, label, addError)) return;
   if (
@@ -252,16 +305,25 @@ function validateToolchain(value, addError) {
   }
 }
 
-export function validateHeroSetManifest(data) {
+export function validateHeroSetManifest(data, options = {}) {
   const errors = [];
   const addError = (message) => {
     if (errors.length < MAX_ERRORS) errors.push(message);
   };
-  if (!exactKeys(data, TOP_KEYS, 'set', addError)) return errors;
-  if (data.grammar !== HERO_SET_GRAMMAR) {
-    addError(`grammar: expected "${HERO_SET_GRAMMAR}"`);
+  const isPreview =
+    data?.status === 'preview' ||
+    data?.grammar === HERO_PREVIEW_SET_GRAMMAR;
+  const expectedKeys = isPreview ? PREVIEW_TOP_KEYS : TOP_KEYS;
+  if (!exactKeys(data, expectedKeys, 'set', addError)) return errors;
+  const expectedGrammar = isPreview
+    ? HERO_PREVIEW_SET_GRAMMAR
+    : HERO_SET_GRAMMAR;
+  if (data.grammar !== expectedGrammar) {
+    addError(`grammar: expected "${expectedGrammar}"`);
   }
-  if (!['historical', 'approved'].includes(data.status)) {
+  if (isPreview && data.status !== 'preview') {
+    addError('status: expected "preview"');
+  } else if (!isPreview && !['historical', 'approved'].includes(data.status)) {
     addError('status: expected "historical" or "approved"');
   }
   if (
@@ -288,7 +350,21 @@ export function validateHeroSetManifest(data) {
       }
     }
   }
-  if (data.status === 'historical') {
+  if (isPreview) {
+    if (options.allowUnapprovedPreview !== true) {
+      addError('preview set: explicit allowUnapprovedPreview opt-in is required');
+    }
+    if (data.authority !== 'unapproved_preview') {
+      addError('preview set.authority: expected "unapproved_preview"');
+    }
+    validatePreviewLineage(
+      data.previewLineage,
+      'apn-hero',
+      'previewLineage',
+      addError,
+    );
+    validateToolchain(data.toolchain, addError);
+  } else if (data.status === 'historical') {
     if (data.lineage !== null || data.toolchain !== null) {
       addError('historical set: lineage and toolchain must both be null');
     }
@@ -430,70 +506,86 @@ function validateHistoricalDescriptor(data, clipName, addError) {
   });
 }
 
-export function validateApprovedHeroDescriptor(
+function validateModernHeroDescriptor(
   data,
   clipName,
   setManifest = null,
+  authorityMode = 'approved',
 ) {
   const errors = [];
   const addError = (message) => {
     if (errors.length < MAX_ERRORS) errors.push(message);
   };
+  const isPreview = authorityMode === 'preview';
+  const label = `${authorityMode} ${clipName}`;
   const contract = HERO_V3_APPROVED_CONTRACT[clipName];
-  if (!contract) return [`approved clip: unknown name "${String(clipName)}"`];
+  if (!contract) {
+    return [`${authorityMode} clip: unknown name "${String(clipName)}"`];
+  }
   if (
-    !exactKeys(data, APPROVED_DESCRIPTOR_KEYS, `approved ${clipName}`, addError)
+    !exactKeys(
+      data,
+      isPreview ? PREVIEW_DESCRIPTOR_KEYS : APPROVED_DESCRIPTOR_KEYS,
+      label,
+      addError,
+    )
   ) {
     return errors;
   }
-  if (data.grammar !== HERO_APPROVED_CLIP_GRAMMAR) {
+  const expectedGrammar = isPreview
+    ? HERO_PREVIEW_CLIP_GRAMMAR
+    : HERO_APPROVED_CLIP_GRAMMAR;
+  if (data.grammar !== expectedGrammar) {
     addError(
-      `approved ${clipName}.grammar: expected "${HERO_APPROVED_CLIP_GRAMMAR}"`,
+      `${label}.grammar: expected "${expectedGrammar}"`,
     );
   }
+  if (isPreview && data.authority !== 'unapproved_preview') {
+    addError(`${label}.authority: expected "unapproved_preview"`);
+  }
   if (data.name !== clipName) {
-    addError(`approved ${clipName}.name: expected "${clipName}"`);
+    addError(`${label}.name: expected "${clipName}"`);
   }
   if (data.playback !== contract.playback) {
     addError(
-      `approved ${clipName}.playback: expected "${contract.playback}"`,
+      `${label}.playback: expected "${contract.playback}"`,
     );
   }
   if (!Number.isInteger(data.fps) || data.fps < 1 || data.fps > 60) {
-    addError(`approved ${clipName}.fps: expected integer 1..60`);
+    addError(`${label}.fps: expected integer 1..60`);
   }
   if (
     !exactKeys(
       data.frameSize,
       SIZE_KEYS,
-      `approved ${clipName}.frameSize`,
+      `${label}.frameSize`,
       addError,
     ) ||
     !validSize(data.frameSize) ||
     data.frameSize.width > MAX_HERO_ATLAS_DIMENSION ||
-    data.frameSize.height > MAX_HERO_ATLAS_DIMENSION
+      data.frameSize.height > MAX_HERO_ATLAS_DIMENSION
   ) {
-    addError(`approved ${clipName}.frameSize: invalid`);
+    addError(`${label}.frameSize: invalid`);
   }
   if (!arraysEqual(data.anchor, [0.5, 1])) {
-    addError(`approved ${clipName}.anchor: expected [0.5,1]`);
+    addError(`${label}.anchor: expected [0.5,1]`);
   }
   if (
-    !exactKeys(data.trim, RECT_KEYS, `approved ${clipName}.trim`, addError) ||
+    !exactKeys(data.trim, RECT_KEYS, `${label}.trim`, addError) ||
     !validRect(data.trim)
   ) {
-    addError(`approved ${clipName}.trim: invalid rectangle`);
+    addError(`${label}.trim: invalid rectangle`);
   } else if (
     data.trim.x + data.trim.width > data.frameSize?.width ||
     data.trim.y + data.trim.height > data.frameSize?.height
   ) {
-    addError(`approved ${clipName}.trim: outside frameSize`);
+    addError(`${label}.trim: outside frameSize`);
   }
   if (
     !exactKeys(
       data.atlas,
       APPROVED_ATLAS_KEYS,
-      `approved ${clipName}.atlas`,
+      `${label}.atlas`,
       addError,
     ) ||
     !validSize(data.atlas) ||
@@ -505,36 +597,91 @@ export function validateApprovedHeroDescriptor(
     data.atlas.bytes > MAX_HERO_IMAGE_BYTES ||
     !SHA256.test(data.atlas.sha256 || '')
   ) {
-    addError(`approved ${clipName}.atlas: invalid or over budget`);
+    addError(`${label}.atlas: invalid or over budget`);
   }
-  validateLineage(data.lineage, `approved ${clipName}.lineage`, addError);
-  validateEncoder(data.encoder, `approved ${clipName}.encoder`, addError);
+  if (isPreview) {
+    validatePreviewLineage(
+      data.previewLineage,
+      'apn-hero',
+      `${label}.previewLineage`,
+      addError,
+    );
+  } else {
+    validateLineage(data.lineage, `${label}.lineage`, addError);
+  }
+  validateEncoder(data.encoder, `${label}.encoder`, addError);
   validateFrames(data.frames, data.atlas, data.trim, {
     legacy: false,
     exactCount: contract.frames,
-    label: `approved ${clipName}`,
+    label,
     addError,
   });
-  if (setManifest?.status === 'approved') {
+  if (
+    setManifest?.status === authorityMode ||
+    (isPreview && setManifest?.status === 'preview')
+  ) {
     const setClip = setManifest.clips?.[clipName];
     if (data.atlas?.sha256 !== setClip?.imageSha256) {
-      addError(`approved ${clipName}.atlas.sha256: differs from set image hash`);
+      addError(`${label}.atlas.sha256: differs from set image hash`);
     }
-    if (stableJson(data.lineage) !== stableJson(setManifest.lineage)) {
-      addError(`approved ${clipName}.lineage: differs from set lineage`);
+    const descriptorLineage = isPreview
+      ? data.previewLineage
+      : data.lineage;
+    const setLineage = isPreview
+      ? setManifest.previewLineage
+      : setManifest.lineage;
+    if (stableJson(descriptorLineage) !== stableJson(setLineage)) {
+      addError(`${label}.lineage: differs from set lineage`);
     }
     if (
       stableJson(data.encoder) !== stableJson(setManifest.toolchain?.encoder)
     ) {
-      addError(`approved ${clipName}.encoder: differs from set toolchain`);
+      addError(`${label}.encoder: differs from set toolchain`);
     }
   }
   return errors;
 }
 
-export function validateHeroClipDescriptor(data, clipName, setManifest) {
+export function validateApprovedHeroDescriptor(
+  data,
+  clipName,
+  setManifest = null,
+) {
+  return validateModernHeroDescriptor(
+    data,
+    clipName,
+    setManifest,
+    'approved',
+  );
+}
+
+export function validatePreviewHeroDescriptor(
+  data,
+  clipName,
+  setManifest = null,
+) {
+  return validateModernHeroDescriptor(
+    data,
+    clipName,
+    setManifest,
+    'preview',
+  );
+}
+
+export function validateHeroClipDescriptor(
+  data,
+  clipName,
+  setManifest,
+  options = {},
+) {
   if (setManifest?.status === 'approved') {
     return validateApprovedHeroDescriptor(data, clipName, setManifest);
+  }
+  if (setManifest?.status === 'preview') {
+    if (options.allowUnapprovedPreview !== true) {
+      return ['preview clip: explicit allowUnapprovedPreview opt-in is required'];
+    }
+    return validatePreviewHeroDescriptor(data, clipName, setManifest);
   }
   const errors = [];
   const addError = (message) => {
