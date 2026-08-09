@@ -1,0 +1,403 @@
+{
+  "name": "broken",
+  "source": {
+    "type": "scene",
+    "module": "./models/curator.js"
+  },
+  "camera": {
+    "pos": [
+      1.9,
+      1.0,
+      2.5
+    ],
+    "lookAt": [
+      0,
+      0.6,
+      0
+    ],
+    "fov": 34
+  },
+  "view": "three-quarter-front-right",
+  "clip": {
+    "fps": 24,
+    "frames": 12
+  },
+  "loop": true,
+  "tracks": [
+    {
+      "node": "torso",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0.14
+        ],
+        [
+          12,
+          0.14
+        ]
+      ],
+      "comment": "permanent hunch"
+    },
+    {
+      "node": "torso",
+      "prop": "rotation.z",
+      "keys": [
+        [
+          0,
+          0.02
+        ],
+        [
+          12,
+          0.02
+        ]
+      ]
+    },
+    {
+      "node": "torso",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          -0.045
+        ],
+        [
+          12,
+          -0.045
+        ]
+      ],
+      "comment": "sunk posture"
+    },
+    {
+      "node": "head",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          -0.045
+        ],
+        [
+          12,
+          -0.045
+        ]
+      ]
+    },
+    {
+      "node": "shades",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          -0.045
+        ],
+        [
+          12,
+          -0.045
+        ]
+      ]
+    },
+    {
+      "node": "arm_l",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          -0.045
+        ],
+        [
+          12,
+          -0.045
+        ]
+      ]
+    },
+    {
+      "node": "arm_r",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          -0.045
+        ],
+        [
+          12,
+          -0.045
+        ]
+      ]
+    },
+    {
+      "node": "coat_l",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          -0.045
+        ],
+        [
+          12,
+          -0.045
+        ]
+      ]
+    },
+    {
+      "node": "coat_r",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          -0.045
+        ],
+        [
+          12,
+          -0.045
+        ]
+      ]
+    },
+    {
+      "node": "head",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0.22
+        ],
+        [
+          3,
+          0.235
+        ],
+        [
+          6,
+          0.21
+        ],
+        [
+          9,
+          0.235
+        ],
+        [
+          12,
+          0.22
+        ]
+      ],
+      "ease": "sine",
+      "comment": "hung head, damaged tremble"
+    },
+    {
+      "node": "shades",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0.22
+        ],
+        [
+          3,
+          0.235
+        ],
+        [
+          6,
+          0.21
+        ],
+        [
+          9,
+          0.235
+        ],
+        [
+          12,
+          0.22
+        ]
+      ],
+      "ease": "sine"
+    },
+    {
+      "node": "shades",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          -0.065
+        ],
+        [
+          12,
+          -0.065
+        ]
+      ],
+      "comment": "cracked shades slipped"
+    },
+    {
+      "node": "shades",
+      "prop": "rotation.z",
+      "keys": [
+        [
+          0,
+          0.2
+        ],
+        [
+          4,
+          0.215
+        ],
+        [
+          8,
+          0.19
+        ],
+        [
+          12,
+          0.2
+        ]
+      ],
+      "ease": "sine",
+      "comment": "cracked shades tilt (broken-state pose)"
+    },
+    {
+      "node": "arm_l",
+      "prop": "rotation.z",
+      "keys": [
+        [
+          0,
+          -0.12
+        ],
+        [
+          12,
+          -0.12
+        ]
+      ],
+      "comment": "limp arm"
+    },
+    {
+      "node": "arm_r",
+      "prop": "rotation.z",
+      "keys": [
+        [
+          0,
+          0.15
+        ],
+        [
+          12,
+          0.15
+        ]
+      ]
+    },
+    {
+      "node": "arm_r",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0.1
+        ],
+        [
+          12,
+          0.1
+        ]
+      ]
+    },
+    {
+      "node": "coat_l",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0.12
+        ],
+        [
+          12,
+          0.12
+        ]
+      ],
+      "comment": "droop"
+    },
+    {
+      "node": "coat_r",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0.12
+        ],
+        [
+          12,
+          0.12
+        ]
+      ]
+    },
+    {
+      "node": "coat_l",
+      "prop": "rotation.z",
+      "keys": [
+        [
+          0,
+          -0.06
+        ],
+        [
+          12,
+          -0.06
+        ]
+      ]
+    },
+    {
+      "node": "coat_r",
+      "prop": "rotation.z",
+      "keys": [
+        [
+          0,
+          0.06
+        ],
+        [
+          12,
+          0.06
+        ]
+      ]
+    },
+    {
+      "node": "cane",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0.38
+        ],
+        [
+          6,
+          0.4
+        ],
+        [
+          12,
+          0.38
+        ]
+      ],
+      "ease": "sine",
+      "comment": "cane droop, tip drags"
+    },
+    {
+      "node": "cane",
+      "prop": "rotation.z",
+      "keys": [
+        [
+          0,
+          0.06
+        ],
+        [
+          12,
+          0.06
+        ]
+      ]
+    },
+    {
+      "node": "cane",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          -0.02
+        ],
+        [
+          12,
+          -0.02
+        ]
+      ],
+      "comment": "grip sags"
+    }
+  ],
+  "output": {
+    "frame": 256
+  },
+  "kind": "locomotion"
+}

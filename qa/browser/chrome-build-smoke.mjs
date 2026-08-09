@@ -92,7 +92,7 @@ async function scenario(cdp, viewport) {
     deviceScaleFactor: 2,
     mobile: true,
   });
-  await cdp.send('Page.navigate', { url: 'http://127.0.0.1:8790/?autostart=1&mute=1&chrome-smoke=1' });
+  await cdp.send('Page.navigate', { url: 'http://127.0.0.1:8791/?autostart=1&mute=1&chrome-smoke=1' });
   await waitFor(cdp, `window.__APN_QA__?.state && document.querySelector('#title-screen')?.hidden`, 'app ready');
   await evaluate(cdp, `(() => {
     const state = window.__APN_QA__.state;

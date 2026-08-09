@@ -21,7 +21,7 @@ if a pack `master/` directory contains anything but generated SVG/MD sources.
 
 | Set | Deliverable | Runtime intent |
 |---|---|---|
-| Host | canonical base animation atlas, six additive role accents, FX atlas | one GLB-derived character; fixed foot pivot |
+| Host | owner-approved GAF2D Hero clip set, role accents, FX | one legless runtime character; fixed bottom-center hover pivot; identity-safe fallback |
 | Corruption | four-tier fissure, redaction, parasite, armor, fracture, and environment overlays | reused by every pack; Tier 4 is the art cap |
 | Encounter FX | scan beam, hit, crit, boss-break, loot pull, spawn/despawn | token-colored, pre-composited where possible |
 | Route transitions | clean pack arrival, boss clear, End Season handoff, corruption reveal | no full-screen video; reduced-motion variant |
@@ -48,13 +48,15 @@ not simultaneously decoded textures.
   navigation.
 - 2D Patchline editorial-action: consistent dark ink outline, two-tone fill, one
   controlled highlight, one grounded oval shadow.
-- Side-on Run staging: Host on the left, encounter enters from the right, both
-  share one ground plane and foot-center pivot.
+- Side-on Run staging: Hero on the left, encounter enters from the right, both
+  share one ground plane and bottom-center baseline pivot.
 - Recognizability comes from silhouette, environment, signature prop, and color
   hierarchy together. Logos and floating game-title text are not the solution.
 - A target must survive a 72 px silhouette check; a boss must survive at 128 px.
-- Every generated proof is redrawn into the APN grammar. Do not paste screenshots
-  or mix realistic, painterly, 3D-toy, and cartoon rendering in one atlas.
+- Every generated proof is normalized into one approved pack grammar.
+  Do not paste screenshots or mix unrelated realistic, painterly, collectible,
+  and cartoon rendering in one atlas.
+  ADR-0014 governs GAF2D character-owned motion for the first pack.
 
 ## Clean Era source boards
 
@@ -66,9 +68,15 @@ the five-target-plus-final contract.
 
 - Space: Bind-style tactical corridor, hard sightlines, site crates, teleporter
   geometry, planted-site telemetry.
-- Small rivals: Jett, Cypher, Killjoy, Omen, KAY/O role silhouettes.
-- Final: overclocked KAY/O guarding a planted Spike core; break state removes the
-  outer suppression armor.
+- Small rivals: Entry Runner, Veil Operator, Signal Hunter, Site Sentinel, and
+  Protocol Courier — APN-original tactical archetypes with no copied agent
+  likeness, costume, weapon, logo, or UI.
+- Final: Site Warden, an APN-original shielded protocol guardian; the break state
+  keeps the same identity with a visibly damaged shoulder assembly.
+- Runtime source: six GAF2D identities are preserved as the static fallback.
+  Production motion requires one approved named set per character and a
+  hash-verified character-owned bundle; runtime and fixture QA may land before
+  those creative approvals, but cannot declare the pack motion-complete.
 - Official basis: [maps](https://playvalorant.com/en-us/maps/), [beginner's
   guide](https://playvalorant.com/en-us/news/announcements/beginners-guide/), and
   [current agent patch references](https://playvalorant.com/en-us/news/game-updates/valorant-patch-notes-13-00/).
@@ -300,16 +308,18 @@ The kit is additive and pack-agnostic:
 No runtime blur, color-matrix filter, or procedural black-noise blanket replaces
 the authored masks. Tier 4 art is reused forever.
 
-## Approval proof set
+## Historical Clean Era approval proof set
 
-The single user gate contains:
+The original Clean Era visual-system gate contained:
 
 1. five Clean Era contact sheets, four packs per sheet;
-2. one canonical Host pose/role sheet derived from the existing reference;
+2. one Hero pose/role sheet derived from the owner reference;
 3. one four-tier Corruption atlas proof;
 4. later deterministic Run composites using the accepted art, real UI, muted
    audio, and right-to-left enemy entry.
 
-Acceptance is visual-system approval, not approval of every future animation
-frame. Rejected pack rows are redrawn before production atlases or game code are
-created.
+That historical visual-system acceptance does not replace the exact per-character
+identity, complete motion-set, Hero rig, and release approvals required by
+[ADR-0014](./decisions/ADR-0014-gaf2d-character-owned-motion.md) and
+[ADR-0015](./decisions/ADR-0015-legless-hero-runtime-authority.md). Rejected pack
+rows are redrawn before production atlases or game code are created.

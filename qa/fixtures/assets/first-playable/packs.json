@@ -1,0 +1,76 @@
+[
+  {
+    "id": "valorant",
+    "order": 1,
+    "targets": [
+      { "id": "entry-runner", "role": "common-a" },
+      { "id": "veil-operator", "role": "common-b" },
+      { "id": "signal-hunter", "role": "common-c" },
+      { "id": "site-sentinel", "role": "elite" },
+      { "id": "protocol-courier", "role": "event" }
+    ],
+    "boss": { "id": "site-warden" },
+    "assets": {
+      "background": "assets/game-packs/valorant/background.webp",
+      "targets": "assets/game-packs/valorant/targets.webp",
+      "targetData": "assets/game-packs/valorant/targets.json",
+      "props": "assets/game-packs/valorant/props.webp",
+      "corruptionMask": "assets/game-packs/valorant/corruption-mask.webp"
+    },
+    "motion": {
+      "grammar": "gaf2d-motion-bundle-v1",
+      "characters": {
+        "entry-runner": {
+          "image": "assets/game-packs/valorant/characters/entry-runner/motion.webp",
+          "descriptor": "assets/game-packs/valorant/characters/entry-runner/motion.json",
+          "descriptorSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "veil-operator": {
+          "image": "assets/game-packs/valorant/characters/veil-operator/motion.webp",
+          "descriptor": "assets/game-packs/valorant/characters/veil-operator/motion.json",
+          "descriptorSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        }
+      }
+    }
+  },
+  {
+    "id": "league",
+    "order": 2,
+    "targets": [
+      { "id": "lane-scout", "role": "common-a" }
+    ],
+    "boss": { "id": "baron-patch" },
+    "assets": {
+      "background": "assets/game-packs/league/background.webp",
+      "targets": "assets/game-packs/league/targets.webp",
+      "targetData": "assets/game-packs/league/targets.json",
+      "props": "assets/game-packs/league/props.webp",
+      "corruptionMask": "assets/game-packs/league/corruption-mask.webp"
+    },
+    "motion": {
+      "grammar": "gaf2d-motion-bundle-v1",
+      "characters": {
+        "lane-scout": {
+          "image": "assets/game-packs/league/characters/lane-scout/motion.webp",
+          "descriptor": "assets/game-packs/league/characters/lane-scout/motion.json",
+          "descriptorSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        }
+      }
+    }
+  },
+  {
+    "id": "fortnite",
+    "order": 3,
+    "targets": [
+      { "id": "storm-runner", "role": "common-a" }
+    ],
+    "boss": { "id": "zero-point-warden" },
+    "assets": {
+      "background": "assets/game-packs/fortnite/background.webp",
+      "targets": "assets/game-packs/fortnite/targets.webp",
+      "targetData": "assets/game-packs/fortnite/targets.json",
+      "props": "assets/game-packs/fortnite/props.webp",
+      "corruptionMask": "assets/game-packs/fortnite/corruption-mask.webp"
+    }
+  }
+]

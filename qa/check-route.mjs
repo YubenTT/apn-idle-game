@@ -7,6 +7,10 @@ import {
   scheduleNextSeason,
   corruptionTierFor,
 } from '../js/route.js';
+import {
+  motionAssetIdsForRouteWindow,
+  routeWaveIdentityUnion,
+} from '../js/wave-roster.js';
 
 const assert = (condition, message) => {
   if (!condition) throw new Error(`Route contract: ${message}`);
@@ -43,6 +47,65 @@ export function checkRouteContract() {
   assert(revisitA.every((pack) => pack.tier === 1), 'first revisit uses Signal Drift');
   assert(JSON.stringify(revisitA) === JSON.stringify(revisitB), 'seeded schedule deterministic');
   assert(corruptionTierFor(mature, revisitA[0].id) === 1, 'mature tier calculation');
+
+  const motionPacks = GAME_PACKS.map((pack) => {
+    const copy = structuredClone(pack);
+    copy.motion = {
+      grammar: 'gaf2d-motion-bundle-v1',
+      characters: Object.fromEntries(
+        [...copy.targets, copy.boss].map(({ id }) => [
+          id,
+          {
+            image: `assets/game-packs/${copy.id}/characters/${id}/motion.webp`,
+            descriptor: `assets/game-packs/${copy.id}/characters/${id}/motion.json`,
+            descriptorSha256: 'a'.repeat(64),
+          },
+        ]),
+      ),
+    };
+    return copy;
+  });
+  const valorantBoundary = {
+    ...createRouteState(),
+    zone: 9,
+  };
+  assert(
+    [...motionAssetIdsForRouteWindow(valorantBoundary, motionPacks)].join('|') ===
+      'valorant/site-warden|league/' +
+        motionPacks[1].targets.map(({ id }) => id).join('|league/'),
+    'clean 10→1 route window uses the real scheduler',
+  );
+
+  const scheduledBoundary = {
+    ...createRouteState(),
+    zone: 209,
+    deck: ['valorant', 'fortnite'],
+    seenPackIds: ['valorant', 'fortnite'],
+  };
+  assert(
+    routeWaveIdentityUnion(scheduledBoundary, motionPacks)
+      .map(({ packId, assetId }) => `${packId}/${assetId}`)
+      .join('|') ===
+      'valorant/site-warden|fortnite/' +
+        motionPacks
+          .find(({ id }) => id === 'fortnite')
+          .targets.map(({ id }) => id)
+          .join('|fortnite/'),
+    'scheduled non-adjacent 10→1 route window uses the real scheduler',
+  );
+
+  const revisitBoundary = {
+    ...scheduledBoundary,
+    zone: 219,
+  };
+  assert(
+    routeWaveIdentityUnion(revisitBoundary, motionPacks)[0]?.packId ===
+      'fortnite' &&
+      routeWaveIdentityUnion(revisitBoundary, motionPacks).some(
+        ({ packId }) => packId === 'valorant',
+      ),
+    'revisit route window follows the scheduler deck order',
+  );
 
   // Nav contract (ADR-0007): exactly five primary destinations + the separate Gear FAB.
   // PR-3 renamed the display labels (Ship→Go Live, Hub→Route) while keeping the data-panel
@@ -81,6 +144,7 @@ export function checkRouteContract() {
     'five targets + boss',
     'pure deterministic scheduler',
     'bounded corruption tier',
+    'real clean/scheduled/revisit wave windows',
     'five nav destinations + separate Gear FAB (ADR-0007)',
     'nav labels Build · Go Live · Route · Boosts · Menu',
   ];

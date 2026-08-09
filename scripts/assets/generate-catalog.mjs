@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { validatePackManifest } from './lib.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const packsRoot = path.join(root, 'assets/game-packs');
@@ -24,16 +25,8 @@ if (new Set(packs.map((pack) => pack.id)).size !== packs.length) fail(null, 'dup
 if (new Set(packs.map((pack) => pack.order)).size !== packs.length) fail(null, 'duplicate order');
 
 for (const pack of packs) {
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(pack.id)) fail(pack, 'invalid stable id');
-  if (!Number.isInteger(pack.order) || pack.order < 1) fail(pack, 'invalid order');
-  if (pack.zones !== 10) fail(pack, 'zones must equal 10');
-  if (!pack.genre || !pack.title) fail(pack, 'missing title or genre');
-  if (!Array.isArray(pack.targets) || pack.targets.length !== 5) fail(pack, 'requires five targets');
-  if (new Set(pack.targets.map((target) => target.id)).size !== 5) fail(pack, 'duplicate target id');
-  if (pack.targets.some((target) => !target.role || !target.frame || !target.pivot)) fail(pack, 'incomplete target');
-  if (!pack.boss?.id || !pack.boss?.breakFrame || !pack.boss?.pivot) fail(pack, 'incomplete boss');
-  if (!pack.assets?.background || !pack.assets?.targets || !pack.assets?.targetData) fail(pack, 'incomplete assets');
-  if (!pack.sourceBoard) fail(pack, 'missing source board');
+  const errors = validatePackManifest(pack, pack.id);
+  if (errors.length) fail(pack, errors.join('\n'));
 }
 
 const catalog = `${JSON.stringify(packs, null, 2)}\n`;

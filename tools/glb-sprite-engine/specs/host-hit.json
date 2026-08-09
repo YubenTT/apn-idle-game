@@ -1,0 +1,242 @@
+{
+  "name": "hit",
+  "source": {
+    "type": "glb",
+    "path": "../../assets/apn-mascot-glb-host.glb"
+  },
+  "camera": {
+    "pos": [
+      2.3,
+      0.8,
+      4.9
+    ],
+    "lookAt": [
+      0,
+      -0.15,
+      0
+    ],
+    "fov": 35
+  },
+  "view": "three-quarter-front-right",
+  "clip": {
+    "fps": 16,
+    "frames": 6
+  },
+  "loop": true,
+  "tracks": [
+    {
+      "node": "red_underglow_stage",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          -1.5708
+        ],
+        [
+          6,
+          -1.5708
+        ]
+      ]
+    },
+    {
+      "node": "red_underglow_stage",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          -0.35
+        ],
+        [
+          6,
+          -0.35
+        ]
+      ]
+    },
+    {
+      "node": "apn_glb_host",
+      "prop": "position.x",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          -0.2
+        ],
+        [
+          3,
+          -0.08
+        ],
+        [
+          6,
+          0
+        ]
+      ],
+      "comment": "knocked back then recover"
+    },
+    {
+      "node": "apn_glb_host",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0.06
+        ],
+        [
+          1,
+          -0.24
+        ],
+        [
+          3,
+          -0.08
+        ],
+        [
+          6,
+          0.06
+        ]
+      ],
+      "comment": "flinch backward"
+    },
+    {
+      "node": "APN_Logo_Head",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          -0.3
+        ],
+        [
+          3,
+          -0.1
+        ],
+        [
+          6,
+          0
+        ]
+      ],
+      "comment": "head snap"
+    },
+    {
+      "node": "host_left_arm",
+      "prop": "rotation.z",
+      "keys": [
+        [
+          0,
+          0.3
+        ],
+        [
+          1,
+          1.1
+        ],
+        [
+          3,
+          0.5
+        ],
+        [
+          6,
+          0.3
+        ]
+      ],
+      "comment": "arms flail up"
+    },
+    {
+      "node": "host_right_arm",
+      "prop": "rotation.z",
+      "keys": [
+        [
+          0,
+          -0.1
+        ],
+        [
+          1,
+          -1.1
+        ],
+        [
+          3,
+          -0.4
+        ],
+        [
+          6,
+          -0.1
+        ]
+      ]
+    },
+    {
+      "node": "host_left_arm",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          -0.6
+        ],
+        [
+          3,
+          -0.2
+        ],
+        [
+          6,
+          0
+        ]
+      ]
+    },
+    {
+      "node": "host_right_arm",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          -0.6
+        ],
+        [
+          3,
+          -0.2
+        ],
+        [
+          6,
+          0
+        ]
+      ]
+    },
+    {
+      "node": "host_soft_torso",
+      "prop": "scale.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          -0.1
+        ],
+        [
+          3,
+          -0.03
+        ],
+        [
+          6,
+          0
+        ]
+      ],
+      "ease": "sine",
+      "comment": "impact squash"
+    }
+  ],
+  "output": {
+    "frame": 256
+  },
+  "kind": "action"
+}

@@ -17,7 +17,7 @@ Living plan — not a commitment calendar.
 - [x] LIVE ticker with game icons
 - [x] Headless domain tests + CI
 - [x] Deterministic seeded headless QA (including gear ordering assertions)
-- [x] Host mascot + enemy sprites + GLB kit files
+- [x] Historical Host mascot/enemy sprites and retained provenance files
 
 ## Shipped (docs / system)
 
@@ -44,19 +44,29 @@ Living plan — not a commitment calendar.
 - [x] Build V2 presentation + Priority Tag behavior (PR-4b / issue #22)
 - [x] Run hierarchy + placeholder Host presentation + single code-side clip
       vocabulary (PR-5 checkpoint / issue #23); muted Chrome matrix complete
-- [ ] Full-body Host identity + deterministic pose derivation + real-pixel asset
-      gate (remainder of issue #23): first candidate rejected and purged; existing
-      canonical GLB/placeholder atlas remain shipped until a new owner-approved
-      four-angle identity proof exists
+- [x] Character-owned GAF2D motion runtime, deterministic approved-export
+      builder, first-playable/resource lifecycle gates, reduced-motion authority,
+      and synthetic real-browser temporal proof (ADR-0014 / ADR-0015)
+- [ ] Approve the exact **legless** APN Hero identity proof, then one complete
+      eight-clip motion set and the editable-rig evidence if that delivery lane
+      needs it; replace historical Hero V3 bytes only after current hash-locked
+      release authorization
+- [ ] Produce and approve one complete named motion set for each of the six
+      first-pack creatures, build their character-owned bundles, add the
+      production pack mapping, and rerun waves 1–10 without a fallback
 
 - [x] Persistent global Route + dual-key save v2 migration; End Season keeps world progress
 - [x] Deterministic 20-pack manifest catalog + seeded least-recent scheduler
 - [x] Multi-day pacing and season-bounded offline progression
-- [x] Production asset pipeline, canonical Host atlas, 20 Clean Era Game Packs,
+- [x] Production asset pipeline, historical Hero atlas, 20 Clean Era Game Packs,
       and current+next lazy runtime composition
 - [x] Redesign screens against [SCREEN-SPECS](./SCREEN-SPECS.md) (Run HUD, Gear,
       Build, Ship, Hub, Boosts, Menu) — one screen at a time, each through
       [QA-CHECKLIST](./QA-CHECKLIST.md)
+- [x] V2 Super Polish (waves 1–4, `v2/super-polish`): procedural Host V2 +
+      feed-noise enemy family + layered editorial scenery, premium chrome,
+      combat juice & cinematics, full QA matrix — ADR-0012; evidence at
+      `qa/screenshots/v2-final/`
 - [ ] Schema rename bytes→signal (with save migrate)
 - [x] Mobile layout polish, safe-area coverage, and long-press gesture hardening
 - [x] Free MVP economy cut: no demo store, paid power, coin rewards, Gear Boxes,
@@ -76,7 +86,6 @@ Living plan — not a commitment calendar.
 
 ## Long term
 
-- [ ] Optional higher-fidelity GLB-derived Host atlas tier if budgets permit
 - [ ] Shared APN account cosmetics (site-linked)
 - [ ] Evidence-led cosmetic monetization proposal; no paid progression power
 - [ ] Challenge modes (boss rush, speed zones)
@@ -86,3 +95,6 @@ Living plan — not a commitment calendar.
 
 - Pay-to-win combat power (if monetized, cosmetics only)
 - Heavy multiplayer simulation
+- A 3D/GLB runtime or biped fallback for the APN Hero
+- Treating whole-sprite translation, bob, camera movement, or squash as authored
+  character locomotion

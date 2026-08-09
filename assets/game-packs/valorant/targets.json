@@ -22,7 +22,13 @@
       "metrics": {
         "silhouetteAt72": true,
         "bossAt128": false,
-        "direction": "right-to-left"
+        "direction": "right-to-left",
+        "identity": "entry-runner"
+      },
+      "provenance": {
+        "authority": "gaf2d",
+        "assetId": "entry-runner",
+        "approvalSha256": "78e24a07a3c87598aa86fbbc316663c39ebc9d884953c98917f5ea5437646b1f"
       }
     },
     "common-b": {
@@ -47,7 +53,13 @@
       "metrics": {
         "silhouetteAt72": true,
         "bossAt128": false,
-        "direction": "right-to-left"
+        "direction": "right-to-left",
+        "identity": "veil-operator"
+      },
+      "provenance": {
+        "authority": "gaf2d",
+        "assetId": "veil-operator",
+        "approvalSha256": "8e1d981b66ea42c69403b540419ad4bc6605c17d88cf5b5b737abed118de1cfd"
       }
     },
     "common-c": {
@@ -72,7 +84,13 @@
       "metrics": {
         "silhouetteAt72": true,
         "bossAt128": false,
-        "direction": "right-to-left"
+        "direction": "right-to-left",
+        "identity": "signal-hunter"
+      },
+      "provenance": {
+        "authority": "gaf2d",
+        "assetId": "signal-hunter",
+        "approvalSha256": "25aa4d72f51723a43b8b748731da27d8f6d496b69baf6c130e14fa3e7f246725"
       }
     },
     "elite": {
@@ -97,7 +115,13 @@
       "metrics": {
         "silhouetteAt72": true,
         "bossAt128": false,
-        "direction": "right-to-left"
+        "direction": "right-to-left",
+        "identity": "site-sentinel"
+      },
+      "provenance": {
+        "authority": "gaf2d",
+        "assetId": "site-sentinel",
+        "approvalSha256": "24efb320e89bba71e24a49d324eeb2a463b2da584e077547b8a69a072dc7aad6"
       }
     },
     "event": {
@@ -122,7 +146,13 @@
       "metrics": {
         "silhouetteAt72": true,
         "bossAt128": false,
-        "direction": "right-to-left"
+        "direction": "right-to-left",
+        "identity": "protocol-courier"
+      },
+      "provenance": {
+        "authority": "gaf2d",
+        "assetId": "protocol-courier",
+        "approvalSha256": "ecc1a009c4f7fa0851ddf548150592f793e0c2d54c8fac505dde607433ed0582"
       }
     },
     "boss": {
@@ -147,7 +177,13 @@
       "metrics": {
         "silhouetteAt72": true,
         "bossAt128": true,
-        "direction": "right-to-left"
+        "direction": "right-to-left",
+        "identity": "site-warden"
+      },
+      "provenance": {
+        "authority": "gaf2d",
+        "assetId": "site-warden",
+        "approvalSha256": "60044ccfbd18fe106d8cffa962e56d0fc03d96ea90698fdfdc4230853336c915"
       }
     },
     "boss-break": {
@@ -172,7 +208,13 @@
       "metrics": {
         "silhouetteAt72": true,
         "bossAt128": true,
-        "direction": "right-to-left"
+        "direction": "right-to-left",
+        "identity": "site-warden"
+      },
+      "provenance": {
+        "authority": "gaf2d",
+        "assetId": "site-warden",
+        "approvalSha256": "60044ccfbd18fe106d8cffa962e56d0fc03d96ea90698fdfdc4230853336c915"
       }
     }
   },
@@ -184,6 +226,12 @@
     },
     "scale": 1,
     "packId": "valorant",
-    "grammar": "apn-patchline-v1"
+    "grammar": "gaf2d-static-v1",
+    "sourceManifest": "gaf2d-sources.json",
+    "sourceManifestSha256": "bb612ff492a969280609d6bddd18019d90aa5abe894093d6fb4459c2573d962e",
+    "toolchain": {
+      "imageMagick": "7.1.2-13",
+      "cwebp": "1.6.0"
+    }
   }
 }

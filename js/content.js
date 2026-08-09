@@ -1,6 +1,6 @@
 /** APN Idle content — skills, permanent Boosts, tips */
 
-import { skillSpCost as buildSkillSpCost } from './formulas.js?v=golive-pr5';
+import { skillSpCost as buildSkillSpCost, isBossZone } from './formulas.js?v=gaf2d-motion-v1';
 
 export const SEASON = {
   id: 'season_01',
@@ -215,6 +215,78 @@ export const ENEMY_FLAVOR = {
   boss: { label: 'Version Gate', color: '#FF2F4B', kind: 'boss' },
 };
 
+/**
+ * Legacy V3 vinyl creatures — homage-original APN sentinels drawn from generated
+ * atlases in assets/creatures/ (loader: js/creatures.js, stage: js/render.js).
+ * Presentational layer only: game.js domain types stay untouched and no
+ * existing enemy kind is removed. Complete pack-owned casts such as Valorant
+ * keep their approved atlas; elsewhere creatureKindFor maps living targets:
+ *  - elites (lag/spoiler/event) → The Recon / The Hotshot, per-enemy stable
+ *  - boss → The Curator on odd boss-zone ordinals, classic Version Gate on even
+ * The Curator mirrors the Version Gate broken-phase contract: below 34% HP its
+ * base clip swaps to `broken` (wired in render.js).
+ */
+export const CREATURES = {
+  curator: {
+    kind: 'curator',
+    label: 'The Curator',
+    role: 'boss',
+    color: '#e6b84d',
+    desc: 'Gold-shaded sentinel of the feed, sniper-cane in hand. Decides which notes deserve to go live — a zone-boss variant beside the Version Gate.',
+  },
+  recon: {
+    kind: 'recon',
+    label: 'The Recon',
+    role: 'elite',
+    color: '#6cb8ff',
+    desc: 'Whiteout scout with a bow, tracking your scroll from the cold end of the feed. Elite regular from the first zones on.',
+  },
+  hotshot: {
+    kind: 'hotshot',
+    label: 'The Hotshot',
+    role: 'elite',
+    color: '#FF8A3D',
+    desc: 'Ember striker juggling a live fire orb. Showboat elite regular who wants your streak ended on stream.',
+  },
+};
+export const CREATURE_KINDS = Object.freeze(Object.keys(CREATURES));
+
+const CREATURE_ELITE_TYPES = new Set(['lag', 'spoiler', 'event']);
+const CREATURE_ELITE_ROTATION = ['recon', 'hotshot'];
+
+/** Deterministic per-enemy pick (stable across frames, like render phases). */
+function creatureHash(id) {
+  let h = 0;
+  const s = String(id || 'e');
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+  return h >>> 0;
+}
+
+/** 1-based count of boss zones up to `zone`; cadence stays owned by formulas. */
+function bossZoneOrdinal(zone) {
+  let n = 0;
+  for (let z = 0; z <= zone; z += 1) if (isBossZone(z)) n += 1;
+  return n;
+}
+
+/**
+ * Resolve an enemy to a V3 creature kind, or null to keep the procedural
+ * feed-noise family. Pure + deterministic — safe to call every frame.
+ */
+export function creatureKindFor(enemy, zone = 0) {
+  if (!enemy) return null;
+  // The first pack owns a complete, identity-approved GAF2D cast. Its pack
+  // atlas must never be replaced by the legacy V3 creature rotation.
+  if (enemy.packId === 'valorant') return null;
+  if (enemy.type === 'boss') {
+    return bossZoneOrdinal(zone) % 2 === 1 ? 'curator' : null;
+  }
+  if (CREATURE_ELITE_TYPES.has(enemy.type)) {
+    return CREATURE_ELITE_ROTATION[creatureHash(enemy.id) % CREATURE_ELITE_ROTATION.length];
+  }
+  return null;
+}
+
 export const TIPS = {
   start:
     'Clear noise → Signal funds Scanner upgrades. Build spends SP. Go Live to bank Notes for permanent Rep.',
@@ -222,7 +294,7 @@ export const TIPS = {
   level: 'Rank up! Open Build and strengthen one focused branch.',
   patch: 'Notes banked. Go Live → permanent Rep → Boosts.',
   alert: 'Collect orbs for Energy and Signal. Sprint spends Energy.',
-  boss: 'Version Gate drops gear. Kill before the timer.',
+  boss: 'Final target drops gear. Kill before the timer.',
   ship: 'Go Live to bank Notes for Rep. Stuck? Improve Boosts, Gear, or Scanner.',
   combo: 'Feed streak! Bonus Signal while it holds.',
   season:

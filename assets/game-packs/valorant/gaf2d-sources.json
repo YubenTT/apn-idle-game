@@ -1,0 +1,173 @@
+{
+  "schemaVersion": 1,
+  "sourceAuthority": "gaf2d",
+  "approvedOn": "2026-07-26",
+  "toolchain": {
+    "imageMagick": "7.1.2-13",
+    "cwebp": "1.6.0"
+  },
+  "atlas": {
+    "cellWidth": 128,
+    "cellHeight": 128,
+    "columns": 7,
+    "paddingBottom": 2,
+    "direction": "right-to-left",
+    "pivot": {
+      "x": 0.5,
+      "y": 1
+    }
+  },
+  "frames": [
+    {
+      "frame": "common-a",
+      "assetId": "entry-runner",
+      "label": "Entry Runner",
+      "manifestPath": "assets/entry-runner/asset.json",
+      "sourcePath": "assets/entry-runner/approved/identity/source-001-candidate-000-a6f133753bd12e04.png",
+      "sourceSha256": "78e24a07a3c87598aa86fbbc316663c39ebc9d884953c98917f5ea5437646b1f",
+      "approvalSha256": "78e24a07a3c87598aa86fbbc316663c39ebc9d884953c98917f5ea5437646b1f",
+      "sourceManifestVersion": 1,
+      "crop": {
+        "x": 0,
+        "y": 0,
+        "w": 627,
+        "h": 627
+      },
+      "fit": {
+        "w": 112,
+        "h": 118
+      }
+    },
+    {
+      "frame": "common-b",
+      "assetId": "veil-operator",
+      "label": "Veil Operator",
+      "manifestPath": "assets/veil-operator/asset.json",
+      "sourcePath": "assets/veil-operator/approved/identity/source-001-candidate-000-64e8a904b38caeec.png",
+      "sourceSha256": "8e1d981b66ea42c69403b540419ad4bc6605c17d88cf5b5b737abed118de1cfd",
+      "approvalSha256": "8e1d981b66ea42c69403b540419ad4bc6605c17d88cf5b5b737abed118de1cfd",
+      "sourceManifestVersion": 1,
+      "crop": {
+        "x": 0,
+        "y": 0,
+        "w": 627,
+        "h": 627
+      },
+      "fit": {
+        "w": 116,
+        "h": 116
+      }
+    },
+    {
+      "frame": "common-c",
+      "assetId": "signal-hunter",
+      "label": "Signal Hunter",
+      "manifestPath": "assets/signal-hunter/asset.json",
+      "sourcePath": "assets/signal-hunter/approved/identity/source-001-candidate-000-d88299c059eaee2b.png",
+      "sourceSha256": "25aa4d72f51723a43b8b748731da27d8f6d496b69baf6c130e14fa3e7f246725",
+      "approvalSha256": "25aa4d72f51723a43b8b748731da27d8f6d496b69baf6c130e14fa3e7f246725",
+      "sourceManifestVersion": 1,
+      "crop": {
+        "x": 0,
+        "y": 0,
+        "w": 627,
+        "h": 627
+      },
+      "fit": {
+        "w": 112,
+        "h": 118
+      }
+    },
+    {
+      "frame": "elite",
+      "assetId": "site-sentinel",
+      "label": "Site Sentinel",
+      "manifestPath": "assets/site-sentinel/asset.json",
+      "sourcePath": "assets/site-sentinel/approved/identity/source-001-candidate-000-101b8cc7f6576a7d.png",
+      "sourceSha256": "24efb320e89bba71e24a49d324eeb2a463b2da584e077547b8a69a072dc7aad6",
+      "approvalSha256": "24efb320e89bba71e24a49d324eeb2a463b2da584e077547b8a69a072dc7aad6",
+      "sourceManifestVersion": 1,
+      "crop": {
+        "x": 0,
+        "y": 0,
+        "w": 627,
+        "h": 627
+      },
+      "fit": {
+        "w": 116,
+        "h": 118
+      }
+    },
+    {
+      "frame": "event",
+      "assetId": "protocol-courier",
+      "label": "Protocol Courier",
+      "manifestPath": "assets/protocol-courier/asset.json",
+      "sourcePath": "assets/protocol-courier/approved/identity/source-001-candidate-000-64399c1f6e03a653.png",
+      "sourceSha256": "ecc1a009c4f7fa0851ddf548150592f793e0c2d54c8fac505dde607433ed0582",
+      "approvalSha256": "ecc1a009c4f7fa0851ddf548150592f793e0c2d54c8fac505dde607433ed0582",
+      "sourceManifestVersion": 1,
+      "crop": {
+        "x": 0,
+        "y": 0,
+        "w": 627,
+        "h": 627
+      },
+      "fit": {
+        "w": 112,
+        "h": 118
+      }
+    },
+    {
+      "frame": "boss",
+      "assetId": "site-warden",
+      "label": "Site Warden",
+      "manifestPath": "assets/site-warden/asset.json",
+      "sourcePath": "assets/site-warden/approved/identity/source-001-candidate-000-e45b2facf680c451.png",
+      "sourceSha256": "60044ccfbd18fe106d8cffa962e56d0fc03d96ea90698fdfdc4230853336c915",
+      "approvalSha256": "60044ccfbd18fe106d8cffa962e56d0fc03d96ea90698fdfdc4230853336c915",
+      "sourceManifestVersion": 1,
+      "crop": {
+        "x": 0,
+        "y": 100,
+        "w": 440,
+        "h": 700
+      },
+      "fit": {
+        "w": 120,
+        "h": 120
+      }
+    },
+    {
+      "frame": "boss-break",
+      "assetId": "site-warden",
+      "label": "Site Warden · Broken",
+      "manifestPath": "assets/site-warden/asset.json",
+      "sourcePath": "assets/site-warden/approved/identity/source-001-candidate-000-e45b2facf680c451.png",
+      "sourceSha256": "60044ccfbd18fe106d8cffa962e56d0fc03d96ea90698fdfdc4230853336c915",
+      "approvalSha256": "60044ccfbd18fe106d8cffa962e56d0fc03d96ea90698fdfdc4230853336c915",
+      "sourceManifestVersion": 1,
+      "crop": {
+        "x": 1355,
+        "y": 597,
+        "w": 360,
+        "h": 320
+      },
+      "eraseRects": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 166,
+          "h": 50
+        }
+      ],
+      "fit": {
+        "w": 120,
+        "h": 116
+      }
+    }
+  ],
+  "derivative": {
+    "targetsSha256": "a88bc072c0604f8e84cd02e9548989db9313dfe315d655696e98a95a2b2e8252"
+  }
+}

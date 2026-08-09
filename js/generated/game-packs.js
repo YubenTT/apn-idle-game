@@ -16,9 +16,9 @@ export const GAME_PACKS = deepFreeze([
     "zones": 10,
     "targets": [
       {
-        "id": "entry-duelist",
+        "id": "entry-runner",
         "role": "common-a",
-        "label": "Entry Duelist",
+        "label": "Entry Runner",
         "frame": "common-a",
         "pivot": {
           "x": 0.5,
@@ -26,9 +26,9 @@ export const GAME_PACKS = deepFreeze([
         }
       },
       {
-        "id": "smoke-controller",
+        "id": "veil-operator",
         "role": "common-b",
-        "label": "Smoke Controller",
+        "label": "Veil Operator",
         "frame": "common-b",
         "pivot": {
           "x": 0.5,
@@ -36,9 +36,9 @@ export const GAME_PACKS = deepFreeze([
         }
       },
       {
-        "id": "recon-initiator",
+        "id": "signal-hunter",
         "role": "common-c",
-        "label": "Recon Initiator",
+        "label": "Signal Hunter",
         "frame": "common-c",
         "pivot": {
           "x": 0.5,
@@ -56,9 +56,9 @@ export const GAME_PACKS = deepFreeze([
         }
       },
       {
-        "id": "spike-courier",
+        "id": "protocol-courier",
         "role": "event",
-        "label": "Spike Courier",
+        "label": "Protocol Courier",
         "frame": "event",
         "pivot": {
           "x": 0.5,
@@ -67,8 +67,8 @@ export const GAME_PACKS = deepFreeze([
       }
     ],
     "boss": {
-      "id": "radiant-protocol",
-      "label": "Radiant Protocol",
+      "id": "site-warden",
+      "label": "Site Warden",
       "frame": "boss",
       "breakFrame": "boss-break",
       "pivot": {
@@ -82,6 +82,323 @@ export const GAME_PACKS = deepFreeze([
       "targetData": "assets/game-packs/valorant/targets.json",
       "props": "assets/game-packs/valorant/props.webp",
       "corruptionMask": "assets/game-packs/valorant/corruption-mask.webp"
+    },
+    "motion": {
+      "grammar": "gaf2d-motion-bundle-v1",
+      "characters": {
+        "entry-runner": {
+          "set": "assets/game-packs/valorant/characters/entry-runner/set.json",
+          "setSha256": "d10954872beecbe955fb171fa9a1ef96939b82f966d3bd5c3cc3a9198b9e368f",
+          "sourceFamily": "authored-semantic-v4",
+          "consumerScale": {
+            "displayedDevicePixels": 144,
+            "grammar": "gaf2d-consumer-scale-v4",
+            "maximumCssBodyHeight": 72,
+            "maximumDpr": 2,
+            "role": "standard",
+            "runtimeCanvasClass": 256,
+            "scaleRatio": {
+              "denominator": 177,
+              "numerator": 144
+            },
+            "sourceVisiblePixels": 177
+          },
+          "selectedProfileSha256": "76d15cc95e8a0bf2f40867abb09f375148679e71f3746e11d51130f83c463dd4",
+          "clips": {
+            "advance": {
+              "descriptor": "assets/game-packs/valorant/characters/entry-runner/advance.json",
+              "descriptorSha256": "90ac24be84ad7ef9ce5e8e18ca600c78b1d7fe267936f23c8ad7e5cf8ef89e38",
+              "image": "assets/game-packs/valorant/characters/entry-runner/advance.webp",
+              "imageSha256": "927985d745693b50fdc6853f7326f50074e7904af3a6d9ff9da5f5e052f52ea4"
+            },
+            "death": {
+              "descriptor": "assets/game-packs/valorant/characters/entry-runner/death.json",
+              "descriptorSha256": "441186aaf5b5069801f88945b16b6711f9a2f5082cef8b0f771633a1f33b3c59",
+              "image": "assets/game-packs/valorant/characters/entry-runner/death.webp",
+              "imageSha256": "dfbd28f135684bca994608aeb530e189088571458d842898bdebdcbe4a9490af"
+            },
+            "engaged": {
+              "descriptor": "assets/game-packs/valorant/characters/entry-runner/engaged.json",
+              "descriptorSha256": "bfcbb5f53f6c91c20a6b23854293d1f9a8d466913bc635dc1607de604eecdacd",
+              "image": "assets/game-packs/valorant/characters/entry-runner/engaged.webp",
+              "imageSha256": "1379dc4e7ed29f2c10d91fe036980eff7f727d17a6690a59fdc10a81c66bda40"
+            },
+            "hit": {
+              "descriptor": "assets/game-packs/valorant/characters/entry-runner/hit.json",
+              "descriptorSha256": "bcab57d4a78f2fdcc0030c520de84e99785b142bdff2c5274bfadde1fb0bfb5d",
+              "image": "assets/game-packs/valorant/characters/entry-runner/hit.webp",
+              "imageSha256": "3e34b4a4f583457bda56b8d688c47a4bb01070f695d53b0cba09c29b6d9bea74"
+            },
+            "idle": {
+              "descriptor": "assets/game-packs/valorant/characters/entry-runner/idle.json",
+              "descriptorSha256": "141a0c5fe805dee569982125661a176583236902cb08ad648b1ffcb3b861baa3",
+              "image": "assets/game-packs/valorant/characters/entry-runner/idle.webp",
+              "imageSha256": "ae46b17a51e8b557356e4d325799b5012763ab9970f3f3415ad14bdbc6453880"
+            }
+          }
+        },
+        "protocol-courier": {
+          "set": "assets/game-packs/valorant/characters/protocol-courier/set.json",
+          "setSha256": "c811a27894744f9329d06a843b0749f94c73d97830ff16d06160948196a625a0",
+          "sourceFamily": "authored-semantic-v4",
+          "consumerScale": {
+            "displayedDevicePixels": 144,
+            "grammar": "gaf2d-consumer-scale-v4",
+            "maximumCssBodyHeight": 72,
+            "maximumDpr": 2,
+            "role": "standard",
+            "runtimeCanvasClass": 256,
+            "scaleRatio": {
+              "denominator": 176,
+              "numerator": 144
+            },
+            "sourceVisiblePixels": 176
+          },
+          "selectedProfileSha256": "76d15cc95e8a0bf2f40867abb09f375148679e71f3746e11d51130f83c463dd4",
+          "clips": {
+            "advance": {
+              "descriptor": "assets/game-packs/valorant/characters/protocol-courier/advance.json",
+              "descriptorSha256": "9db87bf51d29cbb299e8a78093c86bfcb6f0dfa8fa9f3c9d4a5a6fa8a57549ef",
+              "image": "assets/game-packs/valorant/characters/protocol-courier/advance.webp",
+              "imageSha256": "06b6b82a037a2e783ca1355facd676dcad84757076f62e4d859bea5ae14b2aeb"
+            },
+            "death": {
+              "descriptor": "assets/game-packs/valorant/characters/protocol-courier/death.json",
+              "descriptorSha256": "00618dca2975b80a7f25eada8a67f94bbc0a2f0bd445bc49676839db49a39dcf",
+              "image": "assets/game-packs/valorant/characters/protocol-courier/death.webp",
+              "imageSha256": "3594bb88599f13cad03c77243a206b78eee085863be8814affce7fc2cc404f37"
+            },
+            "engaged": {
+              "descriptor": "assets/game-packs/valorant/characters/protocol-courier/engaged.json",
+              "descriptorSha256": "d7fb1549d6ca8316b4a462c87936eb6cd1280110ac40b0dfd2a03b045b7c917c",
+              "image": "assets/game-packs/valorant/characters/protocol-courier/engaged.webp",
+              "imageSha256": "af883301f35051e02aa7ba08afe640612a474bff6bd29ac56f450cc3edd1acb3"
+            },
+            "hit": {
+              "descriptor": "assets/game-packs/valorant/characters/protocol-courier/hit.json",
+              "descriptorSha256": "81450ba767924a10e63fb15389c2b04e0cca9c0737c9a0a4f4231a29f4e81d07",
+              "image": "assets/game-packs/valorant/characters/protocol-courier/hit.webp",
+              "imageSha256": "12311f26a047275c3b609f45c0f3cf95b225e0769159a3adeaaf59e649888315"
+            },
+            "idle": {
+              "descriptor": "assets/game-packs/valorant/characters/protocol-courier/idle.json",
+              "descriptorSha256": "6d2a45d89b0de979c299a21a13db2d3904096ff4b0e9e55992063001deceec20",
+              "image": "assets/game-packs/valorant/characters/protocol-courier/idle.webp",
+              "imageSha256": "2254b241e454883bfeee9cc3a2c126dcf9328254b08fc531f9bdca344cfbccc9"
+            }
+          }
+        },
+        "signal-hunter": {
+          "set": "assets/game-packs/valorant/characters/signal-hunter/set.json",
+          "setSha256": "9e7db9a6594f6c3cc49e0618365ebebe805352832221cac600568a76410b12ff",
+          "sourceFamily": "authored-semantic-v4",
+          "consumerScale": {
+            "displayedDevicePixels": 144,
+            "grammar": "gaf2d-consumer-scale-v4",
+            "maximumCssBodyHeight": 72,
+            "maximumDpr": 2,
+            "role": "standard",
+            "runtimeCanvasClass": 256,
+            "scaleRatio": {
+              "denominator": 177,
+              "numerator": 144
+            },
+            "sourceVisiblePixels": 177
+          },
+          "selectedProfileSha256": "76d15cc95e8a0bf2f40867abb09f375148679e71f3746e11d51130f83c463dd4",
+          "clips": {
+            "advance": {
+              "descriptor": "assets/game-packs/valorant/characters/signal-hunter/advance.json",
+              "descriptorSha256": "526650836bcdbfcefd88cbb323a86e09b7c20da4ecb220b38e47d73fbfc22367",
+              "image": "assets/game-packs/valorant/characters/signal-hunter/advance.webp",
+              "imageSha256": "55decb532b92074fcac4d7dd36c94d90160e9808acb31d5aa3632028b2ae324d"
+            },
+            "death": {
+              "descriptor": "assets/game-packs/valorant/characters/signal-hunter/death.json",
+              "descriptorSha256": "09abeed5e88728c5e4e76cc1558300347f95493159238c4f329e0d5a13c84581",
+              "image": "assets/game-packs/valorant/characters/signal-hunter/death.webp",
+              "imageSha256": "20b7ad821cf76f5edafe6f36f053e228d72c4966fc2f53c9589cd45165265d3c"
+            },
+            "engaged": {
+              "descriptor": "assets/game-packs/valorant/characters/signal-hunter/engaged.json",
+              "descriptorSha256": "93a4b7d6d47cf7c05bd70ed86faed194d772b4609e6950e58598cc80836d3635",
+              "image": "assets/game-packs/valorant/characters/signal-hunter/engaged.webp",
+              "imageSha256": "e7e9c7441aad751f1a1e4f1229709f3443ea855ac255a63ce08620fb224a2ea3"
+            },
+            "hit": {
+              "descriptor": "assets/game-packs/valorant/characters/signal-hunter/hit.json",
+              "descriptorSha256": "60fc7f369f8c3bda4376b541c5817f7a581c8b89cb874efda00a6ea00975823f",
+              "image": "assets/game-packs/valorant/characters/signal-hunter/hit.webp",
+              "imageSha256": "5bdf54ad2c660a99c727567b1acb4c746220b80c0c4fe33d393c429c1089a644"
+            },
+            "idle": {
+              "descriptor": "assets/game-packs/valorant/characters/signal-hunter/idle.json",
+              "descriptorSha256": "7d689459376fc1a682466205419277c1c86ac94dc8ff0036a144c4cc28255088",
+              "image": "assets/game-packs/valorant/characters/signal-hunter/idle.webp",
+              "imageSha256": "c692a088b19dbd368252e71d61706369edb65a717f3559a569089e2ef8bdd318"
+            }
+          }
+        },
+        "site-sentinel": {
+          "set": "assets/game-packs/valorant/characters/site-sentinel/set.json",
+          "setSha256": "b77dae404176b97df581c079e55f68aefaa43148bb70bff0d5d40a9669f82f44",
+          "sourceFamily": "authored-semantic-v4",
+          "consumerScale": {
+            "displayedDevicePixels": 168,
+            "grammar": "gaf2d-consumer-scale-v4",
+            "maximumCssBodyHeight": 84,
+            "maximumDpr": 2,
+            "role": "elite",
+            "runtimeCanvasClass": 256,
+            "scaleRatio": {
+              "denominator": 177,
+              "numerator": 168
+            },
+            "sourceVisiblePixels": 177
+          },
+          "selectedProfileSha256": "76d15cc95e8a0bf2f40867abb09f375148679e71f3746e11d51130f83c463dd4",
+          "clips": {
+            "advance": {
+              "descriptor": "assets/game-packs/valorant/characters/site-sentinel/advance.json",
+              "descriptorSha256": "28ae655ed0c91261463ad77cf21b257868f3c6e84c3611ea96e69825d221bc70",
+              "image": "assets/game-packs/valorant/characters/site-sentinel/advance.webp",
+              "imageSha256": "19895a26dae8f27924084285af645561d1001ff3669b03375d8fefccd8c12772"
+            },
+            "death": {
+              "descriptor": "assets/game-packs/valorant/characters/site-sentinel/death.json",
+              "descriptorSha256": "706c6e1973c337a37c4ee901328720b1702abd96480462f21f44b04df3e404a5",
+              "image": "assets/game-packs/valorant/characters/site-sentinel/death.webp",
+              "imageSha256": "11068ea1ba8bb424ca20117c8840dfabc0944c97086ca30b496af9b689d9812b"
+            },
+            "engaged": {
+              "descriptor": "assets/game-packs/valorant/characters/site-sentinel/engaged.json",
+              "descriptorSha256": "f7636420b9ce58a4c1b5ddfd14d68292bc57cf2d6482c1f56c12ba5f8a19c0f7",
+              "image": "assets/game-packs/valorant/characters/site-sentinel/engaged.webp",
+              "imageSha256": "96b76a55a506149ff8a801b46937123ee65c2940cf7d7ce732e398afae118540"
+            },
+            "hit": {
+              "descriptor": "assets/game-packs/valorant/characters/site-sentinel/hit.json",
+              "descriptorSha256": "4db57366a82d24cb51d8874a9416e9df4051d083ce9e83d9d41d8b09dbded88d",
+              "image": "assets/game-packs/valorant/characters/site-sentinel/hit.webp",
+              "imageSha256": "36d565281e71eb3fe4c67f7606c2e75a9d984a2fdd72d5f402ac6eb7fa975b00"
+            },
+            "idle": {
+              "descriptor": "assets/game-packs/valorant/characters/site-sentinel/idle.json",
+              "descriptorSha256": "f03658859dd51e2e4b6bd8e319e9679e070efb120fd2c701ca4209c20656c2fa",
+              "image": "assets/game-packs/valorant/characters/site-sentinel/idle.webp",
+              "imageSha256": "26506b6fdda49d53debc50bd97f8b7fb23726c5aaa2b71fda76437ed2d861bb7"
+            }
+          }
+        },
+        "site-warden": {
+          "set": "assets/game-packs/valorant/characters/site-warden/set.json",
+          "setSha256": "2774d8fd365c94a6759325455bc706aa2348fcec74f606668f08e389acea5883",
+          "sourceFamily": "authored-semantic-v4",
+          "consumerScale": {
+            "displayedDevicePixels": 224,
+            "grammar": "gaf2d-consumer-scale-v4",
+            "maximumCssBodyHeight": 112,
+            "maximumDpr": 2,
+            "role": "boss",
+            "runtimeCanvasClass": 320,
+            "scaleRatio": {
+              "denominator": 258,
+              "numerator": 224
+            },
+            "sourceVisiblePixels": 258
+          },
+          "selectedProfileSha256": "76d15cc95e8a0bf2f40867abb09f375148679e71f3746e11d51130f83c463dd4",
+          "clips": {
+            "advance": {
+              "descriptor": "assets/game-packs/valorant/characters/site-warden/advance.json",
+              "descriptorSha256": "19939df3743217977e04c914869f006c1b89b36b29a9c3507ed8199c6d0fefc2",
+              "image": "assets/game-packs/valorant/characters/site-warden/advance.webp",
+              "imageSha256": "773cf87d468a102a240bfac9b4c71aafcef2761886019ca920785b00a65ac0cd"
+            },
+            "broken": {
+              "descriptor": "assets/game-packs/valorant/characters/site-warden/broken.json",
+              "descriptorSha256": "53cfe2faec0058ba89944dab65ddcfce3be6d045b1ccdc826344c84aedbf13da",
+              "image": "assets/game-packs/valorant/characters/site-warden/broken.webp",
+              "imageSha256": "7078ce635be74f19710f88e93577928382fb16457269c8cabe80cb2060379152"
+            },
+            "death": {
+              "descriptor": "assets/game-packs/valorant/characters/site-warden/death.json",
+              "descriptorSha256": "2455756e43689aeb6e698065455d3ef7e8520e29c38e2064a055e4ad4185528a",
+              "image": "assets/game-packs/valorant/characters/site-warden/death.webp",
+              "imageSha256": "ce3fb23208928fb10b01a78b166e18c213d6608399f8bd07e04012b9a9c87e22"
+            },
+            "engaged": {
+              "descriptor": "assets/game-packs/valorant/characters/site-warden/engaged.json",
+              "descriptorSha256": "3092fdfbb743f8d50ee75dff049e2d267f6cd699788a2f6951833f9f90d30545",
+              "image": "assets/game-packs/valorant/characters/site-warden/engaged.webp",
+              "imageSha256": "3bd8b5a61fb55c742585c39f986ed3e5187596918ff06ac44950c489802ba382"
+            },
+            "hit": {
+              "descriptor": "assets/game-packs/valorant/characters/site-warden/hit.json",
+              "descriptorSha256": "e2a74a1e85a90c07ddbf99c45b71b9ba87f11524b015b7a7c359a4dca4b11372",
+              "image": "assets/game-packs/valorant/characters/site-warden/hit.webp",
+              "imageSha256": "ad8e6cbb0edf95a7c23884a01fd903c062d8d8d7f13427572d26e90840d4cd5b"
+            },
+            "idle": {
+              "descriptor": "assets/game-packs/valorant/characters/site-warden/idle.json",
+              "descriptorSha256": "734b36cae88d2aa0995ab7a462c2790137ab86daddf71b9bce3e1cdb1e272d9a",
+              "image": "assets/game-packs/valorant/characters/site-warden/idle.webp",
+              "imageSha256": "5ebd3ebd2b22651f12fec494147c9998f3bb21debb8829d1431c31931effe405"
+            }
+          }
+        },
+        "veil-operator": {
+          "set": "assets/game-packs/valorant/characters/veil-operator/set.json",
+          "setSha256": "e40ac304f5f420254b8a93c31f6c68e32a9899bdccead285c6f64319995400d2",
+          "sourceFamily": "authored-semantic-v4",
+          "consumerScale": {
+            "displayedDevicePixels": 144,
+            "grammar": "gaf2d-consumer-scale-v4",
+            "maximumCssBodyHeight": 72,
+            "maximumDpr": 2,
+            "role": "standard",
+            "runtimeCanvasClass": 256,
+            "scaleRatio": {
+              "denominator": 201,
+              "numerator": 144
+            },
+            "sourceVisiblePixels": 201
+          },
+          "selectedProfileSha256": "76d15cc95e8a0bf2f40867abb09f375148679e71f3746e11d51130f83c463dd4",
+          "clips": {
+            "advance": {
+              "descriptor": "assets/game-packs/valorant/characters/veil-operator/advance.json",
+              "descriptorSha256": "6d6d01fcde9f0b0cad9e7e45c315aebd6af8707227da5edbecfee6ab29b49f6d",
+              "image": "assets/game-packs/valorant/characters/veil-operator/advance.webp",
+              "imageSha256": "1b7a8381957574ec24052ae6704261c7cd1ea2dedfb9dd3edc61668a8907d794"
+            },
+            "death": {
+              "descriptor": "assets/game-packs/valorant/characters/veil-operator/death.json",
+              "descriptorSha256": "1adf6614dafd934b9dad2563f6480516c8074ca92eb479396da42b183f8390d1",
+              "image": "assets/game-packs/valorant/characters/veil-operator/death.webp",
+              "imageSha256": "99c708db74323d00b90af94727fef390b01189e3a5d3395c3717fdaf38767e42"
+            },
+            "engaged": {
+              "descriptor": "assets/game-packs/valorant/characters/veil-operator/engaged.json",
+              "descriptorSha256": "dbe942d54c1c8d01b7c49538b1d46ae116a0ed78006dc22643fac5065f507de8",
+              "image": "assets/game-packs/valorant/characters/veil-operator/engaged.webp",
+              "imageSha256": "a8c94c51f3dddbcfb6f8e749f62d8c16904c198a13568cd69ee0302bc58c150f"
+            },
+            "hit": {
+              "descriptor": "assets/game-packs/valorant/characters/veil-operator/hit.json",
+              "descriptorSha256": "6f7a1774db72164e4629e39d9ce0b1631e74b9256be09bef117692ba64b47b95",
+              "image": "assets/game-packs/valorant/characters/veil-operator/hit.webp",
+              "imageSha256": "d502aadb734fd3a30f50d77b04d2a5278a846dba6f1b5c51893b7653eff53103"
+            },
+            "idle": {
+              "descriptor": "assets/game-packs/valorant/characters/veil-operator/idle.json",
+              "descriptorSha256": "39634611eafd14c4cd1594de3d62f7138907824412e7683a404ae8677378bcfd",
+              "image": "assets/game-packs/valorant/characters/veil-operator/idle.webp",
+              "imageSha256": "45fb3c1eedbf4c2dbe938619a163c540d117e45b26c747d07a794bbdf801e214"
+            }
+          }
+        }
+      }
     },
     "sourceBoard": "assets/game-packs/valorant/source-board.md",
     "corruptionMasks": [

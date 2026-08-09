@@ -7,7 +7,7 @@
       "path": "assets/apn-logo-square.png",
       "bytes": 10985,
       "sha256": "1f2b8901bc80b48c3a4296d799d67425e11a707099f149b4aaeca6f801dbb78a",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "apn-logo.svg",
@@ -21,77 +21,301 @@
       "path": "assets/apn-mascot-glb-analyst.glb",
       "bytes": 653412,
       "sha256": "f456d1d247531b2fde4a70090868e286ad73a2ff07203d34e7d4a9f427974e4b",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "apn-mascot-glb-host.glb",
       "path": "assets/apn-mascot-glb-host.glb",
       "bytes": 655912,
       "sha256": "486f2c7900c2e793ef7aace11b192bb77c70525f1512dbd843ae88a1374e3697",
-      "firstPlayable": true
+      "firstPlayable": false
+    },
+    {
+      "id": "creatures/curator/advance.json",
+      "path": "assets/creatures/curator/advance.json",
+      "bytes": 1521,
+      "sha256": "44d8ce0feeca74bf37d5361355285278eb20a583eecdfdeab1c3521e8a513e3e",
+      "firstPlayable": false
+    },
+    {
+      "id": "creatures/curator/advance.webp",
+      "path": "assets/creatures/curator/advance.webp",
+      "bytes": 123604,
+      "sha256": "61246135fc5296238e927d8f31746e6b6bf19e374f6397a38962d5a344001ee0",
+      "firstPlayable": false
+    },
+    {
+      "id": "creatures/curator/attack.json",
+      "path": "assets/creatures/curator/attack.json",
+      "bytes": 1068,
+      "sha256": "195bd3a689ad443c22116c27b293c73214dcaf7b779d5466bb1d7e0354f17097",
+      "firstPlayable": false
+    },
+    {
+      "id": "creatures/curator/attack.webp",
+      "path": "assets/creatures/curator/attack.webp",
+      "bytes": 81060,
+      "sha256": "5230d1780df99f97957de18b332c061aca9a34205b8d181f5d2f887daf232454",
+      "firstPlayable": false
+    },
+    {
+      "id": "creatures/curator/broken.json",
+      "path": "assets/creatures/curator/broken.json",
+      "bytes": 1218,
+      "sha256": "6e192d19ad160f394e5f9d099ac472dd5c1a9da9c26f0042ae62d5bc1069acd6",
+      "firstPlayable": false
+    },
+    {
+      "id": "creatures/curator/broken.webp",
+      "path": "assets/creatures/curator/broken.webp",
+      "bytes": 94556,
+      "sha256": "96c7da4c6ca428456a7e92c37769a16c370980e7773d0d77dac1cc37ed0c2d8f",
+      "firstPlayable": false
+    },
+    {
+      "id": "creatures/curator/death.json",
+      "path": "assets/creatures/curator/death.json",
+      "bytes": 1367,
+      "sha256": "97166d2388d7daa9b6f90bf43263bc8fbdff86a7dbdc91cceaf1625b95b8e046",
+      "firstPlayable": false
+    },
+    {
+      "id": "creatures/curator/death.webp",
+      "path": "assets/creatures/curator/death.webp",
+      "bytes": 110002,
+      "sha256": "e96a4e783619ff1da6fd579fc8705791ed8584ad1a55ee7c965acc5d62301cf7",
+      "firstPlayable": false
+    },
+    {
+      "id": "creatures/curator/hit.json",
+      "path": "assets/creatures/curator/hit.json",
+      "bytes": 762,
+      "sha256": "32b8c48cddecdea254946110b00619db53c2fe98770b6ba25ee913067d2554d0",
+      "firstPlayable": false
+    },
+    {
+      "id": "creatures/curator/hit.webp",
+      "path": "assets/creatures/curator/hit.webp",
+      "bytes": 50094,
+      "sha256": "73cb19373fb3412b77c3450716c7c647892b26fcd71b8dfddfc75dfb0d2e6c8a",
+      "firstPlayable": false
+    },
+    {
+      "id": "creatures/curator/idle.json",
+      "path": "assets/creatures/curator/idle.json",
+      "bytes": 1214,
+      "sha256": "7474d8c79baf0fde326eb66947242752357b34fda3a219244df7384144b8a0da",
+      "firstPlayable": false
+    },
+    {
+      "id": "creatures/curator/idle.webp",
+      "path": "assets/creatures/curator/idle.webp",
+      "bytes": 93238,
+      "sha256": "a87c45914b6b6e91c98d4a656baeb15da48f65556e77a198bf3cfc124b157be1",
+      "firstPlayable": false
+    },
+    {
+      "id": "creatures/hotshot/hotshot-advance.json",
+      "path": "assets/creatures/hotshot/hotshot-advance.json",
+      "bytes": 1536,
+      "sha256": "0f51aee9726d1e8150bb94ec6e1747481ff78a6ff109a3d57c85015290dd32ce",
+      "firstPlayable": false
+    },
+    {
+      "id": "creatures/hotshot/hotshot-advance.webp",
+      "path": "assets/creatures/hotshot/hotshot-advance.webp",
+      "bytes": 128144,
+      "sha256": "22571da3f64fafa4c4db49d3bf0e8a74850d76f2b86551c2e08823a5889f9e0f",
+      "firstPlayable": false
+    },
+    {
+      "id": "creatures/hotshot/hotshot-attack.json",
+      "path": "assets/creatures/hotshot/hotshot-attack.json",
+      "bytes": 1085,
+      "sha256": "36188dabcc29bce6ab95eeb6789871b131f09a72135bd41b899f584b54b09d81",
+      "firstPlayable": false
+    },
+    {
+      "id": "creatures/hotshot/hotshot-attack.webp",
+      "path": "assets/creatures/hotshot/hotshot-attack.webp",
+      "bytes": 85106,
+      "sha256": "ed030a4ef84caaf5467d31e80a68beb1b2dbcf7c072af415a551c6c84e68cb8c",
+      "firstPlayable": false
+    },
+    {
+      "id": "creatures/hotshot/hotshot-death.json",
+      "path": "assets/creatures/hotshot/hotshot-death.json",
+      "bytes": 1382,
+      "sha256": "c3d4c5ee885a3944a007194f13c2cfbffc920515d38a3e7d695b23290ccdfc02",
+      "firstPlayable": false
+    },
+    {
+      "id": "creatures/hotshot/hotshot-death.webp",
+      "path": "assets/creatures/hotshot/hotshot-death.webp",
+      "bytes": 105616,
+      "sha256": "684395285ba9e25f89343343660c3659ff5222433b280a63f6d580f4e452d8e9",
+      "firstPlayable": false
+    },
+    {
+      "id": "creatures/hotshot/hotshot-hit.json",
+      "path": "assets/creatures/hotshot/hotshot-hit.json",
+      "bytes": 778,
+      "sha256": "dfe1e664971bcb1a872e53bc8fcd07519456f336258c80e73e6f857c91a7523f",
+      "firstPlayable": false
+    },
+    {
+      "id": "creatures/hotshot/hotshot-hit.webp",
+      "path": "assets/creatures/hotshot/hotshot-hit.webp",
+      "bytes": 49660,
+      "sha256": "59c199585eae9bc33c923b21a6d84f476577885ca55e116345aa41e4b14b4454",
+      "firstPlayable": false
+    },
+    {
+      "id": "creatures/hotshot/hotshot-idle.json",
+      "path": "assets/creatures/hotshot/hotshot-idle.json",
+      "bytes": 1229,
+      "sha256": "607e7234270c3cf452534f74f425778eb057be55041f5a4e76ef9dcf20dd6654",
+      "firstPlayable": false
+    },
+    {
+      "id": "creatures/hotshot/hotshot-idle.webp",
+      "path": "assets/creatures/hotshot/hotshot-idle.webp",
+      "bytes": 96144,
+      "sha256": "1f5354f648b3339e9e42f2f7d12fefcd4ba048bdf5cf18f6d10b8b0338b10c4b",
+      "firstPlayable": false
+    },
+    {
+      "id": "creatures/recon/advance.json",
+      "path": "assets/creatures/recon/advance.json",
+      "bytes": 1521,
+      "sha256": "4f0c353941e4e4e13f0a065db7de8a650e6119eda720d0bab861f224576e4d4f",
+      "firstPlayable": false
+    },
+    {
+      "id": "creatures/recon/advance.webp",
+      "path": "assets/creatures/recon/advance.webp",
+      "bytes": 191890,
+      "sha256": "3058fe43db8554a76ed0b3ca54858008d73aa3c6c64b2991a799ed2b74fe42ec",
+      "firstPlayable": false
+    },
+    {
+      "id": "creatures/recon/attack.json",
+      "path": "assets/creatures/recon/attack.json",
+      "bytes": 1071,
+      "sha256": "ecf5149b5eb403687031d8cfe7823cb9a87ca3a1aa2f5edc194542f44c060adf",
+      "firstPlayable": false
+    },
+    {
+      "id": "creatures/recon/attack.webp",
+      "path": "assets/creatures/recon/attack.webp",
+      "bytes": 123680,
+      "sha256": "78e9abf186800ac2e1aebd518e93b2a8132364e01bef21fe213c2410ae9b26f8",
+      "firstPlayable": false
+    },
+    {
+      "id": "creatures/recon/death.json",
+      "path": "assets/creatures/recon/death.json",
+      "bytes": 1368,
+      "sha256": "80806df6ed5d53ebb89a11656a451a3a9ca48f3f42588a9c4e979079b7241e52",
+      "firstPlayable": false
+    },
+    {
+      "id": "creatures/recon/death.webp",
+      "path": "assets/creatures/recon/death.webp",
+      "bytes": 140108,
+      "sha256": "399f8a2c49df48f94aecf4fc696a37f967587610b90eb1bbc4138976c4532a7c",
+      "firstPlayable": false
+    },
+    {
+      "id": "creatures/recon/hit.json",
+      "path": "assets/creatures/recon/hit.json",
+      "bytes": 762,
+      "sha256": "d63e5f9165e6e7765977a75479302251984fb837aeb2a0c7eea60c3c0001df22",
+      "firstPlayable": false
+    },
+    {
+      "id": "creatures/recon/hit.webp",
+      "path": "assets/creatures/recon/hit.webp",
+      "bytes": 71372,
+      "sha256": "41e370f0f4210f0c1ed545f04d658ce330f25386dfcd72d0d8d875e49c97b570",
+      "firstPlayable": false
+    },
+    {
+      "id": "creatures/recon/idle.json",
+      "path": "assets/creatures/recon/idle.json",
+      "bytes": 1215,
+      "sha256": "aabaa4bfba8be281a7dca9524ee540afc4f411c4e19508b1b3acedbc549ed71c",
+      "firstPlayable": false
+    },
+    {
+      "id": "creatures/recon/idle.webp",
+      "path": "assets/creatures/recon/idle.webp",
+      "bytes": 140676,
+      "sha256": "a1a949beb9bfeba30ad54a5eb590ce590e24a7714093d382475d5e24578d2c10",
+      "firstPlayable": false
     },
     {
       "id": "enemies/boss.png",
       "path": "assets/enemies/boss.png",
       "bytes": 27917,
       "sha256": "61880737e489b10aaf306cbbf62cd8c0f91bd5e35490c3d027f7cec83e178f51",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "enemies/event.png",
       "path": "assets/enemies/event.png",
       "bytes": 23953,
       "sha256": "c51179b90bdbcb4a6254f0dadb8222f884208f6d971942febac0d7ed12616d6d",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "enemies/lag.png",
       "path": "assets/enemies/lag.png",
       "bytes": 19956,
       "sha256": "47d06fbf0bdf818ade0ac4450b930b21378e100cac3672defcd8961128443d82",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "enemies/patch.png",
       "path": "assets/enemies/patch.png",
       "bytes": 24069,
       "sha256": "045a07c35e6f2a54feb1a38b72d8249a65289a811e60880e1b87d5a425223ffb",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "enemies/rumor.png",
       "path": "assets/enemies/rumor.png",
       "bytes": 17847,
       "sha256": "3b29cc7bd2f1bee87e0b36352e592ab453e869158870e517e399c3f6a2d4afa9",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "enemies/spoiler.png",
       "path": "assets/enemies/spoiler.png",
       "bytes": 21508,
       "sha256": "80a3eb6661966688db335571d03bdd66019e5856f6e624bf76cf2422e245f886",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "enemies/stale.png",
       "path": "assets/enemies/stale.png",
       "bytes": 20220,
       "sha256": "18e46de7ea850f160a542537e70781f7f2114ad128bb167b80de2aaa020b96bb",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "enemies/stale2.png",
       "path": "assets/enemies/stale2.png",
       "bytes": 16911,
       "sha256": "234ef28ee52acb54a7aa54436ed7cc9e3dd6aa2b904da27fadd46e94664481d3",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "enemies-sheet.jpg",
       "path": "assets/enemies-sheet.jpg",
       "bytes": 174366,
       "sha256": "0727a3ecacb11deba311957af895b42d45ce72b36f9fd9cf6d7e1cb53fc48a42",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "game-packs/apex-legends/background.webp",
@@ -114,7 +338,7 @@
       "path": "assets/game-packs/apex-legends/pack.json",
       "bytes": 1751,
       "sha256": "ce3bd0cd30f2085bd11986558ca2244ef1ee1fbc9f4b5202a2f09d92c94b0ad1",
-      "firstPlayable": null
+      "firstPlayable": false
     },
     {
       "id": "game-packs/apex-legends/props.webp",
@@ -129,7 +353,7 @@
       "path": "assets/game-packs/apex-legends/targets.json",
       "bytes": 3197,
       "sha256": "257553d5760d6a6c95448e807da3fecf03302321ecd843c8183e21f17117e4c9",
-      "firstPlayable": null
+      "firstPlayable": false
     },
     {
       "id": "game-packs/apex-legends/targets.webp",
@@ -142,9 +366,9 @@
     {
       "id": "game-packs/catalog.json",
       "path": "assets/game-packs/catalog.json",
-      "bytes": 38048,
-      "sha256": "1da91ca5078170624d462b5e2f81cd648e4f9683290febf46687f7d2bc66f4e3",
-      "firstPlayable": null
+      "bytes": 56023,
+      "sha256": "2ff6a93bf74ce5731158f635d43c239d2b9c8bc769542216fcad080215fb9209",
+      "firstPlayable": false
     },
     {
       "id": "game-packs/counter-strike-2/background.webp",
@@ -167,7 +391,7 @@
       "path": "assets/game-packs/counter-strike-2/pack.json",
       "bytes": 1765,
       "sha256": "6e5abec43762363bca02aa5ddfa65ab67be9270aed20db38994b37693fbb5e02",
-      "firstPlayable": null
+      "firstPlayable": false
     },
     {
       "id": "game-packs/counter-strike-2/props.webp",
@@ -182,7 +406,7 @@
       "path": "assets/game-packs/counter-strike-2/targets.json",
       "bytes": 3201,
       "sha256": "d0f88571bc257cfda8c2951b3c2a1610caed8fa1697f4199ff7b10a4ad995ea1",
-      "firstPlayable": null
+      "firstPlayable": false
     },
     {
       "id": "game-packs/counter-strike-2/targets.webp",
@@ -213,7 +437,7 @@
       "path": "assets/game-packs/dead-by-daylight/pack.json",
       "bytes": 1759,
       "sha256": "4562bacfb59fab5f147a08949936b2861f28ccb2a9611d11c68a43e27232db09",
-      "firstPlayable": null
+      "firstPlayable": false
     },
     {
       "id": "game-packs/dead-by-daylight/props.webp",
@@ -228,7 +452,7 @@
       "path": "assets/game-packs/dead-by-daylight/targets.json",
       "bytes": 3201,
       "sha256": "73c66f6a65d13dc1739276a7e79927949d72b5b96f4c93cb2e5b7650046bcd14",
-      "firstPlayable": null
+      "firstPlayable": false
     },
     {
       "id": "game-packs/dead-by-daylight/targets.webp",
@@ -259,7 +483,7 @@
       "path": "assets/game-packs/dota-2/pack.json",
       "bytes": 1672,
       "sha256": "06b9861a95187db0dc1c845175421a938e1aedac53b3410c5796d90ce8e06071",
-      "firstPlayable": null
+      "firstPlayable": false
     },
     {
       "id": "game-packs/dota-2/props.webp",
@@ -274,7 +498,7 @@
       "path": "assets/game-packs/dota-2/targets.json",
       "bytes": 3191,
       "sha256": "a1b702e304d26c05262c7d2dd52c1e37c63a2d2123ccbf95e5f7eca40f0cc809",
-      "firstPlayable": null
+      "firstPlayable": false
     },
     {
       "id": "game-packs/dota-2/targets.webp",
@@ -305,7 +529,7 @@
       "path": "assets/game-packs/elden-ring/pack.json",
       "bytes": 1750,
       "sha256": "111e06a1d6ae294dfb72631fb7d1a60446c1c798208e24d8e2a98588f0e1a986",
-      "firstPlayable": null
+      "firstPlayable": false
     },
     {
       "id": "game-packs/elden-ring/props.webp",
@@ -320,7 +544,7 @@
       "path": "assets/game-packs/elden-ring/targets.json",
       "bytes": 3195,
       "sha256": "3f71f363eade617fef8af8037fed09dc092cba00d22b920f9fe41acaf64df728",
-      "firstPlayable": null
+      "firstPlayable": false
     },
     {
       "id": "game-packs/elden-ring/targets.webp",
@@ -351,7 +575,7 @@
       "path": "assets/game-packs/escape-from-tarkov/pack.json",
       "bytes": 1780,
       "sha256": "e20942fab179cdb3e25f7117daa4b23b3b12df19a7c167605b0f249def4a8d5d",
-      "firstPlayable": null
+      "firstPlayable": false
     },
     {
       "id": "game-packs/escape-from-tarkov/props.webp",
@@ -366,7 +590,7 @@
       "path": "assets/game-packs/escape-from-tarkov/targets.json",
       "bytes": 3203,
       "sha256": "4e088a4d6940abb3d4f32cb440533c3ba9dd4d26e9d88d25aaafdcc0e22f48f4",
-      "firstPlayable": null
+      "firstPlayable": false
     },
     {
       "id": "game-packs/escape-from-tarkov/targets.webp",
@@ -397,7 +621,7 @@
       "path": "assets/game-packs/fc-26/pack.json",
       "bytes": 1704,
       "sha256": "b1fd70b75b0ca602eeb13a6a186273aeabc4263eb95841d134920360d1a73c9b",
-      "firstPlayable": null
+      "firstPlayable": false
     },
     {
       "id": "game-packs/fc-26/props.webp",
@@ -412,7 +636,7 @@
       "path": "assets/game-packs/fc-26/targets.json",
       "bytes": 3190,
       "sha256": "d5098360f8a9c640db2e3533fb1750a71b8394fe9bce32a8bd58ebee897a1d2e",
-      "firstPlayable": null
+      "firstPlayable": false
     },
     {
       "id": "game-packs/fc-26/targets.webp",
@@ -443,7 +667,7 @@
       "path": "assets/game-packs/fortnite/pack.json",
       "bytes": 1698,
       "sha256": "a4142c388fc3decfbbb0745486d1b4b85785cbebf0d62342a3f2894c0857a3a3",
-      "firstPlayable": null
+      "firstPlayable": false
     },
     {
       "id": "game-packs/fortnite/props.webp",
@@ -458,7 +682,7 @@
       "path": "assets/game-packs/fortnite/targets.json",
       "bytes": 3193,
       "sha256": "6fee5f4848a233c8f7ded22ebd09d13cb46f8c1c579b25da0e1431db1d13c4e7",
-      "firstPlayable": null
+      "firstPlayable": false
     },
     {
       "id": "game-packs/fortnite/targets.webp",
@@ -489,7 +713,7 @@
       "path": "assets/game-packs/grand-theft-auto-v/pack.json",
       "bytes": 1815,
       "sha256": "8249d82e9d9fe2fbb0003fa5db2cf4918c13c0f44849b23f73fd03b05c9838dc",
-      "firstPlayable": null
+      "firstPlayable": false
     },
     {
       "id": "game-packs/grand-theft-auto-v/props.webp",
@@ -504,7 +728,7 @@
       "path": "assets/game-packs/grand-theft-auto-v/targets.json",
       "bytes": 3203,
       "sha256": "3b812a1d4e3adcb10793e8b17499fac2b664874e5cd3da8fb742ba15a0ef5ab9",
-      "firstPlayable": null
+      "firstPlayable": false
     },
     {
       "id": "game-packs/grand-theft-auto-v/targets.webp",
@@ -535,7 +759,7 @@
       "path": "assets/game-packs/league/pack.json",
       "bytes": 1672,
       "sha256": "39e185708a40f54b3a40a916a9a3b48fb190848ba56816e55dab9a785ddaeed8",
-      "firstPlayable": null
+      "firstPlayable": false
     },
     {
       "id": "game-packs/league/props.webp",
@@ -550,7 +774,7 @@
       "path": "assets/game-packs/league/targets.json",
       "bytes": 3191,
       "sha256": "eb8661631e798ae9393d5bdfcfc6871ddc02b4d2ae3da2ec944e0c06b0858997",
-      "firstPlayable": null
+      "firstPlayable": true
     },
     {
       "id": "game-packs/league/targets.webp",
@@ -581,7 +805,7 @@
       "path": "assets/game-packs/madden-nfl-26/pack.json",
       "bytes": 1757,
       "sha256": "49bde61346d843f3b36596c304859c5ca9b21937e287fe37de59c70e73629fe4",
-      "firstPlayable": null
+      "firstPlayable": false
     },
     {
       "id": "game-packs/madden-nfl-26/props.webp",
@@ -596,7 +820,7 @@
       "path": "assets/game-packs/madden-nfl-26/targets.json",
       "bytes": 3198,
       "sha256": "4724243d4ce8772f7a214bb52f33ed01227e4573341b2bca4b594ea9b969c608",
-      "firstPlayable": null
+      "firstPlayable": false
     },
     {
       "id": "game-packs/madden-nfl-26/targets.webp",
@@ -627,7 +851,7 @@
       "path": "assets/game-packs/marvel-rivals/pack.json",
       "bytes": 1718,
       "sha256": "2b33318c7b7f67b1ee029bd29b29d152874bdce43ddf8574a2a659cb6c8adae7",
-      "firstPlayable": null
+      "firstPlayable": false
     },
     {
       "id": "game-packs/marvel-rivals/props.webp",
@@ -642,7 +866,7 @@
       "path": "assets/game-packs/marvel-rivals/targets.json",
       "bytes": 3198,
       "sha256": "e779d19a6dac93afc666114291bf14a9b82af99358a3f3ca3fa5300ed4196531",
-      "firstPlayable": null
+      "firstPlayable": false
     },
     {
       "id": "game-packs/marvel-rivals/targets.webp",
@@ -673,7 +897,7 @@
       "path": "assets/game-packs/minecraft/pack.json",
       "bytes": 1701,
       "sha256": "1ae2874541c6cb4031a1d891ecb4d4e888293c568b030fad2c8c95a0373e1d8b",
-      "firstPlayable": null
+      "firstPlayable": false
     },
     {
       "id": "game-packs/minecraft/props.webp",
@@ -688,7 +912,7 @@
       "path": "assets/game-packs/minecraft/targets.json",
       "bytes": 3194,
       "sha256": "8463679665d8408ea0ed4c9bea9dc77e6ee9906f4abe21918d29e4bdc5f69cf1",
-      "firstPlayable": null
+      "firstPlayable": false
     },
     {
       "id": "game-packs/minecraft/targets.webp",
@@ -719,7 +943,7 @@
       "path": "assets/game-packs/nba-2k26/pack.json",
       "bytes": 1708,
       "sha256": "821632524e6a35381ef51a150142b558ca1047c7ae0f7c61d9fd06dc7e02dbe4",
-      "firstPlayable": null
+      "firstPlayable": false
     },
     {
       "id": "game-packs/nba-2k26/props.webp",
@@ -734,7 +958,7 @@
       "path": "assets/game-packs/nba-2k26/targets.json",
       "bytes": 3193,
       "sha256": "79c9a5d333a7a7c8914f9f5cb93af655f968d407db78be7b34b20021719b6bf5",
-      "firstPlayable": null
+      "firstPlayable": false
     },
     {
       "id": "game-packs/nba-2k26/targets.webp",
@@ -765,7 +989,7 @@
       "path": "assets/game-packs/old-school-runescape/pack.json",
       "bytes": 1775,
       "sha256": "a496fa63e3d0bf821060e9fd136859576db1dc0b7959b90bcbfeed4372944681",
-      "firstPlayable": null
+      "firstPlayable": false
     },
     {
       "id": "game-packs/old-school-runescape/props.webp",
@@ -780,7 +1004,7 @@
       "path": "assets/game-packs/old-school-runescape/targets.json",
       "bytes": 3205,
       "sha256": "c70868a5a668a7b2e24c42cee0fc997f6e8642b9906ad137f796483bb8090366",
-      "firstPlayable": null
+      "firstPlayable": false
     },
     {
       "id": "game-packs/old-school-runescape/targets.webp",
@@ -811,7 +1035,7 @@
       "path": "assets/game-packs/overwatch/pack.json",
       "bytes": 1710,
       "sha256": "d701c8f1667bc440e3880217737f8f7b8d7b43d956a1a1cb6c260e1dad580a20",
-      "firstPlayable": null
+      "firstPlayable": false
     },
     {
       "id": "game-packs/overwatch/props.webp",
@@ -826,7 +1050,7 @@
       "path": "assets/game-packs/overwatch/targets.json",
       "bytes": 3194,
       "sha256": "331d17d028abdd0e2d04c0228dd53f54d135627f7103ad6cd62b7a4062146532",
-      "firstPlayable": null
+      "firstPlayable": false
     },
     {
       "id": "game-packs/overwatch/targets.webp",
@@ -857,7 +1081,7 @@
       "path": "assets/game-packs/path-of-exile-2/pack.json",
       "bytes": 1758,
       "sha256": "7a9a604686f3d894c3c738230f465a18f894dd78d5c75082798f8352cbb04bca",
-      "firstPlayable": null
+      "firstPlayable": false
     },
     {
       "id": "game-packs/path-of-exile-2/props.webp",
@@ -872,7 +1096,7 @@
       "path": "assets/game-packs/path-of-exile-2/targets.json",
       "bytes": 3200,
       "sha256": "4698c71a3d22f1a9f8f4fb3e1313a21884a67924296a5bd0817318fbdd1bea28",
-      "firstPlayable": null
+      "firstPlayable": false
     },
     {
       "id": "game-packs/path-of-exile-2/targets.webp",
@@ -903,7 +1127,7 @@
       "path": "assets/game-packs/rocket-league/pack.json",
       "bytes": 1734,
       "sha256": "c998d342e4d6c5d7b6165203b79a4053efa6036ad88c69a4861fec3fc327ef59",
-      "firstPlayable": null
+      "firstPlayable": false
     },
     {
       "id": "game-packs/rocket-league/props.webp",
@@ -918,7 +1142,7 @@
       "path": "assets/game-packs/rocket-league/targets.json",
       "bytes": 3198,
       "sha256": "711ccb26269fb712cf2701cdea3b11b29b029db3ed659849dc371d5e5f73796e",
-      "firstPlayable": null
+      "firstPlayable": false
     },
     {
       "id": "game-packs/rocket-league/targets.webp",
@@ -937,6 +1161,482 @@
       "firstPlayable": true
     },
     {
+      "id": "game-packs/valorant/characters/entry-runner/advance.json",
+      "path": "assets/game-packs/valorant/characters/entry-runner/advance.json",
+      "bytes": 9570,
+      "sha256": "90ac24be84ad7ef9ce5e8e18ca600c78b1d7fe267936f23c8ad7e5cf8ef89e38",
+      "firstPlayable": true
+    },
+    {
+      "id": "game-packs/valorant/characters/entry-runner/advance.webp",
+      "path": "assets/game-packs/valorant/characters/entry-runner/advance.webp",
+      "bytes": 477002,
+      "sha256": "927985d745693b50fdc6853f7326f50074e7904af3a6d9ff9da5f5e052f52ea4",
+      "firstPlayable": true
+    },
+    {
+      "id": "game-packs/valorant/characters/entry-runner/death.json",
+      "path": "assets/game-packs/valorant/characters/entry-runner/death.json",
+      "bytes": 11324,
+      "sha256": "441186aaf5b5069801f88945b16b6711f9a2f5082cef8b0f771633a1f33b3c59",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/entry-runner/death.webp",
+      "path": "assets/game-packs/valorant/characters/entry-runner/death.webp",
+      "bytes": 577646,
+      "sha256": "dfbd28f135684bca994608aeb530e189088571458d842898bdebdcbe4a9490af",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/entry-runner/engaged.json",
+      "path": "assets/game-packs/valorant/characters/entry-runner/engaged.json",
+      "bytes": 7171,
+      "sha256": "bfcbb5f53f6c91c20a6b23854293d1f9a8d466913bc635dc1607de604eecdacd",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/entry-runner/engaged.webp",
+      "path": "assets/game-packs/valorant/characters/entry-runner/engaged.webp",
+      "bytes": 297224,
+      "sha256": "1379dc4e7ed29f2c10d91fe036980eff7f727d17a6690a59fdc10a81c66bda40",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/entry-runner/hit.json",
+      "path": "assets/game-packs/valorant/characters/entry-runner/hit.json",
+      "bytes": 5449,
+      "sha256": "bcab57d4a78f2fdcc0030c520de84e99785b142bdff2c5274bfadde1fb0bfb5d",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/entry-runner/hit.webp",
+      "path": "assets/game-packs/valorant/characters/entry-runner/hit.webp",
+      "bytes": 141090,
+      "sha256": "3e34b4a4f583457bda56b8d688c47a4bb01070f695d53b0cba09c29b6d9bea74",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/entry-runner/idle.json",
+      "path": "assets/game-packs/valorant/characters/entry-runner/idle.json",
+      "bytes": 11163,
+      "sha256": "141a0c5fe805dee569982125661a176583236902cb08ad648b1ffcb3b861baa3",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/entry-runner/idle.webp",
+      "path": "assets/game-packs/valorant/characters/entry-runner/idle.webp",
+      "bytes": 566562,
+      "sha256": "ae46b17a51e8b557356e4d325799b5012763ab9970f3f3415ad14bdbc6453880",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/entry-runner/set.json",
+      "path": "assets/game-packs/valorant/characters/entry-runner/set.json",
+      "bytes": 4630,
+      "sha256": "d10954872beecbe955fb171fa9a1ef96939b82f966d3bd5c3cc3a9198b9e368f",
+      "firstPlayable": true
+    },
+    {
+      "id": "game-packs/valorant/characters/protocol-courier/advance.json",
+      "path": "assets/game-packs/valorant/characters/protocol-courier/advance.json",
+      "bytes": 9577,
+      "sha256": "9db87bf51d29cbb299e8a78093c86bfcb6f0dfa8fa9f3c9d4a5a6fa8a57549ef",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/protocol-courier/advance.webp",
+      "path": "assets/game-packs/valorant/characters/protocol-courier/advance.webp",
+      "bytes": 467240,
+      "sha256": "06b6b82a037a2e783ca1355facd676dcad84757076f62e4d859bea5ae14b2aeb",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/protocol-courier/death.json",
+      "path": "assets/game-packs/valorant/characters/protocol-courier/death.json",
+      "bytes": 11330,
+      "sha256": "00618dca2975b80a7f25eada8a67f94bbc0a2f0bd445bc49676839db49a39dcf",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/protocol-courier/death.webp",
+      "path": "assets/game-packs/valorant/characters/protocol-courier/death.webp",
+      "bytes": 570426,
+      "sha256": "3594bb88599f13cad03c77243a206b78eee085863be8814affce7fc2cc404f37",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/protocol-courier/engaged.json",
+      "path": "assets/game-packs/valorant/characters/protocol-courier/engaged.json",
+      "bytes": 7178,
+      "sha256": "d7fb1549d6ca8316b4a462c87936eb6cd1280110ac40b0dfd2a03b045b7c917c",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/protocol-courier/engaged.webp",
+      "path": "assets/game-packs/valorant/characters/protocol-courier/engaged.webp",
+      "bytes": 291814,
+      "sha256": "af883301f35051e02aa7ba08afe640612a474bff6bd29ac56f450cc3edd1acb3",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/protocol-courier/hit.json",
+      "path": "assets/game-packs/valorant/characters/protocol-courier/hit.json",
+      "bytes": 5456,
+      "sha256": "81450ba767924a10e63fb15389c2b04e0cca9c0737c9a0a4f4231a29f4e81d07",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/protocol-courier/hit.webp",
+      "path": "assets/game-packs/valorant/characters/protocol-courier/hit.webp",
+      "bytes": 129402,
+      "sha256": "12311f26a047275c3b609f45c0f3cf95b225e0769159a3adeaaf59e649888315",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/protocol-courier/idle.json",
+      "path": "assets/game-packs/valorant/characters/protocol-courier/idle.json",
+      "bytes": 11170,
+      "sha256": "6d2a45d89b0de979c299a21a13db2d3904096ff4b0e9e55992063001deceec20",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/protocol-courier/idle.webp",
+      "path": "assets/game-packs/valorant/characters/protocol-courier/idle.webp",
+      "bytes": 591226,
+      "sha256": "2254b241e454883bfeee9cc3a2c126dcf9328254b08fc531f9bdca344cfbccc9",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/protocol-courier/set.json",
+      "path": "assets/game-packs/valorant/characters/protocol-courier/set.json",
+      "bytes": 4638,
+      "sha256": "c811a27894744f9329d06a843b0749f94c73d97830ff16d06160948196a625a0",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/signal-hunter/advance.json",
+      "path": "assets/game-packs/valorant/characters/signal-hunter/advance.json",
+      "bytes": 9576,
+      "sha256": "526650836bcdbfcefd88cbb323a86e09b7c20da4ecb220b38e47d73fbfc22367",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/signal-hunter/advance.webp",
+      "path": "assets/game-packs/valorant/characters/signal-hunter/advance.webp",
+      "bytes": 647810,
+      "sha256": "55decb532b92074fcac4d7dd36c94d90160e9808acb31d5aa3632028b2ae324d",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/signal-hunter/death.json",
+      "path": "assets/game-packs/valorant/characters/signal-hunter/death.json",
+      "bytes": 11329,
+      "sha256": "09abeed5e88728c5e4e76cc1558300347f95493159238c4f329e0d5a13c84581",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/signal-hunter/death.webp",
+      "path": "assets/game-packs/valorant/characters/signal-hunter/death.webp",
+      "bytes": 778398,
+      "sha256": "20b7ad821cf76f5edafe6f36f053e228d72c4966fc2f53c9589cd45165265d3c",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/signal-hunter/engaged.json",
+      "path": "assets/game-packs/valorant/characters/signal-hunter/engaged.json",
+      "bytes": 7177,
+      "sha256": "93a4b7d6d47cf7c05bd70ed86faed194d772b4609e6950e58598cc80836d3635",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/signal-hunter/engaged.webp",
+      "path": "assets/game-packs/valorant/characters/signal-hunter/engaged.webp",
+      "bytes": 400360,
+      "sha256": "e7e9c7441aad751f1a1e4f1229709f3443ea855ac255a63ce08620fb224a2ea3",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/signal-hunter/hit.json",
+      "path": "assets/game-packs/valorant/characters/signal-hunter/hit.json",
+      "bytes": 5455,
+      "sha256": "60fc7f369f8c3bda4376b541c5817f7a581c8b89cb874efda00a6ea00975823f",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/signal-hunter/hit.webp",
+      "path": "assets/game-packs/valorant/characters/signal-hunter/hit.webp",
+      "bytes": 196370,
+      "sha256": "5bdf54ad2c660a99c727567b1acb4c746220b80c0c4fe33d393c429c1089a644",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/signal-hunter/idle.json",
+      "path": "assets/game-packs/valorant/characters/signal-hunter/idle.json",
+      "bytes": 11169,
+      "sha256": "7d689459376fc1a682466205419277c1c86ac94dc8ff0036a144c4cc28255088",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/signal-hunter/idle.webp",
+      "path": "assets/game-packs/valorant/characters/signal-hunter/idle.webp",
+      "bytes": 337132,
+      "sha256": "c692a088b19dbd368252e71d61706369edb65a717f3559a569089e2ef8bdd318",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/signal-hunter/set.json",
+      "path": "assets/game-packs/valorant/characters/signal-hunter/set.json",
+      "bytes": 4632,
+      "sha256": "9e7db9a6594f6c3cc49e0618365ebebe805352832221cac600568a76410b12ff",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/site-sentinel/advance.json",
+      "path": "assets/game-packs/valorant/characters/site-sentinel/advance.json",
+      "bytes": 9575,
+      "sha256": "28ae655ed0c91261463ad77cf21b257868f3c6e84c3611ea96e69825d221bc70",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/site-sentinel/advance.webp",
+      "path": "assets/game-packs/valorant/characters/site-sentinel/advance.webp",
+      "bytes": 654760,
+      "sha256": "19895a26dae8f27924084285af645561d1001ff3669b03375d8fefccd8c12772",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/site-sentinel/death.json",
+      "path": "assets/game-packs/valorant/characters/site-sentinel/death.json",
+      "bytes": 11329,
+      "sha256": "706c6e1973c337a37c4ee901328720b1702abd96480462f21f44b04df3e404a5",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/site-sentinel/death.webp",
+      "path": "assets/game-packs/valorant/characters/site-sentinel/death.webp",
+      "bytes": 802580,
+      "sha256": "11068ea1ba8bb424ca20117c8840dfabc0944c97086ca30b496af9b689d9812b",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/site-sentinel/engaged.json",
+      "path": "assets/game-packs/valorant/characters/site-sentinel/engaged.json",
+      "bytes": 7176,
+      "sha256": "f7636420b9ce58a4c1b5ddfd14d68292bc57cf2d6482c1f56c12ba5f8a19c0f7",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/site-sentinel/engaged.webp",
+      "path": "assets/game-packs/valorant/characters/site-sentinel/engaged.webp",
+      "bytes": 406236,
+      "sha256": "96b76a55a506149ff8a801b46937123ee65c2940cf7d7ce732e398afae118540",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/site-sentinel/hit.json",
+      "path": "assets/game-packs/valorant/characters/site-sentinel/hit.json",
+      "bytes": 5454,
+      "sha256": "4db57366a82d24cb51d8874a9416e9df4051d083ce9e83d9d41d8b09dbded88d",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/site-sentinel/hit.webp",
+      "path": "assets/game-packs/valorant/characters/site-sentinel/hit.webp",
+      "bytes": 196944,
+      "sha256": "36d565281e71eb3fe4c67f7606c2e75a9d984a2fdd72d5f402ac6eb7fa975b00",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/site-sentinel/idle.json",
+      "path": "assets/game-packs/valorant/characters/site-sentinel/idle.json",
+      "bytes": 11168,
+      "sha256": "f03658859dd51e2e4b6bd8e319e9679e070efb120fd2c701ca4209c20656c2fa",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/site-sentinel/idle.webp",
+      "path": "assets/game-packs/valorant/characters/site-sentinel/idle.webp",
+      "bytes": 399346,
+      "sha256": "26506b6fdda49d53debc50bd97f8b7fb23726c5aaa2b71fda76437ed2d861bb7",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/site-sentinel/set.json",
+      "path": "assets/game-packs/valorant/characters/site-sentinel/set.json",
+      "bytes": 4629,
+      "sha256": "b77dae404176b97df581c079e55f68aefaa43148bb70bff0d5d40a9669f82f44",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/site-warden/advance.json",
+      "path": "assets/game-packs/valorant/characters/site-warden/advance.json",
+      "bytes": 9578,
+      "sha256": "19939df3743217977e04c914869f006c1b89b36b29a9c3507ed8199c6d0fefc2",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/site-warden/advance.webp",
+      "path": "assets/game-packs/valorant/characters/site-warden/advance.webp",
+      "bytes": 1523808,
+      "sha256": "773cf87d468a102a240bfac9b4c71aafcef2761886019ca920785b00a65ac0cd",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/site-warden/broken.json",
+      "path": "assets/game-packs/valorant/characters/site-warden/broken.json",
+      "bytes": 11183,
+      "sha256": "53cfe2faec0058ba89944dab65ddcfce3be6d045b1ccdc826344c84aedbf13da",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/site-warden/broken.webp",
+      "path": "assets/game-packs/valorant/characters/site-warden/broken.webp",
+      "bytes": 1944276,
+      "sha256": "7078ce635be74f19710f88e93577928382fb16457269c8cabe80cb2060379152",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/site-warden/death.json",
+      "path": "assets/game-packs/valorant/characters/site-warden/death.json",
+      "bytes": 11341,
+      "sha256": "2455756e43689aeb6e698065455d3ef7e8520e29c38e2064a055e4ad4185528a",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/site-warden/death.webp",
+      "path": "assets/game-packs/valorant/characters/site-warden/death.webp",
+      "bytes": 1633270,
+      "sha256": "ce3fb23208928fb10b01a78b166e18c213d6608399f8bd07e04012b9a9c87e22",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/site-warden/engaged.json",
+      "path": "assets/game-packs/valorant/characters/site-warden/engaged.json",
+      "bytes": 7173,
+      "sha256": "3092fdfbb743f8d50ee75dff049e2d267f6cd699788a2f6951833f9f90d30545",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/site-warden/engaged.webp",
+      "path": "assets/game-packs/valorant/characters/site-warden/engaged.webp",
+      "bytes": 931318,
+      "sha256": "3bd8b5a61fb55c742585c39f986ed3e5187596918ff06ac44950c489802ba382",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/site-warden/hit.json",
+      "path": "assets/game-packs/valorant/characters/site-warden/hit.json",
+      "bytes": 5450,
+      "sha256": "e2a74a1e85a90c07ddbf99c45b71b9ba87f11524b015b7a7c359a4dca4b11372",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/site-warden/hit.webp",
+      "path": "assets/game-packs/valorant/characters/site-warden/hit.webp",
+      "bytes": 352820,
+      "sha256": "ad8e6cbb0edf95a7c23884a01fd903c062d8d8d7f13427572d26e90840d4cd5b",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/site-warden/idle.json",
+      "path": "assets/game-packs/valorant/characters/site-warden/idle.json",
+      "bytes": 11183,
+      "sha256": "734b36cae88d2aa0995ab7a462c2790137ab86daddf71b9bce3e1cdb1e272d9a",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/site-warden/idle.webp",
+      "path": "assets/game-packs/valorant/characters/site-warden/idle.webp",
+      "bytes": 1840278,
+      "sha256": "5ebd3ebd2b22651f12fec494147c9998f3bb21debb8829d1431c31931effe405",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/site-warden/set.json",
+      "path": "assets/game-packs/valorant/characters/site-warden/set.json",
+      "bytes": 4890,
+      "sha256": "2774d8fd365c94a6759325455bc706aa2348fcec74f606668f08e389acea5883",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/veil-operator/advance.json",
+      "path": "assets/game-packs/valorant/characters/veil-operator/advance.json",
+      "bytes": 9581,
+      "sha256": "6d6d01fcde9f0b0cad9e7e45c315aebd6af8707227da5edbecfee6ab29b49f6d",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/veil-operator/advance.webp",
+      "path": "assets/game-packs/valorant/characters/veil-operator/advance.webp",
+      "bytes": 841452,
+      "sha256": "1b7a8381957574ec24052ae6704261c7cd1ea2dedfb9dd3edc61668a8907d794",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/veil-operator/death.json",
+      "path": "assets/game-packs/valorant/characters/veil-operator/death.json",
+      "bytes": 11335,
+      "sha256": "1adf6614dafd934b9dad2563f6480516c8074ca92eb479396da42b183f8390d1",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/veil-operator/death.webp",
+      "path": "assets/game-packs/valorant/characters/veil-operator/death.webp",
+      "bytes": 878968,
+      "sha256": "99c708db74323d00b90af94727fef390b01189e3a5d3395c3717fdaf38767e42",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/veil-operator/engaged.json",
+      "path": "assets/game-packs/valorant/characters/veil-operator/engaged.json",
+      "bytes": 7178,
+      "sha256": "dbe942d54c1c8d01b7c49538b1d46ae116a0ed78006dc22643fac5065f507de8",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/veil-operator/engaged.webp",
+      "path": "assets/game-packs/valorant/characters/veil-operator/engaged.webp",
+      "bytes": 504312,
+      "sha256": "a8c94c51f3dddbcfb6f8e749f62d8c16904c198a13568cd69ee0302bc58c150f",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/veil-operator/hit.json",
+      "path": "assets/game-packs/valorant/characters/veil-operator/hit.json",
+      "bytes": 5455,
+      "sha256": "6f7a1774db72164e4629e39d9ce0b1631e74b9256be09bef117692ba64b47b95",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/veil-operator/hit.webp",
+      "path": "assets/game-packs/valorant/characters/veil-operator/hit.webp",
+      "bytes": 229702,
+      "sha256": "d502aadb734fd3a30f50d77b04d2a5278a846dba6f1b5c51893b7653eff53103",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/veil-operator/idle.json",
+      "path": "assets/game-packs/valorant/characters/veil-operator/idle.json",
+      "bytes": 11177,
+      "sha256": "39634611eafd14c4cd1594de3d62f7138907824412e7683a404ae8677378bcfd",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/veil-operator/idle.webp",
+      "path": "assets/game-packs/valorant/characters/veil-operator/idle.webp",
+      "bytes": 1057610,
+      "sha256": "45fb3c1eedbf4c2dbe938619a163c540d117e45b26c747d07a794bbdf801e214",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/veil-operator/set.json",
+      "path": "assets/game-packs/valorant/characters/veil-operator/set.json",
+      "bytes": 4632,
+      "sha256": "e40ac304f5f420254b8a93c31f6c68e32a9899bdccead285c6f64319995400d2",
+      "firstPlayable": false
+    },
+    {
       "id": "game-packs/valorant/corruption-mask.webp",
       "path": "assets/game-packs/valorant/corruption-mask.webp",
       "bytes": 3158,
@@ -945,11 +1645,25 @@
       "firstPlayable": true
     },
     {
+      "id": "game-packs/valorant/gaf2d-sources.json",
+      "path": "assets/game-packs/valorant/gaf2d-sources.json",
+      "bytes": 5062,
+      "sha256": "bb612ff492a969280609d6bddd18019d90aa5abe894093d6fb4459c2573d962e",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/gen/lineup-v1.png",
+      "path": "assets/game-packs/valorant/gen/lineup-v1.png",
+      "bytes": 2711881,
+      "sha256": "d92b8523b7d5f25b5e82e5c3a4b85ad7e6fc15b1ebc15eef6069660160371e84",
+      "firstPlayable": false
+    },
+    {
       "id": "game-packs/valorant/pack.json",
       "path": "assets/game-packs/valorant/pack.json",
-      "bytes": 1717,
-      "sha256": "4c3b5669eba2ee98720896e7fb77e1e900cc380de12624a809bf47176754e02a",
-      "firstPlayable": null
+      "bytes": 19058,
+      "sha256": "8fc2466eb63dc6cdf55d07dfd3a71be5745963e31b68be2bd7045c64f87639cb",
+      "firstPlayable": false
     },
     {
       "id": "game-packs/valorant/props.webp",
@@ -962,15 +1676,15 @@
     {
       "id": "game-packs/valorant/targets.json",
       "path": "assets/game-packs/valorant/targets.json",
-      "bytes": 3193,
-      "sha256": "6a6ddb1c6eb146618061cdf158e13e53dc75dd4d8981685af3e0b53f4d50be1b",
-      "firstPlayable": null
+      "bytes": 4999,
+      "sha256": "4c0b536f34e291b337eddfb17cc074c09ee9970aa98c40273e09a97da6fc690b",
+      "firstPlayable": true
     },
     {
       "id": "game-packs/valorant/targets.webp",
       "path": "assets/game-packs/valorant/targets.webp",
-      "bytes": 11324,
-      "sha256": "c4035da0674a2fd7339b825aa4931341e403bc5e474de7551b50ae993ca057a7",
+      "bytes": 30506,
+      "sha256": "a88bc072c0604f8e84cd02e9548989db9313dfe315d655696e98a95a2b2e8252",
       "kind": "targets",
       "firstPlayable": true
     },
@@ -995,7 +1709,7 @@
       "path": "assets/game-packs/world-of-warcraft/pack.json",
       "bytes": 1761,
       "sha256": "853bd9e824208642e39e7edc64bc9bbb1ed0499fe58fae583d664e2cf681c4cb",
-      "firstPlayable": null
+      "firstPlayable": false
     },
     {
       "id": "game-packs/world-of-warcraft/props.webp",
@@ -1010,7 +1724,7 @@
       "path": "assets/game-packs/world-of-warcraft/targets.json",
       "bytes": 3202,
       "sha256": "c7eb8ea3f2c0cb7e70085ed38bc7935724b9c25a41dd56e585341e974fc69444",
-      "firstPlayable": null
+      "firstPlayable": false
     },
     {
       "id": "game-packs/world-of-warcraft/targets.webp",
@@ -1025,119 +1739,119 @@
       "path": "assets/icons/apex.svg",
       "bytes": 223,
       "sha256": "3947719de0bd4fb31d595fc6226d66a2707f43abf9e17ed3b0e288ef27424156",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "icons/apn.svg",
       "path": "assets/icons/apn.svg",
       "bytes": 354,
       "sha256": "0f80c28580aeeef0089ae7d129983d621cf2a242592811b0e31aac7d594f8b10",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "icons/cs2.svg",
       "path": "assets/icons/cs2.svg",
       "bytes": 210,
       "sha256": "dfbcad07bc55ca3bc87ad2da255c57d00d9b9452371de9eab8a38e329bd4422b",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "icons/diablo.svg",
       "path": "assets/icons/diablo.svg",
       "bytes": 276,
       "sha256": "8dccd106c4e94e4faf716cf5b79d947cce168eddf4c44c5fccb7e28452195c86",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "icons/ffxiv.svg",
       "path": "assets/icons/ffxiv.svg",
       "bytes": 305,
       "sha256": "6f9a402b6f8dea79379453467d3f75fe51a423efaff101d1dc5cb5b7cd8ee33e",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "icons/fortnite.svg",
       "path": "assets/icons/fortnite.svg",
       "bytes": 216,
       "sha256": "c1d3468901515dce09f65e5ef1aa40633ece7f5d7d798c8dd3b4f81ee497c76e",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "icons/genshin.svg",
       "path": "assets/icons/genshin.svg",
       "bytes": 252,
       "sha256": "e7c3995c29bfd0e69b20eb8516a9a81e73916d9622d29bc8cd989e7fb594ec9f",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "icons/league.svg",
       "path": "assets/icons/league.svg",
       "bytes": 236,
       "sha256": "9958a36372c8fac12ed9f691851663da017b46ad4b46e0d3691a7a62b95d6a15",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "icons/overwatch.svg",
       "path": "assets/icons/overwatch.svg",
       "bytes": 229,
       "sha256": "cdcc7136f259ab87a7dc38194244ac398ef31a9f307a44f09953ef1f9b30f140",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "icons/poe.svg",
       "path": "assets/icons/poe.svg",
       "bytes": 253,
       "sha256": "edb794710f66c3ca832b849584d5cd7cf9e6a8c2c82c268d27f3e87d0f66bcc2",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "icons/r6.svg",
       "path": "assets/icons/r6.svg",
       "bytes": 313,
       "sha256": "30cae62a54a42a888f598e6cd71066ed8309f85c1cf25464e83c0ecd31a8b9c3",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "icons/starrail.svg",
       "path": "assets/icons/starrail.svg",
       "bytes": 243,
       "sha256": "f87a561830e60b45068f355c4df1eadec1f19be3a28e427abaeca76be07b1236",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "icons/steam.svg",
       "path": "assets/icons/steam.svg",
       "bytes": 255,
       "sha256": "8a10b9f2d3f9e54f41e3d4a2cf1384f360c6e34e530a923302e1ea0f0466a314",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "icons/tft.svg",
       "path": "assets/icons/tft.svg",
       "bytes": 209,
       "sha256": "aabf560e2f5602e2f7cefee8340cfc474a3ef5194a64930301c493ab9501419e",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "icons/valorant.svg",
       "path": "assets/icons/valorant.svg",
       "bytes": 217,
       "sha256": "f09fe6151fafed0adcee56e1e011af9084291aa5d6453ce4620c4f8d2b0d95df",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "icons/wow.svg",
       "path": "assets/icons/wow.svg",
       "bytes": 264,
       "sha256": "f83bb9ac41117eff6ddd129396291b1abbb51c0e57d5ec6baa4bfdc137d1ad81",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "items/item-atlas.json",
       "path": "assets/items/item-atlas.json",
       "bytes": 1545,
       "sha256": "f4edda493cb557638a07c73449a29a78ed7d49be8627e496add099099b1515c8",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "items/item-atlas.webp",
@@ -1152,14 +1866,14 @@
       "bytes": 20972,
       "sha256": "e728fabe87c51358f60d73b7fe9cbb306dde760c7e6e05b808f2a864df2218b0",
       "kind": "host",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "mascot/apn-mascot-fx.webp",
       "path": "assets/mascot/apn-mascot-fx.webp",
       "bytes": 108,
       "sha256": "ed6986512463087ee693d94001334d44af62053f1a7345c221c82e04b7df87cd",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "mascot/apn-mascot-idle.webp",
@@ -1167,42 +1881,189 @@
       "bytes": 2366,
       "sha256": "70881ab7b618fbc2d32063c9a751501f87d645d9e20f443a96e51d2d0358b7bd",
       "kind": "host",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "mascot/atlas/apn-mascot-base.json",
       "path": "assets/mascot/atlas/apn-mascot-base.json",
       "bytes": 4666,
       "sha256": "0245863112cbf664bb008333ce58fdabf69d7872e46d24289a5a8c04febc2a8e",
+      "firstPlayable": false
+    },
+    {
+      "id": "mascot/v2/host.json",
+      "path": "assets/mascot/v2/host.json",
+      "bytes": 2073,
+      "sha256": "d2090450a13ddce8b902178ab644cd3cf6a46d1ebd3c75114ba7161886513fdb",
+      "firstPlayable": false
+    },
+    {
+      "id": "mascot/v2/host.webp",
+      "path": "assets/mascot/v2/host.webp",
+      "bytes": 222012,
+      "sha256": "9487b11b80049af9db32be46e9852990477f0011200edb5e1d00995cfaf35ec0",
+      "firstPlayable": false
+    },
+    {
+      "id": "mascot/v2/rig.json",
+      "path": "assets/mascot/v2/rig.json",
+      "bytes": 1206,
+      "sha256": "7167de4b19bda2830600f88c700e220a205ba7ba670fb42ef54367b5f7c66653",
+      "firstPlayable": false
+    },
+    {
+      "id": "mascot/v2/rig.webp",
+      "path": "assets/mascot/v2/rig.webp",
+      "bytes": 16570,
+      "sha256": "66bb1679c7c4688b6e8df68672ac0abd0113009cd95be4bc23a1e64eedecc248",
+      "firstPlayable": false
+    },
+    {
+      "id": "mascot/v3/attack.json",
+      "path": "assets/mascot/v3/attack.json",
+      "bytes": 1075,
+      "sha256": "daa2fd0a87c2fd347fe71901dc023293c8b972282a7090dda1a8841723bda770",
+      "firstPlayable": false
+    },
+    {
+      "id": "mascot/v3/attack.webp",
+      "path": "assets/mascot/v3/attack.webp",
+      "bytes": 63526,
+      "sha256": "7d8ae131213fddc538707ce5c70f29d8ce3f75e6ee67353e772f761d70a41b49",
+      "firstPlayable": false
+    },
+    {
+      "id": "mascot/v3/celebrate.json",
+      "path": "assets/mascot/v3/celebrate.json",
+      "bytes": 1524,
+      "sha256": "74386ee2cbbb7ad636007f896d94455d83121b09ac52b846f0f168c250480d2a",
+      "firstPlayable": false
+    },
+    {
+      "id": "mascot/v3/celebrate.webp",
+      "path": "assets/mascot/v3/celebrate.webp",
+      "bytes": 97550,
+      "sha256": "996e42b0f3ae8d14e663bfa310f7894196cb86133f8729a775ffddaa9ca6a17e",
+      "firstPlayable": false
+    },
+    {
+      "id": "mascot/v3/crit.json",
+      "path": "assets/mascot/v3/crit.json",
+      "bytes": 1216,
+      "sha256": "ad8a93abecf65537bdb5721280c479204e92ea576f69dd0f65dde4b43f48d308",
+      "firstPlayable": false
+    },
+    {
+      "id": "mascot/v3/crit.webp",
+      "path": "assets/mascot/v3/crit.webp",
+      "bytes": 75642,
+      "sha256": "0178c8826550921fb05d0a07694a2e073e0a94da24bfac5bedc0c446bed60ba2",
+      "firstPlayable": false
+    },
+    {
+      "id": "mascot/v3/death.json",
+      "path": "assets/mascot/v3/death.json",
+      "bytes": 1366,
+      "sha256": "927e497b167b5a92698fe416ffd77293d8f0b7d3195fc6a3b207ec7de1f70259",
+      "firstPlayable": false
+    },
+    {
+      "id": "mascot/v3/death.webp",
+      "path": "assets/mascot/v3/death.webp",
+      "bytes": 77888,
+      "sha256": "76d16ed213759410fd3a8b7c4d6c588c49947ba5c8dbef25b3eb45b4f0f9fa22",
+      "firstPlayable": false
+    },
+    {
+      "id": "mascot/v3/hit.json",
+      "path": "assets/mascot/v3/hit.json",
+      "bytes": 764,
+      "sha256": "da2c7033594e80541ddf0c587b91d3e94b4942c511aae2ad5a1dde0bf9509f9c",
+      "firstPlayable": false
+    },
+    {
+      "id": "mascot/v3/hit.webp",
+      "path": "assets/mascot/v3/hit.webp",
+      "bytes": 38160,
+      "sha256": "9f53439c7e31a06583f29c98d631c1c3dc796fde36cc18852ed04131803f1082",
+      "firstPlayable": false
+    },
+    {
+      "id": "mascot/v3/idle.json",
+      "path": "assets/mascot/v3/idle.json",
+      "bytes": 1215,
+      "sha256": "98a788a82e59fc79cbedd7621f2e03dace0d685160b8f2c4d1d770d004ddd2c4",
+      "firstPlayable": false
+    },
+    {
+      "id": "mascot/v3/idle.webp",
+      "path": "assets/mascot/v3/idle.webp",
+      "bytes": 74992,
+      "sha256": "0d501c0ad7beb503255ffe97eedf2b651c9e9aacfc57cd954caecca152c29ac1",
+      "firstPlayable": false
+    },
+    {
+      "id": "mascot/v3/run.json",
+      "path": "assets/mascot/v3/run.json",
+      "bytes": 1512,
+      "sha256": "3a0e58f170a91af0abc3bb0195ac1e749029017371e6f2162178016b4407a533",
       "firstPlayable": true
+    },
+    {
+      "id": "mascot/v3/run.webp",
+      "path": "assets/mascot/v3/run.webp",
+      "bytes": 94480,
+      "sha256": "0aef7d64e849b0ab61a1f646d7363757187ababce63c0d530b6fe2cb7a4df6ae",
+      "firstPlayable": true
+    },
+    {
+      "id": "mascot/v3/set.json",
+      "path": "assets/mascot/v3/set.json",
+      "bytes": 2256,
+      "sha256": "0104633f516496f7a49221df3f5362085ba9c7303de786696091c835cd58f1f4",
+      "firstPlayable": true
+    },
+    {
+      "id": "mascot/v3/sprint.json",
+      "path": "assets/mascot/v3/sprint.json",
+      "bytes": 1218,
+      "sha256": "8856bd334b8fa220f1e453f65d4e405c56b1c883f827eeb3dfb82aa921016f12",
+      "firstPlayable": false
+    },
+    {
+      "id": "mascot/v3/sprint.webp",
+      "path": "assets/mascot/v3/sprint.webp",
+      "bytes": 71238,
+      "sha256": "370ad5c8405a46cca024601b864760dc5a8ee95ea72a4e6b336f6797df36bd97",
+      "firstPlayable": false
     },
     {
       "id": "mascot-34.jpg",
       "path": "assets/mascot-34.jpg",
       "bytes": 34748,
       "sha256": "296a9672e19f89d3ceef6935ce8be3aaebe6cd9fc82e2e66fd1614c5ea7af943",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "mascot-combat.png",
       "path": "assets/mascot-combat.png",
       "bytes": 42032,
       "sha256": "670142a3e5d24527dec7551f5f9d0c3abcdf03693b71a3da4bc19aec7a84c43c",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "mascot-face-right.png",
       "path": "assets/mascot-face-right.png",
       "bytes": 61119,
       "sha256": "9394161fc0880cd6de58aadb2ff4b06cf233759077a6012cfe97ba9338bf511c",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "mascot-host.png",
       "path": "assets/mascot-host.png",
       "bytes": 64745,
       "sha256": "1007b931e3a0127238df936d88a902c34a2b4dbf82f15303f55a0892f8fc3642",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "mascot-host.webp",
@@ -1210,42 +2071,42 @@
       "bytes": 16364,
       "sha256": "5292d21006e858479def0e82fe3ebf2cb7063cf506db21eeb0d7367bd111dea6",
       "kind": "host",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "mascot-ref-sheet.jpg",
       "path": "assets/mascot-ref-sheet.jpg",
       "bytes": 142910,
       "sha256": "4fd0c5bd4fae52482906cd9a9fcf5a61541232b71ea64d481241578afd3530e7",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "mascot-run.png",
       "path": "assets/mascot-run.png",
       "bytes": 40763,
       "sha256": "4f8ec072bf1fe90909ece6200649688cdaa1509ea5c00eda9528b4c2ad884ada",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "mascot-side.jpg",
       "path": "assets/mascot-side.jpg",
       "bytes": 47183,
       "sha256": "2148b8e2c0ea85fc06ceb7fe0d069ea658a314bb5002486cacc5aeca6d3d978e",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "mascot-side.png",
       "path": "assets/mascot-side.png",
       "bytes": 40763,
       "sha256": "4f8ec072bf1fe90909ece6200649688cdaa1509ea5c00eda9528b4c2ad884ada",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "mascot-title.png",
       "path": "assets/mascot-title.png",
       "bytes": 21335,
       "sha256": "654985ce6b87c7b63478494932fa25061c52821fbe282e2ba3693f2d0f104d55",
-      "firstPlayable": true
+      "firstPlayable": false
     }
   ],
   "packs": [

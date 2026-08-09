@@ -1,0 +1,433 @@
+{
+  "name": "hotshot-hit",
+  "source": {
+    "type": "scene",
+    "module": "./models/hotshot.js"
+  },
+  "camera": {
+    "pos": [
+      1.81,
+      1.32,
+      2.16
+    ],
+    "lookAt": [
+      0,
+      0.62,
+      0
+    ],
+    "fov": 32
+  },
+  "view": "three-quarter-front-right",
+  "clip": {
+    "fps": 16,
+    "frames": 6
+  },
+  "loop": false,
+  "tracks": [
+    {
+      "node": "torso",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0.18
+        ],
+        [
+          3,
+          0.1
+        ],
+        [
+          6,
+          0
+        ]
+      ],
+      "comment": "snap backward"
+    },
+    {
+      "node": "jacket",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0.15
+        ],
+        [
+          3,
+          0.08
+        ],
+        [
+          6,
+          0
+        ]
+      ]
+    },
+    {
+      "node": "collar",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0.14
+        ],
+        [
+          3,
+          0.08
+        ],
+        [
+          6,
+          0
+        ]
+      ]
+    },
+    {
+      "node": "head",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0.22
+        ],
+        [
+          3,
+          0.1
+        ],
+        [
+          6,
+          0
+        ]
+      ],
+      "comment": "head knocked back"
+    },
+    {
+      "node": "head",
+      "prop": "position.z",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          -0.12
+        ],
+        [
+          3,
+          -0.06
+        ],
+        [
+          6,
+          0
+        ]
+      ]
+    },
+    {
+      "node": "torso",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          -0.04
+        ],
+        [
+          3,
+          -0.02
+        ],
+        [
+          6,
+          0
+        ]
+      ]
+    },
+    {
+      "node": "jacket",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          -0.04
+        ],
+        [
+          3,
+          -0.02
+        ],
+        [
+          6,
+          0
+        ]
+      ]
+    },
+    {
+      "node": "collar",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          -0.04
+        ],
+        [
+          3,
+          -0.02
+        ],
+        [
+          6,
+          0
+        ]
+      ]
+    },
+    {
+      "node": "head",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          -0.04
+        ],
+        [
+          3,
+          -0.02
+        ],
+        [
+          6,
+          0
+        ]
+      ]
+    },
+    {
+      "node": "arm_l",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0.55
+        ],
+        [
+          3,
+          0.25
+        ],
+        [
+          6,
+          0
+        ]
+      ],
+      "comment": "arms fly up"
+    },
+    {
+      "node": "arm_r",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0.45
+        ],
+        [
+          3,
+          0.2
+        ],
+        [
+          6,
+          0
+        ]
+      ]
+    },
+    {
+      "node": "palm_r",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0.16
+        ],
+        [
+          3,
+          0.06
+        ],
+        [
+          6,
+          0
+        ]
+      ]
+    },
+    {
+      "node": "palm_r",
+      "prop": "position.z",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          -0.14
+        ],
+        [
+          3,
+          -0.05
+        ],
+        [
+          6,
+          0
+        ]
+      ]
+    },
+    {
+      "node": "orb",
+      "prop": "position.x",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0.16
+        ],
+        [
+          2,
+          -0.14
+        ],
+        [
+          3,
+          0.1
+        ],
+        [
+          4,
+          -0.06
+        ],
+        [
+          6,
+          0
+        ]
+      ],
+      "comment": "orb wobble"
+    },
+    {
+      "node": "orb",
+      "prop": "position.y",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0.22
+        ],
+        [
+          3,
+          0.1
+        ],
+        [
+          6,
+          0
+        ]
+      ]
+    },
+    {
+      "node": "orb",
+      "prop": "scale",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          -0.2
+        ],
+        [
+          3,
+          0.12
+        ],
+        [
+          6,
+          0
+        ]
+      ],
+      "comment": "squash on impact, settle"
+    },
+    {
+      "node": "leg_l",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0.18
+        ],
+        [
+          6,
+          0
+        ]
+      ]
+    },
+    {
+      "node": "leg_r",
+      "prop": "rotation.x",
+      "keys": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          -0.15
+        ],
+        [
+          6,
+          0
+        ]
+      ]
+    }
+  ],
+  "output": {
+    "frame": 256
+  },
+  "kind": "action"
+}

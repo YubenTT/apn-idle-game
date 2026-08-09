@@ -19,6 +19,18 @@
       overflow, contrast floors met.
 - [ ] **Mascot canon** — any mascot art matches [MASCOT-CANON](../brand/MASCOT-CANON.md)
       (Silhouette QA).
+- [ ] **Character authority is singular** — a mapped identity draws one current,
+      hash-locked character-owned bundle; static translation, bob, camera motion,
+      or squash never counts as authored locomotion.
+- [ ] **Motion seed is clean** — image-conditioned motion starts from the exact
+      approved single subject; no turnaround cell, display base, stand, floor,
+      shadow, underglow, or review fixture is baked into character pixels.
+- [ ] **Creative gates are real** — automated QA may reject identity, motion, rig,
+      or release bytes, but never records the required human approval.
+- [ ] **Stage geometry is shared** — neutral visible bounds choose the named role
+      scale, the body-only motion envelope protects labels, and the complete
+      motion set keeps one scale/pivot transform; no frame is independently
+      resized or grounded.
 - [ ] **Domain purity kept** — combat/economy math stays in `formulas.js` /
       `game.js`; UI/render don't invent balance ([ARCHITECTURE](./ARCHITECTURE.md)).
 - [ ] **No framework creep** — still zero-npm, static-file playable
@@ -43,4 +55,6 @@ stat delta, and persists across reload" is.
 - Don't guess balance numbers — they belong in `C` ([BALANCE](./BALANCE.md)).
 - Don't guess terminology — use [GLOSSARY](./GLOSSARY.md).
 - Don't rename save fields without a migration.
+- Don't infer character behavior from an asset name or array position; use the
+  trusted pack role and the approved clip vocabulary.
 - If a decision is ambiguous or architecturally significant, ask — don't invent.

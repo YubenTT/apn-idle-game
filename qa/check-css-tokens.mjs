@@ -70,7 +70,7 @@ export function checkCssTokenContract() {
     .filter((name) => !tokenDefinitions.has(name))
     .sort();
   const localDefinitions = customProperties(gameCss, /(?:^|[;{]\s*)(--[\w-]+)\s*:/gm);
-  const runtimeProperties = new Set(['--wc', '--ac', '--rc']);
+  const runtimeProperties = new Set(['--wc', '--ac', '--rc', '--charge', '--en', '--nav-i']);
   const references = customProperties(gameCss, /var\(\s*(--[\w-]+)/g);
   const unresolved = [...references]
     .filter(

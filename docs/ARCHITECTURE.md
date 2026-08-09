@@ -86,6 +86,9 @@ flowchart TB
 - Priority Tag is a `game.js` target-state mechanic. It consumes Focus, records the
   purchased rank on the current enemy, and multiplies only that enemy's Signal and
   Notes reward. `render.js` reads the tag solely to draw its targeting brackets.
+- The first Game Pack's Wave 1–10 cast pools live here as pure domain selectors.
+  They choose existing enemy types only; HP, rewards, kill budgets, and boss
+  cadence keep their existing owners.
 
 ### `route.js`
 
@@ -109,25 +112,91 @@ flowchart TB
 
 ### `host-contract.js`
 
-- Sole code owner for the canonical Host GLB path, camera/pivot render lock,
-  118–142px Run presentation gate, placeholder frames, and semantic clip names.
-- `render.js` and contract QA import this module. A future approved export path
-  must import it too rather than retyping a parallel Host vocabulary.
+- Sole code owner for the semantic clip vocabulary (`resolveHostClip`) and the
+  approved Hero source/render-lock metadata.
+- `render.js` (via `hero-v2.js`) and contract QA import this module.
+  Hero stage size comes from `stage-presentation.js`, not a parallel trim-height
+  gate in this module.
 - Contains presentation/asset metadata only. It never owns combat or economy.
+
+### `stage-presentation.js`
+
+- Pure bridge between intrinsic character geometry and APN-owned role
+  presentation ([ADR-0017](./decisions/ADR-0017-visible-body-stage-presentation.md)).
+- `STAGE_ROLE_PRESENTATION` owns exact `hero` 96/6, `standard` 72/2, `elite`
+  84/2, and `boss` 112/2 visible-body-height/visual-gap pairs at `fit = 1`.
+- Validates the hash-bound neutral visible bounds and body-only union motion
+  envelope, then resolves one immutable draw transform, body, envelope, and
+  actor-anchor set.
+- Neutral bounds choose role scale; the motion envelope protects labels and
+  short-stage clearance.
+  Every clip/frame keeps the same scale and pivot translation.
+- Resolves responsive cast fit from motion envelopes without owning combat,
+  asset identity, clip selection, or creative approval.
 
 ### `render.js`
 
 - Stateless draw from `s` plus an explicit decoded asset store.
-- The scheduled Game Pack owns the happy-path environment and target atlas;
-  procedural Patchline scenery is a missing/slow-asset fallback only.
+- V2: composes the layered world from `scenery-v2.js` (per-zone seeded moods;
+  the scheduled Game Pack plate integrates as a dimmed far layer), targets from
+  `enemies-v2.js`, and the Host from `hero-v2.js`. Stamps `world.groundY` +
+  `world.stageFit` each frame so `game.js` can stage-anchor effects and text.
+- `enemyFrameFor` is the one normal/boss-break frame resolver used by both the
+  renderer and deterministic browser QA.
+- A motion-enabled pack uses character-owned, hash-verified GAF2D bundles.
+  `targets.webp` is failure-only for mapped identities and remains the normal
+  path for unmapped packs.
+- Hero, creature, shadow, HP, floater, aura, hit, and loot drawing consume the
+  shared resolved actor geometry rather than guessing from atlas cells or
+  grounding individual frames.
 - Never grant currency.
+
+### `hero-v2.js` · `hero-v3.js` · `enemies-v2.js` · `scenery-v2.js`
+
+- `hero-v3.js` exclusively owns approved Hero clip bytes. `hero-v2.js` is the
+  Canvas presentation/orchestration entry point; on clip-load failure it may
+  draw only the explicit legless identity-safe body. It never loads the old
+  segmented rig ([ADR-0015](./decisions/ADR-0015-legless-hero-runtime-authority.md)).
+- The stable `v3` path is an interface, not identity approval. Historical bytes
+  remain historical until the owner-reference replacement passes its exact
+  identity, motion, rig (when applicable), QA, and release gates.
+- `enemies-v2.js` — procedural feed-noise creature family + the unified target
+  presentation layer (shadow, spawn pop, hit squash, death burst, HP plates).
+- `scenery-v2.js` — per-zone seeded editorial moods (skyline, towers, rails,
+  feed cards, props, atmosphere) drawn in parallax layers under the cast.
+- Pure-ish presentation: deterministic from state + time, no DOM, no currency.
 
 ### `assets.js`
 
 - Owns browser decode promises and explicit current/next Game Pack references.
 - Deduplicates loads, treats props/masks as optional, releases cold decoded images,
   and never keeps more than two pack records after a transition.
+- Appends the runtime build ID to image/JSON requests so atlas and metadata cache
+  invalidation stays atomic with the importing modules.
 - Reads pure Route scheduling; it does not calculate combat or choose balance.
+
+### `motion-bundle.js` · `motion-store.js` · `wave-roster.js`
+
+- `motion-bundle.js` is the DOM-free closed-world descriptor validator, clip
+  precedence selector, fixed-rate frame selector, and single Canvas blitter.
+- `motion-store.js` owns hash-before-parse, hash-before-decode, intrinsic-size
+  checks, request coalescing, deadlines, diagnostics, generation races, abort,
+  and explicit bitmap release.
+- `wave-roster.js` is the shared spawn/warm/budget identity authority. It uses
+  declared target roles and the real current/next Route window, never target
+  array position or catalog adjacency.
+- Initial simulation waits for current-wave motion. Later pending motion can
+  hold only the spawn boundary; UI and rendering continue.
+
+### `main.js` QA surface
+
+- Production pages expose no state or stepping controls.
+- `?chrome-smoke=1` exposes `window.render_game_to_text`,
+  `window.advanceTime(ms)`, and the existing `window.__APN_QA__` action surface.
+- Adding `qa-manual=1` suppresses the normal animation loop so fixed-step browser
+  evidence cannot race a queued frame.
+- The text snapshot reports only visible Route/pack/enemy/atlas/viewport state.
+  It uses the same boss-frame resolver as Canvas.
 
 ### `ui.js`
 
@@ -163,10 +232,12 @@ s
 ├── run
 │   ├── bytes (Signal), patches (Notes)
 │   └── hero { level, xp, sp, scanner, skills, buildVersion, energy, focus, … }
-├── world       enemies, alerts, floaters, particles, confetti, sprinting, scroll
+├── world       enemies, alerts, floaters, particles, confetti, shocks, sprinting, scroll
+│               (+ cosmetic feel clocks: shake, hitStopT, slowMoT)
 ├── ui          panel, toast, seasonDone, tips, chipPulse, fx
 ├── stats       dps, combo
-└── settings    reducedMotion, sfx, gearSort, gearFilter, lastTs
+├── settings    saved reducedMotion, sfx, gearSort, gearFilter, lastTs
+└── runtime     live osReducedMotion (never persisted)
 ```
 
 Naming debt: internal `bytes` / `patches` / `authority` map to UI Signal / Notes /
@@ -192,7 +263,8 @@ Keeps combat deterministic enough for headless tests and fair offline simulation
 |------|--------|
 | New skill | `content.SKILLS` + `game.combatStats` / cast + optional chip |
 | New boost | `content.META` + `metaPer` usage |
-| New Game Pack | manifest + generated catalog + static atlas; schedule at End Season |
+| New Game Pack | manifest + generated catalog + target fallback; schedule through Route |
+| New GAF2D motion cast | authored declarations + approved identity/named sets + pack motion map |
 | New fallback enemy type | `ENEMY_FLAVOR` + sprite + `typeHpMult` / rewards |
 | New currency | formulas + game grant + HUD chip + save migrate |
 | 3D hero | GLB assets already in `assets/`; replace `drawHero` path |
@@ -205,9 +277,12 @@ qa/run-tests.mjs
   → import game + formulas
   → simulate steps without canvas
   → assert kills, ship, boss, zone > 20, soft HP scale
+  → validate GAF2D lineage, descriptor trust, wave windows, budgets, and ready/pending/failed precedence
 ```
 
 CI runs the same command (see `.github/workflows/ci.yml`).
+The dedicated muted Chrome matrix additionally drives all ten first-pack waves
+at three viewports through the fixed-step QA surface.
 
 ## Non-goals (v1)
 

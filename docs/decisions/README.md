@@ -10,15 +10,21 @@
 |-----|----------|--------|
 | [0001](./ADR-0001-vanilla-stack.md) | Keep vanilla ES + Canvas 2D; do **not** migrate to PixiJS/React | Accepted |
 | [0002](./ADR-0002-design-tokens.md) | Adopt a token-driven design system (`brand/tokens.css`) | Accepted |
-| [0003](./ADR-0003-mascot-single-source.md) | GLB is the single source of truth for the mascot | Accepted |
+| [0003](./ADR-0003-mascot-single-source.md) | GLB was the single source of truth for the mascot | Superseded by ADR-0015 |
 | [0004](./ADR-0004-game-pack-route.md) | Catalog-driven 10-zone Game Packs + bounded Corruption epochs | Accepted |
-| [0005](./ADR-0005-hybrid-host-render.md) | GLB-locked hybrid Host rendering | Accepted |
+| [0005](./ADR-0005-hybrid-host-render.md) | GLB-locked hybrid Host rendering | Superseded by ADR-0015 |
 | [0006](./ADR-0006-persistent-route-save-v2.md) | Persist global Route in dual-key save schema v2 | Accepted |
 | [0007](./ADR-0007-keep-five-navigation.md) | Keep five primary destinations plus the Gear FAB | Accepted |
 | [0008](./ADR-0008-go-live-sole-checkpoint.md) | Go Live is the sole prestige checkpoint (supersedes End Season) | Accepted |
 | [0009](./ADR-0009-rights-modes-required.md) | Every Game Pack declares a required, validated rights mode | Accepted |
-| [0010](./ADR-0010-extended-full-body-glb.md) | Extended full-body canonical GLB (extends ADR-0003/0005 scope) | Accepted |
+| [0010](./ADR-0010-extended-full-body-glb.md) | Extended full-body canonical GLB | Superseded by ADR-0015 |
 | [0011](./ADR-0011-transitional-rights-pending-review.md) | Transitional `pending-review` warns for wave packs, blocks for launch | Accepted |
+| [0012](./ADR-0012-procedural-host-v2.md) | Procedural Canvas Host V2 was the shipped runtime character | Superseded by ADR-0015 for runtime body ownership |
+| [0013](./ADR-0013-gaf2d-static-creature-atlas.md) | GAF2D static atlases are the first-pack creature source | Superseded by ADR-0014 |
+| [0014](./ADR-0014-gaf2d-character-owned-motion.md) | GAF2D character-owned motion is the pack-creature authority | Accepted |
+| [0015](./ADR-0015-legless-hero-runtime-authority.md) | Hero V3 owns approved clips; failure fallback is explicitly legless | Accepted |
+| [0016](./ADR-0016-motion-ready-identity-seeds.md) | Image-conditioned motion starts from one approved, platform-free subject | Accepted |
+| [0017](./ADR-0017-visible-body-stage-presentation.md) | Neutral visible-body bounds set game role scale; one transform preserves acting | Accepted |
 
 ## When to write one
 

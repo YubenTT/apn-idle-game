@@ -90,6 +90,20 @@ Fixes over the shipped run screen:
    Focus is omitted until Hotfix or another Focus-spending skill is learned, so a
    dead meter never competes with the first-session decision.
 
+### Run actor geometry
+
+At `fit = 1`, the stage uses the `STAGE_ROLE_PRESENTATION` ladder: `hero`
+96 px/6 px gap, `standard` 72 px/2 px, reserved `elite` 84 px/2 px, and
+`boss` 112 px/2 px.
+Those measurements describe the neutral visible body, not an atlas cell.
+The neutral bounds choose scale while the body-only motion envelope reserves
+clearance for the enemy HP plate, priority brackets, floaters, and the fixed HUD
+bands.
+The shadow stays on the game ground, and all body/overlay anchors come from the
+same resolved actor geometry.
+Short stages may reduce one cast-wide fit, but they never resize or ground an
+individual animation frame.
+
 ## Sheets (bottom-sheet pattern)
 
 All secondary surfaces are focused bottom sheets: handle 36×5, title 28/32,

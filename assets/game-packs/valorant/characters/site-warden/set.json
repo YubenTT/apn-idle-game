@@ -1,0 +1,142 @@
+{
+  "assetId": "site-warden",
+  "authority": "approved_release",
+  "clips": {
+    "advance": {
+      "descriptor": "advance.json",
+      "descriptorSha256": "19939df3743217977e04c914869f006c1b89b36b29a9c3507ed8199c6d0fefc2",
+      "image": "advance.webp",
+      "imageSha256": "773cf87d468a102a240bfac9b4c71aafcef2761886019ca920785b00a65ac0cd"
+    },
+    "broken": {
+      "descriptor": "broken.json",
+      "descriptorSha256": "53cfe2faec0058ba89944dab65ddcfce3be6d045b1ccdc826344c84aedbf13da",
+      "image": "broken.webp",
+      "imageSha256": "7078ce635be74f19710f88e93577928382fb16457269c8cabe80cb2060379152"
+    },
+    "death": {
+      "descriptor": "death.json",
+      "descriptorSha256": "2455756e43689aeb6e698065455d3ef7e8520e29c38e2064a055e4ad4185528a",
+      "image": "death.webp",
+      "imageSha256": "ce3fb23208928fb10b01a78b166e18c213d6608399f8bd07e04012b9a9c87e22"
+    },
+    "engaged": {
+      "descriptor": "engaged.json",
+      "descriptorSha256": "3092fdfbb743f8d50ee75dff049e2d267f6cd699788a2f6951833f9f90d30545",
+      "image": "engaged.webp",
+      "imageSha256": "3bd8b5a61fb55c742585c39f986ed3e5187596918ff06ac44950c489802ba382"
+    },
+    "hit": {
+      "descriptor": "hit.json",
+      "descriptorSha256": "e2a74a1e85a90c07ddbf99c45b71b9ba87f11524b015b7a7c359a4dca4b11372",
+      "image": "hit.webp",
+      "imageSha256": "ad8e6cbb0edf95a7c23884a01fd903c062d8d8d7f13427572d26e90840d4cd5b"
+    },
+    "idle": {
+      "descriptor": "idle.json",
+      "descriptorSha256": "734b36cae88d2aa0995ab7a462c2790137ab86daddf71b9bce3e1cdb1e272d9a",
+      "image": "idle.webp",
+      "imageSha256": "5ebd3ebd2b22651f12fec494147c9998f3bb21debb8829d1431c31931effe405"
+    }
+  },
+  "consumerScale": {
+    "displayedDevicePixels": 224,
+    "grammar": "gaf2d-consumer-scale-v4",
+    "maximumCssBodyHeight": 112,
+    "maximumDpr": 2,
+    "role": "boss",
+    "runtimeCanvasClass": 320,
+    "scaleRatio": {
+      "denominator": 258,
+      "numerator": 224
+    },
+    "sourceVisiblePixels": 258
+  },
+  "frameSize": {
+    "height": 320,
+    "width": 320
+  },
+  "grammar": "gaf2d-motion-set-index-v2",
+  "lineage": {
+    "derivativeSetSha256": "6b974b42faf742b2df10fe2db68d87e0927be0851d45a38388729ce23b562ae6",
+    "masterSetSha256": "ca07f652077fe611abfd2a97d744ec6557d0caebfcdfc20e8541e0bc0038945b",
+    "selectedProfileSha256": "76d15cc95e8a0bf2f40867abb09f375148679e71f3746e11d51130f83c463dd4",
+    "sourceBatchSha256": "1ab30e7850918cd03446b539eeaf444b14ff5de4d9d0e121782cb92805f10a0e",
+    "v3LineageSha256": "de625bd00b9ffd7ceeb7049fb36f8b4f88d01bc0fe04afdf7e1ac134f3f0a75a"
+  },
+  "pivot": {
+    "x": 0.5,
+    "y": 1
+  },
+  "presentation": {
+    "motionBounds": {
+      "height": 260,
+      "width": 260,
+      "x": 0,
+      "y": 0
+    },
+    "reference": {
+      "clip": "idle",
+      "frameIndex": 0,
+      "sourceSha256": "463082bccd1392d82146bc740335adcf858b2a47e21edc76657bcce2b4e34ded"
+    },
+    "scaleContract": "visible-body",
+    "schemaVersion": 1,
+    "visibleBounds": {
+      "height": 258,
+      "width": 260,
+      "x": 0,
+      "y": 2
+    }
+  },
+  "previewLineage": {
+    "batchSummarySha256": "1ab30e7850918cd03446b539eeaf444b14ff5de4d9d0e121782cb92805f10a0e",
+    "candidateId": "site-warden-authored-semantic-v3",
+    "candidateSha256": "0a56bddc4e9bee4aff573e8e287287b11afaa70676b19f0fa70420daf7b7cad7",
+    "qaSummarySha256": "8b82d6c0c01c7f5c02ad5325e4d539bc3be273895f1f797b81f0ade5aad023ef",
+    "sourceManifestVersion": 3,
+    "temporalEvidenceSha256": "df5bac1442728ce75c7c2e6ae00029c2adc30c81e0e1ab77d485c3abd419457a"
+  },
+  "releaseLineage": {
+    "derivativeSetSha256": "6b974b42faf742b2df10fe2db68d87e0927be0851d45a38388729ce23b562ae6",
+    "motionApprovalSha256": "707e53ae77c2c3a3f37cdec70ba35f59a710c690247b7b1365a49204ad39abae",
+    "runtimeLineageSha256": "b65a1233f52d2c657e65ed4b8dfeb722ccbeaba33f0fbc1042281adacb7f8141",
+    "visualFidelityLineageSha256": "fdca843cc889d7edafaa8bd33ceca5c0b46f763bd16ac16018464ec8ca409263"
+  },
+  "role": "boss",
+  "sourceFamily": "authored-semantic-v4",
+  "status": "approved",
+  "toolchain": {
+    "compositor": {
+      "name": "HashBoundCopy",
+      "version": "selected-webp-v1"
+    },
+    "encoder": {
+      "arguments": [
+        "-quiet",
+        "-exact",
+        "-lossless",
+        "-q",
+        "100",
+        "-m",
+        "6"
+      ],
+      "name": "cwebp",
+      "profileSha256": "76d15cc95e8a0bf2f40867abb09f375148679e71f3746e11d51130f83c463dd4",
+      "version": "1.6.0"
+    },
+    "grammar": "apn-gaf2d-preview-matrix-toolchain-v1",
+    "operations": [
+      "validate:v4-selected-webp:hash-bound-source",
+      "validate:v4-selected-webp:exact-copy-byte-proof",
+      "copy:v4-selected-webp:exact-media-bytes"
+    ],
+    "profileSha256": "76d15cc95e8a0bf2f40867abb09f375148679e71f3746e11d51130f83c463dd4"
+  },
+  "trim": {
+    "height": 260,
+    "width": 260,
+    "x": 29,
+    "y": 38
+  }
+}

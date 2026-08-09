@@ -32,6 +32,7 @@ import {
   skillLv,
   claimHubObjective,
   normalizeGear,
+  confetti,
   END_SEASON_CONTRACT,
   metaUpgradePreview,
   recommendedMetaId,
@@ -118,12 +119,86 @@ process.stdout.write(
   })
 );
 process.stdout.write(
+  execFileSync(process.execPath, [fileURLToPath(new URL('./check-runtime-cache.mjs', import.meta.url))], {
+    encoding: 'utf8',
+  })
+);
+process.stdout.write(
   execFileSync(process.execPath, [fileURLToPath(new URL('./check-icon-grammar.mjs', import.meta.url))], {
     encoding: 'utf8',
   })
 );
 process.stdout.write(
   execFileSync(process.execPath, [fileURLToPath(new URL('./check-asset-loader.mjs', import.meta.url))], {
+    encoding: 'utf8',
+  })
+);
+process.stdout.write(
+  execFileSync(process.execPath, [fileURLToPath(new URL('./check-motion-bundle.mjs', import.meta.url))], {
+    encoding: 'utf8',
+  })
+);
+process.stdout.write(
+  execFileSync(process.execPath, [fileURLToPath(new URL('./check-stage-presentation.mjs', import.meta.url))], {
+    encoding: 'utf8',
+  })
+);
+process.stdout.write(
+  execFileSync(process.execPath, [fileURLToPath(new URL('./check-hero-motion-semantics.mjs', import.meta.url))], {
+    encoding: 'utf8',
+  })
+);
+process.stdout.write(
+  execFileSync(process.execPath, [fileURLToPath(new URL('./check-gaf2d-motion-build.mjs', import.meta.url))], {
+    encoding: 'utf8',
+  })
+);
+process.stdout.write(
+  execFileSync(process.execPath, [fileURLToPath(new URL('./check-gaf2d-preview-build.mjs', import.meta.url))], {
+    encoding: 'utf8',
+  })
+);
+process.stdout.write(
+  execFileSync(process.execPath, [fileURLToPath(new URL('./check-gaf2d-hero-build.mjs', import.meta.url))], {
+    encoding: 'utf8',
+  })
+);
+process.stdout.write(
+  execFileSync(process.execPath, [fileURLToPath(new URL('./check-motion-store.mjs', import.meta.url))], {
+    encoding: 'utf8',
+  })
+);
+process.stdout.write(
+  execFileSync(process.execPath, [fileURLToPath(new URL('./check-motion-preview.mjs', import.meta.url))], {
+    encoding: 'utf8',
+  })
+);
+process.stdout.write(
+  execFileSync(process.execPath, [fileURLToPath(new URL('./check-motion-preview-ui.mjs', import.meta.url))], {
+    encoding: 'utf8',
+  })
+);
+process.stdout.write(
+  execFileSync(process.execPath, [fileURLToPath(new URL('./check-motion-review.mjs', import.meta.url))], {
+    encoding: 'utf8',
+  })
+);
+process.stdout.write(
+  execFileSync(
+    process.execPath,
+    [fileURLToPath(new URL('./check-motion-continuity.mjs', import.meta.url))],
+    { encoding: 'utf8' },
+  ),
+);
+process.stdout.write(
+  execFileSync(
+    process.execPath,
+    [fileURLToPath(new URL('./check-visual-fidelity-v4.mjs', import.meta.url))],
+    { encoding: 'utf8' },
+  ),
+);
+process.stdout.write(
+  execFileSync(process.execPath, [fileURLToPath(new URL('./check-motion-preference.mjs', import.meta.url))], {
     encoding: 'utf8',
   })
 );
@@ -146,6 +221,31 @@ process.stdout.write(
   execFileSync(process.execPath, [fileURLToPath(new URL('./check-go-live.mjs', import.meta.url))], {
     encoding: 'utf8',
   })
+);
+process.stdout.write(
+  execFileSync(process.execPath, [fileURLToPath(new URL('./check-hero-atlas.mjs', import.meta.url))], {
+    encoding: 'utf8',
+  })
+);
+process.stdout.write(
+  execFileSync(process.execPath, [fileURLToPath(new URL('./check-hero-v3-runtime.mjs', import.meta.url))], {
+    encoding: 'utf8',
+  })
+);
+process.stdout.write(
+  execFileSync(process.execPath, [fileURLToPath(new URL('./check-creatures.mjs', import.meta.url))], {
+    encoding: 'utf8',
+  })
+);
+process.stdout.write(
+  execFileSync(process.execPath, [fileURLToPath(new URL('./check-gaf2d-valorant.mjs', import.meta.url))], {
+    encoding: 'utf8',
+  })
+);
+execFileSync(
+  process.execPath,
+  ['--check', fileURLToPath(new URL('./browser/chrome-motion-continuity.mjs', import.meta.url))],
+  { stdio: 'inherit' },
 );
 
 let fails = 0;
@@ -180,16 +280,21 @@ ok(
   'Every semantic clip resolves to a shipped placeholder frame',
 );
 ok(
-  HOST_PRESENTATION.min === 118 && HOST_PRESENTATION.target === 130 && HOST_PRESENTATION.max === 142,
-  'Run Host presentation is locked to the 118–142 CSS px gate',
+  JSON.stringify(HOST_PRESENTATION) ===
+    JSON.stringify({
+      role: 'hero',
+      visibleBodyHeight: 96,
+      visualGap: 6,
+    }),
+  'Run Host presentation is locked to the exact Hero visible-body contract',
 );
 ok(
   HOST_RENDER_LOCK.cameraY === 18 && HOST_RENDER_LOCK.cameraX === 9 && HOST_RENDER_LOCK.pivot === 'foot-center',
   'Host render lock is defined once in code',
 );
 ok(resolveHostClip({ hitRecoil: 0.6 }) === 'damage', 'Host resolver prioritizes damage reaction');
-ok(resolveHostClip({ attack: 0.9 }) === 'crit', 'Host resolver maps peak attack to crit placeholder');
-ok(resolveHostClip({ attack: 0.4 }) === 'scan', 'Host resolver maps attack to scan placeholder');
+ok(resolveHostClip({ attack: 0.9, crit: true }) === 'crit', 'Host resolver maps actual crit to crit placeholder');
+ok(resolveHostClip({ attack: 0.9, crit: false }) === 'scan', 'Host resolver maps ordinary attack to scan placeholder');
 ok(resolveHostClip({ overdrive: true }) === 'overdrive', 'Host resolver maps Overclock to overdrive placeholder');
 ok(resolveHostClip({ sprinting: true }) === 'sprint', 'Host resolver maps Sprint to sprint placeholder');
 ok(resolveHostClip({}) === 'run', 'Host resolver defaults to run placeholder');
@@ -251,7 +356,6 @@ ok(
 ok(shellMarkup.includes('id="patch-echo-chip"') && shellMarkup.includes('id="v-echo-progress"'), 'Run reserves one data-bound Patch Echo chip');
 ok(uiSource.includes("skillLv(s, 'hotfix') > 0 || skillLv(s, 'summary_burst') > 0"), 'Focus appears only after a Focus-spending skill is learned');
 ok(uiSource.includes("echoProgressByPack?.[pack?.id]"), 'Patch Echo chip reads optional Route domain state without inventing progress');
-ok(/const mh = HOST_PRESENTATION\.target;/.test(readFileSync(new URL('../js/render.js', import.meta.url), 'utf8')), 'Canvas uses the canonical 130px Host target');
 ok(uiSource.includes("spBtn.disabled = h.energy < 1"), 'Sprint empty state uses native disabled semantics');
 ok(/\.btn-chip\s*\{[^}]*min-height:\s*calc\(var\(--touch-min\) \+ var\(--sp-1\)\)/s.test(cssSource), 'Run skills preserve touch targets');
 ok((shellMarkup.match(/class="nav-btn"/g) || []).length === 5, 'Navigation keeps exactly five tabs');
@@ -601,15 +705,87 @@ const s = createState();
 s.run.hero.scanner = 5;
 let sawAnchoredDamage = false;
 let sawSignalFlight = false;
+let sawHitStop = false;
+let sawShockRing = false;
 for (let i = 0; i < 60 * 12; i++) {
   step(s, C.FIXED_DT);
   if (s.world.floaters.some((floater) => floater.anchorId)) sawAnchoredDamage = true;
   if (s.world.lootFlights?.some((flight) => flight.target === 'signal')) sawSignalFlight = true;
+  if (s.world.hitStopT > 0) sawHitStop = true;
+  if (s.world.shocks.length > 0) sawShockRing = true;
 }
 ok(s.meta.kills > 0, `kills occur (${s.meta.kills})`);
 ok(s.run.bytes > 0, `bytes drop (${s.run.bytes | 0})`);
 ok(sawAnchoredDamage, 'damage numbers anchor to target');
 ok(sawSignalFlight, 'Signal reward flies to resource strip');
+ok(sawHitStop, 'Wave 3: kill hit stop engages');
+ok(sawShockRing, 'Wave 3: death burst shock rings fire');
+
+// —— Wave 3 juice: cosmetic fields, gates, caps ——
+const juice = createState();
+juice.run.hero.scanner = 5;
+step(juice, 1);
+ok(juice.world.hitStopT >= 0 && juice.world.slowMoT === 0, 'Wave 3: fresh run has no slow-mo');
+
+// Deterministic rank-up: scanner 40 one-shots early feed noise, XP accrues fast.
+const rankJuice = createState();
+rankJuice.run.hero.scanner = 40;
+let sawLevelClock = false;
+for (let i = 0; i < 60 * 6 && !sawLevelClock; i++) {
+  step(rankJuice, C.FIXED_DT);
+  if (rankJuice.run.hero.levelT > 0) sawLevelClock = true;
+}
+ok(sawLevelClock, 'Wave 3: rank-up hero levelT clock runs');
+
+// Deterministic zone clear: park one kill below the zone target.
+const sweepJuice = createState();
+sweepJuice.run.hero.scanner = 40;
+sweepJuice.route.killsInZone = killsNeeded(0) - 1;
+let sawZoneSweep = false;
+for (let i = 0; i < 60 * 6 && !sawZoneSweep; i++) {
+  step(sweepJuice, C.FIXED_DT);
+  if (sweepJuice.ui.fx?.kind === 'sweep') sawZoneSweep = true;
+}
+ok(sawZoneSweep, 'Wave 3: zone-clear light sweep fires');
+ok(sweepJuice.route.zone === 1, 'Wave 3: the zone actually advanced');
+
+const glJuice = createState();
+glJuice.route.zone = 10;
+glJuice.meta.pendingGoLiveZone = 10;
+glJuice.authority.shippedThisSeason = 300;
+const glJuiceRec = goLive(glJuice);
+ok(glJuiceRec && glJuice.ui.fx?.kind === 'golive', 'Wave 3: Go Live fires its cinematic fx');
+ok(glJuice.ui.fx.from < glJuice.ui.fx.to, 'Wave 3: Go Live count-up runs from old to new Live Mult');
+ok(glJuice.world.slowMoT > 0, 'Wave 3: Go Live slow-mo beat engages');
+
+// Reduced motion gates every motion-juice channel.
+const calm = createState();
+calm.settings.reducedMotion = true;
+calm.run.hero.scanner = 40; // one-shot kills so the gate check is deterministic
+for (let i = 0; i < 60 * 6; i++) step(calm, C.FIXED_DT);
+ok(calm.meta.kills > 0, 'Wave 3 calm: kills still occur under reduced motion');
+ok(calm.world.hitStopT === 0, 'Wave 3 calm: reduced motion gates hit stop');
+ok(calm.world.shake === 0, 'Wave 3 calm: reduced motion gates screen shake');
+ok(calm.world.shocks.length === 0, 'Wave 3 calm: reduced motion gates shock rings');
+ok(calm.world.particles.length === 0 && calm.world.confetti.length === 0, 'Wave 3 calm: reduced motion gates particles + confetti');
+ok(calm.run.hero.levelT === 0, 'Wave 3 calm: reduced motion gates the rank jump clock');
+ok(calm.ui.fx?.kind !== 'sweep' && calm.ui.fx?.kind !== 'golive', 'Wave 3 calm: reduced motion gates sweep fx');
+
+const calmGo = createState();
+calmGo.settings.reducedMotion = true;
+calmGo.route.zone = 10;
+calmGo.meta.pendingGoLiveZone = 10;
+goLive(calmGo);
+ok(calmGo.world.slowMoT === 0, 'Wave 3 calm: reduced motion gates Go Live slow-mo');
+ok(calmGo.ui.fx?.kind === 'golive', 'Wave 3 calm: Go Live still shows its (static) count-up');
+
+// Perf caps hold under spam.
+const capState = createState();
+for (let i = 0; i < 30; i++) confetti(capState, 100, 100, ['#fff'], 22);
+ok(capState.world.confetti.length <= 200, 'Wave 3: confetti storm respects the perf cap');
+for (const cue of ['golive', 'zone', 'combo', 'deny', 'toggle']) {
+  ok(hapticPattern(cue).length > 0, `Wave 3: ${cue} owns a deterministic haptic cue`);
+}
 
 // —— No masks in catalog ——
 ok(!SKILLS.verified_mask, 'no crit mask skill');

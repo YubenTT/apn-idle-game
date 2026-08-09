@@ -1,140 +1,107 @@
-# Mascot canon — the Host
+# Mascot canon — APN Hero
 
-> **Single source of truth for the mascot.** Inconsistent mascots are the most
-> expensive art bug: they kill brand recognition (the player starts seeing a
-> *family* of similar red figures instead of one hero). This doc exists to make
-> that impossible. See [ADR-0003](../docs/decisions/ADR-0003-mascot-single-source.md).
+> **Single source of truth for the player character.**
+> The runtime ownership decision is
+> [ADR-0015](../docs/decisions/ADR-0015-legless-hero-runtime-authority.md).
 
-## The one rule
+## Authority
 
-**The GLB is the geometry source of truth.** No new mesh and no invented
-proportions. A fitter look comes from **camera, pose, shader, and cleanup**. An AI
-image may be used only as a style/cleanup reference after it is conditioned on
-canonical multi-angle GLB renders; the shipped Host is always re-rendered from the
-GLB under this lock. See [ADR-0005](../docs/decisions/ADR-0005-hybrid-host-render.md).
+The character is one identity across every screen:
 
-Canonical source files (already in repo):
+1. the owner-approved GAF2D `apn-hero` identity record owns anatomy and proportions;
+2. one complete, owner-approved GAF2D motion set owns acting and timing;
+3. hash-locked files in `assets/mascot/v3/` are the only approved raster body at runtime;
+4. `hero-v3.js` loads and blits those files, while `hero-v2.js` supplies presentation effects;
+5. load failure may draw only the explicit identity-safe Canvas silhouette.
 
-- `assets/apn-mascot-glb-host.glb` — **primary** Host
-- `assets/apn-mascot-glb-analyst.glb` — analyst variant source
-- Derived 2D (keep in sync, never diverge): `assets/mascot-host.png` / `.webp`,
-  `mascot-run.png`, `mascot-combat.png`, `mascot-side.png`, `mascot-title.png`
+The current `assets/mascot/v3/` bytes are historical runtime art.
+They keep the game playable, but they do not prove that the owner-requested replacement identity
+or motion has passed its exact approval gates.
 
-If a 2D sprite disagrees with the GLB silhouette, the **GLB wins** and the sprite
-is re-exported ([ART-PIPELINE](../docs/ART-PIPELINE.md)).
+## Anatomy lock
 
-### Current production checkpoint (2026-07-18)
+- One oversized crimson spherical head.
+- One integrated black wraparound visor.
+- One floating crimson capsule torso.
+- Two short capsule arms, visually separate from the torso.
+- **No legs, feet, boots, or platform.**
+- A small oval shadow may show the hover/ground relationship but is not part of the body.
+- The runtime anchor is bottom-center at the torso/hover baseline; the name `footY` in legacy code
+  is coordinate debt, not permission to invent feet.
 
-The repository still ships the existing canonical GLB and its existing
-GLB-derived placeholder atlas. A first full-body extension candidate
-(`d15bba39…`) was rejected at the owner identity gate and removed before commit:
-its overall proportions and limb integration did not preserve the Host's
-character. It is **not canonical** and must not be reconstructed from cached
-proofs or by reusing the existing arm/neck meshes as legs and boots.
+The owner reference controls the silhouette.
+Rendering may simplify surface detail for gameplay size, but may not add anatomy, split the visor,
+change the head/body relationship, or turn the body into a biped.
 
-ADR-0010 remains the intended full-body direction, but no replacement GLB may
-enter runtime assets until a new four-angle neutral identity proof is explicitly
-approved. Run UI and the code-side clip vocabulary may evolve against the
-placeholder atlas without implying art approval.
+## Visual finish
 
-## Silhouette DNA (must never drift)
+- Read as clear 2D editorial game art at runtime, not a glossy plastic toy.
+- Keep the APN crimson body and a single near-black visor.
+- Use one controlled highlight, crisp edges, and a quiet 18–22% oval shadow.
+- Keep the same view, light direction, scale, outline language, and bottom-center pivot across the
+  complete clip set.
+- Prove the silhouette at actual gameplay sizes before producing the full motion batch.
 
-Large spherical head · slim body · integrated black visor · short cylindrical arms
-· minimal grounded shadow. The character's power is the **iconic silhouette**, not
-"shiny 3D toy." Final in-game asset reads **2D** even when derived from a 3D render.
+## Runtime clip contract
 
-## Render lock (GLB → sprite)
+The stable runtime interface is eight paired files:
 
-| Field | Rule |
-|-------|------|
-| Camera | Orthographic. Y-rotate 18°, X-tilt 8–10°. No lens perspective. |
-| Pivot | Foot-center, fixed across **every** animation. |
-| Frame | Master 192×192; atlas padding 2 px; export @1× runtime. |
-| Light | Single key upper-left 45°, fill ~35%, rim ~15%. |
-| Shader | 2-tone fill + 1 controlled spec. **No HDR bloom.** |
-| Outline | 2px outer line in composite; dark ink/bordo, **not** pure black. |
-| Shadow | Fixed oval drop shadow, opacity 18–22%. |
-| Cleanup | Reduce gloss, sharpen visor edge, kill plastic-toy feel. |
+| Clip | Purpose |
+|---|---|
+| `idle` | planted hover/breathe |
+| `run` | default travel |
+| `attack` | normal strike |
+| `crit` | critical strike |
+| `sprint` | sprint/overdrive travel |
+| `hit` | damage reaction |
+| `death` | defeat progression |
+| `celebrate` | level/loot celebration |
 
-### Hybrid reference boundary
+Each clip has `assets/mascot/v3/<clip>.webp` and `<clip>.json`.
+All clips must share the approved identity, canvas convention, anchor, and motion authority.
+Replacing only part of the set is forbidden; release swaps all eight clips as one hash-locked
+generation.
 
-- Input reference sheets must show the canonical GLB from front, locked ¾, side,
-  and back views with the foot pivot marked.
-- Image generation may propose pose energy, flat-light cleanup, and edge economy.
-- It may not change head/body ratio, visor bounds, limb thickness, foot pivot, or
-  the one-piece silhouette.
-- Final runtime frames are deterministic GLB renders plus controlled 2D composite
-  cleanup. If the reference and GLB disagree, the reference is rejected.
+Reduced motion removes secondary camera, trail, squash, flash, and hover intensity.
+It does not substitute a different body or bypass approved authored frames.
 
-### Production gate order
+## Stage presentation
 
-Host work advances through one fail-fast sequence:
+The `hero` role presents the neutral visible body at 96 px with a deliberate
+6 px hover gap when stage fit is 1.
+Hash-bound neutral body bounds choose that scale; the body-only union motion
+envelope protects the HP plate, floaters, priority brackets, and viewport
+clearance.
+Every Hero clip keeps the same source pivot, scale, and translation so authored
+hops, recoil, compression, and collapse survive.
+The renderer-owned oval shadow remains on the game ground and never follows the
+body vertically or participates in body bounds.
+Do not crop, resize, or ground individual frames to enforce the neutral pose.
 
-1. Lock a neutral front, three-quarter, side, and back identity proof from the
-   canonical GLB.
-2. Check the same silhouette at 72, 128, and 192 px before producing motion.
-3. Approve pose keyframes before rendering a complete motion set.
-4. Approve loop, pivot, and visor stability before packing the runtime atlas.
+## Approval order
 
-Do not generate a replacement mesh, rig, full frame set, or atlas to compensate
-for a failed earlier gate. Provider outputs, turntables, and comparison renders
-remain local candidates; only an approved master, its deterministic runtime
-exports, and compact approval evidence enter the repository.
+1. Register the owner reference in GAF2D without uploading it to a provider.
+2. Prepare front/three-quarter/side/back comparison evidence and one isolated,
+   legless, platform-free three-quarter motion seed.
+3. Inspect the seed at gameplay size and obtain the exact human identity
+   approval over those candidate bytes.
+4. Prepare one complete eight-clip motion set and inspect every temporal proof.
+5. Obtain the exact human motion approval and rig approval only if the selected lane needs it.
+6. Run complete GAF2D QA, deterministic export, APN bundle validation, three-viewport browser QA,
+   and the release gate.
 
-## Role variants (NOT new characters)
+Mechanical QA cannot approve identity, acting, deformation, timing feel, or release.
 
-Same mascot, same silhouette — only a small accent/prop changes.
+## Historical boundary
 
-| Variant | Role | Silhouette delta | Accent |
-|---------|------|------------------|--------|
-| Base Runner | default run | bare visor + body | crimson + black |
-| Scanner Operator | main DPS / scan | thin mod-stick / beam emitter in hand | crimson + APN red |
-| Burst Specialist | tap/burst | small condenser ring at shoulder | crimson + blue |
-| Sprint Courier | speed | route fins / small trail emitter at feet | crimson + gold |
-| Overdrive Core | late-game | chest energy core, visor inner glow | crimson + magenta |
-| Publisher Marshal | prestige / Ship | belt seal-satchel, chest source badge | crimson + gold |
+The old GLBs, procedural V2 body, segmented rig, and their renderer tools are provenance and
+maintenance references only.
+They are not current identity authority and cannot be used to reconstruct or silently replace the
+APN Hero.
+No new mesh, 3D runtime, biped fallback, or automatic final rig authoring is part of this pipeline.
 
-## Animation set
+## Permanent QA rule
 
-| Clip | Frames | FPS | Notes |
-|------|-------:|----:|-------|
-| `idle_breathe` | 8 | 8 | always |
-| `run_loop` | 8 | 12 | auto-run / stage motion |
-| `scan_start` | 4 | 16 | beam charge |
-| `scan_fire` | 4 | 20 | beam hit |
-| `scan_recover` | 3 | 16 | post-hit |
-| `crit_hit` | 5 | 18 | extra beam flicker |
-| `loot_pull` | 6 | 14 | pickup / pull to HUD |
-| `sprint_loop` | 8 | 14 | hold-to-speed |
-| `overdrive_loop` | 8 | 10 | chest core pulse |
-| `damage_react` | 3 | 18 | recoil |
-| `level_up` | 6 | 12 | halo / badge flash |
-| `defeat_fall` | 6 | 10 | short, rare |
-
-## Shipped atlas layout
-
-```
-assets/mascot/
-  apn-mascot-base.webp             # ten GLB-derived base poses
-  apn-mascot-idle.webp             # DOM/Gear niche derivative
-  apn-mascot-fx.webp               # reserved transparent FX surface
-  atlas/apn-mascot-base.json       # rect + foot pivot + render-lock metadata
-  master/*.png                     # deterministic 192 px exports
-```
-
-`tools/mascot-render/` parses the canonical GLB directly with a local WebGL2
-renderer. It retains authored node matrices, uses the locked orthographic camera,
-removes clearcoat/bloom through a three-band diffuse shader, and changes poses
-only by rotating existing arm meshes or the whole silhouette. The export script
-packs and converts the result deterministically; image-generation studies never
-enter the atlas.
-
-## QA hook
-
-Every mascot appearance is checked against **Silhouette QA** in
-[QA-CHECKLIST](../docs/QA-CHECKLIST.md): same head/body ratio, same visor geometry,
-same perspective, same outline — on every screen.
-
-`node qa/check-assets.mjs` additionally fails unless all ten poses share a foot
-pivot within one pixel, head/body ratio within 3%, non-empty visor coverage, the
-18°/9° camera lock, and the canonical GLB source path.
+Every APN Hero appearance must match the same approved silhouette and perspective.
+Any leg, foot, boot, platform, alternate visor, mixed clip generation, stale approval hash, or
+runtime fallback to a second character is a release blocker.

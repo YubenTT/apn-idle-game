@@ -1,0 +1,136 @@
+{
+  "assetId": "veil-operator",
+  "authority": "approved_release",
+  "clips": {
+    "advance": {
+      "descriptor": "advance.json",
+      "descriptorSha256": "6d6d01fcde9f0b0cad9e7e45c315aebd6af8707227da5edbecfee6ab29b49f6d",
+      "image": "advance.webp",
+      "imageSha256": "1b7a8381957574ec24052ae6704261c7cd1ea2dedfb9dd3edc61668a8907d794"
+    },
+    "death": {
+      "descriptor": "death.json",
+      "descriptorSha256": "1adf6614dafd934b9dad2563f6480516c8074ca92eb479396da42b183f8390d1",
+      "image": "death.webp",
+      "imageSha256": "99c708db74323d00b90af94727fef390b01189e3a5d3395c3717fdaf38767e42"
+    },
+    "engaged": {
+      "descriptor": "engaged.json",
+      "descriptorSha256": "dbe942d54c1c8d01b7c49538b1d46ae116a0ed78006dc22643fac5065f507de8",
+      "image": "engaged.webp",
+      "imageSha256": "a8c94c51f3dddbcfb6f8e749f62d8c16904c198a13568cd69ee0302bc58c150f"
+    },
+    "hit": {
+      "descriptor": "hit.json",
+      "descriptorSha256": "6f7a1774db72164e4629e39d9ce0b1631e74b9256be09bef117692ba64b47b95",
+      "image": "hit.webp",
+      "imageSha256": "d502aadb734fd3a30f50d77b04d2a5278a846dba6f1b5c51893b7653eff53103"
+    },
+    "idle": {
+      "descriptor": "idle.json",
+      "descriptorSha256": "39634611eafd14c4cd1594de3d62f7138907824412e7683a404ae8677378bcfd",
+      "image": "idle.webp",
+      "imageSha256": "45fb3c1eedbf4c2dbe938619a163c540d117e45b26c747d07a794bbdf801e214"
+    }
+  },
+  "consumerScale": {
+    "displayedDevicePixels": 144,
+    "grammar": "gaf2d-consumer-scale-v4",
+    "maximumCssBodyHeight": 72,
+    "maximumDpr": 2,
+    "role": "standard",
+    "runtimeCanvasClass": 256,
+    "scaleRatio": {
+      "denominator": 201,
+      "numerator": 144
+    },
+    "sourceVisiblePixels": 201
+  },
+  "frameSize": {
+    "height": 256,
+    "width": 256
+  },
+  "grammar": "gaf2d-motion-set-index-v2",
+  "lineage": {
+    "derivativeSetSha256": "db11f8bc516bddb1c661abd80640301fe6db2269e1559a7fbd5b5e1cc5ca8484",
+    "masterSetSha256": "35d7327a7d04df5adbe0f415dab02d8279d6d459bb245e87d6982ecdbd54481d",
+    "selectedProfileSha256": "76d15cc95e8a0bf2f40867abb09f375148679e71f3746e11d51130f83c463dd4",
+    "sourceBatchSha256": "1ab30e7850918cd03446b539eeaf444b14ff5de4d9d0e121782cb92805f10a0e",
+    "v3LineageSha256": "6f773b6a2a12c4bb775bf4e1c7555fec09ffde80f668957d46236485f73de2b1"
+  },
+  "pivot": {
+    "x": 0.5,
+    "y": 1
+  },
+  "presentation": {
+    "motionBounds": {
+      "height": 207,
+      "width": 232,
+      "x": 0,
+      "y": 0
+    },
+    "reference": {
+      "clip": "idle",
+      "frameIndex": 0,
+      "sourceSha256": "628f1de501ecf22be32f1b4bb0022c1f47cbcb4e180bb6c9000cbf20b27f9250"
+    },
+    "scaleContract": "visible-body",
+    "schemaVersion": 1,
+    "visibleBounds": {
+      "height": 201,
+      "width": 232,
+      "x": 0,
+      "y": 6
+    }
+  },
+  "previewLineage": {
+    "batchSummarySha256": "1ab30e7850918cd03446b539eeaf444b14ff5de4d9d0e121782cb92805f10a0e",
+    "candidateId": "veil-operator-authored-semantic-v3",
+    "candidateSha256": "fc7fa187672f1ce663095a6c2252d2c1c3ae52a30f66a1f8b6c46f0b600fe39c",
+    "qaSummarySha256": "e5353b419f80580559dccd9d3627baef71d8f6a99336d15d252824a2d1298c3d",
+    "sourceManifestVersion": 3,
+    "temporalEvidenceSha256": "34b6103b28972feb584ea7a3e45f72479920a0d1738b51462e41e0b250237527"
+  },
+  "releaseLineage": {
+    "derivativeSetSha256": "db11f8bc516bddb1c661abd80640301fe6db2269e1559a7fbd5b5e1cc5ca8484",
+    "motionApprovalSha256": "29852c0f6bbdb5b40b4577eaaf088835c854bb5f73494bc357d68151ab521efa",
+    "runtimeLineageSha256": "ebbac82d31344f38663cf8d2f99ff54e4ed1ecc10fae25cfb2a70357adf5dad2",
+    "visualFidelityLineageSha256": "60d2c9ff2dbfef5293225570b1e66f6b2dcec6938484be744a83c80c95899174"
+  },
+  "role": "character",
+  "sourceFamily": "authored-semantic-v4",
+  "status": "approved",
+  "toolchain": {
+    "compositor": {
+      "name": "HashBoundCopy",
+      "version": "selected-webp-v1"
+    },
+    "encoder": {
+      "arguments": [
+        "-quiet",
+        "-exact",
+        "-lossless",
+        "-q",
+        "100",
+        "-m",
+        "6"
+      ],
+      "name": "cwebp",
+      "profileSha256": "76d15cc95e8a0bf2f40867abb09f375148679e71f3746e11d51130f83c463dd4",
+      "version": "1.6.0"
+    },
+    "grammar": "apn-gaf2d-preview-matrix-toolchain-v1",
+    "operations": [
+      "validate:v4-selected-webp:hash-bound-source",
+      "validate:v4-selected-webp:exact-copy-byte-proof",
+      "copy:v4-selected-webp:exact-media-bytes"
+    ],
+    "profileSha256": "76d15cc95e8a0bf2f40867abb09f375148679e71f3746e11d51130f83c463dd4"
+  },
+  "trim": {
+    "height": 207,
+    "width": 232,
+    "x": 16,
+    "y": 34
+  }
+}

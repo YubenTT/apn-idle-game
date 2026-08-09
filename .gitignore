@@ -23,6 +23,7 @@ APN-Idle-Package.zip
 
 # Optional local noise
 .cache/
+/.gaf2d-preview/
 .worktrees/
 tmp/
 *.log
@@ -36,3 +37,4 @@ coverage/
 # Keep qa screenshots intentional; ignore ad-hoc local dumps
 qa/screenshots/_local/
 assets/mascot/**/candidates/
+refs/ext/

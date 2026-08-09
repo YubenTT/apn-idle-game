@@ -14,10 +14,13 @@ language. Original APN IP, Host mascot, crimson APN UI.
 
 ## Active phase
 
-**Phase: Redesign foundation (system-first).** We are locking the design system,
-screen specs, mascot canon, and production docs *before* screen-by-screen polish.
-This mirrors the redesign research: **system first, then polish.** The playable
-game stays live and green the whole time.
+**Phase: Visual Fidelity V4 approved production integration.** V3 remains the
+exact semantic acting/timing/root authority. The owner approved all seven V4
+motion sets; six baked creature sets passed complete QA, exported through
+hash-locked releases, and now back the production Valorant pack. APN Hero motion
+is approved but remains outside production at its separate rig-approval gate.
+The exact 7-asset / 39-clip / 795-frame review, same-scale V3↔V4 proof, and
+post-approval three-viewport production Chrome evidence are green.
 
 ## The stack, in one sentence
 
@@ -43,6 +46,7 @@ must be updated to match, not argued with.
 | Component specs (sizes, states) | [../brand/COMPONENTS.md](../brand/COMPONENTS.md) | Design |
 | Mascot geometry, poses, variants | [../brand/MASCOT-CANON.md](../brand/MASCOT-CANON.md) | Art |
 | 2D art grammar, icons, enemies, backgrounds | [../brand/ART-DIRECTION.md](../brand/ART-DIRECTION.md) | Art |
+| Character identity/motion runtime contract | [authored-motion design](./superpowers/specs/2026-07-28-gaf2d-authored-motion-design.md) + [ADR-0014](./decisions/ADR-0014-gaf2d-character-owned-motion.md) + [ADR-0015](./decisions/ADR-0015-legless-hero-runtime-authority.md) + [ADR-0016](./decisions/ADR-0016-motion-ready-identity-seeds.md) | Art + Eng + QA |
 | Player-facing copy & naming | [../brand/NAMING.md](../brand/NAMING.md) | Design |
 | Term glossary (Signal/Notes/Rep… + code names) | [GLOSSARY.md](./GLOSSARY.md) | All |
 | Per-screen mobile layout | [SCREEN-SPECS.md](./SCREEN-SPECS.md) | Design |
@@ -66,7 +70,9 @@ must be updated to match, not argued with.
 3. [../brand/DESIGN-TOKENS.md](../brand/DESIGN-TOKENS.md) (how it looks)
 4. [SCREEN-SPECS.md](./SCREEN-SPECS.md) (what each screen must do)
 5. [ARCHITECTURE.md](./ARCHITECTURE.md) (how the code is shaped)
-6. [decisions/](./decisions/) (why the big calls were made)
+6. [authored-motion design](./superpowers/specs/2026-07-28-gaf2d-authored-motion-design.md)
+   when touching any Hero, creature, atlas, animation, or loader path
+7. [decisions/](./decisions/) (why the big calls were made)
 
 ## Doc conventions
 

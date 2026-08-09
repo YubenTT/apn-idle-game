@@ -1,6 +1,6 @@
 # ADR-0003 — GLB is the single source of truth for the mascot
 
-- Status: Accepted
+- Status: Superseded by ADR-0015
 - Date: 2026-07-13
 
 ## Context
@@ -53,3 +53,9 @@ render-lock, which is slower than freehand.
 - The Host is intentionally redesigned (a new canonical GLB supersedes this, via a
   new ADR), or
 - A rendering-tier change (e.g. a real-time GLB overlay) makes sprites secondary.
+
+## Supersession
+
+ADR-0015 replaced this GLB geometry authority with the owner-approved GAF2D
+`apn-hero` identity and complete motion-set authority. The GLB remains historical
+provenance only.

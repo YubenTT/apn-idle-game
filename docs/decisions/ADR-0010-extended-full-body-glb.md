@@ -1,6 +1,6 @@
 # ADR-0010 — Extended full-body canonical GLB (supersedes ADR-0003/0005 scope)
 
-- Status: Accepted
+- Status: Superseded by ADR-0015
 - Date: 2026-07-16
 
 ## Context
@@ -61,3 +61,9 @@ new neutral four-angle candidate clears the same owner gate.
 
 The Host identity itself changes, or a rigged/animated pipeline replaces the
 deterministic matte render.
+
+## Supersession
+
+The owner-provided reference is legless. ADR-0015 rejects this full-body/biped
+direction and makes the approved GAF2D `apn-hero` identity the only current
+anatomy authority. No extended GLB candidate may bypass that identity gate.

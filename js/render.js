@@ -1,34 +1,265 @@
-/** APN Idle canvas — biomes, death juice, confetti, Host + enemies */
+/** APN Idle canvas — V2 scenery/targets/Host + combat juice overlays */
 
-import { C, clamp, easeOutCubic, easeOutQuad } from './formulas.js?v=golive-pr5';
-import { getCurrentPackAssets } from './assets.js?v=golive-pr5';
-import { HOST_PRESENTATION, resolveHostClip } from './host-contract.js?v=golive-pr5';
+import { C, clamp, easeOutCubic, easeOutQuad } from './formulas.js?v=gaf2d-motion-v1';
+import { getCurrentPackAssets } from './assets.js?v=gaf2d-motion-v1';
+import { resolveHostClip } from './host-contract.js?v=gaf2d-motion-v1';
+import { drawHeroV2 } from './hero-v2.js?v=gaf2d-motion-v1';
+import {
+  getV3Clip,
+  getV3Geometry,
+  getV3Presentation,
+  resolveHeroV3Frame,
+} from './hero-v3.js?v=gaf2d-motion-v1';
+import {
+  STAGE_OVERHEAD_GAP,
+  STAGE_ROLE_PRESENTATION,
+  legacySquarePresentation,
+  resolveActorGeometry,
+  stageFitForActors,
+} from './stage-presentation.js?v=gaf2d-motion-v1';
+import { motionReduced } from './motion-preference.js?v=gaf2d-motion-v1';
+import {
+  drawMotionFrame,
+  frameIndexForClip,
+  selectEnemyMotion,
+} from './motion-bundle.js?v=gaf2d-motion-v1';
+import {
+  failMotionRecord,
+  getMotionClipRecord,
+  getMotionRecord,
+  motionDiagnostics,
+  pruneMotionClipResidency,
+  warmMotionClip,
+} from './motion-store.js?v=gaf2d-motion-v1';
+import { drawTarget } from './enemies-v2.js?v=gaf2d-motion-v1';
+import { drawScenery } from './scenery-v2.js?v=gaf2d-motion-v1';
+import { CREATURES, creatureKindFor } from './content.js?v=gaf2d-motion-v1';
+import { creatureClipReady, drawCreature } from './creatures.js?v=gaf2d-motion-v1';
+import {
+  packWaveIdentityIds,
+  targetForEnemyType,
+} from './wave-roster.js?v=gaf2d-motion-v1';
 
-const V = 'v8';
-let hostAtlas = null;
-fetch(`./assets/mascot/atlas/apn-mascot-base.json?${V}`)
-  .then((response) => response.json())
-  .then((atlas) => { hostAtlas = atlas; })
-  .catch(() => { hostAtlas = null; });
-const sprites = {
-  mascot: loadImg(`./assets/mascot/apn-mascot-base.webp?${V}`),
-  enemies: {
-    stale: loadImg(`./assets/enemies/stale.png?${V}`),
-    rumor: loadImg(`./assets/enemies/rumor.png?${V}`),
-    lag: loadImg(`./assets/enemies/lag.png?${V}`),
-    spoiler: loadImg(`./assets/enemies/spoiler.png?${V}`),
-    patch: loadImg(`./assets/enemies/patch.png?${V}`),
-    event: loadImg(`./assets/enemies/event.png?${V}`),
-    boss: loadImg(`./assets/enemies/boss.png?${V}`),
-  },
-};
+const LEGACY_ENEMY_PRESENTATION = legacySquarePresentation({ sourceSize: 1 });
+const LEGACY_ENEMY_INTRINSICS = Object.freeze({
+  frameSize: Object.freeze({ width: 1, height: 1 }),
+  trim: Object.freeze({ x: 0, y: 0, width: 1, height: 1 }),
+  pivot: Object.freeze({ x: 0.5, y: 1 }),
+  presentation: LEGACY_ENEMY_PRESENTATION,
+});
+const STAGE_CLEARANCE_FALLBACK = 78;
+const STAGE_CLEARANCE_MARGIN = 2;
+const ENEMY_PLATE_COMPACT_FIT = 0.92;
+const ENEMY_PLATE_HEIGHT = Object.freeze({
+  compact: 30,
+  standard: 54,
+  boss: 62,
+});
+const BOSS_TIMER_BAR_HEIGHT = 10;
+const BOSS_TIMER_FUNCTION_HEIGHT = 24;
+const BOSS_TIMER_EDGE_MARGIN = 16;
+const BOSS_TIMER_PLATE_GAP = 12;
 
-const FOOT_PAD = 2;
-const enemyRenderSize = (enemy) => enemy.type === 'boss' ? 128 : enemy.type === 'patch' ? 94 : 88;
+function enemyPlateHeight(role, fit) {
+  if (fit < ENEMY_PLATE_COMPACT_FIT) return ENEMY_PLATE_HEIGHT.compact;
+  return role === 'boss'
+    ? ENEMY_PLATE_HEIGHT.boss
+    : ENEMY_PLATE_HEIGHT.standard;
+}
+
+function enemyPlateClearance(role, fit) {
+  return STAGE_OVERHEAD_GAP + enemyPlateHeight(role, fit);
+}
+
+function rectsOverlap(left, right) {
+  return (
+    left.x < right.x + right.width &&
+    left.x + left.width > right.x &&
+    left.y < right.y + right.height &&
+    left.y + left.height > right.y
+  );
+}
+
+function stageFunctionalLayout({
+  actorX,
+  geometry,
+  fit,
+  stageClearance,
+  stageWidth,
+  stageHeight,
+  includeBossTimer = false,
+}) {
+  let plate = null;
+  if (geometry) {
+    const compact = fit < ENEMY_PLATE_COMPACT_FIT;
+    const baseWidth = geometry.role === 'boss' ? 148 : 124;
+    const height = enemyPlateHeight(geometry.role, fit);
+    const width = compact ? Math.max(64, baseWidth * 0.62) : baseWidth;
+    const anchoredY = geometry.anchors.hpY - height;
+    const safeTop = Number.isFinite(stageClearance)
+      ? stageClearance
+      : anchoredY;
+    plate = Object.freeze({
+      x: actorX - width / 2,
+      y: Math.min(
+        geometry.anchors.shadowY - height,
+        Math.max(anchoredY, safeTop),
+      ),
+      width,
+      height,
+    });
+  }
+
+  if (!includeBossTimer) {
+    return Object.freeze({ plate, timer: null });
+  }
+
+  const timerY = bossTimerYFor(stageHeight);
+  const defaultTimer = {
+    x: stageWidth * 0.18,
+    y: timerY,
+    width: stageWidth * 0.64,
+    height: BOSS_TIMER_FUNCTION_HEIGHT,
+    barHeight: BOSS_TIMER_BAR_HEIGHT,
+    labelX: stageWidth / 2,
+    labelY: timerY + 22,
+  };
+  let timer = defaultTimer;
+  if (plate && rectsOverlap(plate, defaultTimer)) {
+    const rightX = plate.x + plate.width + BOSS_TIMER_PLATE_GAP;
+    const lanes = [
+      {
+        x: BOSS_TIMER_EDGE_MARGIN,
+        width: Math.max(
+          0,
+          plate.x - BOSS_TIMER_PLATE_GAP - BOSS_TIMER_EDGE_MARGIN,
+        ),
+      },
+      {
+        x: rightX,
+        width: Math.max(
+          0,
+          stageWidth - BOSS_TIMER_EDGE_MARGIN - rightX,
+        ),
+      },
+    ];
+    const lane = lanes[1].width >= lanes[0].width ? lanes[1] : lanes[0];
+    timer = {
+      ...defaultTimer,
+      x: lane.x,
+      width: lane.width,
+      labelX: lane.x + lane.width / 2,
+    };
+  }
+  return Object.freeze({
+    plate,
+    timer: Object.freeze(timer),
+  });
+}
+
+/** Enemy type is trusted game state; asset IDs never self-assign scale. */
+export function stageRoleForEnemy(enemy) {
+  return enemy?.type === 'boss' ? 'boss' : 'standard';
+}
+
+function enemyIntrinsicsForMotion(motionInfo) {
+  const record =
+    motionInfo?.status === 'ready' ? motionInfo.record : null;
+  const clipDescriptor = record?.descriptor;
+  if (
+    clipDescriptor?.sourceFamily === 'authored-semantic-v4' &&
+    clipDescriptor?.presentation &&
+    clipDescriptor?.trim &&
+    clipDescriptor?.pivot
+  ) {
+    return {
+      frameSize: record?.set?.frameSize,
+      trim: clipDescriptor.trim,
+      pivot: clipDescriptor.pivot,
+      presentation: clipDescriptor.presentation,
+    };
+  }
+  const descriptor =
+    record?.set && typeof record.set === 'object'
+      ? record.set
+      : record?.descriptor;
+  if (!descriptor?.presentation) {
+    if (clipDescriptor?.presentation) {
+      return {
+        frameSize: clipDescriptor.frameSize,
+        trim: clipDescriptor.trim,
+        pivot: clipDescriptor.pivot,
+        presentation: clipDescriptor.presentation,
+      };
+    }
+    return LEGACY_ENEMY_INTRINSICS;
+  }
+  return {
+    frameSize: descriptor.frameSize,
+    trim: descriptor.trim,
+    pivot: descriptor.pivot,
+    presentation: descriptor.presentation,
+  };
+}
+
+export function enemyStagePresentationForMotion(motionInfo) {
+  const record =
+    motionInfo?.status === 'ready' ? motionInfo.record : null;
+  if (
+    record?.set?.sourceFamily === 'authored-semantic-v4' &&
+    record.set.presentation
+  ) {
+    return record.set.presentation;
+  }
+  return enemyIntrinsicsForMotion(motionInfo).presentation;
+}
+
+function resolveEnemyGeometry(enemy, groundY, fit, motionInfo) {
+  return resolveActorGeometry({
+    actorX: enemy.displayX,
+    groundY,
+    fit,
+    role: stageRoleForEnemy(enemy),
+    ...enemyIntrinsicsForMotion(motionInfo),
+  });
+}
+
+/** Resolve the exact pack-atlas frame used by both Canvas and deterministic QA. */
+export function enemyFrameFor(enemy) {
+  if (!enemy) return null;
+  const hpRatio = enemy.hpMax > 0 ? enemy.hp / enemy.hpMax : 1;
+  return enemy.type === 'boss' && hpRatio < 0.34 ? 'boss-break' : enemy.frame;
+}
+
+/** Keep approved identity names intact while bounding unforeseen pack labels. */
+export function enemyLabelForDisplay(labelSource, isBoss = false) {
+  const label = String(labelSource || '');
+  const limit = isBoss ? 20 : 18;
+  return label.length > limit ? `${label.slice(0, limit - 1)}…` : label;
+}
+
+/** Name approved Valorant identities and V3 variants without changing legacy packs. */
+export function bossBannerFor(activeBoss, zone = 0) {
+  if (!activeBoss) return 'VERSION GATE';
+  const kind = creatureKindFor(activeBoss, zone);
+  const label = kind && CREATURES[kind]
+    ? CREATURES[kind].label
+    : activeBoss.packId === 'valorant'
+      ? activeBoss.label
+      : 'Version Gate';
+  return String(label || 'Version Gate').toUpperCase();
+}
+
+/** Dock the timer below the fixed two-row DOM stage HUD. */
+export function bossTimerYFor(stageHeight) {
+  return Math.min(108, Math.max(0, stageHeight - 34));
+}
+
 export const CANVAS_TONE_TOKENS = Object.freeze({
   signal: '--c-signal',
   notes: '--c-notes',
   sp: '--c-sp',
+  zone: '--c-zone',
 });
 const canvasToneColors = new Map();
 
@@ -44,324 +275,450 @@ function resolveCanvasPaint(paint) {
   return value;
 }
 
-/** 5 biomes — painted midground strips (cached canvas “PNG” look) */
-const BIOMES = [
-  {
-    id: 'night',
-    name: 'Night Feed',
-    top: '#0a1018',
-    mid: '#10161f',
-    ground: '#080c11',
-    glow: '252,18,67',
-    accent: '#FC1243',
-    far: '#121a24',
-    midCol: '#171f2a',
-    paint: ['#0d1520', '#1a1020', '#FC1243'],
-  },
-  {
-    id: 'cold',
-    name: 'Cold Patch',
-    top: '#0a1520',
-    mid: '#0e1a26',
-    ground: '#081018',
-    glow: '94,176,255',
-    accent: '#5eb0ff',
-    far: '#102030',
-    midCol: '#152838',
-    paint: ['#0c1a28', '#143040', '#5eb0ff'],
-  },
-  {
-    id: 'heat',
-    name: 'Launch Heat',
-    top: '#1a100c',
-    mid: '#1c1410',
-    ground: '#120c0a',
-    glow: '230,184,77',
-    accent: '#e6b84d',
-    far: '#241810',
-    midCol: '#2a1c14',
-    paint: ['#1c1008', '#302010', '#e6b84d'],
-  },
-  {
-    id: 'live',
-    name: 'Live Green',
-    top: '#0a1612',
-    mid: '#0e1a16',
-    ground: '#081210',
-    glow: '62,207,142',
-    accent: '#3ecf8e',
-    far: '#10241c',
-    midCol: '#143028',
-    paint: ['#0a1814', '#143028', '#3ecf8e'],
-  },
-  {
-    id: 'spoiler',
-    name: 'Spoiler Violet',
-    top: '#140e1c',
-    mid: '#16101e',
-    ground: '#0e0a14',
-    glow: '192,132,252',
-    accent: '#c084fc',
-    far: '#1c1428',
-    midCol: '#241830',
-    paint: ['#140e1c', '#241830', '#c084fc'],
-  },
-];
-
-/** Cached painted midground strips (512×180) — procedural “hand-painted” look */
-const midCache = new Map();
-
-function paintedMid(bio) {
-  if (midCache.has(bio.id)) return midCache.get(bio.id);
-  const W = 512;
-  const H = 180;
-  const c = typeof document !== 'undefined' ? document.createElement('canvas') : null;
-  if (!c) return null;
-  c.width = W;
-  c.height = H;
-  const g = c.getContext('2d');
-  // base wash
-  const grad = g.createLinearGradient(0, 0, 0, H);
-  grad.addColorStop(0, bio.paint[0]);
-  grad.addColorStop(0.55, bio.paint[1]);
-  grad.addColorStop(1, bio.ground);
-  g.fillStyle = grad;
-  g.fillRect(0, 0, W, H);
-  // soft hills / silhouette ridge
-  g.fillStyle = bio.far;
-  g.beginPath();
-  g.moveTo(0, H * 0.72);
-  for (let x = 0; x <= W; x += 16) {
-    const y = H * 0.55 + Math.sin(x * 0.02) * 18 + Math.sin(x * 0.05) * 8;
-    g.lineTo(x, y);
-  }
-  g.lineTo(W, H);
-  g.lineTo(0, H);
-  g.closePath();
-  g.fill();
-  // city / feed towers block-in
-  for (let i = 0; i < 14; i++) {
-    const x = (i * 40 + 12) % W;
-    const bh = 40 + ((i * 37) % 55);
-    const bw = 18 + (i % 3) * 8;
-    g.fillStyle = bio.midCol;
-    g.globalAlpha = 0.85;
-    g.fillRect(x, H - bh - 8, bw, bh);
-    // neon windows
-    g.fillStyle = bio.accent;
-    g.globalAlpha = 0.15 + (i % 4) * 0.05;
-    for (let wy = H - bh + 6; wy < H - 16; wy += 10) {
-      g.fillRect(x + 4, wy, bw - 8, 3);
-    }
-  }
-  g.globalAlpha = 1;
-  // painted accent strokes
-  g.strokeStyle = bio.accent;
-  g.globalAlpha = 0.12;
-  g.lineWidth = 3;
-  g.beginPath();
-  for (let x = 0; x < W; x += 8) {
-    const y = H * 0.35 + Math.sin(x * 0.03) * 20;
-    if (x === 0) g.moveTo(x, y);
-    else g.lineTo(x, y);
-  }
-  g.stroke();
-  g.globalAlpha = 1;
-  // fog band
-  const fog = g.createLinearGradient(0, H * 0.5, 0, H);
-  fog.addColorStop(0, 'rgba(0,0,0,0)');
-  fog.addColorStop(1, 'rgba(0,0,0,0.35)');
-  g.fillStyle = fog;
-  g.fillRect(0, 0, W, H);
-  midCache.set(bio.id, c);
-  return c;
-}
-
-function loadImg(src) {
-  const img = new Image();
-  img.src = src;
-  img._ready = false;
-  img.onload = () => {
-    img._ready = true;
-  };
-  img.onerror = () => {
-    img._ready = false;
-  };
-  return img;
-}
-
 function ready(img) {
   return img && (img._ready || img.complete) && img.naturalWidth > 0;
 }
-
-const FALLBACK_BIOME = BIOMES[0];
 
 export function sizeCanvas(canvas) {
   const parent = canvas.parentElement;
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   const w = parent.clientWidth;
-  const h = Math.max(220, parent.clientHeight);
+  const h = Math.max(160, parent.clientHeight);
   canvas.width = Math.floor(w * dpr);
   canvas.height = Math.floor(h * dpr);
   canvas.style.width = `${w}px`;
   canvas.style.height = `${h}px`;
   const ctx = canvas.getContext('2d');
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  return { w, h, ctx };
+  const stageHud = parent.querySelector?.('.stage-hud');
+  const stageClearance =
+    Number.isFinite(stageHud?.offsetTop) &&
+    Number.isFinite(stageHud?.offsetHeight)
+      ? Math.ceil(stageHud.offsetTop + stageHud.offsetHeight) +
+        STAGE_CLEARANCE_MARGIN
+      : STAGE_CLEARANCE_FALLBACK;
+  return { w, h, ctx, stageClearance };
 }
 
-export function draw(ctx, w, h, s, assetStore = null) {
-  const gy = h * 0.86;
-  s.world.groundY = gy;
-  const t = s.world.time;
-  const scroll = s.world.scrollSmooth;
-  const shakeX = s.world.shake ? (Math.random() - 0.5) * s.world.shake : 0;
-  const shakeY = s.world.shake ? (Math.random() - 0.5) * s.world.shake : 0;
-  const bio = FALLBACK_BIOME;
-  const packAssets = assetStore ? getCurrentPackAssets(assetStore, s.route) : null;
+/** Interpolate display roots only; authored body pixels remain discrete. */
+export function interpolateRootPosition(previous, current, alpha = 1) {
+  const resolvedCurrent = Number.isFinite(current) ? current : 0;
+  const resolvedPrevious = Number.isFinite(previous)
+    ? previous
+    : resolvedCurrent;
+  const resolvedAlpha = Number.isFinite(alpha)
+    ? clamp(alpha, 0, 1)
+    : 1;
+  return resolvedPrevious +
+    (resolvedCurrent - resolvedPrevious) * resolvedAlpha;
+}
 
+function presentationNoise(seed) {
+  const sample = Math.sin(seed) * 43758.5453123;
+  return sample - Math.floor(sample);
+}
+
+// Render continuity is presentation state, never simulation state. Weak keys
+// release each retained frame automatically when the world drops its enemy
+// object after death, so the cache follows the domain object's lifecycle
+// without adding serializable fields or requiring an unbounded id registry.
+const enemyMotionRetention = new WeakMap();
+
+// Stage layout and effect origins are repaint-owned presentation state. The
+// state key releases the complete stage snapshot with the game session, while
+// each effect key releases its retained origin when fixed-step cleanup drops
+// that transient object. Neither cache is serializable or reachable from the
+// domain tree.
+const stagePresentationRetention = new WeakMap();
+const effectOriginRetention = new WeakMap();
+
+export function inspectStagePresentation(state) {
+  return stagePresentationRetention.get(state)?.snapshot || null;
+}
+
+function liveEffects(state) {
+  return [
+    ...(state.world.floaters || []),
+    ...(state.world.particles || []),
+    ...(state.world.lootFlights || []),
+    ...(state.world.shocks || []),
+    ...(state.world.confetti || []),
+  ];
+}
+
+function retainStagePresentation(
+  state,
+  { groundY, stageFit, heroGeometry, actorGeometries },
+) {
+  const previous = stagePresentationRetention.get(state);
+  const retainedActorGeometries = new Map(actorGeometries);
+  for (const effect of liveEffects(state)) {
+    if (effect.anchorKind !== 'enemy' || effect.anchorId === null) continue;
+    if (retainedActorGeometries.has(effect.anchorId)) continue;
+    const retained = previous?.actorGeometries?.get(effect.anchorId);
+    if (retained) retainedActorGeometries.set(effect.anchorId, retained);
+  }
+  const actors = Object.freeze(
+    [...actorGeometries].map(([id, geometry]) =>
+      Object.freeze({ id, geometry }),
+    ),
+  );
+  const snapshot = Object.freeze({
+    groundY,
+    stageFit,
+    heroGeometry,
+    actors,
+  });
+  const presentation = Object.freeze({
+    groundY,
+    stageFit,
+    heroGeometry,
+    actorGeometries: retainedActorGeometries,
+    snapshot,
+  });
+  stagePresentationRetention.set(state, presentation);
+  return presentation;
+}
+
+function geometryAnchor(effect, geometry, presentation) {
+  const name = effect.anchorName;
+  if (name === 'ground' || name === 'shadow') {
+    return {
+      x: geometry.anchors.shadowX,
+      y: geometry.anchors.shadowY,
+    };
+  }
+  if (name === 'floater') {
+    if (effect.anchorKind === 'hero') {
+      return {
+        x: geometry.anchors.hitX,
+        y:
+          presentation.groundY -
+          geometry.targetBodyHeight -
+          24,
+      };
+    }
+    return {
+      x: geometry.anchors.hitX,
+      y: Math.max(
+        geometry.anchors.floaterY,
+        Math.min(170, presentation.groundY - 32),
+      ),
+    };
+  }
+  if (name === 'loot') {
+    return { x: geometry.anchors.lootX, y: geometry.anchors.lootY };
+  }
+  return { x: geometry.anchors.hitX, y: geometry.anchors.hitY };
+}
+
+function fallbackAnchor(effect, presentation) {
+  if (!Number.isFinite(effect.anchorFallbackX)) return null;
+  const role = Object.hasOwn(
+    STAGE_ROLE_PRESENTATION,
+    effect.anchorRole,
+  )
+    ? effect.anchorRole
+    : 'standard';
+  const targetBodyHeight =
+    STAGE_ROLE_PRESENTATION[role].visibleBodyHeight * presentation.stageFit;
+  const visualGap =
+    STAGE_ROLE_PRESENTATION[role].visualGap * presentation.stageFit;
+  const bodyBottom = presentation.groundY - visualGap;
+  if (effect.anchorName === 'ground' || effect.anchorName === 'shadow') {
+    return { x: effect.anchorFallbackX, y: presentation.groundY };
+  }
+  if (effect.anchorName === 'floater') {
+    const y =
+      role === 'hero'
+        ? presentation.groundY - targetBodyHeight - 24
+        : Math.max(
+            bodyBottom - targetBodyHeight - STAGE_OVERHEAD_GAP * 2,
+            Math.min(170, presentation.groundY - 32),
+          );
+    return { x: effect.anchorFallbackX, y };
+  }
+  return {
+    x: effect.anchorFallbackX,
+    y: bodyBottom - targetBodyHeight / 2,
+  };
+}
+
+function resolveEffectOrigin(effect, presentation, follow = false) {
+  if (
+    effect.anchorKind !== 'enemy' &&
+    effect.anchorKind !== 'hero'
+  ) {
+    return null;
+  }
+  const geometry =
+    effect.anchorKind === 'hero'
+      ? presentation.heroGeometry
+      : presentation.actorGeometries.get(effect.anchorId);
+  const current = geometry
+    ? geometryAnchor(effect, geometry, presentation)
+    : fallbackAnchor(effect, presentation);
+  const retained = effectOriginRetention.get(effect) || null;
+  if (current && (follow || !retained)) {
+    const origin = Object.freeze({ x: current.x, y: current.y });
+    effectOriginRetention.set(effect, origin);
+    return origin;
+  }
+  return retained || current;
+}
+
+function retainedEnemyMotion(enemy) {
+  return enemy && typeof enemy === 'object'
+    ? enemyMotionRetention.get(enemy) || null
+    : null;
+}
+
+function retainEnemyMotion(enemy, retained) {
+  if (!enemy || typeof enemy !== 'object') return;
+  enemyMotionRetention.set(enemy, retained);
+}
+
+/**
+ * Keep the drawable predecessor plus its warming replacement. With no actor on
+ * stage, retain only current-wave advance media so the spawn gate cannot race
+ * the renderer's bounded-cache pruning.
+ */
+export function motionClipKeepKeysForStage(
+  enemies,
+  motionInfoByEnemyId,
+  pack,
+  zone = 0,
+) {
+  const keepClipKeys = new Set();
+  if (!pack?.motion?.characters) return keepClipKeys;
+  const packWave = ((Math.max(0, Math.floor(zone)) % 10) + 1);
+  for (const assetId of packWaveIdentityIds(pack, packWave)) {
+    if (pack.motion.characters[assetId]?.clips?.advance) {
+      keepClipKeys.add(`${pack.id}/${assetId}#advance`);
+    }
+  }
+  for (const enemy of enemies) {
+    const motionInfo = motionInfoByEnemyId.get(enemy.id);
+    const assetId = motionInfo?.assetId;
+    const source = assetId ? pack.motion.characters[assetId] : null;
+    const retained = retainedEnemyMotion(enemy);
+    if (
+      retained?.packId === pack.id &&
+      retained.assetId === assetId &&
+      source?.clips?.[retained.clip]
+    ) {
+      keepClipKeys.add(`${pack.id}/${assetId}#${retained.clip}`);
+    }
+    if (
+      motionInfo?.requestedStatus === 'pending' &&
+      source?.clips?.[motionInfo.requestedClip]
+    ) {
+      keepClipKeys.add(`${pack.id}/${assetId}#${motionInfo.requestedClip}`);
+    } else if (
+      !retained &&
+      motionInfo?.status === 'ready' &&
+      source?.clips?.[motionInfo.clip]
+    ) {
+      keepClipKeys.add(`${pack.id}/${assetId}#${motionInfo.clip}`);
+    }
+  }
+  return keepClipKeys;
+}
+
+export function draw(
+  ctx,
+  w,
+  h,
+  s,
+  assetStore = null,
+  stageClearance = STAGE_CLEARANCE_FALLBACK,
+  rootAlpha = 1,
+) {
+  const gy = h * 0.86;
+  const t = s.world.time;
+  const scroll = interpolateRootPosition(
+    s.world.previousScrollSmooth,
+    s.world.scrollSmooth,
+    rootAlpha,
+  );
+  const repaintTime = t + clamp(rootAlpha, 0, 1) * C.FIXED_DT;
+  const shakeX = s.world.shake
+    ? (presentationNoise(repaintTime * 1009 + 17) - 0.5) * s.world.shake
+    : 0;
+  const shakeY = s.world.shake
+    ? (presentationNoise(repaintTime * 1013 + 29) - 0.5) * s.world.shake
+    : 0;
+  const packAssets = assetStore ? getCurrentPackAssets(assetStore, s.route) : null;
+  const heroX = s.world.heroX;
+  const enemyEnv = {
+    zone: s.route?.zone ?? 0,
+    meleeStop: heroX + C.MELEE_RANGE - 8,
+    engagedId:
+      s.world.enemies.find((e) => e.hp > 0 && e.x <= heroX + C.MELEE_RANGE)?.id || null,
+  };
+  const show = s.world.enemies.filter(
+    (e) => e.hp > 0 || (e.deathT && e.deathT > 0),
+  );
+  const motionInfoByEnemyId = new Map(
+    show.map((enemy) => [
+      enemy.id,
+      inspectEnemyMotion(enemy, packAssets, assetStore, {
+        ...enemyEnv,
+        t,
+      }),
+    ]),
+  );
+  const heroStageActor = {
+    role: 'hero',
+    presentation:
+      getV3Presentation() || heroIntrinsicGeometry().presentation,
+  };
+  const enemyStageActors = (plateFit) =>
+    show.map((enemy) => {
+      const role = stageRoleForEnemy(enemy);
+      return {
+        role,
+        presentation: enemyStagePresentationForMotion(
+          motionInfoByEnemyId.get(enemy.id),
+        ),
+        overheadClearance: enemyPlateClearance(role, plateFit),
+      };
+    });
+  const fitForPlateMode = (plateFit) =>
+    stageFitForActors({
+      groundY: gy,
+      bannerClearance: stageClearance,
+      actors: [
+        heroStageActor,
+        ...enemyStageActors(plateFit),
+      ],
+    });
+  let stageFit = fitForPlateMode(1);
+  if (show.length && stageFit < ENEMY_PLATE_COMPACT_FIT) {
+    stageFit = Math.min(
+      fitForPlateMode(ENEMY_PLATE_COMPACT_FIT - Number.EPSILON),
+      ENEMY_PLATE_COMPACT_FIT - Number.EPSILON,
+    );
+  }
   ctx.save();
   ctx.translate(shakeX, shakeY);
 
-  // --- sky ---
-  const bg = ctx.createLinearGradient(0, 0, 0, h);
-  bg.addColorStop(0, bio.top);
-  bg.addColorStop(0.5, bio.mid);
-  bg.addColorStop(1, bio.ground);
-  ctx.fillStyle = bg;
-  ctx.fillRect(0, 0, w, h);
-
-  // bloom
-  const bloom = ctx.createRadialGradient(w * 0.7, h * 0.28, 8, w * 0.7, h * 0.28, w * 0.6);
-  bloom.addColorStop(0, `rgba(${bio.glow},0.18)`);
-  bloom.addColorStop(0.45, `rgba(${bio.glow},0.05)`);
-  bloom.addColorStop(1, `rgba(${bio.glow},0)`);
-  ctx.fillStyle = bloom;
-  ctx.fillRect(0, 0, w, h);
-
-  // soft orbs
-  ctx.fillStyle = `rgba(${bio.glow},0.07)`;
-  ctx.beginPath();
-  ctx.arc(w * 0.16, h * 0.18, 48, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = 'rgba(108,184,255,0.05)';
-  ctx.beginPath();
-  ctx.arc(w * 0.88, h * 0.14, 36, 0, Math.PI * 2);
-  ctx.fill();
-
-  // painted midground strip (parallax tile)
-  const mid = paintedMid(bio);
-  if (mid) {
-    const mh = Math.min(gy * 0.85, 160);
-    const my = gy - mh;
-    const mw = mid.width * (mh / mid.height);
-    const ox = -((scroll * 0.22) % mw);
-    ctx.globalAlpha = 0.92;
-    for (let x = ox - mw; x < w + mw; x += mw - 1) {
-      ctx.drawImage(mid, x, my, mw, mh);
-    }
-    ctx.globalAlpha = 1;
-  }
-
-  // parallax props (near layers)
-  drawFarSilhouettes(ctx, w, gy, scroll * 0.18, bio);
-  drawMidProps(ctx, w, gy, scroll * 0.4, bio, t);
-  drawFeedCards(ctx, w, gy, scroll * 0.55, bio, t);
-  drawServerRacks(ctx, w, gy, scroll * 0.75, bio);
-
-  // Catalog-driven environment owns the scene once decoded. The procedural
-  // fallback above remains only for a missing/slow asset and never chooses a pack.
-  if (packAssets?.ready && ready(packAssets.background)) {
-    drawCover(ctx, packAssets.background, 0, 0, w, h);
-  }
-
-  // ground plane + texture
-  ctx.fillStyle = bio.ground;
-  ctx.fillRect(0, gy, w, h - gy);
-  // ground sheen
-  const gshine = ctx.createLinearGradient(0, gy, 0, h);
-  gshine.addColorStop(0, `rgba(${bio.glow},0.08)`);
-  gshine.addColorStop(1, 'rgba(0,0,0,0)');
-  ctx.fillStyle = gshine;
-  ctx.fillRect(0, gy, w, 28);
-
-  // ground line
-  const line = ctx.createLinearGradient(0, gy, w, gy);
-  line.addColorStop(0, `rgba(${bio.glow},0)`);
-  line.addColorStop(0.2, `rgba(${bio.glow},0.55)`);
-  line.addColorStop(0.8, `rgba(${bio.glow},0.55)`);
-  line.addColorStop(1, `rgba(${bio.glow},0)`);
-  ctx.strokeStyle = line;
-  ctx.lineWidth = 2.5;
-  ctx.beginPath();
-  ctx.moveTo(0, gy);
-  for (let x = 0; x <= w; x += 6) {
-    ctx.lineTo(x, gy + Math.sin((x + scroll) * 0.03) * 1.4);
-  }
-  ctx.stroke();
-
-  // lane dashes
-  ctx.strokeStyle = 'rgba(48,56,66,0.65)';
-  ctx.lineWidth = 1;
-  ctx.setLineDash([10, 14]);
-  ctx.beginPath();
-  ctx.moveTo(0, gy + 18);
-  ctx.lineTo(w, gy + 18);
-  ctx.stroke();
-  ctx.setLineDash([]);
-
-  // dust motes
-  if (!s.settings.reducedMotion) {
-    for (let i = 0; i < 24; i++) {
-      const ax = ((i * 91 + scroll * 0.55) % (w + 30)) - 15;
-      const ay = ((i * 47 + t * 20) % (gy - 20)) + 10;
-      ctx.globalAlpha = 0.12 + (i % 5) * 0.04;
-      ctx.fillStyle = `rgba(200,210,220,1)`;
-      ctx.fillRect(ax, ay, 2, 2);
-    }
-    ctx.globalAlpha = 1;
-  }
+  // --- layered editorial world (per-zone seeded mood, pack plate far layer) ---
+  drawScenery(ctx, w, h, {
+    zone: s.route?.zone ?? 0,
+    gy,
+    scroll,
+    t,
+    reducedMotion: motionReduced(s),
+    packBg: packAssets?.ready && ready(packAssets.background) ? packAssets.background : null,
+  });
 
   // alerts
   for (const a of s.world.alerts) drawAlert(ctx, a, t);
 
-  // enemies (living + dying)
-  const show = s.world.enemies.filter((e) => e.hp > 0 || (e.deathT && e.deathT > 0));
-  show.forEach((e) => drawEnemy(ctx, e, gy, t, packAssets));
+  // enemies (living + dying) — env mirrors game.js melee targeting so V3
+  // creature clips (advance / attack / hit / death / broken) track the domain
+  const actorGeometries = new Map();
+  show.forEach((e) => {
+    const renderEnemy = {
+      ...e,
+      displayX: interpolateRootPosition(
+        e.previousDisplayX,
+        e.displayX,
+        rootAlpha,
+      ),
+    };
+    const geometry = drawEnemy(
+      ctx,
+      renderEnemy,
+      gy,
+      t,
+      packAssets,
+      assetStore,
+      motionReduced(s),
+      stageFit,
+      {
+        ...enemyEnv,
+        stageClearance,
+        motionInfo: motionInfoByEnemyId.get(e.id),
+        retentionOwner: e,
+      },
+    );
+    actorGeometries.set(e.id, geometry);
+  });
+  if (assetStore?.motionStore && packAssets?.pack?.motion?.characters) {
+    pruneMotionClipResidency(
+      assetStore.motionStore,
+      motionClipKeepKeysForStage(
+        show,
+        motionInfoByEnemyId,
+        packAssets.pack,
+        s.route?.zone ?? 0,
+      ),
+    );
+  }
 
   // hero
-  drawHero(ctx, s.world.heroDisplayX, gy, s, t);
+  const heroGeometry = drawHero(
+    ctx,
+    interpolateRootPosition(
+      s.world.previousHeroDisplayX,
+      s.world.heroDisplayX,
+      rootAlpha,
+    ),
+    gy,
+    s,
+    t,
+    stageFit,
+  );
+  const stagePresentation = retainStagePresentation(s, {
+    groundY: gy,
+    stageFit,
+    heroGeometry,
+    actorGeometries,
+  });
 
   // particles
-  for (const p of s.world.particles) drawParticle(ctx, p);
+  for (const p of s.world.particles) {
+    drawParticle(ctx, p, stagePresentation);
+  }
+
+  // shock rings (crit pops, death bursts, rank halo)
+  for (const sh of s.world.shocks || []) {
+    drawShock(ctx, sh, stagePresentation);
+  }
 
   // Currency reward travels from the defeated target to its owning HUD chip.
-  for (const flight of s.world.lootFlights || []) drawLootFlight(ctx, flight, s, w, gy);
+  for (const flight of s.world.lootFlights || []) {
+    drawLootFlight(ctx, flight, w, h, stagePresentation);
+  }
 
   // confetti
-  for (const c of s.world.confetti || []) drawConfettiBit(ctx, c);
+  for (const c of s.world.confetti || []) {
+    drawConfettiBit(ctx, c, stagePresentation);
+  }
 
   // floaters
   ctx.textAlign = 'center';
   for (const f of s.world.floaters) {
-    if (f.anchorId) {
-      const anchor = s.world.enemies.find((enemy) => enemy.id === f.anchorId);
-      if (anchor) {
-        f.x = anchor.displayX;
-        f.y = gy - enemyRenderSize(anchor) * 0.82;
-      }
-    }
+    const origin = resolveEffectOrigin(f, stagePresentation, true);
     const life = f.life || 1;
     const u = clamp(f.t / life, 0, 1);
     const a = easeOutCubic(u);
-    const pop = f.big ? 1 + (1 - u) * 0.4 : 1 + (1 - u) * 0.2;
+    const pop = f.huge ? 1 + (1 - u) * 0.75 : f.big ? 1 + (1 - u) * 0.4 : 1 + (1 - u) * 0.2;
+    // Centered milestone counters live at stage center, not at the kill point.
+    const fx = f.center ? w / 2 : (origin?.x || 0) + f.x;
+    const fy = f.center
+      ? h * 0.42
+      : (origin?.y || 0) + f.y - (f.anchorLift || 0);
+    if (!f.center && (!Number.isFinite(fx) || !Number.isFinite(fy))) continue;
     ctx.save();
     ctx.globalAlpha = a;
-    ctx.translate(f.x, f.y);
+    ctx.translate(fx, fy);
     ctx.scale(pop, pop);
-    const size = f.big ? 17 : 13;
+    const size = f.huge ? 24 : f.big ? 17 : 13;
     ctx.font = `900 ${size}px system-ui, -apple-system, sans-serif`;
-    ctx.lineWidth = 3.5;
+    ctx.lineWidth = f.huge ? 5 : 3.5;
     ctx.strokeStyle = 'rgba(6,8,10,0.9)';
     ctx.lineJoin = 'round';
     ctx.strokeText(f.text, 0, 0);
@@ -371,11 +728,19 @@ export function draw(ctx, w, h, s, assetStore = null) {
   }
   ctx.globalAlpha = 1;
 
-  // rank flash overlay
-  if (s.ui.fx && s.ui.fx.kind === 'rank') {
-    const a = clamp(s.ui.fx.t / 0.55, 0, 1);
-    ctx.fillStyle = `rgba(62,207,142,${0.12 * a})`;
-    ctx.fillRect(0, 0, w, h);
+  // celebration overlays (rank flash / zone-clear sweep / Go Live cinematic)
+  if (s.ui.fx) {
+    const fx = s.ui.fx;
+    const fxLife = fx.life || 0.55;
+    if (fx.kind === 'rank') {
+      const a = clamp(fx.t / fxLife, 0, 1);
+      ctx.fillStyle = `rgba(62,207,142,${0.12 * a})`;
+      ctx.fillRect(0, 0, w, h);
+    } else if (fx.kind === 'sweep') {
+      drawZoneSweep(ctx, w, h, fx);
+    } else if (fx.kind === 'golive') {
+      drawGoLiveFx(ctx, w, h, fx, motionReduced(s));
+    }
   }
 
   // vignette
@@ -388,22 +753,42 @@ export function draw(ctx, w, h, s, assetStore = null) {
   // boss timer (below stage Zone/Rank HUD)
   if (s.world.bossActive) {
     const ratio = clamp(s.world.bossTimer / C.BOSS_TIMER, 0, 1);
-    const bx = w * 0.18;
-    const bw = w * 0.64;
-    const by = 54;
+    const activeBoss = s.world.enemies.find(
+      (e) => e.type === 'boss' && e.hp > 0,
+    );
+    const bossGeometry = activeBoss
+      ? actorGeometries.get(activeBoss.id)
+      : null;
+    const timerLayout = stageFunctionalLayout({
+      actorX: activeBoss ? activeBoss.displayX : w / 2,
+      geometry: bossGeometry,
+      fit: stageFit,
+      stageClearance,
+      stageWidth: w,
+      stageHeight: h,
+      includeBossTimer: true,
+    }).timer;
+    const bx = timerLayout.x;
+    const bw = timerLayout.width;
+    const by = timerLayout.y;
     ctx.fillStyle = 'rgba(10,14,19,0.8)';
-    roundRect(ctx, bx, by, bw, 10, 5);
+    roundRect(ctx, bx, by, bw, timerLayout.barHeight, 5);
     ctx.fill();
     const g = ctx.createLinearGradient(bx, 0, bx + bw, 0);
     g.addColorStop(0, '#A3072F');
     g.addColorStop(1, '#FC1243');
     ctx.fillStyle = g;
-    roundRect(ctx, bx, by, bw * ratio, 10, 5);
+    roundRect(ctx, bx, by, bw * ratio, timerLayout.barHeight, 5);
     ctx.fill();
     ctx.fillStyle = 'rgba(245,246,248,0.85)';
     ctx.font = '700 10px system-ui,sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('VERSION GATE', w / 2, by + 22);
+    // Zone-boss variant: the banner names whichever boss is actually on stage
+    const banner = bossBannerFor(activeBoss, s.route?.zone ?? 0);
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = 'rgba(6,10,16,0.92)';
+    ctx.strokeText(banner, timerLayout.labelX, timerLayout.labelY);
+    ctx.fillText(banner, timerLayout.labelX, timerLayout.labelY);
   }
 
   ctx.restore();
@@ -420,437 +805,601 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-function drawCover(ctx, image, x, y, width, height) {
-  const scale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
-  const sourceWidth = width / scale;
-  const sourceHeight = height / scale;
-  const sourceX = (image.naturalWidth - sourceWidth) / 2;
-  const sourceY = Math.max(0, image.naturalHeight - sourceHeight);
-  ctx.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, x, y, width, height);
-}
-
-function drawPackTag(ctx, w, label, bio) {
-  if (!label) return;
-  ctx.save();
-  ctx.font = '700 10px system-ui,sans-serif';
-  const tw = ctx.measureText(label).width;
-  const x = w - tw - 16;
-  // Below in-stage Zone/Rank strip
-  const y = 48;
-  ctx.fillStyle = 'rgba(8,12,16,0.45)';
-  roundRect(ctx, x, y, tw + 12, 16, 5);
-  ctx.fill();
-  ctx.fillStyle = bio.accent;
-  ctx.globalAlpha = 0.75;
-  ctx.textAlign = 'left';
-  ctx.fillText(label, x + 6, y + 11);
-  ctx.restore();
-}
-
-function drawFarSilhouettes(ctx, w, gy, scroll, bio) {
-  for (let i = 0; i < 6; i++) {
-    const x = ((i * 160 - scroll) % (w + 200)) - 80;
-    const h = 40 + (i % 3) * 18;
-    ctx.fillStyle = bio.far;
-    ctx.globalAlpha = 0.55;
-    roundRect(ctx, x, gy - h - 20, 50 + (i % 2) * 30, h, 4);
-    ctx.fill();
-    // tiny window lights
-    ctx.fillStyle = bio.accent;
-    ctx.globalAlpha = 0.15 + (i % 3) * 0.05;
-    for (let j = 0; j < 3; j++) {
-      ctx.fillRect(x + 8 + j * 14, gy - h - 8, 6, 4);
-    }
-  }
-  ctx.globalAlpha = 1;
-}
-
-function drawMidProps(ctx, w, gy, scroll, bio, t) {
-  for (let i = 0; i < 5; i++) {
-    const x = ((i * 190 - scroll) % (w + 220)) - 90;
-    // feed tower / mast
-    ctx.fillStyle = bio.midCol;
-    ctx.fillRect(x + 18, gy - 95, 8, 95);
-    ctx.beginPath();
-    ctx.arc(x + 22, gy - 100, 10, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = bio.accent;
-    ctx.globalAlpha = 0.35 + Math.sin(t * 3 + i) * 0.15;
-    ctx.beginPath();
-    ctx.arc(x + 22, gy - 100, 4, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalAlpha = 1;
-    // billboard
-    if (i % 2 === 0) {
-      ctx.fillStyle = bio.midCol;
-      roundRect(ctx, x + 40, gy - 70, 56, 36, 4);
-      ctx.fill();
-      ctx.fillStyle = bio.accent;
-      ctx.globalAlpha = 0.25;
-      ctx.fillRect(x + 40, gy - 70, 4, 36);
-      ctx.globalAlpha = 1;
-      ctx.fillStyle = 'rgba(245,246,248,0.12)';
-      ctx.fillRect(x + 50, gy - 58, 36, 4);
-      ctx.fillRect(x + 50, gy - 50, 24, 3);
-    }
-  }
-}
-
-function drawFeedCards(ctx, w, gy, scroll, bio, t) {
-  const colors = [bio.accent, '#6cb8ff', '#d180ff', '#10B981', '#f0b964'];
-  for (let i = 0; i < 5; i++) {
-    const x = ((i * 175 - scroll * 0.7) % (w + 180)) - 90;
-    const cardH = 30 + (i % 2) * 10;
-    const y = gy - cardH - 52 - (i % 2) * 12;
-    const bob = Math.sin(t * 2 + i) * 1.5;
-    ctx.fillStyle = '#171D22';
-    roundRect(ctx, x, y + bob, 74 + (i % 2) * 18, cardH, 8);
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(48,56,66,0.95)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-    ctx.fillStyle = colors[i % colors.length];
-    roundRect(ctx, x, y + bob, 4, cardH, 2);
-    ctx.fill();
-    ctx.fillStyle = 'rgba(245,246,248,0.16)';
-    ctx.fillRect(x + 12, y + bob + 10, 42, 4);
-    ctx.fillRect(x + 12, y + bob + 20, 28, 3);
-  }
-}
-
-function drawServerRacks(ctx, w, gy, scroll, bio) {
-  for (let i = 0; i < 5; i++) {
-    const x = ((i * 200 - scroll) % (w + 220)) - 100;
-    ctx.fillStyle = '#151a20';
-    ctx.fillRect(x, gy - 70, 36, 70);
-    ctx.fillStyle = i % 2 ? `rgba(${bio.glow},0.4)` : 'rgba(16,185,129,0.35)';
-    for (let j = 0; j < 4; j++) {
-      ctx.fillRect(x + 6, gy - 60 + j * 14, 24, 4);
-    }
-  }
-}
-
-function drawHero(ctx, x, gy, s, t) {
-  const h = s.run.hero;
-  const bob = Math.sin(t * 8) * 1.2;
-  const attack = easeOutCubic(h.attackAnim);
-  const recoil = h.hitRecoil * 3;
-  const squashY = 1 - attack * 0.04;
-  const squashX = 1 + attack * 0.05;
-  const sprinting = s.world.sprinting && h.energy > 0.5;
-  const img = ready(sprites.mascot) ? sprites.mascot : null;
-  const footY = gy - FOOT_PAD + bob;
-  const mh = HOST_PRESENTATION.target;
-  const mw = HOST_PRESENTATION.target;
-  const hx = x - recoil;
-  // Visor / eye height on Host mascot (facing right after flip)
-  const eyeX = hx + mh * 0.16;
-  const eyeY = footY - mh * 0.64;
-  const overdrive = !!h.deepOn;
-  const hostPose = resolveHostClip({
-    hitRecoil: h.hitRecoil,
+export function heroRuntimeSemantics(s, t) {
+  const hero = s.run.hero;
+  const attackClock = clamp(hero.attackAnim, 0, 1);
+  // Keep the established 250 ms procedural lunge while the authored 8-frame
+  // strip advances uniformly over its full 500 ms (8 frames / 16 fps).
+  const attack = easeOutCubic(clamp(attackClock * 2 - 1, 0, 1));
+  const crit = hero.attackCrit === true;
+  const sprinting = s.world.sprinting && hero.energy > 0.5;
+  const overdrive = !!hero.deepOn;
+  const tracker = hero.trackerOn && hero.trackerStacks > 0.04;
+  const pose = resolveHostClip({
+    hitRecoil: hero.hitRecoil,
     attack,
+    crit,
     overdrive,
     sprinting,
-    tracker: h.trackerOn && h.trackerStacks > 0.04,
+    tracker,
   });
+  return {
+    hero,
+    attack,
+    sprinting,
+    overdrive,
+    tracker,
+    pose,
+    selector: {
+      t,
+      attack: attackClock,
+      crit,
+      recoil: hero.hitRecoil,
+      overdrive,
+      sprint: sprinting,
+      pose,
+      defeatT: hero.defeatT || 0,
+      levelT: hero.levelT || 0,
+      lootT: hero.lootT || 0,
+    },
+  };
+}
+
+export function inspectHeroMotion(s, t = s?.world?.time || 0) {
+  if (!s?.run?.hero || !s?.world) {
+    return { status: 'unavailable', clip: null, fps: null, frameIndex: null };
+  }
+  const selected = resolveHeroV3Frame(heroRuntimeSemantics(s, t).selector);
+  if (!selected) {
+    return { status: 'pending', clip: null, fps: null, frameIndex: null };
+  }
+  const clip = getV3Clip(selected.clip);
+  return {
+    status: selected.warming ? 'pending' : clip ? 'ready' : 'failed',
+    clip: selected.requestedClip || selected.clip,
+    fps: clip?.fps ?? null,
+    frameIndex: selected.frame,
+  };
+}
+
+const LEGACY_HERO_PRESENTATION = legacySquarePresentation({ sourceSize: 1 });
+const LEGACY_HERO_INTRINSICS = Object.freeze({
+  frameSize: Object.freeze({ width: 1, height: 1 }),
+  trim: Object.freeze({ x: 0, y: 0, width: 1, height: 1 }),
+  pivot: Object.freeze({ x: 0.5, y: 1 }),
+  presentation: LEGACY_HERO_PRESENTATION,
+});
+
+function heroIntrinsicGeometry(selected = null) {
+  const geometry = getV3Geometry(selected);
+  const presentation = geometry?.presentation || getV3Presentation();
+  if (!geometry || !presentation) return LEGACY_HERO_INTRINSICS;
+  const frameSize =
+    typeof geometry.frameSize === 'number'
+      ? { width: geometry.frameSize, height: geometry.frameSize }
+      : geometry.frameSize;
+  return {
+    frameSize,
+    trim: {
+      x: geometry.trim.x,
+      y: geometry.trim.y,
+      width: geometry.trim.w,
+      height: geometry.trim.h,
+    },
+    pivot: { x: geometry.anchor[0], y: geometry.anchor[1] },
+    presentation,
+  };
+}
+
+export function heroDrawOptions(actorX, groundY, fit = 1, selected = null) {
+  const geometry = resolveActorGeometry({
+    actorX,
+    groundY,
+    fit,
+    role: 'hero',
+    ...heroIntrinsicGeometry(selected),
+  });
+  return Object.freeze({
+    drawTrimHeight: geometry.drawTrimHeight,
+    pivotY: geometry.pivotY,
+    geometry,
+  });
+}
+
+export function drawHero(ctx, x, gy, s, t, fit = 1) {
+  const semantics = heroRuntimeSemantics(s, t);
+  const selected = resolveHeroV3Frame(semantics.selector);
+  const h = semantics.hero;
+  const attack = semantics.attack;
+  const sprinting = semantics.sprinting;
+  const overdrive = semantics.overdrive;
+  const tracker = semantics.tracker;
+  const hostPose = semantics.pose;
+  const drawOptions = heroDrawOptions(x, gy, fit, selected);
+  const geometry = drawOptions.geometry;
+  const bodyScale =
+    geometry.body.height / STAGE_ROLE_PRESENTATION.hero.visibleBodyHeight;
+  const auraX = geometry.anchors.auraX;
+  const auraY = geometry.anchors.auraY;
 
   // Soft skill auras UNDER the character (no hard ring lines)
-  const cy = footY - mh * 0.42;
-  if (h.trackerOn && h.trackerStacks > 0.04) {
+  if (tracker) {
     const st = Math.min(1, h.trackerStacks);
-    const rg = ctx.createRadialGradient(hx, cy, 4, hx, cy, 36 + st * 22);
+    const radius = (36 + st * 22) * bodyScale;
+    const rg = ctx.createRadialGradient(
+      auraX,
+      auraY,
+      4 * bodyScale,
+      auraX,
+      auraY,
+      radius,
+    );
     rg.addColorStop(0, `rgba(62,207,142,${0.1 + st * 0.12})`);
     rg.addColorStop(0.55, `rgba(62,207,142,${0.05 + st * 0.06})`);
     rg.addColorStop(1, 'rgba(62,207,142,0)');
     ctx.fillStyle = rg;
     ctx.beginPath();
-    ctx.arc(hx, cy, 36 + st * 22, 0, Math.PI * 2);
+    ctx.arc(auraX, auraY, radius, 0, Math.PI * 2);
     ctx.fill();
   }
   // Overdrive — clear crimson field + pulse rings (readable at a glance)
   if (overdrive) {
     const pulse = 0.5 + Math.sin(t * 7) * 0.5;
-    const rad = 52 + pulse * 10;
-    const rg = ctx.createRadialGradient(hx, cy, 4, hx, cy, rad);
+    const rad = (52 + pulse * 10) * bodyScale;
+    const rg = ctx.createRadialGradient(
+      auraX,
+      auraY,
+      4 * bodyScale,
+      auraX,
+      auraY,
+      rad,
+    );
     rg.addColorStop(0, `rgba(252,18,67,${0.28 + pulse * 0.1})`);
     rg.addColorStop(0.45, `rgba(252,18,67,${0.14 + pulse * 0.06})`);
     rg.addColorStop(1, 'rgba(252,18,67,0)');
     ctx.fillStyle = rg;
     ctx.beginPath();
-    ctx.arc(hx, cy, rad, 0, Math.PI * 2);
+    ctx.arc(auraX, auraY, rad, 0, Math.PI * 2);
     ctx.fill();
     ctx.strokeStyle = `rgba(255,90,120,${0.22 + pulse * 0.18})`;
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 2 * bodyScale;
     ctx.beginPath();
-    ctx.arc(hx, cy, 28 + pulse * 6, 0, Math.PI * 2);
+    ctx.arc(
+      auraX,
+      auraY,
+      (28 + pulse * 6) * bodyScale,
+      0,
+      Math.PI * 2,
+    );
     ctx.stroke();
     ctx.strokeStyle = `rgba(252,18,67,${0.12 + pulse * 0.1})`;
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 1.5 * bodyScale;
     ctx.beginPath();
-    ctx.arc(hx, cy, 40 + pulse * 8, 0, Math.PI * 2);
+    ctx.arc(
+      auraX,
+      auraY,
+      (40 + pulse * 8) * bodyScale,
+      0,
+      Math.PI * 2,
+    );
     ctx.stroke();
   }
-  ctx.fillStyle = 'rgba(0,0,0,0.5)';
-  ctx.beginPath();
-  ctx.ellipse(hx, gy + 3, mh * 0.27, mh * 0.065, 0, 0, Math.PI * 2);
-  ctx.fill();
 
-  // Subtle sprint dust (no SPRINT billboard)
-  if (sprinting) {
-    ctx.fillStyle = 'rgba(230,184,77,0.1)';
-    for (let i = 1; i <= 3; i++) {
-      ctx.beginPath();
-      ctx.ellipse(hx - i * 9, gy - 22, 8 + i, 11, 0, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-
-  // Dual eye scanners — always-on idle beams, punch on attack (never a skull stick)
-  // Reach matches MELEE stop so the beam meets the enemy, not through the mascot body
-  const idlePulse = 0.55 + Math.sin(t * 6) * 0.08;
-  const beamLen = 48 + attack * 42 + (overdrive ? 10 : 0);
-  const beamAlpha = (0.28 + attack * 0.55) * idlePulse + (overdrive ? 0.12 : 0);
-  for (const dy of [-3.2, 3.2]) {
-    ctx.save();
-    ctx.translate(eyeX, eyeY + dy);
-    // soft eye glow (visor, not a prop stuck on the head)
-    const eg = ctx.createRadialGradient(0, 0, 0, 0, 0, 4.5);
-    eg.addColorStop(0, `rgba(255,140,160,${0.55 + attack * 0.4 + (overdrive ? 0.15 : 0)})`);
-    eg.addColorStop(1, 'rgba(252,18,67,0)');
-    ctx.fillStyle = eg;
-    ctx.beginPath();
-    ctx.arc(0, 0, 4.5, 0, Math.PI * 2);
-    ctx.fill();
-    // beam core
-    const g = ctx.createLinearGradient(0, 0, beamLen, 0);
-    g.addColorStop(0, `rgba(252,18,67,${beamAlpha})`);
-    g.addColorStop(0.4, `rgba(255,90,120,${beamAlpha * 0.5})`);
-    g.addColorStop(1, 'rgba(252,18,67,0)');
-    ctx.fillStyle = g;
-    const bh = 1.2 + attack * 1.8 + (overdrive ? 0.4 : 0);
-    ctx.beginPath();
-    ctx.moveTo(1, -bh);
-    ctx.lineTo(beamLen, -bh * 0.3);
-    ctx.lineTo(beamLen, bh * 0.3);
-    ctx.lineTo(1, bh);
-    ctx.closePath();
-    ctx.fill();
-    if (attack > 0.3) {
-      ctx.fillStyle = `rgba(255,255,255,${attack * 0.75})`;
-      ctx.beginPath();
-      ctx.arc(beamLen * 0.9, 0, 1.4 + attack * 1.8, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.restore();
-  }
-
-  // Body
-  ctx.save();
-  ctx.translate(hx, footY);
-  ctx.scale(squashX, squashY);
-  const frame = hostAtlas?.frames?.[hostPose] || hostAtlas?.frames?.idle;
-  if (img && frame) {
-    const rect = frame.rect;
-    ctx.drawImage(img, rect.x, rect.y, rect.w, rect.h, -mw / 2, -mh, mw, mh);
-  } else {
-    ctx.fillStyle = '#FC1243';
-    ctx.beginPath();
-    ctx.arc(0, -mh * 0.62, 20, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  ctx.restore();
+  // Procedural Host V2 — run_loop / scan / crit / sprint / overdrive / damage
+  drawHeroV2(ctx, x, gy, {
+    height: geometry.targetBodyHeight,
+    ...drawOptions,
+    time: t,
+    attack,
+    crit: semantics.selector.crit,
+    motionSelector: semantics.selector,
+    hitRecoil: h.hitRecoil,
+    overdrive,
+    sprinting,
+    tracker,
+    energy: h.energy,
+    reducedMotion: motionReduced(s),
+    pose: hostPose,
+    levelT: h.levelT || 0,
+    defeatT: h.defeatT || 0,
+    lootT: h.lootT || 0,
+  });
 
   // Overdrive crown flare above head (readable status)
   if (overdrive) {
     const fl = 0.55 + Math.sin(t * 9) * 0.35;
+    const crownX = geometry.body.centerX;
+    const crownY = geometry.motionEnvelope.top;
     ctx.fillStyle = `rgba(252,18,67,${0.35 + fl * 0.35})`;
     ctx.beginPath();
-    ctx.moveTo(hx, footY - mh - 4);
-    ctx.lineTo(hx - 7, footY - mh + 8);
-    ctx.lineTo(hx + 7, footY - mh + 8);
+    ctx.moveTo(crownX, crownY - 4 * bodyScale);
+    ctx.lineTo(crownX - 7 * bodyScale, crownY + 8 * bodyScale);
+    ctx.lineTo(crownX + 7 * bodyScale, crownY + 8 * bodyScale);
     ctx.closePath();
     ctx.fill();
     ctx.fillStyle = `rgba(255,200,210,${0.5 + fl * 0.4})`;
     ctx.beginPath();
-    ctx.arc(hx, footY - mh - 2, 2.2, 0, Math.PI * 2);
+    ctx.arc(
+      crownX,
+      crownY - 2 * bodyScale,
+      2.2 * bodyScale,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
 
-  // Hit spark at eyes when attacking
-  if (attack > 0.5) {
-    ctx.fillStyle = `rgba(255,255,255,${(attack - 0.5) * 1.4})`;
-    ctx.beginPath();
-    ctx.arc(eyeX + 2, eyeY, 2 + attack * 2, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
+  // Combo chip in the overhead slot
   if (s.stats.combo >= 3) {
+    const chipX = geometry.body.centerX;
+    const chipY =
+      geometry.anchors.floaterY - (overdrive ? 10 * bodyScale : 0);
     ctx.fillStyle = 'rgba(12,16,20,0.82)';
-    roundRect(ctx, hx - 18, footY - mh - 18 - (overdrive ? 10 : 0), 36, 14, 5);
+    roundRect(ctx, chipX - 19, chipY, 38, 15, 7);
     ctx.fill();
+    ctx.strokeStyle = 'rgba(252,18,67,0.5)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
     ctx.fillStyle = '#fc1243';
     ctx.font = '800 11px system-ui,sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(`${s.stats.combo}×`, hx, footY - mh - 7 - (overdrive ? 10 : 0));
+    ctx.fillText(`${s.stats.combo}×`, chipX, chipY + 11);
+    // slim time-to-decay meter under the chip (informational, like an HP bar)
+    const frac = clamp((s.stats.comboT || 0) / 2.4, 0, 1);
+    ctx.fillStyle = 'rgba(12,16,20,0.7)';
+    roundRect(ctx, chipX - 19, chipY + 18, 38, 4, 2);
+    ctx.fill();
+    if (frac > 0.02) {
+      ctx.fillStyle = frac > 0.35 ? '#fc1243' : '#e6b84d';
+      roundRect(
+        ctx,
+        chipX - 19,
+        chipY + 18,
+        Math.max(3, 38 * frac),
+        4,
+        2,
+      );
+      ctx.fill();
+    }
   }
+  return geometry;
 }
 
-function drawEnemy(ctx, e, gy, t, packAssets = null) {
+export function inspectEnemyMotion(enemy, packAssets = null, assetStore = null, env = null) {
+  const pack = packAssets?.pack || null;
+  const target = pack ? targetForEnemyType(pack, enemy?.type) : null;
+  const assetId = target?.id || null;
+  const source = assetId ? pack?.motion?.characters?.[assetId] : null;
+  const fallbackCount = assetStore?.motionStore
+    ? motionDiagnostics(assetStore.motionStore).length
+    : 0;
+  if (!pack || !assetId || !source) {
+    return {
+      mode: 'unmapped',
+      status: 'unmapped',
+      assetId,
+      clip: null,
+      frameIndex: null,
+      fallbacks: fallbackCount,
+      target,
+    };
+  }
+  const record = assetStore?.motionStore
+    ? getMotionRecord(assetStore.motionStore, pack.id, assetId)
+    : null;
+  if (!record || record.status === 'pending') {
+    return {
+      mode: 'pending',
+      status: 'pending',
+      assetId,
+      clip: null,
+      frameIndex: null,
+      fallbacks: fallbackCount,
+      target,
+    };
+  }
+  if (record.status === 'failed') {
+    return {
+      mode: 'static-fallback',
+      status: 'failed',
+      assetId,
+      clip: null,
+      frameIndex: null,
+      fallbacks: fallbackCount,
+      target,
+    };
+  }
+  const selection = selectEnemyMotion(enemy, {
+    assetId,
+    clips: record.descriptor?.clips,
+    meleeStop: env?.meleeStop,
+    engagedId: env?.engagedId,
+    time: env?.t,
+    timestamp: env?.t,
+  });
+  if (
+    assetStore?.motionStore &&
+    typeof record.descriptor?.sourceFamily === 'string' &&
+    [
+      'authored-semantic-v3',
+      'authored-semantic-v4',
+    ].includes(record.descriptor.sourceFamily)
+  ) {
+    const clipRecord = getMotionClipRecord(
+      assetStore.motionStore,
+      pack.id,
+      assetId,
+      selection.clip,
+    );
+    if (!clipRecord || clipRecord.status === 'pending') {
+      void warmMotionClip(
+        assetStore.motionStore,
+        pack,
+        assetId,
+        selection.clip,
+      ).catch(() => {});
+      const retained = retainedEnemyMotion(env?.retentionOwner || enemy);
+      const retainedRecord =
+        retained?.packId === pack.id &&
+        retained.assetId === assetId &&
+        typeof retained.clip === 'string'
+          ? getMotionClipRecord(
+              assetStore.motionStore,
+              pack.id,
+              assetId,
+              retained.clip,
+            )
+          : null;
+      if (
+        retainedRecord?.status === 'ready' &&
+        Number.isInteger(retained.frameIndex)
+      ) {
+        return {
+          mode: 'motion',
+          status: 'ready',
+          assetId,
+          clip: retained.clip,
+          fps: retainedRecord.descriptor?.fps ?? null,
+          frameIndex: retained.frameIndex,
+          requestedClip: selection.clip,
+          requestedStatus: 'pending',
+          retained: true,
+          fallbacks: fallbackCount,
+          record: retainedRecord,
+          target,
+        };
+      }
+      return {
+        mode: 'pending',
+        status: 'pending',
+        assetId,
+        clip: selection.clip,
+        requestedClip: selection.clip,
+        requestedStatus: 'pending',
+        frameIndex: null,
+        fallbacks: fallbackCount,
+        target,
+      };
+    }
+    if (clipRecord.status === 'failed') {
+      return {
+        mode: 'static-fallback',
+        status: 'failed',
+        assetId,
+        clip: selection.clip,
+        frameIndex: null,
+        fallbacks: fallbackCount,
+        target,
+      };
+    }
+    return {
+      mode: 'motion',
+      status: 'ready',
+      assetId,
+      clip: selection.clip,
+      requestedClip: selection.clip,
+      requestedStatus: 'ready',
+      fps: clipRecord.descriptor?.fps ?? null,
+      frameIndex: frameIndexForClip(clipRecord.descriptor, selection.value),
+      fallbacks: fallbackCount,
+      record: clipRecord,
+      target,
+    };
+  }
+  const clip = record.descriptor?.clips?.[selection.clip];
+  if (!clip) {
+    return {
+      mode: 'static-fallback',
+      status: 'failed',
+      assetId,
+      clip: selection.clip,
+      frameIndex: null,
+      fallbacks: fallbackCount,
+      target,
+    };
+  }
+  return {
+    mode: 'motion',
+    status: 'ready',
+    assetId,
+    clip: selection.clip,
+    fps: clip.fps,
+    frameIndex: frameIndexForClip(clip, selection.value),
+    fallbacks: fallbackCount,
+    record,
+    target,
+  };
+}
+
+export function legacyCreatureKindForEnemy(
+  enemy,
+  packAssets = null,
+  assetStore = null,
+  env = null,
+) {
+  const motion = inspectEnemyMotion(enemy, packAssets, assetStore, env);
+  return motion.status === 'unmapped'
+    ? creatureKindFor(enemy, env?.zone ?? 0)
+    : null;
+}
+
+export function legacyCreatureKindForStage(
+  enemies,
+  packAssets = null,
+  assetStore = null,
+  env = null,
+) {
+  if (!Array.isArray(enemies)) return null;
+  for (const enemy of enemies) {
+    const onStage =
+      enemy?.hp > 0 ||
+      (Number.isFinite(enemy?.deathT) && enemy.deathT > 0);
+    if (!onStage) continue;
+    const kind = legacyCreatureKindForEnemy(
+      enemy,
+      packAssets,
+      assetStore,
+      env,
+    );
+    if (kind) return kind;
+  }
+  return null;
+}
+
+export function drawEnemy(ctx, e, gy, t, packAssets = null, assetStore = null, reducedMotion = false, fit = 1, env = null) {
   const x = e.displayX;
   const dying = e.deathT > 0 && e.killed;
-  const deathU = dying ? 1 - clamp(e.deathT / (e.deathMax || 0.5), 0, 1) : 0;
-  const flash = e.hitFlash > 0;
-  const hurtOff = !dying && e.hurt > 0 ? Math.sin(t * 40) * 1.5 : 0;
   const isBoss = e.type === 'boss';
-  const isPatch = e.type === 'patch';
-  const size = enemyRenderSize(e);
-  const sprite = sprites.enemies[e.type];
   const atlas = packAssets?.ready && ready(packAssets.targets) ? packAssets.targets : null;
-  const frameName = isBoss && e.hp / e.hpMax < 0.34 ? 'boss-break' : e.frame;
+  const frameName = enemyFrameFor(e);
   const frame = packAssets?.targetData?.frames?.[frameName];
-  const footY = gy - FOOT_PAD;
-
-  // death transforms
-  let sx = 1;
-  let sy = 1;
-  let rot = 0;
-  let alpha = 1;
-  let dy = 0;
-  if (dying) {
-    const u = easeOutQuad(deathU);
-    if (isPatch) {
-      // card flip + float up
-      sx = Math.cos(u * Math.PI * 0.9);
-      sy = 1 - u * 0.15;
-      rot = u * 0.4;
-      dy = -u * 40;
-      alpha = 1 - u * 0.85;
-    } else if (isBoss) {
-      sx = 1 + u * 0.2;
-      sy = 1 - u * 0.55;
-      alpha = 1 - u;
-      dy = u * 10;
-    } else {
-      // squash pop
-      sx = 1 + u * 0.35;
-      sy = Math.max(0.05, 1 - u * 1.1);
-      alpha = 1 - u * 0.9;
-      dy = u * 8;
-    }
+  const motionInfo =
+    env?.motionInfo ||
+    inspectEnemyMotion(e, packAssets, assetStore, {
+      ...env,
+      t,
+    });
+  const geometry = resolveEnemyGeometry(e, gy, fit, motionInfo);
+  const size = geometry.drawTrimHeight;
+  const footY = geometry.pivotY;
+  if (motionInfo.status !== 'pending') {
+    drawEnemyShadow(ctx, e, geometry);
   }
 
-  ctx.save();
-  ctx.globalAlpha = alpha;
-
-  // shadow shrinks on death
-  ctx.fillStyle = 'rgba(0,0,0,0.45)';
-  ctx.beginPath();
-  ctx.ellipse(x + hurtOff, gy + 3, size * 0.26 * Math.abs(sx), 4.5 * Math.max(0.2, sy), 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.translate(x + hurtOff, footY + dy);
-  ctx.rotate(rot);
-  ctx.scale(sx || 0.01, sy);
-
-  if (atlas && frame?.rect) {
-    const rect = frame.rect;
-    ctx.drawImage(atlas, rect.x, rect.y, rect.w, rect.h, -size / 2, -size, size, size);
-    if (flash && !dying) {
-      const flashU = clamp(e.hitFlash / (C.HIT_FLASH || 0.12), 0, 1);
-      ctx.save();
-      ctx.globalCompositeOperation = 'lighter';
-      ctx.globalAlpha = 0.45 * flashU * alpha;
-      ctx.fillStyle = e.color;
-      ctx.beginPath();
-      ctx.arc(0, -size * 0.5, size * 0.34, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
+  let onStage = false;
+  if (motionInfo.status === 'ready') {
+    let failureDetail = 'motion frame blit returned no drawable frame';
+    try {
+      onStage = !!drawMotionFrame(
+        ctx,
+        motionInfo.record,
+        motionInfo.clip,
+        motionInfo.frameIndex,
+        x,
+        geometry.pivotY,
+        geometry.drawTrimHeight,
+      );
+      if (
+        onStage &&
+        motionInfo.record?.key?.includes('#')
+      ) {
+        retainEnemyMotion(env?.retentionOwner || e, {
+          packId: packAssets.pack.id,
+          assetId: motionInfo.assetId,
+          clip: motionInfo.clip,
+          frameIndex: motionInfo.frameIndex,
+        });
+      }
+    } catch (error) {
+      failureDetail = `motion frame blit failed: ${error?.message || String(error)}`;
+      onStage = false;
     }
-  } else if (ready(sprite)) {
-    ctx.drawImage(sprite, -size / 2, -size, size, size);
-    // Soft hit bloom (no hard white rectangle)
-    if (flash && !dying) {
-      const flashU = clamp(e.hitFlash / (C.HIT_FLASH || 0.12), 0, 1);
-      ctx.save();
-      ctx.globalCompositeOperation = 'lighter';
-      ctx.globalAlpha = 0.55 * flashU * alpha;
-      const cx = 0;
-      const cy = -size * 0.48;
-      const rg = ctx.createRadialGradient(cx, cy, 2, cx, cy, size * 0.52);
-      rg.addColorStop(0, 'rgba(255,255,255,0.95)');
-      rg.addColorStop(0.35, 'rgba(255,180,190,0.45)');
-      rg.addColorStop(1, 'rgba(255,80,100,0)');
-      ctx.fillStyle = rg;
-      ctx.beginPath();
-      ctx.arc(cx, cy, size * 0.52, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
+    if (!onStage && assetStore?.motionStore) {
+      failMotionRecord(
+        assetStore.motionStore,
+        packAssets.pack.id,
+        motionInfo.assetId,
+        'decode',
+        failureDetail,
+        motionInfo.record?.key?.includes('#') ? motionInfo.clip : null,
+      );
     }
-  } else {
-    ctx.fillStyle = e.color;
-    roundRect(ctx, -16, -44, 32, 44, 6);
-    ctx.fill();
-    if (flash && !dying) {
-      ctx.globalAlpha = 0.4 * alpha;
-      ctx.fillStyle = '#fff';
-      ctx.beginPath();
-      ctx.arc(0, -22, 18, 0, Math.PI * 2);
-      ctx.fill();
-    }
+  } else if (motionInfo.status === 'pending') {
+    onStage = true;
   }
 
-  // patch note “card shine” on death
-  if (dying && isPatch) {
-    ctx.globalAlpha = alpha * 0.5;
-    ctx.fillStyle = '#FC1243';
-    roundRect(ctx, -size * 0.35, -size * 0.85, size * 0.7, size * 0.55, 6);
-    ctx.fill();
-    ctx.fillStyle = '#fff';
-    ctx.globalAlpha = alpha * 0.7;
-    ctx.font = '800 10px system-ui,sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('NOTE', 0, -size * 0.5);
+  const kind = env
+    ? legacyCreatureKindForEnemy(e, packAssets, assetStore, env)
+    : null;
+  if (!onStage && motionInfo.status === 'unmapped') {
+    onStage = !!(
+      kind &&
+      drawCreatureTarget(ctx, e, kind, {
+        t,
+        gy,
+        size,
+        reducedMotion,
+        meleeStop: env.meleeStop,
+        engagedId: env.engagedId,
+        creatureStore: assetStore?.creatureStore,
+        geometry,
+      })
+    );
+  }
+  if (!onStage && motionInfo.status !== 'pending') {
+    drawTarget(ctx, e, {
+      t,
+      gy,
+      size,
+      atlas: atlas && frame?.rect ? atlas : null,
+      frame: atlas && frame?.rect ? frame : null,
+      reducedMotion,
+      geometry,
+    });
   }
 
-  ctx.restore();
-  ctx.globalAlpha = 1;
-
-  if (dying) return; // no HP bar while dying
+  drawEnemyHitFlash(ctx, e, geometry);
+  if (dying) return geometry; // no HP bar while dying
 
   if (e.priorityTagRank > 0) {
     const tagColor = resolveCanvasPaint({ tone: 'signal' });
-    const half = size * 0.43;
-    const top = footY - size * 0.88;
-    const bottom = footY - size * 0.08;
-    const arm = Math.max(7, size * 0.12);
+    const { left, top, right, bottom } = geometry.motionEnvelope;
+    const arm = Math.max(7, geometry.targetBodyHeight * 0.12);
     ctx.save();
     ctx.strokeStyle = tagColor;
     ctx.lineWidth = 2;
     ctx.globalAlpha = 0.72 + Math.sin(t * 6) * 0.16;
     ctx.beginPath();
-    ctx.moveTo(x - half + arm, top);
-    ctx.lineTo(x - half, top);
-    ctx.lineTo(x - half, top + arm);
-    ctx.moveTo(x + half - arm, top);
-    ctx.lineTo(x + half, top);
-    ctx.lineTo(x + half, top + arm);
-    ctx.moveTo(x - half, bottom - arm);
-    ctx.lineTo(x - half, bottom);
-    ctx.lineTo(x - half + arm, bottom);
-    ctx.moveTo(x + half, bottom - arm);
-    ctx.lineTo(x + half, bottom);
-    ctx.lineTo(x + half - arm, bottom);
+    ctx.moveTo(left + arm, top);
+    ctx.lineTo(left, top);
+    ctx.lineTo(left, top + arm);
+    ctx.moveTo(right - arm, top);
+    ctx.lineTo(right, top);
+    ctx.lineTo(right, top + arm);
+    ctx.moveTo(left, bottom - arm);
+    ctx.lineTo(left, bottom);
+    ctx.lineTo(left + arm, bottom);
+    ctx.moveTo(right, bottom - arm);
+    ctx.lineTo(right, bottom);
+    ctx.lineTo(right - arm, bottom);
     ctx.stroke();
     ctx.restore();
   }
 
-  const barW = isBoss ? 148 : 112;
-  const bannerH = isBoss ? 62 : 54;
-  const barY = footY - size - bannerH - 10;
+  const compact = fit < ENEMY_PLATE_COMPACT_FIT;
+  const plate = stageFunctionalLayout({
+    actorX: x,
+    geometry,
+    fit,
+    stageClearance: env?.stageClearance,
+  }).plate;
+  const bannerH = plate.height;
+  const plateW = plate.width;
+  const plateX = plate.x;
+  const barY = plate.y;
   const ratio = clamp(e.hp / e.hpMax, 0, 1);
-  ctx.fillStyle = 'rgba(7,16,25,0.94)';
-  roundRect(ctx, x - barW / 2, barY, barW, bannerH, 10);
+  ctx.fillStyle = compact ? 'rgba(7,16,25,0.88)' : 'rgba(7,16,25,0.94)';
+  roundRect(ctx, plateX, barY, plateW, bannerH, compact ? 7 : 10);
   ctx.fill();
   ctx.strokeStyle = 'rgba(44,67,94,0.95)';
   ctx.lineWidth = 1;
@@ -858,34 +1407,221 @@ function drawEnemy(ctx, e, gy, t, packAssets = null) {
   ctx.fillStyle = '#f3f7fb';
   ctx.font = `800 ${isBoss ? 11 : 10}px system-ui,sans-serif`;
   ctx.textAlign = 'center';
-  const label = e.label.length > (isBoss ? 18 : 14) ? `${e.label.slice(0, isBoss ? 17 : 13)}…` : e.label;
+  const labelSource = kind && CREATURES[kind]
+    ? CREATURES[kind].label
+    : motionInfo.target?.label || e.label;
+  const label = enemyLabelForDisplay(labelSource, isBoss);
+  if (compact) {
+    // Short stages keep one slim envelope-anchored component.
+    ctx.fillStyle = '#f3f7fb';
+    ctx.font = '800 9px system-ui,sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(label, x, barY + 12);
+    const trackY = barY + bannerH - 8;
+    ctx.fillStyle = '#22364c';
+    roundRect(ctx, plateX + 7, trackY, plateW - 14, 4, 2);
+    ctx.fill();
+    ctx.fillStyle = ratio > 0.3 ? '#fc1243' : '#e6b84d';
+    if (ratio > 0.01) {
+      roundRect(
+        ctx,
+        plateX + 7,
+        trackY,
+        Math.max(3, (plateW - 14) * ratio),
+        4,
+        2,
+      );
+      ctx.fill();
+    }
+    return geometry;
+  }
   ctx.fillText(label, x, barY + 17);
   ctx.fillStyle = '#aab7c7';
   ctx.font = '700 9px system-ui,sans-serif';
   ctx.fillText(`${Math.ceil(e.hp)}/${e.hpMax}`, x, barY + 32);
   ctx.fillStyle = '#22364c';
-  roundRect(ctx, x - barW / 2 + 9, barY + bannerH - 14, barW - 18, 8, 4);
+  roundRect(ctx, plateX + 9, barY + bannerH - 14, plateW - 18, 8, 4);
   ctx.fill();
   ctx.fillStyle = ratio > 0.3 ? '#fc1243' : '#e6b84d';
   if (ratio > 0.01) {
-    roundRect(ctx, x - barW / 2 + 9, barY + bannerH - 14, Math.max(4, (barW - 18) * ratio), 8, 4);
+    roundRect(
+      ctx,
+      plateX + 9,
+      barY + bannerH - 14,
+      Math.max(4, (plateW - 18) * ratio),
+      8,
+      4,
+    );
     ctx.fill();
   }
+  return geometry;
 }
 
-function drawLootFlight(ctx, flight, s, w, gy) {
-  const anchor = s.world.enemies.find((enemy) => enemy.id === flight.enemyId);
-  if (flight.y == null) flight.y = gy - (anchor ? enemyRenderSize(anchor) * 0.55 : 70);
-  if (anchor) flight.x = anchor.displayX;
-  const u = easeOutCubic(1 - clamp(flight.t / flight.life, 0, 1));
-  const targetX = flight.target === 'notes' ? w * 0.62 : w * 0.11;
-  const x = flight.x + (targetX - flight.x) * u;
-  const y = flight.y + (-56 - flight.y) * u - Math.sin(u * Math.PI) * 34;
+/* —— V3 vinyl creature stage ————————————————————————————————————————
+ * Same juice contract as enemies-v2.drawTarget (ground shadow, spawn pop-in,
+ * idle bob, hit squash + white bloom, crit core, death burst transforms) but
+ * the body comes from the generated clip atlases via drawCreature. Domain
+ * death timing/particles stay in game.js; this only paints. */
+
+const TAU2 = Math.PI * 2;
+const creatureFirstSeen = new WeakMap();
+
+function creaturePhase(id) {
+  let h = 0;
+  const s = String(id || 'e');
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+  return ((h >>> 0) % 628) / 100;
+}
+
+function creatureSpawnScale(e, t) {
+  let t0 = creatureFirstSeen.get(e);
+  if (t0 == null) {
+    t0 = t;
+    creatureFirstSeen.set(e, t0);
+  }
+  const u = clamp((t - t0) / 0.32, 0, 1);
+  if (u >= 1) return 1;
+  const c1 = 1.70158;
+  const c3 = c1 + 1;
+  return 1 + c3 * (u - 1) ** 3 + c1 * (u - 1) ** 2; // easeOutBack
+}
+
+/**
+ * Draw one V3 creature with the unified target juice. Returns false when no
+ * usable clip atlas is decoded yet — caller then paints the procedural family.
+ * Clip state machine: death on kill (progress) → hit on recoil (progress) →
+ * Curator broken phase below 34% HP (loop, mirrors the Version Gate contract)
+ * → advance while approaching (loop) → attack while engaged in melee (loop) →
+ * idle otherwise (loop).
+ */
+function drawCreatureTarget(ctx, e, kind, o) {
+  const {
+    t,
+    gy,
+    size,
+    reducedMotion,
+    meleeStop,
+    engagedId,
+    creatureStore,
+    geometry,
+  } = o;
+  const x = e.displayX;
+  const dying = e.deathT > 0 && e.killed;
+  const deathU = dying ? 1 - clamp(e.deathT / (e.deathMax || 0.5), 0, 1) : 0;
+  const critU = e.critFlash > 0 && !dying ? clamp(e.critFlash / 0.16, 0, 1) : 0;
+  const flashU = Math.max(e.hitFlash > 0 && !dying ? clamp(e.hitFlash / 0.12, 0, 1) : 0, critU);
+  const hurtOff = !dying && e.hurt > 0 ? Math.sin(t * 40) * 1.5 : 0;
+  const isBoss = e.type === 'boss';
+  const footY = geometry.pivotY;
+  const phase = creaturePhase(e.id);
+  // Broken phase swap — the exact Version Gate threshold (render + enemies-v2
+  // both use hp/hpMax < 0.34); hit/death still outrank it, like the classic boss.
+  const breaking = kind === 'curator' && !dying && e.hp / e.hpMax < 0.34;
+
+  let clip;
+  let clipT;
+  if (dying) {
+    clip = 'death';
+    clipT = deathU;
+  } else if (e.hurt > 0) {
+    clip = 'hit';
+    clipT = 1 - clamp(e.hurt / 0.2, 0, 1);
+  } else if (breaking) {
+    clip = 'broken';
+    clipT = t + phase;
+  } else if (e.x > meleeStop + 0.5) {
+    clip = 'advance';
+    clipT = t + phase;
+  } else if (engagedId === e.id) {
+    clip = 'attack';
+    clipT = t + phase;
+  } else {
+    clip = 'idle';
+    clipT = t + phase;
+  }
+  // Missing atlas? Step down to a loop clip that exists, else bail out.
+  if (!creatureClipReady(kind, clip, creatureStore)) {
+    const fallback = ['idle', 'advance'].find((name) =>
+      creatureClipReady(kind, name, creatureStore),
+    );
+    if (!fallback) return false;
+    clip = fallback;
+    clipT = t + phase;
+  }
+
+  // death transforms (ported 1:1 from the unified target draw)
+  let sx = 1;
+  let sy = 1;
+  let alpha = 1;
+  let dy = 0;
+  if (dying) {
+    const u = easeOutQuad(deathU);
+    if (isBoss) {
+      sx = 1 + u * 0.2;
+      sy = 1 - u * 0.55;
+      alpha = 1 - u;
+      dy = u * 10;
+    } else {
+      sx = 1 + u * 0.35;
+      sy = Math.max(0.05, 1 - u * 1.1);
+      alpha = 1 - u * 0.9;
+      dy = u * 8;
+    }
+  } else {
+    // spawn pop + idle bob + hit squash (living targets only)
+    const pop = creatureSpawnScale(e, t);
+    sx *= pop * (1 + flashU * 0.16);
+    sy *= pop * (1 - flashU * 0.12);
+    if (!reducedMotion) dy += Math.sin(t * 2.2 + phase) * 2;
+  }
+
   ctx.save();
+  ctx.globalAlpha = alpha;
+
+  ctx.translate(x + hurtOff, footY + dy);
+  ctx.scale(sx || 0.01, sy);
+
+  drawCreature(ctx, kind, clip, clipT, 0, 0, size, creatureStore);
+
+  ctx.restore();
+  ctx.globalAlpha = 1;
+  return true;
+}
+
+function drawLootFlight(ctx, flight, w, h, presentation) {
+  const origin = resolveEffectOrigin(flight, presentation);
+  const sourceX = (origin?.x || 0) + flight.x;
+  const sourceY = (origin?.y || 0) + flight.y;
+  if (!Number.isFinite(sourceX) || !Number.isFinite(sourceY)) return;
+  const u = easeOutCubic(1 - clamp(flight.t / flight.life, 0, 1));
+  // Gear drops dive to the in-stage bag FAB (bottom-left); currency to the top chips.
+  const isGear = flight.target === 'gear';
+  const targetX = isGear ? 34 : flight.target === 'notes' ? w * 0.62 : w * 0.11;
+  const targetY = isGear ? h - 38 : -56;
+  const posAt = (uu) => ({
+    x: sourceX + (targetX - sourceX) * uu,
+    y: sourceY + (targetY - sourceY) * uu - Math.sin(uu * Math.PI) * 34,
+  });
+  const { x, y } = posAt(u);
+  const paint = flight.color || { tone: flight.target === 'notes' ? 'notes' : 'signal' };
+  ctx.save();
+  // tiny rarity-colored trail behind a gear drop
+  if (isGear) {
+    for (let i = 1; i <= 4; i++) {
+      const tu = clamp(u - i * 0.045, 0, 1);
+      if (tu <= 0) break;
+      const tp = posAt(tu);
+      ctx.globalAlpha = Math.min(1, flight.t / 0.16) * (1 - i / 5.5) * 0.65;
+      ctx.fillStyle = resolveCanvasPaint(paint);
+      ctx.beginPath();
+      ctx.arc(tp.x, tp.y, Math.max(1.2, 3.4 - i * 0.55), 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
   ctx.globalAlpha = Math.min(1, flight.t / 0.16);
   ctx.translate(x, y);
   ctx.rotate(u * Math.PI * 1.5);
-  ctx.fillStyle = resolveCanvasPaint({ tone: flight.target === 'notes' ? 'notes' : 'signal' });
+  ctx.fillStyle = resolveCanvasPaint(paint);
   ctx.beginPath();
   ctx.moveTo(0, -6);
   ctx.lineTo(5, 0);
@@ -896,11 +1632,155 @@ function drawLootFlight(ctx, flight, s, w, gy) {
   ctx.restore();
 }
 
-function drawParticle(ctx, p) {
+/** Expanding shock ring (crit pop / death burst / rank halo). */
+function drawShock(ctx, sh, presentation) {
+  if (sh.delay > 0) return;
+  const origin = resolveEffectOrigin(sh, presentation);
+  const x = (origin?.x || 0) + sh.x;
+  const y = (origin?.y || 0) + sh.y;
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+  const u = 1 - clamp(sh.t / (sh.life || 0.34), 0, 1);
+  const r = 6 + easeOutCubic(u) * ((sh.r1 || 46) - 6);
+  ctx.save();
+  ctx.globalAlpha = (1 - u) * 0.85;
+  ctx.strokeStyle = resolveCanvasPaint(sh.c);
+  ctx.lineWidth = Math.max(1, (sh.w || 3) * (1 - u * 0.6));
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawEnemyShadow(ctx, enemy, geometry) {
+  const dying = enemy.deathT > 0 && enemy.killed;
+  const deathU = dying
+    ? 1 - clamp(enemy.deathT / (enemy.deathMax || 0.5), 0, 1)
+    : 0;
+  const shrink = dying ? Math.max(0.2, 1 - easeOutQuad(deathU) * 0.72) : 1;
+  ctx.save();
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.beginPath();
+  ctx.ellipse(
+    geometry.anchors.shadowX,
+    geometry.anchors.shadowY,
+    Math.max(8, geometry.body.width * 0.34) * shrink,
+    4.5 * shrink,
+    0,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+  ctx.restore();
+}
+
+/** Shared normal/critical hit flash for every body source. */
+function drawEnemyHitFlash(ctx, e, geometry) {
+  const dying = e.deathT > 0 && e.killed;
+  if (dying) return;
+  const critU = clamp((e.critFlash || 0) / 0.16, 0, 1);
+  const hitU = clamp((e.hitFlash || 0) / 0.12, 0, 1);
+  const u = Math.max(hitU, critU);
+  if (u <= 0) return;
+  const size = geometry.targetBodyHeight;
+  const x = geometry.anchors.hitX;
+  const y = geometry.anchors.hitY;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  const rg = ctx.createRadialGradient(x, y, 1, x, y, size * 0.66);
+  rg.addColorStop(0, `rgba(255,255,255,${0.95 * u})`);
+  rg.addColorStop(0.4, `rgba(255,244,220,${0.5 * u})`);
+  rg.addColorStop(1, 'rgba(255,220,120,0)');
+  ctx.fillStyle = rg;
+  ctx.beginPath();
+  ctx.arc(x, y, size * 0.66, 0, Math.PI * 2);
+  ctx.fill();
+  if (critU > 0) {
+    ctx.strokeStyle = `rgba(255,255,255,${0.85 * critU})`;
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 6; i++) {
+      const a = i * (Math.PI / 3) + 0.4;
+      ctx.beginPath();
+      ctx.moveTo(
+        x + Math.cos(a) * size * 0.18 * critU,
+        y + Math.sin(a) * size * 0.18 * critU,
+      );
+      ctx.lineTo(
+        x + Math.cos(a) * size * (0.42 + 0.22 * critU),
+        y + Math.sin(a) * size * (0.42 + 0.22 * critU),
+      );
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+/** Zone-clear: quick full-width light sweep across the stage. */
+function drawZoneSweep(ctx, w, h, fx) {
+  const u = 1 - clamp(fx.t / (fx.life || 0.55), 0, 1);
+  const band = w * 0.34;
+  const x = -band + (w + band * 2) * easeOutCubic(u);
+  const a = Math.sin(clamp(u, 0, 1) * Math.PI) * 0.32;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  const g = ctx.createLinearGradient(x - band, 0, x + band, 0);
+  g.addColorStop(0, 'rgba(63,208,216,0)');
+  g.addColorStop(0.5, `rgba(228,246,255,${a})`);
+  g.addColorStop(1, 'rgba(63,208,216,0)');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.moveTo(x - band, 0);
+  ctx.lineTo(x + band * 0.4, 0);
+  ctx.lineTo(x + band, h);
+  ctx.lineTo(x - band * 0.4, h);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+/** Go Live mini-cinematic: screen flash, then a Live Mult count-up center-stage. */
+function drawGoLiveFx(ctx, w, h, fx, reduced) {
+  const life = fx.life || 1.5;
+  const u = 1 - clamp(fx.t / life, 0, 1); // 0 → 1 over the beat
+  // 1) screen flash on the first beat (motion juice — skipped when reduced)
+  if (!reduced && u < 0.18) {
+    ctx.fillStyle = `rgba(255,244,220,${0.5 * (1 - u / 0.18)})`;
+    ctx.fillRect(0, 0, w, h);
+  }
+  // 2) centered Live Mult count-up (static final value under reduced motion)
+  const cu = reduced ? 1 : easeOutCubic(clamp((u - 0.12) / 0.55, 0, 1));
+  const val = (fx.from ?? 1) + ((fx.to ?? 1) - (fx.from ?? 1)) * cu;
+  const a = Math.min(clamp(u / 0.1, 0, 1), clamp(fx.t / 0.3, 0, 1));
+  const pop = reduced ? 1 : 1 + Math.max(0, 1 - u / 0.25) * 0.5;
+  ctx.save();
+  ctx.globalAlpha = a;
+  ctx.translate(w / 2, h * 0.34);
+  ctx.scale(pop, pop);
+  ctx.textAlign = 'center';
+  ctx.lineJoin = 'round';
+  ctx.font = '800 13px system-ui, -apple-system, sans-serif';
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = 'rgba(6,8,10,0.9)';
+  ctx.strokeText('GO LIVE!', 0, -34);
+  ctx.fillStyle = '#FC1243';
+  ctx.fillText('GO LIVE!', 0, -34);
+  ctx.font = '900 30px system-ui, -apple-system, sans-serif';
+  ctx.lineWidth = 5;
+  const label = `LIVE ×${val.toFixed(2)}`;
+  ctx.strokeText(label, 0, 0);
+  ctx.fillStyle = '#e6b84d';
+  ctx.fillText(label, 0, 0);
+  ctx.restore();
+}
+
+function drawParticle(ctx, p, presentation) {
+  const origin = resolveEffectOrigin(p, presentation);
+  const x = (origin?.x || 0) + p.x;
+  const y = (origin?.y || 0) + p.y;
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return;
   const a = clamp(p.t / (p.life || 0.5), 0, 1);
   ctx.save();
   ctx.globalAlpha = a;
-  ctx.translate(p.x, p.y);
+  ctx.translate(x, y);
   if (p.rot) ctx.rotate(p.rot);
   if (p.kind === 'coin') {
     // diamond / note chip
@@ -917,6 +1797,19 @@ function drawParticle(ctx, p) {
     ctx.beginPath();
     ctx.arc(-r * 0.2, -r * 0.2, r * 0.25, 0, Math.PI * 2);
     ctx.fill();
+  } else if (p.kind === 'shard') {
+    // token-colored death shard (rotated quad)
+    ctx.fillStyle = resolveCanvasPaint(p.c);
+    const r = p.r || 3;
+    ctx.beginPath();
+    ctx.moveTo(-r, -r * 0.55);
+    ctx.lineTo(r * 0.8, -r * 0.3);
+    ctx.lineTo(r, r * 0.55);
+    ctx.lineTo(-r * 0.7, r * 0.4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.fillRect(-r * 0.45, -r * 0.4, r * 0.5, r * 0.28);
   } else {
     ctx.fillStyle = p.c;
     ctx.beginPath();
@@ -926,11 +1819,15 @@ function drawParticle(ctx, p) {
   ctx.restore();
 }
 
-function drawConfettiBit(ctx, c) {
+function drawConfettiBit(ctx, c, presentation) {
+  const origin = resolveEffectOrigin(c, presentation);
+  const x = (origin?.x || 0) + c.x;
+  const y = (origin?.y || 0) + c.y;
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return;
   const a = clamp(c.t / (c.life || 1), 0, 1);
   ctx.save();
   ctx.globalAlpha = a;
-  ctx.translate(c.x, c.y);
+  ctx.translate(x, y);
   ctx.rotate(c.rot);
   ctx.fillStyle = resolveCanvasPaint(c.c);
   ctx.fillRect(-c.w / 2, -c.h / 2, c.w, c.h);

@@ -7,9 +7,12 @@
 
 ## The thesis
 
-**APN Idle is 2D Patchline editorial-action, not a generic cyberpunk battler.**
-Flat-shaded, crisp-outlined, dark editorial night. No 3D toy gloss, no fantasy
-clutter, no random sci-fi kit look.
+**APN Idle is Patchline editorial-action, not a generic cyberpunk battler.**
+UI, environments, icons, FX, and fallback silhouettes stay flat-shaded,
+crisp-outlined, and dark-editorial.
+An owner-approved GAF2D collectible cast may use controlled toy volume inside one
+complete pack under ADR-0013; mixing unrelated render styles inside that cast is
+still prohibited.
 
 ## One grammar for everything
 
@@ -24,6 +27,39 @@ clutter, no random sci-fi kit look.
 
 If two assets sit next to each other and look like they came from different asset
 packs, one of them is wrong.
+
+### Controlled GAF2D character exception
+
+The exception is narrow: a complete target family must share one camera,
+material response, display-base language, scale ladder, direction, and
+bottom-center pivot.
+Every identity is reviewed together, hash-approved separately, and tested in the
+real Run surface at 72/128 px.
+No one-off generated sprite, mixed model family, copied character, official mark,
+or uncontrolled prompt variation qualifies.
+Character-owned clips supply locomotion, engaged, hit, death, and boss-break acting.
+Canvas may add the shared shadow, impact particles, camera response, and UI feedback around those
+clips; whole-sprite transforms cannot satisfy authored-motion acceptance.
+
+### Stage presentation ladder
+
+Intrinsic character geometry stays asset-owned; APN assigns the game role in
+[`STAGE_ROLE_PRESENTATION`](../js/stage-presentation.js).
+The table below mirrors that runtime authority at `fit = 1`:
+
+| Role | Neutral visible-body height | Visual gap |
+|------|----------------------------:|-----------:|
+| `hero` | 96 px | 6 px |
+| `standard` | 72 px | 2 px |
+| `elite` | 84 px | 2 px |
+| `boss` | 112 px | 2 px |
+
+Proof shorthand: Hero 96, standard 72, elite 84, boss 112.
+Neutral visible-body height chooses scale; a body-only motion envelope protects
+labels and viewport clearance.
+Every clip uses one shared transform, and frame-by-frame grounding is forbidden.
+The shared renderer-owned shadow stays on the game ground and never becomes
+character pixels.
 
 ## Icon system
 

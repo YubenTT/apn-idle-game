@@ -1,0 +1,69 @@
+{
+  "grammar": "gaf2d-motion-bundle-v1",
+  "assetId": "wrong-runner",
+  "image": "/private/motion.webp",
+  "atlas": {
+    "width": 1280,
+    "height": 1280,
+    "sha256": "NOT-A-SHA256"
+  },
+  "frameSize": {
+    "width": 128,
+    "height": 128
+  },
+  "trim": {
+    "x": 16,
+    "y": 8,
+    "width": 96,
+    "height": 112
+  },
+  "pivot": {
+    "x": 0.5,
+    "y": 1
+  },
+  "clips": {
+    "idle": {
+      "playback": "pingpong",
+      "fps": 8,
+      "frames": [
+        { "x": 0, "y": 0, "width": 96, "height": 112 },
+        { "x": 48, "y": 0, "width": 96, "height": 112 }
+      ]
+    },
+    "advance": {
+      "playback": "loop",
+      "fps": 8,
+      "frames": [
+        { "x": 0, "y": 112, "width": 96, "height": 112 }
+      ]
+    },
+    "hit": {
+      "playback": "progress",
+      "fps": 12,
+      "frames": [
+        { "x": 0, "y": 224, "width": 96, "height": 112 }
+      ]
+    },
+    "death": {
+      "playback": "progress",
+      "fps": 10,
+      "frames": [
+        { "x": 1270, "y": 1260, "width": 32, "height": 32 }
+      ]
+    }
+  },
+  "lineage": {
+    "identityApprovalSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+    "motionApprovalSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+    "motionSetCandidateSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+    "motionSetApprovalSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+    "sourceManifestSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+    "exportArtifactSha256": "6666666666666666666666666666666666666666666666666666666666666666",
+    "derivativeToolchainSha256": "7777777777777777777777777777777777777777777777777777777777777777"
+  },
+  "encoder": {
+    "name": "cwebp",
+    "version": "1.6.0",
+    "arguments": ["-exact", "-q", "90"]
+  }
+}

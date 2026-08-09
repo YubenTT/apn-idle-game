@@ -1,16 +1,17 @@
-import { GAME_PACKS } from './generated/game-packs.js?v=golive-pr5';
-import { packForRoute } from './route.js?v=golive-pr5';
+import { GAME_PACKS } from './generated/game-packs.js?v=gaf2d-motion-v1';
+import { packForRoute } from './route.js?v=gaf2d-motion-v1';
+import { withRuntimeVersion } from './cache.js?v=gaf2d-motion-v1';
 
 const browserImage = (src) => new Promise((resolve, reject) => {
   const image = new Image();
   image.decoding = 'async';
   image.onload = () => resolve(image);
   image.onerror = () => reject(new Error(`Image failed: ${src}`));
-  image.src = `./${src}`;
+  image.src = withRuntimeVersion(src);
 });
 
 const browserJson = async (src) => {
-  const response = await fetch(`./${src}`);
+  const response = await fetch(withRuntimeVersion(src));
   if (!response.ok) throw new Error(`JSON failed ${response.status}: ${src}`);
   return response.json();
 };
@@ -21,15 +22,18 @@ export function createAssetStore(options = {}) {
     pending: new Map(),
     currentId: null,
     nextId: null,
+    catalog: options.catalog || GAME_PACKS,
+    motionStore: options.motionStore || null,
+    creatureStore: options.creatureStore || null,
     loadImage: options.loadImage || browserImage,
     loadJson: options.loadJson || browserJson,
     warn: options.warn || ((message) => console.warn(message)),
   };
 }
 
-export function packWindowForRoute(route) {
-  const current = packForRoute(route, GAME_PACKS);
-  const next = packForRoute({ ...route, zone: Math.max(0, route?.zone || 0) + 10 }, GAME_PACKS);
+export function packWindowForRoute(route, catalog = GAME_PACKS) {
+  const current = packForRoute(route, catalog);
+  const next = packForRoute({ ...route, zone: Math.max(0, route?.zone || 0) + 10 }, catalog);
   return [current, next].filter((pack, index, packs) => pack && packs.findIndex((item) => item.id === pack.id) === index);
 }
 
@@ -81,7 +85,7 @@ export function releaseColdPacks(store, keep) {
 }
 
 export async function preloadRouteAssets(store, route) {
-  const window = packWindowForRoute(route);
+  const window = packWindowForRoute(route, store.catalog);
   store.currentId = window[0]?.id || null;
   store.nextId = window[1]?.id || null;
   await Promise.all(window.map((pack) => ensurePack(store, pack)));
@@ -90,6 +94,6 @@ export async function preloadRouteAssets(store, route) {
 }
 
 export function getCurrentPackAssets(store, route) {
-  const current = packForRoute(route, GAME_PACKS);
+  const current = packForRoute(route, store.catalog);
   return current ? store.packs.get(current.id) || null : null;
 }

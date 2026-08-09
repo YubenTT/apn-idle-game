@@ -144,7 +144,12 @@ Key repository sources:
 - PR #14 — current full-bleed Run polish;
 - PR #15 — fail-fast Host asset gates.
 
-The supplied current-main screenshot is the visual baseline. The supplied four-view Host turnaround is geometry evidence for this playbook; the repository’s canonical GLB remains the runtime authority.
+The supplied current-main screenshot was the visual baseline for this imported
+playbook. Its statement that the canonical GLB remained runtime authority is
+historical and is superseded by
+[ADR-0015](../decisions/ADR-0015-legless-hero-runtime-authority.md): the exact
+legless GAF2D identity/clip set is current authority, while existing GLBs are
+provenance only.
 
 ## Research limits
 

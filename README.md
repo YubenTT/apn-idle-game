@@ -230,6 +230,28 @@ Covers: combat kills, weapon upgrades, skills, publish, bosses, **endless zones 
 
 No browser required for domain tests. Visual checks use `qa/screenshots/` as human reference.
 
+### Local authored-motion review
+
+The current GAF2D motion candidate can be reviewed inside real gameplay without
+granting it production approval:
+
+```bash
+npm run preview:gaf2d -- \
+  --gaf2d-project /absolute/path/to/apn-idle-game-gaf2d \
+  --output .gaf2d-preview \
+  --json
+./serve.sh
+```
+
+Open
+[the local motion review](http://127.0.0.1:8790/?motion-preview=1&autostart=1&zone=1).
+The preview activates only on exact loopback hosts with
+`motion-preview=1`, displays a permanent `UNAPPROVED · LOCAL ONLY` banner,
+and fails closed to normal production-safe assets if any manifest, descriptor,
+or media hash is stale. The generated `.gaf2d-preview/` directory is ignored
+and disposable. The normal [local game](http://127.0.0.1:8790/) never requests
+preview media.
+
 ---
 
 ## Design pillars
@@ -281,13 +303,15 @@ every doc + the source-of-truth table (which doc wins on which topic).
 | **Design system (`brand/`)** | |
 | [DESIGN-TOKENS.md](./brand/DESIGN-TOKENS.md) · [tokens.css](./brand/tokens.css) | Color / type / spacing / motion — one color, one job |
 | [COMPONENTS.md](./brand/COMPONENTS.md) | Component library specs + states |
-| [MASCOT-CANON.md](./brand/MASCOT-CANON.md) | GLB single-source mascot rules |
+| [MASCOT-CANON.md](./brand/MASCOT-CANON.md) | Legless Hero identity, motion, fallback, and approval authority |
 | [ART-DIRECTION.md](./brand/ART-DIRECTION.md) | 2D grammar, icons, enemies, backgrounds |
 | [NAMING.md](./brand/NAMING.md) | Copy & naming standard |
 | **Screens / production** | |
 | [SCREEN-SPECS.md](./docs/SCREEN-SPECS.md) | Mobile-first per-screen redesign |
 | [REDESIGN-PLAN.md](./docs/REDESIGN-PLAN.md) | Execution plan — sequenced issue backlog |
-| [ART-PIPELINE.md](./docs/ART-PIPELINE.md) | GLB → sprite → atlas → WebP |
+| [ART-PIPELINE.md](./docs/ART-PIPELINE.md) | Approved GAF2D identity/motion → deterministic runtime bundles |
+| [authored-motion design](./docs/superpowers/specs/2026-07-28-gaf2d-authored-motion-design.md) | Hero + creature clip, runtime, budget, QA, and human-gate contract |
+| [motion-ready identity seeds](./docs/decisions/ADR-0016-motion-ready-identity-seeds.md) | Single-subject, platform-free source contract for authored motion |
 | [PERF-BUDGET.md](./docs/PERF-BUDGET.md) | Load + runtime budgets |
 | [QA-CHECKLIST.md](./docs/QA-CHECKLIST.md) | V1 quality gate |
 | **Engineering / governance** | |

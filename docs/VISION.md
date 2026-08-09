@@ -23,7 +23,7 @@ fix it.
 | # | Pillar | Test question |
 |---|--------|---------------|
 | 1 | **Gameplay is the hero.** | In the first 3 seconds can the player tell *what they fight, what they earn, what to do next*? |
-| 2 | **One mascot, one silhouette, one perspective.** | Does this asset match the [mascot canon](../brand/MASCOT-CANON.md) exactly — same head/body ratio, visor, light, outline? |
+| 2 | **One mascot, one silhouette, one perspective.** | Does this asset match the owner-approved [mascot canon](../brand/MASCOT-CANON.md) exactly — including its legless anatomy, head/body ratio, visor, light, and outline? |
 | 3 | **2D editorial clarity, not 3D toy gloss.** | Does it read as flat-shaded APN art with a crisp outline, or as a shiny plastic toy? |
 | 4 | **One color, one job.** | Does each hue mean exactly one thing per [DESIGN-TOKENS](../brand/DESIGN-TOKENS.md)? Is red still meaningful, not ambient paint? |
 | 5 | **One screen, one decision.** | Does this surface ask the player for *one* clear decision — no debug text, no half-built economy, no placeholder? |
@@ -48,7 +48,7 @@ cheap; violating it is expensive.
 | React / Vue / Pixi / heavy framework for the playable core | Kills zero-npm static iteration; contradicts [ADR-0001](./decisions/ADR-0001-vanilla-stack.md). |
 | Pay-to-win combat power | If monetized, cosmetics + convenience only. See [MONETIZATION.md](./MONETIZATION.md). |
 | Multiplayer / server-authoritative combat | Single-surface waiting-room game; no backend for v1. |
-| New mascot art per screen / AI re-interpretations | Mascot is single-source from GLB. "Fit look" comes from camera + cleanup, not new meshes. |
+| New mascot art per screen / unapproved reinterpretations | The GAF2D `apn-hero` identity and complete motion-set approvals are the single authority. A model, prompt, fallback, or partial clip replacement cannot invent a second character. |
 | Red as the default accent for everything | Red = APN primary / patch / live only. Other jobs get other hues. |
 | Pasting official logos or unmodified third-party art into encounters | Game Packs use recognizable homage as input, then redraw every target, prop, and environment through APN's owned 2D grammar; no source image ships as runtime art. See [ADR-0004](./decisions/ADR-0004-game-pack-route.md). |
 | More than 5 top-level nav destinations | Cognitive load + touch targets. Secondary surfaces are sheets. |

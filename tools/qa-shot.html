@@ -1,0 +1,31 @@
+<!doctype html>
+<!-- QA evidence helper: boots the game in an iframe with ?chrome-smoke,
+     jumps to ?zone=N via window.__APN_QA__, lets it play in virtual time,
+     then the outer Chrome --screenshot captures the iframe content. -->
+<html><head><meta charset="utf-8"><style>html,body{margin:0;height:100%;background:#0c0f14}iframe{border:0;width:100vw;height:100vh}</style></head>
+<body>
+<iframe id="f"></iframe>
+<script>
+const q = new URLSearchParams(location.search);
+const zone = parseInt(q.get('zone') || '1', 10);
+const f = document.getElementById('f');
+f.src = '/index.html?chrome-smoke&v=golive-pr5';
+f.addEventListener('load', () => {
+  const w = f.contentWindow;
+  const t0 = Date.now();
+  const iv = setInterval(() => {
+    const qa = w.__APN_QA__;
+    if (qa && qa.state) {
+      try {
+        const btn = w.document.getElementById('btn-start');
+        if (btn && !btn.closest('#title-screen').hidden) btn.click();
+        qa.state.route.zone = zone;
+        if (qa.state.ui) qa.state.ui.toast = null;
+        clearInterval(iv);
+      } catch (e) { /* retry until boot settles */ }
+    }
+    if (Date.now() - t0 > 8000) clearInterval(iv);
+  }, 100);
+});
+</script>
+</body></html>
