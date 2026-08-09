@@ -5,6 +5,7 @@ import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import {
   ASSET_BUDGETS,
+  MOTION_BUDGETS,
   readJson,
   validateAtlasData,
   validatePackManifest,
@@ -81,6 +82,14 @@ for (const script of [
   assert(!source.includes('/Users/'), `${script} has no developer-only tool path`);
   assert(!source.includes(signedTokenPrefix), `${script} contains no signed source token`);
 }
+const motionBuildCheckSource = fs.readFileSync(
+  path.join(root, 'qa/check-gaf2d-motion-build.mjs'),
+  'utf8',
+);
+assert(
+  !motionBuildCheckSource.includes('/Users/'),
+  'real V4 integration check uses an explicit portable project input',
+);
 
 const validErrors = validateAtlasData(readJson(path.join(fixtures, 'valid/atlas.json')), 'valid');
 assert(validErrors.length === 0, 'valid atlas keeps rect and foot pivot');
@@ -94,6 +103,9 @@ assert(boundsErrors.some((error) => error.includes('out-of-bounds/idle: rect out
 const productionPack = readJson(path.join(root, 'assets/game-packs/valorant/pack.json'));
 const fixturePack = structuredClone(productionPack);
 const validDescriptorSha256 = 'a'.repeat(64);
+const validSetSha256 = 'b'.repeat(64);
+const validImageSha256 = 'c'.repeat(64);
+const validProfileSha256 = 'd'.repeat(64);
 fixturePack.motion = {
   grammar: 'gaf2d-motion-bundle-v1',
   characters: {
@@ -105,6 +117,44 @@ fixturePack.motion = {
   },
 };
 assert(validatePackManifest(fixturePack).length === 0, 'optional pack motion map accepted');
+const v4FixturePack = structuredClone(productionPack);
+v4FixturePack.motion = {
+  grammar: 'gaf2d-motion-bundle-v1',
+  characters: {
+    'entry-runner': {
+      set: 'assets/game-packs/valorant/characters/entry-runner/set.json',
+      setSha256: validSetSha256,
+      sourceFamily: 'authored-semantic-v4',
+      consumerScale: {
+        grammar: 'gaf2d-consumer-scale-v4',
+        role: 'standard',
+        maximumCssBodyHeight: 72,
+        maximumDpr: 2,
+        displayedDevicePixels: 144,
+        runtimeCanvasClass: 256,
+        sourceVisiblePixels: 177,
+        scaleRatio: {
+          numerator: 144,
+          denominator: 177,
+        },
+      },
+      selectedProfileSha256: validProfileSha256,
+      clips: {
+        advance: {
+          descriptor:
+            'assets/game-packs/valorant/characters/entry-runner/advance.json',
+          descriptorSha256: validDescriptorSha256,
+          image: 'assets/game-packs/valorant/characters/entry-runner/advance.webp',
+          imageSha256: validImageSha256,
+        },
+      },
+    },
+  },
+};
+assert(
+  validatePackManifest(v4FixturePack).length === 0,
+  'visual-fidelity V4 motion pack map is accepted',
+);
 const duplicateRole = structuredClone(fixturePack);
 duplicateRole.targets[1].role = 'common-a';
 assert(
@@ -188,25 +238,84 @@ assert(
   validatePackManifest(duplicateMotionPath).some((error) => error.includes('duplicate motion path')),
   'motion image and descriptor paths are unique',
 );
-const motionlessBefore = JSON.stringify(productionPack);
+const productionMotionAssets = [
+  'entry-runner',
+  'protocol-courier',
+  'signal-hunter',
+  'site-sentinel',
+  'site-warden',
+  'veil-operator',
+];
 assert(
   validatePackManifest(productionPack).length === 0 &&
-    JSON.stringify(productionPack) === motionlessBefore &&
-    productionPack.motion === undefined,
-  'pack without motion stays valid and unchanged',
+    productionPack.motion?.grammar === 'gaf2d-motion-bundle-v1' &&
+    Object.keys(productionPack.motion.characters).sort().join('|') ===
+      productionMotionAssets.join('|') &&
+    !Object.hasOwn(productionPack.motion.characters, 'apn-hero') &&
+    productionMotionAssets.every((assetId) => {
+      const record = productionPack.motion.characters[assetId];
+      return (
+        record?.sourceFamily === 'authored-semantic-v4' &&
+        record?.authority === undefined &&
+        record?.set ===
+          `assets/game-packs/valorant/characters/${assetId}/set.json` &&
+        /^[a-f0-9]{64}$/.test(record?.setSha256 || '') &&
+        /^[a-f0-9]{64}$/.test(record?.selectedProfileSha256 || '') &&
+        typeof record?.clips === 'object' &&
+        Object.keys(record.clips).length >= 5
+      );
+    }),
+  'production Valorant pack exposes exactly six approved V4 motion sources and keeps Hero absent',
 );
 
 const firstPlayablePacks = readJson(
   path.join(fixtures, 'first-playable/packs.json'),
 );
+firstPlayablePacks[0].motion.characters['entry-runner'] = {
+  set: 'assets/game-packs/valorant/characters/entry-runner/set.json',
+  setSha256: validSetSha256,
+  sourceFamily: 'authored-semantic-v4',
+  consumerScale: {
+    grammar: 'gaf2d-consumer-scale-v4',
+    role: 'standard',
+    maximumCssBodyHeight: 72,
+    maximumDpr: 2,
+    displayedDevicePixels: 144,
+    runtimeCanvasClass: 256,
+    sourceVisiblePixels: 177,
+    scaleRatio: {
+      numerator: 144,
+      denominator: 177,
+    },
+  },
+  selectedProfileSha256: validProfileSha256,
+  clips: {
+    advance: {
+      descriptor:
+        'assets/game-packs/valorant/characters/entry-runner/advance.json',
+      descriptorSha256: validDescriptorSha256,
+      image: 'assets/game-packs/valorant/characters/entry-runner/advance.webp',
+      imageSha256: validImageSha256,
+    },
+    death: {
+      descriptor:
+        'assets/game-packs/valorant/characters/entry-runner/death.json',
+      descriptorSha256: 'e'.repeat(64),
+      image: 'assets/game-packs/valorant/characters/entry-runner/death.webp',
+      imageSha256: 'f'.repeat(64),
+    },
+  },
+};
 const firstPlayablePaths = firstPlayableAssetPaths(firstPlayablePacks);
 assert(
-  HERO_V3_CLIPS.every(
-    (clip) =>
-      firstPlayablePaths.has(`assets/mascot/v3/${clip}.webp`) &&
-      firstPlayablePaths.has(`assets/mascot/v3/${clip}.json`),
-  ),
-  'all eight Hero V3 WebP and JSON files are first-playable',
+  firstPlayablePaths.has('assets/mascot/v3/run.webp') &&
+    firstPlayablePaths.has('assets/mascot/v3/run.json') &&
+    HERO_V3_CLIPS.filter((clip) => clip !== 'run').every(
+      (clip) =>
+        !firstPlayablePaths.has(`assets/mascot/v3/${clip}.webp`) &&
+        !firstPlayablePaths.has(`assets/mascot/v3/${clip}.json`),
+    ),
+  'only the current Hero run clip is first-playable; seven semantic clips stay cold',
 );
 assert(
   firstPlayablePaths.has('assets/mascot/v3/set.json'),
@@ -221,12 +330,21 @@ for (const pack of firstPlayablePacks.slice(0, 2)) {
 }
 assert(
   firstPlayablePaths.has(
-    'assets/game-packs/valorant/characters/entry-runner/motion.webp',
+    'assets/game-packs/valorant/characters/entry-runner/set.json',
   ) &&
     firstPlayablePaths.has(
-      'assets/game-packs/valorant/characters/entry-runner/motion.json',
+      'assets/game-packs/valorant/characters/entry-runner/advance.json',
+    ) &&
+    firstPlayablePaths.has(
+      'assets/game-packs/valorant/characters/entry-runner/advance.webp',
+    ) &&
+    !firstPlayablePaths.has(
+      'assets/game-packs/valorant/characters/entry-runner/death.json',
+    ) &&
+    !firstPlayablePaths.has(
+      'assets/game-packs/valorant/characters/entry-runner/death.webp',
     ),
-  'current Wave 1 possible motion is first-playable',
+  'current Wave 1 possible V4 motion warms only the set and selected advance clip',
 );
 assert(
   !firstPlayablePaths.has(
@@ -256,7 +374,7 @@ const motionPreviewSource = fs.readFileSync(
   'utf8',
 );
 assert(
-  /\bloadHeroV3\(motionPreview\.heroBasePath,\s*\{\s*allowUnapprovedPreview:\s*motionPreview\.active,\s*\}\)/.test(
+  /\bloadHeroV3\(motionPreview\.heroBasePath,\s*\{\s*allowUnapprovedPreview:\s*motionPreview\.active,\s*sourceFamily:\s*motionPreview\.manifest\?\.sourceFamily\s*\?\?\s*null,\s*expectedSetSha256:\s*motionPreview\.manifest\?\.hero\?\.setSha256\s*\?\?\s*null,\s*consumerScale:\s*motionPreview\.manifest\?\.hero\?\.consumerScale\s*\?\?\s*null,\s*selectedProfileSha256:\s*motionPreview\.manifest\?\.toolchain\?\.profileSha256\s*\?\?\s*null,\s*\}\)/.test(
     mainSource,
   ) &&
     /const PRODUCTION_HERO_BASE = ['"]assets\/mascot\/v3\/['"]/.test(
@@ -274,10 +392,13 @@ assert(
   bootSource.includes('heroV3Load') &&
     bootSource.indexOf('heroV3Load') <
       bootSource.indexOf('apn-first-playable'),
-  'first-playable waits for the complete Hero set to load or fail safely',
+  'first-playable waits for the Hero set index and current clip to load or fail safely',
 );
 const currentWarmIndex = bootSource.indexOf(
   'await warmMotionRequests(currentRequests)',
+);
+const currentAdvanceWarmIndex = bootSource.indexOf(
+  'await warmCurrentAdvanceRequests(currentRequests)',
 );
 const firstDrawIndex = bootSource.indexOf(
   'draw(view.ctx, view.w, view.h, s, assetStore, view.stageClearance)',
@@ -287,11 +408,13 @@ const readyMarkerIndex = bootSource.indexOf(
 );
 assert(
   currentWarmIndex >= 0 &&
-    firstDrawIndex > currentWarmIndex &&
+    currentAdvanceWarmIndex > currentWarmIndex &&
+    firstDrawIndex > currentAdvanceWarmIndex &&
     readyMarkerIndex > firstDrawIndex &&
     !bootSource.includes('syncMotionWindow()') &&
+    mainSource.includes('motionClipSettled(') &&
     mainSource.includes("performance.mark?.('apn-first-playable')"),
-  'first playable waits for current motion, draws and marks ready before any next-wave warm',
+  'first playable waits for current advance pixels, draws and marks ready before any next-wave warm',
 );
 for (const coldPath of [
   'assets/apn-mascot-glb-host.glb',
@@ -387,8 +510,8 @@ const secondHash = crypto.createHash('sha256').update(secondBytes).digest('hex')
 assert(firstHash === secondHash && first.assets.length === second.assets.length, 'asset manifest generation byte-stable');
 const generatedByPath = new Map(first.assets.map((asset) => [asset.path, asset]));
 for (const hotPath of [
-  'assets/mascot/v3/idle.webp',
-  'assets/mascot/v3/idle.json',
+  'assets/mascot/v3/run.webp',
+  'assets/mascot/v3/run.json',
   'assets/mascot/v3/set.json',
   'assets/game-packs/valorant/background.webp',
   'assets/game-packs/valorant/targets.json',
@@ -402,6 +525,8 @@ for (const hotPath of [
   );
 }
 for (const coldPath of [
+  'assets/mascot/v3/idle.webp',
+  'assets/mascot/v3/death.webp',
   'assets/apn-mascot-glb-host.glb',
   'assets/mascot-ref-sheet.jpg',
   'assets/game-packs/fortnite/background.webp',
@@ -422,9 +547,24 @@ assert(
     sizes.hotTextures >= sizes.legacyCreatureDecoded,
   'hot-texture accounting includes one lazily resident legacy creature owner',
 );
+assert(
+  sizes.hotTextures < MOTION_BUDGETS.hotTextures,
+  'hot-texture accounting uses one real current/next route window below the frozen 64 MiB cap',
+);
+const v4PackLast = sourcePacks.map((pack, index) => ({
+  ...pack,
+  order: pack.id === 'valorant' ? sourcePacks.length + 1 : index + 1,
+}));
+const v4PackLastSizes = verifySizes(generatedManifestPath, {
+  packs: v4PackLast,
+});
+assert(
+  !v4PackLastSizes.errors.some((error) => error.includes('motion decoded')),
+  'V4 budget authority follows any V4 pack instead of depending on catalog order',
+);
 const staleManifest = structuredClone(first);
 const staleHot = staleManifest.assets.find(
-  (asset) => asset.path === 'assets/mascot/v3/idle.webp',
+  (asset) => asset.path === 'assets/mascot/v3/run.webp',
 );
 const staleCold = staleManifest.assets.find(
   (asset) => asset.path === 'assets/apn-mascot-glb-host.glb',
@@ -438,7 +578,7 @@ const staleResult = verifySizes(staleManifestPath, {
 });
 assert(
   staleResult.errors.some((error) =>
-    error.includes('assets/mascot/v3/idle.webp') &&
+    error.includes('assets/mascot/v3/run.webp') &&
     error.includes('firstPlayable must equal true'),
   ) &&
     staleResult.errors.some((error) =>
@@ -450,7 +590,7 @@ assert(
 const normalCliStaleResult = verifySizes(staleManifestPath);
 assert(
   normalCliStaleResult.errors.some((error) =>
-    error.includes('assets/mascot/v3/idle.webp') &&
+    error.includes('assets/mascot/v3/run.webp') &&
     error.includes('firstPlayable must equal true'),
   ) &&
     normalCliStaleResult.errors.some((error) =>
@@ -462,7 +602,7 @@ assert(
 
 const missingManifestRecord = structuredClone(first);
 missingManifestRecord.assets = missingManifestRecord.assets.filter(
-  (asset) => asset.path !== 'assets/mascot/v3/idle.webp',
+  (asset) => asset.path !== 'assets/mascot/v3/run.webp',
 );
 const missingManifestRecordPath = path.join(
   temp,
@@ -476,7 +616,7 @@ const missingManifestRecordResult = verifySizes(missingManifestRecordPath);
 assert(
   missingManifestRecordResult.errors.some(
     (error) =>
-      error.includes('assets/mascot/v3/idle.webp') &&
+      error.includes('assets/mascot/v3/run.webp') &&
       error.includes('missing manifest asset record'),
   ),
   'normal verifier discovery rejects a missing canonical first-playable manifest record',

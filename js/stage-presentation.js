@@ -102,7 +102,7 @@ function checkRect(rect, label, addError) {
  * Validate an untrusted, game-integration presentation record without throwing.
  * Descriptor owners separately bind the reference hash to their exact bytes.
  */
-export function validatePresentationRecord(record) {
+export function validatePresentationRecord(record, options = {}) {
   const errors = [];
   const addError = (message) => {
     if (errors.length < MAX_ERRORS) errors.push(message);
@@ -125,8 +125,9 @@ export function validatePresentationRecord(record) {
       addError,
     )
   ) {
-    if (record.reference.clip !== 'idle') {
-      addError('presentation.reference.clip: expected "idle"');
+    const expectedClip = options.referenceClip ?? 'idle';
+    if (record.reference.clip !== expectedClip) {
+      addError(`presentation.reference.clip: expected "${expectedClip}"`);
     }
     if (record.reference.frameIndex !== 0) {
       addError('presentation.reference.frameIndex: expected 0');
@@ -296,7 +297,9 @@ export function resolveActorGeometry(input = {}) {
     pivot,
     presentation,
   } = input;
-  const presentationErrors = validatePresentationRecord(presentation);
+  const presentationErrors = validatePresentationRecord(presentation, {
+    referenceClip: presentation?.reference?.clip ?? 'idle',
+  });
   if (presentationErrors.length) {
     throw new Error(presentationErrors.join('; '));
   }

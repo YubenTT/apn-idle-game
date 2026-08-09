@@ -13,14 +13,24 @@ import {
   firstPlayableAssetPaths,
   PACK_TEXTURE_KEYS,
 } from './first-playable.mjs';
-import { validateMotionBundle } from '../../js/motion-bundle.js';
+import {
+  validateMotionBundle,
+  validateMotionClipDescriptor,
+  validateMotionSetIndex,
+} from '../../js/motion-bundle.js';
 import {
   motionAssetIdsForRouteWindow,
+  routeWaveIdentityUnion,
   routeWaveWindow,
 } from '../../js/wave-roster.js';
 import {
   LEGACY_CREATURE_ASSET_PATHS_BY_KIND,
 } from '../../js/creatures.js';
+import {
+  VISUAL_FIDELITY_BUDGETS,
+  visualFidelityDecodedLimit,
+  visualFidelityEncodedLimit,
+} from '../../js/visual-fidelity-v4.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const PACK_IMAGE_KEYS = PACK_TEXTURE_KEYS.filter(
@@ -222,6 +232,146 @@ export function verifySizes(
       pack?.motion?.characters || {},
     )) {
       const key = `${pack.id}/${assetId}`;
+      const isBoss = pack?.boss?.id === assetId;
+      const role = isBoss ? 'boss' : 'character';
+      const perClipSource =
+        record?.sourceFamily === 'authored-semantic-v4' &&
+        typeof record?.set === 'string' &&
+        record?.clips &&
+        typeof record.clips === 'object';
+      if (perClipSource) {
+        const setFile = path.join(rootDir, record.set);
+        if (!fs.existsSync(setFile)) {
+          errors.push(`${assetId} motion: missing ${record.set}`);
+          continue;
+        }
+        const setHash = sha256(setFile);
+        if (setHash !== record.setSha256) {
+          errors.push(
+            `${assetId} motion set SHA-256: ${setHash} does not match ${record.setSha256 || 'missing'}`,
+          );
+        }
+        let set;
+        try {
+          set = readJson(setFile);
+        } catch (error) {
+          errors.push(`${assetId} motion set: ${error.message}`);
+          continue;
+        }
+        const setErrors = validateMotionSetIndex(set, assetId, {
+          role,
+          consumerRole: record.consumerScale?.role,
+          selectedProfileSha256: record.selectedProfileSha256,
+        });
+        if (setErrors.length) {
+          errors.push(`${assetId} motion set: ${setErrors.join('; ')}`);
+          continue;
+        }
+        let compressed = fs.statSync(setFile).size;
+        const decodedCandidates = [];
+        for (const [clipName, clipSource] of Object.entries(record.clips)) {
+          const descriptorFile = path.join(rootDir, clipSource.descriptor || '');
+          const image = path.join(rootDir, clipSource.image || '');
+          if (!fs.existsSync(descriptorFile)) {
+            errors.push(`${assetId} ${clipName} descriptor: missing ${clipSource.descriptor}`);
+            continue;
+          }
+          if (!fs.existsSync(image)) {
+            errors.push(`${assetId} ${clipName} image: missing ${clipSource.image}`);
+            continue;
+          }
+          const descriptorHash = sha256(descriptorFile);
+          if (descriptorHash !== clipSource.descriptorSha256) {
+            errors.push(
+              `${assetId} ${clipName} descriptor SHA-256: ${descriptorHash} does not match ${clipSource.descriptorSha256 || 'missing'}`,
+            );
+          }
+          let descriptor;
+          try {
+            descriptor = readJson(descriptorFile);
+          } catch (error) {
+            errors.push(`${assetId} ${clipName} descriptor: ${error.message}`);
+            continue;
+          }
+          const descriptorErrors = validateMotionClipDescriptor(
+            descriptor,
+            clipName,
+            set,
+            {
+              role,
+              consumerRole: record.consumerScale?.role,
+              descriptorSha256: clipSource.descriptorSha256,
+              imageSha256: clipSource.imageSha256,
+              selectedProfileSha256: record.selectedProfileSha256,
+            },
+          );
+          if (descriptorErrors.length) {
+            errors.push(
+              `${assetId} ${clipName} descriptor: ${descriptorErrors.join('; ')}`,
+            );
+            continue;
+          }
+          const atlasHash = sha256(image);
+          if (atlasHash !== descriptor.atlas.sha256) {
+            errors.push(
+              `${assetId} ${clipName} atlas SHA-256: ${atlasHash} does not match ${descriptor.atlas.sha256 || 'missing'}`,
+            );
+          }
+          let descriptorDimensions;
+          try {
+            descriptorDimensions = motionDescriptorDimensions(descriptor);
+          } catch (error) {
+            errors.push(`${assetId} ${clipName} decoded: ${error.message}`);
+            continue;
+          }
+          let imageDimensions;
+          try {
+            imageDimensions = webpDimensions(image);
+          } catch (error) {
+            errors.push(`${assetId} ${clipName} WebP: ${error.message}`);
+            continue;
+          }
+          if (
+            descriptorDimensions.width !== imageDimensions.width ||
+            descriptorDimensions.height !== imageDimensions.height
+          ) {
+            errors.push(
+              `${assetId} ${clipName} dimensions: descriptor ${descriptorDimensions.width}x${descriptorDimensions.height} does not match WebP ${imageDimensions.width}x${imageDimensions.height}`,
+            );
+          }
+          const decoded = imageDimensions.width * imageDimensions.height * 4;
+          const clipCompressed =
+            fs.statSync(image).size + fs.statSync(descriptorFile).size;
+          const compressedCap = visualFidelityEncodedLimit(role);
+          const decodedCap = visualFidelityDecodedLimit(role);
+          if (clipCompressed > compressedCap) {
+            errors.push(
+              budgetError(
+                `${assetId} ${clipName} motion compressed`,
+                clipCompressed,
+                compressedCap,
+              ),
+            );
+          }
+          if (decoded > decodedCap) {
+            errors.push(
+              budgetError(
+                `${assetId} ${clipName} motion decoded`,
+                decoded,
+                decodedCap,
+              ),
+            );
+          }
+          compressed += clipCompressed;
+          decodedCandidates.push(decoded);
+        }
+        const decoded = decodedCandidates
+          .sort((left, right) => right - left)
+          .slice(0, 2)
+          .reduce((sum, value) => sum + value, 0);
+        motionRecords.set(key, { compressed, decoded });
+        continue;
+      }
       const image = path.join(rootDir, record.image || '');
       const descriptorFile = path.join(rootDir, record.descriptor || '');
       if (!fs.existsSync(image)) {
@@ -247,9 +397,8 @@ export function verifySizes(
         errors.push(`${assetId} motion descriptor: ${error.message}`);
         continue;
       }
-      const isBoss = pack?.boss?.id === assetId;
       const descriptorErrors = validateMotionBundle(descriptor, assetId, {
-        role: isBoss ? 'boss' : 'character',
+        role,
       });
       if (descriptorErrors.length) {
         errors.push(
@@ -362,22 +511,60 @@ export function verifySizes(
   }
 
   const firstPack = orderedPacks[0];
+  const visualFidelityMotion =
+    orderedPacks.some((pack) =>
+      Object.values(pack?.motion?.characters || {}).some(
+        (record) => record?.sourceFamily === 'authored-semantic-v4',
+      ),
+    );
+  const motionBudgetCaps = visualFidelityMotion
+    ? {
+        newMotionCompressed: VISUAL_FIDELITY_BUDGETS.newMotionCompressedBytes,
+        waveDecoded: VISUAL_FIDELITY_BUDGETS.maxWaveDecodedBytes,
+        hotTextures: VISUAL_FIDELITY_BUDGETS.hotTexturesBytes,
+      }
+    : {
+        newMotionCompressed: MOTION_BUDGETS.newMotionCompressed,
+        waveDecoded: MOTION_BUDGETS.waveDecoded,
+        hotTextures: MOTION_BUDGETS.hotTextures,
+      };
   let newMotionCompressed = heroNewMotionCompressed;
   for (const assetId of Object.keys(firstPack?.motion?.characters || {})) {
     newMotionCompressed +=
       motionRecords.get(`${firstPack.id}/${assetId}`)?.compressed || 0;
   }
-  if (newMotionCompressed > MOTION_BUDGETS.newMotionCompressed) {
+  if (newMotionCompressed > motionBudgetCaps.newMotionCompressed) {
     errors.push(
       budgetError(
         'new motion compressed',
         newMotionCompressed,
-        MOTION_BUDGETS.newMotionCompressed,
+        motionBudgetCaps.newMotionCompressed,
       ),
     );
   }
 
+  const packTextureBytesById = new Map();
+  for (const pack of orderedPacks) {
+    let decoded = 0;
+    for (const key of PACK_IMAGE_KEYS) {
+      const assetPath = pack?.assets?.[key];
+      if (!assetPath) continue;
+      const file = path.join(rootDir, assetPath);
+      if (!fs.existsSync(file)) {
+        errors.push(`${pack.id} ${key} texture: missing ${assetPath}`);
+        continue;
+      }
+      try {
+        decoded += decodedImageBytes(file);
+      } catch (error) {
+        errors.push(`${pack.id} ${key} texture: ${error.message}`);
+      }
+    }
+    packTextureBytesById.set(pack.id, decoded);
+  }
+
   let maxWaveDecoded = 0;
+  let maxHotTextures = heroDecoded + legacyCreatureDecoded;
   const checkRouteWindow = (route) => {
     const [current, next] = routeWaveWindow(route, orderedPacks);
     const decoded = [...motionAssetIdsForRouteWindow(route, orderedPacks)].reduce(
@@ -386,15 +573,32 @@ export function verifySizes(
       0,
     );
     maxWaveDecoded = Math.max(maxWaveDecoded, decoded);
-    if (decoded > MOTION_BUDGETS.waveDecoded) {
+    if (decoded > motionBudgetCaps.waveDecoded) {
       const label =
         current.pack?.id === next.pack?.id && current.wave < 10
           ? `${current.pack.id} waves ${current.wave}+${next.wave} motion decoded`
           : `${current.pack?.id || 'none'} wave 10 + ${next.pack?.id || 'none'} wave 1 motion decoded`;
       errors.push(
-        budgetError(label, decoded, MOTION_BUDGETS.waveDecoded),
+        budgetError(label, decoded, motionBudgetCaps.waveDecoded),
       );
     }
+    const routePackIds = new Set(
+      [current.pack?.id, next.pack?.id].filter(Boolean),
+    );
+    const routePackTextures = [...routePackIds].reduce(
+      (sum, packId) => sum + (packTextureBytesById.get(packId) || 0),
+      0,
+    );
+    const requiresLegacyCreature = routeWaveIdentityUnion(
+      route,
+      orderedPacks,
+    ).some(({ packId, assetId }) => !motionRecords.has(`${packId}/${assetId}`));
+    const routeHotTextures =
+      heroDecoded +
+      routePackTextures +
+      decoded +
+      (requiresLegacyCreature ? legacyCreatureDecoded : 0);
+    maxHotTextures = Math.max(maxHotTextures, routeHotTextures);
   };
 
   const cleanZoneCount = orderedPacks.length * 10;
@@ -435,37 +639,13 @@ export function verifySizes(
     });
   }
 
-  const packTextureTotals = [];
-  for (const pack of orderedPacks) {
-    let decoded = 0;
-    for (const key of PACK_IMAGE_KEYS) {
-      const assetPath = pack?.assets?.[key];
-      if (!assetPath) continue;
-      const file = path.join(rootDir, assetPath);
-      if (!fs.existsSync(file)) {
-        errors.push(`${pack.id} ${key} texture: missing ${assetPath}`);
-        continue;
-      }
-      try {
-        decoded += decodedImageBytes(file);
-      } catch (error) {
-        errors.push(`${pack.id} ${key} texture: ${error.message}`);
-      }
-    }
-    packTextureTotals.push(decoded);
-  }
-  packTextureTotals.sort((left, right) => right - left);
-  const hotTextures =
-    heroDecoded +
-    packTextureTotals.slice(0, 2).reduce((sum, bytes) => sum + bytes, 0) +
-    maxWaveDecoded +
-    legacyCreatureDecoded;
-  if (hotTextures >= MOTION_BUDGETS.hotTextures) {
+  const hotTextures = maxHotTextures;
+  if (hotTextures >= motionBudgetCaps.hotTextures) {
     errors.push(
       strictBudgetError(
         'hot textures',
         hotTextures,
-        MOTION_BUDGETS.hotTextures,
+        motionBudgetCaps.hotTextures,
       ),
     );
   }

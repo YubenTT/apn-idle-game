@@ -10,9 +10,9 @@
 
 ## Global Constraints
 
-- Game worktree: `/Users/talatongu/Code/kimi-projects/apn-idle-game/.worktrees/gaf2d-2d-identities`.
-- Asset project: `/Users/talatongu/Code/kimi-projects/apn-idle-game-gaf2d`.
-- Consume GAF2D only from `/Users/talatongu/Code/kimi-projects/gaf2d`.
+- Game worktree: `$APN_GAME_ROOT`.
+- Asset project: `$GAF2D_PROJECT`.
+- Consume GAF2D only from `$GAF2D_ROOT`.
 - No provider call, private-media upload, 3D generation, optical flow, raster crossfade, or runtime body tweening.
 - Preserve gameplay event durations, one shared body transform, bottom-center pivot, and fixed stage presentation.
 - Loop frame selection is elapsed-time based; progress selection is normalized-domain-progress based.
@@ -28,10 +28,10 @@
 ### Task 1: Re-author the APN Pose Contract at 30–32 FPS
 
 **Files:**
-- Modify: `/Users/talatongu/Code/kimi-projects/apn-idle-game-gaf2d/tools/test_build_offline_authored_motion.py`
-- Modify: `/Users/talatongu/Code/kimi-projects/apn-idle-game-gaf2d/tools/build_offline_authored_motion.py`
-- Create: `/Users/talatongu/Code/kimi-projects/apn-idle-game-gaf2d/briefs/authored-semantic-v3/acting-contract.json`
-- Preserve read-only: `/Users/talatongu/Code/kimi-projects/apn-idle-game-gaf2d/briefs/authored-semantic-v2/acting-contract.json`
+- Modify: `$GAF2D_PROJECT/tools/test_build_offline_authored_motion.py`
+- Modify: `$GAF2D_PROJECT/tools/build_offline_authored_motion.py`
+- Create: `$GAF2D_PROJECT/briefs/authored-semantic-v3/acting-contract.json`
+- Preserve read-only: `$GAF2D_PROJECT/briefs/authored-semantic-v2/acting-contract.json`
 
 **Interfaces:**
 - Consumes: current normalized identities, part masks, joint underpaints, key poses, and easing
@@ -76,12 +76,16 @@ the existing deterministic smoothstep:
 
 ```python
 sample_phase_numerator = frame_index
-sample_phase_denominator = frame_count - 1
+sample_phase_denominator = (
+    frame_count if playback == "loop" else frame_count - 1
+)
 ```
 
 Map semantic anchors to exact output indices with deterministic half-away
-rounding, preserve first/last loop closure, and emit V3 hold/marker records.
-Do not interpolate flattened RGBA pixels.
+rounding. Loop clips use periodic `[0, 1)` sampling, keep the final frame as the
+unique pre-wrap pose, and require canonical GAF raster
+`loop_velocity_discontinuity <= 0.25`. Emit V3 hold/marker records. Do not
+interpolate flattened RGBA pixels.
 
 - [ ] **Step 4: Verify GREEN and deterministic double build**
 
@@ -99,9 +103,9 @@ Expected: tests pass and both output hash maps are identical.
 ### Task 2: Generate and Prepare the Seven V3 Motion Reviews
 
 **Files:**
-- Regenerate: `/Users/talatongu/Code/kimi-projects/apn-idle-game-gaf2d/motion/authored-semantic-v3/`
+- Regenerate: `$GAF2D_PROJECT/motion/authored-semantic-v3/`
 - Regenerate: asset-contained extraction and clip manifests under each asset
-- Update: `/Users/talatongu/Code/kimi-projects/apn-idle-game-gaf2d/FINAL_REPORT.md`
+- Update: `$GAF2D_PROJECT/FINAL_REPORT.md`
 
 **Interfaces:**
 - Consumes: Task 1 generator and GAF2D V3 CLI
@@ -333,7 +337,7 @@ git commit -m "feat: stream high cadence motion clips"
 - Consumes: Tasks 1–4 local preview
 - Produces: real-speed comparison, viewport evidence, performance facts, and one human review URL
 
-- [ ] **Step 1: Write failing browser assertions**
+- [x] **Step 1: Write failing browser assertions**
 
 At each refresh schedule, sample each complete clip cycle and assert:
 
@@ -345,11 +349,16 @@ assert.equal(consoleErrors.length, 0);
 
 Capture Hero, one regular creature, and Site Warden at 64, 80, and 128 px plus
 real gameplay at 375×812, 390×844, 428×926, and 844×390.
-Declared terminal holds and the intentional loop closure are excluded from the
-distinct-pose-rate denominator. Root-only translation never counts as a new
-authored body pose.
+The authored-semantic-v3 source is exactly 128×128. The preview builder must
+reject a different V3 canvas, retain historical V2 at 640×640, and prove every
+V3 derivative has `scalePpm <= 1_000_000`; the runtime may preserve or
+downscale the source but never upscale it.
+Only declared terminal holds are excluded from the distinct-pose-rate
+denominator. A loop never duplicates frame zero at the endpoint; its pre-wrap
+frame remains distinct and its seam is evaluated by canonical GAF raster
+evidence. Root-only translation never counts as a new authored body pose.
 
-- [ ] **Step 2: Run browser QA and verify RED**
+- [x] **Step 2: Run browser QA and verify RED**
 
 Serve the game locally and run:
 
@@ -360,14 +369,14 @@ node qa/browser/chrome-motion-continuity.mjs
 Expected: the old low-rate preview fails the normalized authored-body-cadence
 threshold.
 
-- [ ] **Step 3: Complete the comparison and CI lane**
+- [x] **Step 3: Complete the comparison and CI lane**
 
 Produce current-versus-V3 playback, frame-step controls, light/dark backgrounds,
 temporal metrics, and exact hashes.
 Add the authored-motion browser test to CI after the existing route/go-live
 smokes.
 
-- [ ] **Step 4: Run the complete local matrix**
+- [x] **Step 4: Run the complete local matrix**
 
 Run:
 

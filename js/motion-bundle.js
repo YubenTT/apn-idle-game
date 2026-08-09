@@ -7,6 +7,12 @@
  */
 
 import { validatePresentationRecord } from './stage-presentation.js?v=gaf2d-motion-v1';
+import {
+  validateConsumerScaleContract,
+  validateQualityProfileBinding,
+  visualFidelityDecodedLimit,
+  visualFidelityEncodedLimit,
+} from './visual-fidelity-v4.js?v=gaf2d-motion-v1';
 
 export const MOTION_GRAMMAR = 'gaf2d-motion-bundle-v1';
 export const MOTION_PREVIEW_GRAMMAR = 'gaf2d-motion-preview-v1';
@@ -102,9 +108,16 @@ const PREVIEW_LINEAGE_HASHES = Object.freeze([
   'batchSummarySha256',
 ]);
 const ENCODER_KEYS = new Set(['name', 'version', 'arguments']);
+const V4_ENCODER_KEYS = new Set([
+  'name',
+  'version',
+  'arguments',
+  'profileSha256',
+]);
 const EXACT_ENCODER_VERSION = '1.6.0';
 const EXACT_ENCODER_ARGUMENTS = Object.freeze(['-exact', '-q', '90']);
 const HIGH_CADENCE_SOURCE_FAMILY = 'authored-semantic-v3';
+const VISUAL_FIDELITY_SOURCE_FAMILY = 'authored-semantic-v4';
 const HIGH_CADENCE_CONTRACTS = Object.freeze({
   character: Object.freeze({
     idle: Object.freeze({ frames: 30, fps: 30, playback: 'loop' }),
@@ -147,6 +160,15 @@ const HIGH_CADENCE_SET_KEYS = new Set([
   'previewLineage',
   'toolchain',
 ]);
+const VISUAL_FIDELITY_SET_KEYS = new Set([
+  ...HIGH_CADENCE_SET_KEYS,
+  'consumerScale',
+  'lineage',
+]);
+const APPROVED_VISUAL_FIDELITY_SET_KEYS = new Set([
+  ...VISUAL_FIDELITY_SET_KEYS,
+  'releaseLineage',
+]);
 const HIGH_CADENCE_CLIP_KEYS = new Set([
   'grammar',
   'authority',
@@ -164,6 +186,18 @@ const HIGH_CADENCE_CLIP_KEYS = new Set([
   'frames',
   'atlas',
   'encoder',
+]);
+const VISUAL_FIDELITY_CLIP_KEYS = new Set([
+  ...HIGH_CADENCE_CLIP_KEYS,
+  'trim',
+  'pivot',
+  'presentation',
+  'lineage',
+]);
+const APPROVED_VISUAL_FIDELITY_CLIP_KEYS = new Set([
+  ...VISUAL_FIDELITY_CLIP_KEYS,
+  'status',
+  'releaseLineage',
 ]);
 const HIGH_CADENCE_SET_ENTRY_KEYS = new Set([
   'descriptor',
@@ -227,11 +261,50 @@ const HIGH_CADENCE_TOOLCHAIN_KEYS = new Set([
   'profileSha256',
 ]);
 const HIGH_CADENCE_COMPOSITOR_KEYS = new Set(['name', 'version']);
+const VISUAL_FIDELITY_SET_LINEAGE_KEYS = new Set([
+  'sourceBatchSha256',
+  'derivativeSetSha256',
+  'masterSetSha256',
+  'selectedProfileSha256',
+  'v3LineageSha256',
+]);
+const VISUAL_FIDELITY_SET_RELEASE_LINEAGE_KEYS = new Set([
+  'motionApprovalSha256',
+  'derivativeSetSha256',
+  'visualFidelityLineageSha256',
+  'runtimeLineageSha256',
+]);
+const VISUAL_FIDELITY_CLIP_LINEAGE_KEYS = new Set([
+  'sourceBatchSha256',
+  'derivativeSetSha256',
+  'sourceDescriptorSha256',
+  'sourceEvidenceSha256',
+  'sourceMediaSha256',
+  'masterInventorySha256',
+  'masterSetSha256',
+  'selectedProfileSha256',
+  'v3LineageSha256',
+]);
+const VISUAL_FIDELITY_CLIP_RELEASE_LINEAGE_KEYS = new Set([
+  'sourceDescriptorSha256',
+  'sourceEvidenceSha256',
+  'sourceMediaSha256',
+  'masterInventorySha256',
+  'motionApprovalSha256',
+  'derivativeSetSha256',
+  'visualFidelityLineageSha256',
+  'runtimeLineageSha256',
+]);
 const HIGH_CADENCE_MAX_IMAGE_BYTES = Object.freeze({
   character: 160 * 1024,
   boss: 240 * 1024,
   hero: 640 * 1024,
 });
+const VISUAL_FIDELITY_TOOLCHAIN_OPERATIONS = Object.freeze([
+  'validate:v4-selected-webp:hash-bound-source',
+  'validate:v4-selected-webp:exact-copy-byte-proof',
+  'copy:v4-selected-webp:exact-media-bytes',
+]);
 
 const isObject = (value) =>
   value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -701,8 +774,40 @@ function highCadenceDecodedLimit(role) {
     : BOSS_DECODED_BYTES;
 }
 
-function validateHighCadenceEncoder(value, label, addError) {
-  if (!exactHighCadenceKeys(value, ENCODER_KEYS, label, addError)) return;
+function validateHighCadenceEncoder(
+  value,
+  label,
+  addError,
+  sourceFamily = HIGH_CADENCE_SOURCE_FAMILY,
+  expectedProfileSha256 = null,
+) {
+  const visualFidelity = sourceFamily === VISUAL_FIDELITY_SOURCE_FAMILY;
+  const keys = visualFidelity ? V4_ENCODER_KEYS : ENCODER_KEYS;
+  if (!exactHighCadenceKeys(value, keys, label, addError)) return;
+  if (visualFidelity) {
+    if (
+      value.name !== 'cwebp' ||
+      value.version !== EXACT_ENCODER_VERSION ||
+      !Array.isArray(value.arguments) ||
+      value.arguments.length === 0 ||
+      value.arguments.length > 64 ||
+      !value.arguments.every((argument) => typeof argument === 'string')
+    ) {
+      addError(
+        `${label}: V4 requires cwebp 1.6.0 and a bounded selected profile argument list`,
+      );
+    }
+    const profileErrors = validateQualityProfileBinding({
+      grammar: 'gaf2d-visual-quality-profile-binding-v4',
+      selectedProfileSha256:
+        expectedProfileSha256 ?? value.profileSha256,
+      manifestProfileSha256:
+        expectedProfileSha256 ?? value.profileSha256,
+      encoderProfileSha256: value.profileSha256,
+    });
+    for (const error of profileErrors) addError(`${label}: ${error}`);
+    return;
+  }
   if (
     value.name !== 'cwebp' ||
     value.version !== EXACT_ENCODER_VERSION ||
@@ -714,7 +819,12 @@ function validateHighCadenceEncoder(value, label, addError) {
   }
 }
 
-function validateHighCadenceToolchain(value, addError) {
+function validateHighCadenceToolchain(
+  value,
+  addError,
+  sourceFamily,
+  selectedProfileSha256 = null,
+) {
   if (
     !exactHighCadenceKeys(
       value,
@@ -736,25 +846,59 @@ function validateHighCadenceToolchain(value, addError) {
       HIGH_CADENCE_COMPOSITOR_KEYS,
       'toolchain.compositor',
       addError,
-    ) &&
-    (
-      value.compositor.name !== 'ImageMagick' ||
-      value.compositor.version !== '7.1.2-13'
     )
   ) {
-    addError('toolchain.compositor: expected ImageMagick 7.1.2-13');
+    if (sourceFamily === VISUAL_FIDELITY_SOURCE_FAMILY) {
+      if (
+        value.compositor.name !== 'HashBoundCopy' ||
+        value.compositor.version !== 'selected-webp-v1'
+      ) {
+        addError(
+          'toolchain.compositor: V4 requires HashBoundCopy selected-webp-v1',
+        );
+      }
+    } else if (
+      value.compositor.name !== 'ImageMagick' ||
+      value.compositor.version !== '7.1.2-13'
+    ) {
+      addError('toolchain.compositor: expected ImageMagick 7.1.2-13');
+    }
   }
-  validateHighCadenceEncoder(value.encoder, 'toolchain.encoder', addError);
-  if (
-    !exactStringArrayEqual(value.operations, [
-      'crop:normalized-png:shared-trim:repage:png32',
-      'resize:lanczos:shared-scale:exact-cell:png32',
-      'montage:row-major:bounded-matrix:shared-cell:no-gap:transparent:alpha-on:png-color-type-6',
-    ])
-  ) {
-    addError('toolchain.operations: preview derivative profile is not canonical');
+  validateHighCadenceEncoder(
+    value.encoder,
+    'toolchain.encoder',
+    addError,
+    sourceFamily,
+    value.profileSha256,
+  );
+  const expectedOperations =
+    sourceFamily === VISUAL_FIDELITY_SOURCE_FAMILY
+      ? VISUAL_FIDELITY_TOOLCHAIN_OPERATIONS
+      : [
+          'crop:normalized-png:shared-trim:repage:png32',
+          'resize:lanczos:shared-scale:exact-cell:png32',
+          'montage:row-major:bounded-matrix:shared-cell:no-gap:transparent:alpha-on:png-color-type-6',
+        ];
+  if (!exactStringArrayEqual(value.operations, expectedOperations)) {
+    addError(
+      sourceFamily === VISUAL_FIDELITY_SOURCE_FAMILY
+        ? 'toolchain.operations: V4 selected-WebP copy profile is not canonical'
+        : 'toolchain.operations: preview derivative profile is not canonical',
+    );
   }
-  if (
+  if (sourceFamily === VISUAL_FIDELITY_SOURCE_FAMILY) {
+    if (!SHA256.test(value.profileSha256 || '')) {
+      addError('toolchain.profileSha256: V4 selected profile is not hash-bound');
+    }
+    const profileErrors = validateQualityProfileBinding({
+      grammar: 'gaf2d-visual-quality-profile-binding-v4',
+      selectedProfileSha256:
+        selectedProfileSha256 ?? value.profileSha256,
+      manifestProfileSha256: value.profileSha256,
+      encoderProfileSha256: value.encoder?.profileSha256,
+    });
+    for (const error of profileErrors) addError(`toolchain: ${error}`);
+  } else if (
     value.profileSha256 !==
     '71f50b2378a4a588d9e49fb2d29700becb2b4a5ae37078a2af3280284eaa8013'
   ) {
@@ -778,9 +922,17 @@ export function validateMotionSetIndex(
     if (errors.length < MAX_VALIDATION_ERRORS) errors.push(message);
   };
   if (!isObject(data)) return ['set: must be an object'];
+  const visualFidelity =
+    data.sourceFamily === VISUAL_FIDELITY_SOURCE_FAMILY;
+  const approvedRelease =
+    visualFidelity && data.authority === 'approved_release';
   exactHighCadenceKeys(
     data,
-    HIGH_CADENCE_SET_KEYS,
+    approvedRelease
+      ? APPROVED_VISUAL_FIDELITY_SET_KEYS
+      : visualFidelity
+        ? VISUAL_FIDELITY_SET_KEYS
+        : HIGH_CADENCE_SET_KEYS,
     'set',
     addError,
   );
@@ -790,14 +942,27 @@ export function validateMotionSetIndex(
   if (data.grammar !== MOTION_SET_INDEX_GRAMMAR) {
     addError(`grammar: expected "${MOTION_SET_INDEX_GRAMMAR}"`);
   }
-  if (data.authority !== 'unapproved_preview') {
-    addError('authority: expected "unapproved_preview"');
+  if (data.authority !== (approvedRelease ? 'approved_release' : 'unapproved_preview')) {
+    addError(
+      approvedRelease
+        ? 'authority: expected "approved_release"'
+        : 'authority: expected "unapproved_preview"',
+    );
   }
-  if (data.status !== 'human_review_required') {
-    addError('status: expected "human_review_required"');
+  if (data.status !== (approvedRelease ? 'approved' : 'human_review_required')) {
+    addError(
+      approvedRelease
+        ? 'status: expected "approved"'
+        : 'status: expected "human_review_required"',
+    );
   }
-  if (data.sourceFamily !== HIGH_CADENCE_SOURCE_FAMILY) {
-    addError(`sourceFamily: expected "${HIGH_CADENCE_SOURCE_FAMILY}"`);
+  if (
+    data.sourceFamily !== HIGH_CADENCE_SOURCE_FAMILY &&
+    data.sourceFamily !== VISUAL_FIDELITY_SOURCE_FAMILY
+  ) {
+    addError(
+      `sourceFamily: expected "${HIGH_CADENCE_SOURCE_FAMILY}" or "${VISUAL_FIDELITY_SOURCE_FAMILY}"`,
+    );
   }
   if (
     typeof data.assetId !== 'string' ||
@@ -809,6 +974,42 @@ export function validateMotionSetIndex(
   }
   if (data.role !== role) {
     addError(`role: expected trusted role "${role}"`);
+  }
+
+  if (visualFidelity) {
+    const consumerScaleErrors = validateConsumerScaleContract(data.consumerScale);
+    for (const error of consumerScaleErrors) {
+      addError(`consumerScale: ${error}`);
+    }
+    if (data.consumerScale?.role !== options?.consumerRole) {
+      addError(
+        `consumer scale role: expected trusted role "${String(options?.consumerRole)}"`,
+      );
+    }
+    exactHighCadenceKeys(data.lineage, VISUAL_FIDELITY_SET_LINEAGE_KEYS, 'lineage', addError);
+    for (const field of VISUAL_FIDELITY_SET_LINEAGE_KEYS) {
+      if (!SHA256.test(data.lineage?.[field] || '')) {
+        addError(`lineage.${field}: invalid SHA-256`);
+      }
+    }
+    if (approvedRelease) {
+      exactHighCadenceKeys(
+        data.releaseLineage,
+        VISUAL_FIDELITY_SET_RELEASE_LINEAGE_KEYS,
+        'releaseLineage',
+        addError,
+      );
+      for (const field of VISUAL_FIDELITY_SET_RELEASE_LINEAGE_KEYS) {
+        if (!SHA256.test(data.releaseLineage?.[field] || '')) {
+          addError(`releaseLineage.${field}: invalid SHA-256`);
+        }
+      }
+      if (data.releaseLineage?.derivativeSetSha256 !== data.lineage?.derivativeSetSha256) {
+        addError(
+          'releaseLineage.derivativeSetSha256: differs from lineage.derivativeSetSha256',
+        );
+      }
+    }
   }
 
   const frameSize = data.frameSize;
@@ -854,6 +1055,22 @@ export function validateMotionSetIndex(
       if (!boundsInsideTrim(data.presentation[field], trim)) {
         addError(`presentation: ${field} is outside trim`);
       }
+    }
+  }
+  if (visualFidelity) {
+    if (
+      frameSize?.width !== data.consumerScale?.runtimeCanvasClass ||
+      frameSize?.height !== data.consumerScale?.runtimeCanvasClass
+    ) {
+      addError('consumerScale.runtimeCanvasClass: must equal the set frameSize');
+    }
+    if (
+      data.presentation?.visibleBounds?.height <
+      data.consumerScale?.displayedDevicePixels
+    ) {
+      addError(
+        'presentation visible pixels must cover consumerScale.displayed device pixels',
+      );
     }
   }
 
@@ -930,7 +1147,12 @@ export function validateMotionSetIndex(
       addError('previewLineage.sourceManifestVersion: must be a positive integer');
     }
   }
-  validateHighCadenceToolchain(data.toolchain, addError);
+  validateHighCadenceToolchain(
+    data.toolchain,
+    addError,
+    data.sourceFamily,
+    options.selectedProfileSha256,
+  );
   return errors;
 }
 
@@ -961,24 +1183,45 @@ export function validateMotionClipDescriptor(
     if (errors.length < MAX_VALIDATION_ERRORS) errors.push(message);
   };
   if (!isObject(data)) return ['clip: must be an object'];
-  exactHighCadenceKeys(
-    data,
-    HIGH_CADENCE_CLIP_KEYS,
-    'clip',
-    addError,
-  );
   const role = highCadenceRole(options);
   const contract = HIGH_CADENCE_CONTRACTS[role]?.[expectedClipName];
   const setEntry = set?.clips?.[expectedClipName];
+  const visualFidelity =
+    set?.sourceFamily === VISUAL_FIDELITY_SOURCE_FAMILY;
+  const approvedRelease =
+    visualFidelity && data.authority === 'approved_release';
+  exactHighCadenceKeys(
+    data,
+    approvedRelease
+      ? APPROVED_VISUAL_FIDELITY_CLIP_KEYS
+      : visualFidelity
+        ? VISUAL_FIDELITY_CLIP_KEYS
+        : HIGH_CADENCE_CLIP_KEYS,
+    'clip',
+    addError,
+  );
 
   if (data.grammar !== MOTION_CLIP_GRAMMAR) {
     addError(`grammar: expected "${MOTION_CLIP_GRAMMAR}"`);
   }
-  if (data.authority !== 'unapproved_preview') {
-    addError('authority: expected "unapproved_preview"');
+  if (data.authority !== (approvedRelease ? 'approved_release' : 'unapproved_preview')) {
+    addError(
+      approvedRelease
+        ? 'authority: expected "approved_release"'
+        : 'authority: expected "unapproved_preview"',
+    );
   }
-  if (data.sourceFamily !== HIGH_CADENCE_SOURCE_FAMILY) {
-    addError(`sourceFamily: expected "${HIGH_CADENCE_SOURCE_FAMILY}"`);
+  if (approvedRelease && data.status !== 'approved') {
+    addError('status: expected "approved"');
+  }
+  if (
+    data.sourceFamily !== set?.sourceFamily ||
+    ![
+      HIGH_CADENCE_SOURCE_FAMILY,
+      VISUAL_FIDELITY_SOURCE_FAMILY,
+    ].includes(data.sourceFamily)
+  ) {
+    addError(`sourceFamily: expected "${String(set?.sourceFamily)}"`);
   }
   if (data.assetId !== set?.assetId) {
     addError(`assetId: expected "${String(set?.assetId)}"`);
@@ -1150,17 +1393,22 @@ export function validateMotionClipDescriptor(
       );
     }
     const decodedBytes = atlas.width * atlas.height * 4;
-    const limit = highCadenceDecodedLimit(role);
+    const limit = visualFidelity
+      ? visualFidelityDecodedLimit(role)
+      : highCadenceDecodedLimit(role);
     if (decodedBytes > limit) {
       addError(`atlas: decoded RGBA bytes ${decodedBytes} exceed ${limit}`);
     }
   }
+  const encodedLimit = visualFidelity
+    ? visualFidelityEncodedLimit(role)
+    : HIGH_CADENCE_MAX_IMAGE_BYTES[role];
   if (
     !isPositiveInteger(atlas?.bytes) ||
-    atlas.bytes > HIGH_CADENCE_MAX_IMAGE_BYTES[role]
+    atlas.bytes > encodedLimit
   ) {
     addError(
-      `atlas.bytes: must fit the ${HIGH_CADENCE_MAX_IMAGE_BYTES[role]} byte ${role} clip budget`,
+      `atlas.bytes: must fit the ${encodedLimit} byte ${role} clip budget`,
     );
   }
   if (!SHA256.test(atlas?.sha256 || '')) {
@@ -1204,12 +1452,7 @@ export function validateMotionClipDescriptor(
   ) {
     const frame = frames[index];
     const label = `frames[${index}]`;
-    exactHighCadenceKeys(
-      frame,
-      HIGH_CADENCE_FRAME_KEYS,
-      label,
-      addError,
-    );
+    exactHighCadenceKeys(frame, HIGH_CADENCE_FRAME_KEYS, label, addError);
     const valid =
       isObject(frame) &&
       Number.isInteger(frame.x) &&
@@ -1222,11 +1465,16 @@ export function validateMotionClipDescriptor(
       addError(`${label}: must be a positive integer rectangle`);
       continue;
     }
+    const expectedTrim = visualFidelity ? data.trim : set?.trim;
     if (
-      frame.width !== set?.trim?.width ||
-      frame.height !== set?.trim?.height
+      frame.width !== expectedTrim?.width ||
+      frame.height !== expectedTrim?.height
     ) {
-      addError(`${label}: must match the set-wide shared trim`);
+      addError(
+        visualFidelity
+          ? `${label}: must match the clip-owned V4 trim`
+          : `${label}: must match the set-wide shared trim`,
+      );
     }
     if (
       atlasSizeValid &&
@@ -1284,15 +1532,103 @@ export function validateMotionClipDescriptor(
       }
     }
   }
+  validateHighCadenceEncoder(
+    data.encoder,
+    'encoder',
+    addError,
+    data.sourceFamily,
+    visualFidelity
+      ? options.selectedProfileSha256 ?? set?.toolchain?.profileSha256
+      : null,
+  );
   if (
-    data.playback === 'loop' &&
-    frames.length > 1 &&
-    frames[0]?.bodyPoseSha256 !== frames.at(-1)?.bodyPoseSha256
+    visualFidelity &&
+    JSON.stringify(data.encoder) !== JSON.stringify(set?.toolchain?.encoder)
   ) {
-    addError('frames: loop must preserve the authored first/last closure');
+    addError('encoder profile differs from the selected set profile');
   }
-  validateHighCadenceEncoder(data.encoder, 'encoder', addError);
+  if (visualFidelity) {
+    exactHighCadenceKeys(data.trim, RECT_KEYS, 'trim', addError);
+    if (
+      !isObject(data.trim) ||
+      !Number.isInteger(data.trim.x) ||
+      data.trim.x < 0 ||
+      !Number.isInteger(data.trim.y) ||
+      data.trim.y < 0 ||
+      !isPositiveInteger(data.trim.width) ||
+      !isPositiveInteger(data.trim.height) ||
+      data.trim.x + data.trim.width > set?.frameSize?.width ||
+      data.trim.y + data.trim.height > set?.frameSize?.height
+    ) {
+      addError('trim: V4 clip trim must stay inside the runtime frameSize');
+    }
+    exactHighCadenceKeys(data.pivot, PIVOT_KEYS, 'pivot', addError);
+    if (
+      !isObject(data.pivot) ||
+      !finiteNormalized(data.pivot.x) ||
+      !finiteNormalized(data.pivot.y)
+    ) {
+      addError('pivot: V4 clip pivot must stay normalized inside the runtime frame');
+    }
+    const presentationErrors = validatePresentationRecord(data.presentation, {
+      referenceClip: expectedClipName,
+    });
+    for (const error of presentationErrors) addError(`presentation: ${error}`);
+    if (presentationErrors.length === 0 && isObject(data.trim)) {
+      for (const field of ['visibleBounds', 'motionBounds']) {
+        if (!boundsInsideTrim(data.presentation[field], data.trim)) {
+          addError(`presentation: ${field} is outside clip trim`);
+        }
+      }
+    }
+    exactHighCadenceKeys(
+      data.lineage,
+      VISUAL_FIDELITY_CLIP_LINEAGE_KEYS,
+      'lineage',
+      addError,
+    );
+    for (const field of VISUAL_FIDELITY_CLIP_LINEAGE_KEYS) {
+      if (!SHA256.test(data.lineage?.[field] || '')) {
+        addError(`lineage.${field}: invalid SHA-256`);
+      }
+    }
+    if (approvedRelease) {
+      exactHighCadenceKeys(
+        data.releaseLineage,
+        VISUAL_FIDELITY_CLIP_RELEASE_LINEAGE_KEYS,
+        'releaseLineage',
+        addError,
+      );
+      for (const field of VISUAL_FIDELITY_CLIP_RELEASE_LINEAGE_KEYS) {
+        if (!SHA256.test(data.releaseLineage?.[field] || '')) {
+          addError(`releaseLineage.${field}: invalid SHA-256`);
+        }
+      }
+      for (const field of [
+        'sourceDescriptorSha256',
+        'sourceEvidenceSha256',
+        'sourceMediaSha256',
+        'masterInventorySha256',
+      ]) {
+        if (data.releaseLineage?.[field] !== data.lineage?.[field]) {
+          addError(`releaseLineage.${field}: differs from lineage.${field}`);
+        }
+      }
+      if (data.releaseLineage?.derivativeSetSha256 !== data.lineage?.derivativeSetSha256) {
+        addError(
+          'releaseLineage.derivativeSetSha256: differs from lineage.derivativeSetSha256',
+        );
+      }
+    }
+    if (data.lineage?.selectedProfileSha256 !== set?.toolchain?.profileSha256) {
+      addError('lineage.selectedProfileSha256: differs from the selected set profile');
+    }
+  }
   return errors;
+}
+
+function finiteNormalized(value) {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 1;
 }
 
 /**
@@ -1403,11 +1739,22 @@ export function drawMotionFrame(
   drawTrimHeight,
 ) {
   const descriptor = record?.descriptor;
-  const clip = descriptor?.clips?.[clipName];
+  const container = record?.set || descriptor;
+  const clip =
+    descriptor?.clips?.[clipName] ||
+    (descriptor?.name === clipName ? descriptor : null);
   const frame = clip?.frames?.[frameIndex];
-  const trim = descriptor?.trim;
-  const frameSize = descriptor?.frameSize;
-  const pivot = descriptor?.pivot;
+  const trim =
+    descriptor?.sourceFamily === VISUAL_FIDELITY_SOURCE_FAMILY &&
+    descriptor?.trim
+      ? descriptor.trim
+      : container?.trim;
+  const frameSize = container?.frameSize;
+  const pivot =
+    descriptor?.sourceFamily === VISUAL_FIDELITY_SOURCE_FAMILY &&
+    descriptor?.pivot
+      ? descriptor.pivot
+      : container?.pivot;
   if (
     typeof ctx?.drawImage !== 'function' ||
     !record?.image ||

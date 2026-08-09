@@ -25,8 +25,37 @@
 
       <div id="motion-preview-banner" class="motion-preview-banner" role="status" aria-live="polite" hidden>
         <strong id="motion-preview-title">UNAPPROVED MOTION PREVIEW · LOCAL ONLY</strong>
-        <span id="motion-preview-detail">7 assets · 39 clips · 276 frames</span>
+        <span id="motion-preview-detail">Awaiting preview manifest</span>
       </div>
+
+      <section id="motion-review-panel" class="motion-review-panel" hidden>
+        <div class="motion-review-head">
+          <strong>MOTION REVIEW · ACTUAL BROWSER PLAYBACK</strong>
+          <span data-role="review-status">Review surface inactive</span>
+        </div>
+        <div class="motion-review-controls">
+          <label>
+            <span>Asset</span>
+            <select data-role="review-asset"></select>
+          </label>
+          <label>
+            <span>Clip</span>
+            <select data-role="review-clip"></select>
+          </label>
+          <label>
+            <span>View</span>
+            <select data-role="review-mode">
+              <option value="actual-game-size">Actual game size</option>
+              <option value="inspection">Inspection</option>
+            </select>
+          </label>
+        </div>
+        <canvas data-role="review-canvas" width="320" height="320" aria-label="Selected motion preview clip"></canvas>
+        <div class="motion-review-meta">
+          <div data-role="review-facts">No clip selected</div>
+          <div data-role="review-viewed">0/39 viewed</div>
+        </div>
+      </section>
 
       <div class="hud-ticker" role="status" aria-label="Current live patch feed">
         <img class="feed-source" src="./assets/apn-logo.svg?v=gaf2d-motion-v1" alt="" width="16" height="16" />

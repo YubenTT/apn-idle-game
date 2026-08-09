@@ -1,0 +1,2212 @@
+{
+  "assets": {
+    "apn-hero": {
+      "clips": {
+        "attack": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 30,
+          "frame_count": 15,
+          "holds": [
+            {
+              "end_index": 14,
+              "reason": "terminal",
+              "start_index": 12
+            }
+          ],
+          "intent": "Wind up one arm and finish in a clear primary strike while head and torso participate as stable root-carried braces.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "anticipation": "attack-004",
+            "contact": "attack-010",
+            "maximum_excursion": "attack-010",
+            "neutral": "attack-000",
+            "recovery": "attack-012",
+            "terminal": "attack-014"
+          },
+          "playback": "progress",
+          "required_parts": [
+            "head",
+            "torso",
+            "left-arm",
+            "right-arm"
+          ],
+          "sampling_profile": "clamped_c2_progress_s0_2_5_6_o0_4_10_12_v1",
+          "secondary_action": null,
+          "source_fps": 16,
+          "source_frame_count": 8,
+          "witnesses": {
+            "maximum-excursion": "attack-010",
+            "neutral": "attack-000",
+            "terminal": "attack-014"
+          }
+        },
+        "celebrate": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 30,
+          "frame_count": 15,
+          "holds": [],
+          "intent": "Raise both arms for two emphatic celebration beats while head and torso remain stable root-carried braces, then return cleanly.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "maximum_excursion": "celebrate-004",
+            "neutral": "celebrate-000",
+            "return": "celebrate-014"
+          },
+          "playback": "loop",
+          "required_parts": [
+            "head",
+            "torso",
+            "left-arm",
+            "right-arm"
+          ],
+          "sampling_profile": "cyclic_c1_periodic_pre_wrap_v1",
+          "secondary_action": {
+            "amplitude_mdeg": -10800,
+            "basis_id": "second_harmonic_15_v1",
+            "intent": "balance asymmetric arm rasters while preserving both celebration beats",
+            "parts": [
+              "left-arm",
+              "right-arm"
+            ],
+            "profile": "paired_second_harmonic_counter_swing_v1"
+          },
+          "source_fps": 16,
+          "source_frame_count": 8,
+          "witnesses": {
+            "maximum-excursion": "celebrate-004",
+            "neutral": "celebrate-000",
+            "return": "celebrate-014"
+          }
+        },
+        "crit": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 30,
+          "frame_count": 15,
+          "holds": [
+            {
+              "end_index": 14,
+              "reason": "terminal",
+              "start_index": 12
+            }
+          ],
+          "intent": "Commit both arms to an amplified strike distinct from attack while head and torso participate through the stable root.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "anticipation": "crit-004",
+            "contact": "crit-010",
+            "maximum_excursion": "crit-010",
+            "neutral": "crit-000",
+            "recovery": "crit-012",
+            "terminal": "crit-014"
+          },
+          "playback": "progress",
+          "required_parts": [
+            "head",
+            "torso",
+            "left-arm",
+            "right-arm"
+          ],
+          "sampling_profile": "clamped_c2_progress_s0_2_5_6_o0_4_10_12_v1",
+          "secondary_action": null,
+          "source_fps": 16,
+          "source_frame_count": 8,
+          "witnesses": {
+            "maximum-excursion": "crit-010",
+            "neutral": "crit-000",
+            "terminal": "crit-014"
+          }
+        },
+        "death": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 30,
+          "frame_count": 15,
+          "holds": [
+            {
+              "end_index": 14,
+              "reason": "terminal",
+              "start_index": 12
+            }
+          ],
+          "intent": "Lose power through the root, rotate, sink, and leave both arms limp while head and torso remain stable braces in a low inert hold.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "anticipation": "death-004",
+            "contact": "death-010",
+            "maximum_excursion": "death-010",
+            "neutral": "death-000",
+            "recovery": "death-012",
+            "terminal": "death-014"
+          },
+          "playback": "progress",
+          "required_parts": [
+            "head",
+            "torso",
+            "left-arm",
+            "right-arm"
+          ],
+          "sampling_profile": "clamped_c2_progress_s0_2_5_6_o0_4_10_12_v1",
+          "secondary_action": {
+            "intent": "keep both limp arms raster-distinct without changing root collapse or terminal hold",
+            "parts": [
+              "left-arm",
+              "right-arm"
+            ],
+            "profile": "paired_arm_rotation_scale_v1",
+            "scale_ppm": 1100000
+          },
+          "source_fps": 16,
+          "source_frame_count": 8,
+          "witnesses": {
+            "maximum-excursion": "death-010",
+            "neutral": "death-000",
+            "terminal": "death-014"
+          }
+        },
+        "hit": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 32,
+          "frame_count": 8,
+          "holds": [
+            {
+              "end_index": 7,
+              "reason": "terminal",
+              "start_index": 5
+            }
+          ],
+          "intent": "Recoil directionally through the root with readable arm flare while head and torso remain stable carried braces.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "anticipation": "hit-002",
+            "contact": "hit-002",
+            "maximum_excursion": "hit-002",
+            "neutral": "hit-000",
+            "recovery": "hit-005",
+            "terminal": "hit-007"
+          },
+          "playback": "progress",
+          "required_parts": [
+            "head",
+            "torso",
+            "left-arm",
+            "right-arm"
+          ],
+          "sampling_profile": "clamped_c2_progress_s0_1_2_o0_3_5_v1",
+          "secondary_action": null,
+          "source_fps": 16,
+          "source_frame_count": 4,
+          "witnesses": {
+            "maximum-excursion": "hit-002",
+            "neutral": "hit-000",
+            "terminal": "hit-007"
+          }
+        },
+        "idle": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 30,
+          "frame_count": 20,
+          "holds": [],
+          "intent": "Hold a restrained root-driven ready hover with subtle active-arm balance while head and torso remain stable braces.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "maximum_excursion": "idle-006",
+            "neutral": "idle-000",
+            "return": "idle-019"
+          },
+          "playback": "loop",
+          "required_parts": [
+            "head",
+            "torso",
+            "left-arm",
+            "right-arm"
+          ],
+          "sampling_profile": "cyclic_c2_periodic_interpolating_v1",
+          "secondary_action": {
+            "basis_id": "periodic_c2_interpolating_source_controls_v1",
+            "intent": "preserve restrained active-arm balance above the final-raster cadence floor",
+            "parts": [
+              "left-arm",
+              "right-arm"
+            ],
+            "profile": "paired_arm_peak_calibration_v1",
+            "selected_peak_mdeg": 10950,
+            "source_peak_mdeg": 5000
+          },
+          "source_fps": 12,
+          "source_frame_count": 8,
+          "witnesses": {
+            "maximum-excursion": "idle-006",
+            "neutral": "idle-000",
+            "return": "idle-019"
+          }
+        },
+        "run": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 32,
+          "frame_count": 20,
+          "holds": [],
+          "intent": "Lean the stable head-and-torso brace through the root with alternating arm drive and restrained legless rise and fall.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "maximum_excursion": "run-007",
+            "neutral": "run-000",
+            "return": "run-019"
+          },
+          "playback": "loop",
+          "required_parts": [
+            "head",
+            "torso",
+            "left-arm",
+            "right-arm"
+          ],
+          "sampling_profile": "cyclic_c1_periodic_pre_wrap_v1",
+          "secondary_action": {
+            "amplitude_mdeg": 5000,
+            "basis_id": "second_harmonic_20_v1",
+            "intent": "phase-lock opposing arms to preserve readable run cadence and loop closure",
+            "parts": [
+              "left-arm",
+              "right-arm"
+            ],
+            "profile": "paired_second_harmonic_counter_swing_v1"
+          },
+          "source_fps": 16,
+          "source_frame_count": 10,
+          "witnesses": {
+            "maximum-excursion": "run-007",
+            "neutral": "run-000",
+            "return": "run-019"
+          }
+        },
+        "sprint": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 30,
+          "frame_count": 15,
+          "holds": [],
+          "intent": "Drive the stable head-and-torso brace through a deeper root lean with arms swept back and a short urgent recovery.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "maximum_excursion": "sprint-005",
+            "neutral": "sprint-000",
+            "return": "sprint-014"
+          },
+          "playback": "loop",
+          "required_parts": [
+            "head",
+            "torso",
+            "left-arm",
+            "right-arm"
+          ],
+          "sampling_profile": "cyclic_c1_periodic_pre_wrap_v1",
+          "secondary_action": null,
+          "source_fps": 20,
+          "source_frame_count": 10,
+          "witnesses": {
+            "maximum-excursion": "sprint-005",
+            "neutral": "sprint-000",
+            "return": "sprint-014"
+          }
+        }
+      },
+      "contrast_pairs": [
+        [
+          "run",
+          "sprint"
+        ],
+        [
+          "attack",
+          "crit"
+        ],
+        [
+          "idle",
+          "celebrate"
+        ],
+        [
+          "hit",
+          "death"
+        ]
+      ],
+      "parts": [
+        "head",
+        "torso",
+        "left-arm",
+        "right-arm"
+      ]
+    },
+    "entry-runner": {
+      "clips": {
+        "advance": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 30,
+          "frame_count": 24,
+          "holds": [],
+          "intent": "Drive a light in-place advance with opposing limbs and forward helmet pressure while the torso remains a stable root-carried brace.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "maximum_excursion": "advance-007",
+            "neutral": "advance-000",
+            "return": "advance-023"
+          },
+          "playback": "loop",
+          "required_parts": [
+            "helmet-fin",
+            "torso",
+            "left-arm",
+            "right-arm",
+            "left-leg",
+            "right-leg"
+          ],
+          "sampling_profile": "cyclic_c2_interior_hermite_signed_pre_wrap_recovery_v1",
+          "secondary_action": null,
+          "source_fps": 10,
+          "source_frame_count": 8,
+          "witnesses": {
+            "maximum-excursion": "advance-007",
+            "neutral": "advance-000",
+            "return": "advance-023"
+          }
+        },
+        "death": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 30,
+          "frame_count": 30,
+          "holds": [
+            {
+              "end_index": 29,
+              "reason": "terminal",
+              "start_index": 25
+            }
+          ],
+          "intent": "Drop through a quick root-driven power-loss descent with active fin and limbs while the torso remains a stable brace.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "anticipation": "death-008",
+            "contact": "death-021",
+            "maximum_excursion": "death-021",
+            "neutral": "death-000",
+            "recovery": "death-025",
+            "terminal": "death-029"
+          },
+          "playback": "progress",
+          "required_parts": [
+            "helmet-fin",
+            "torso",
+            "left-arm",
+            "right-arm",
+            "left-leg",
+            "right-leg"
+          ],
+          "sampling_profile": "clamped_c2_progress_all_controls_s0_1_2_3_4_5_6_o0_4_8_12_17_21_25_terminal_hold_v1",
+          "secondary_action": null,
+          "source_fps": 8,
+          "source_frame_count": 8,
+          "witnesses": {
+            "maximum-excursion": "death-021",
+            "neutral": "death-000",
+            "terminal": "death-029"
+          }
+        },
+        "engaged": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 30,
+          "frame_count": 15,
+          "holds": [],
+          "intent": "Use active fin-and-limb feints around a stable root-carried torso without losing the narrow silhouette.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "maximum_excursion": "engaged-006",
+            "neutral": "engaged-000",
+            "return": "engaged-014"
+          },
+          "playback": "loop",
+          "required_parts": [
+            "helmet-fin",
+            "torso",
+            "left-arm",
+            "right-arm",
+            "left-leg",
+            "right-leg"
+          ],
+          "sampling_profile": "cyclic_c1_periodic_pre_wrap_v1",
+          "secondary_action": {
+            "amplitude_mdeg": 400,
+            "authored_frame_indices": [
+              13
+            ],
+            "basis_id": "single_interior_peak_f12_f14_v1",
+            "intent": "preserve a readable signed pre-wrap arm cadence without changing the sampled trajectory or loop boundary",
+            "parts": [
+              "left-arm",
+              "right-arm"
+            ],
+            "preserved_boundary_indices": [
+              0,
+              1,
+              12,
+              14
+            ],
+            "profile": "paired_opposed_pre_wrap_rotation_v1"
+          },
+          "source_fps": 12,
+          "source_frame_count": 6,
+          "witnesses": {
+            "maximum-excursion": "engaged-006",
+            "neutral": "engaged-000",
+            "return": "engaged-014"
+          }
+        },
+        "hit": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 32,
+          "frame_count": 8,
+          "holds": [
+            {
+              "end_index": 7,
+              "reason": "terminal",
+              "start_index": 5
+            }
+          ],
+          "intent": "Snap the stable torso and leg braces through one root recoil while helmet-fin and arms provide the local interruption.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "anticipation": "hit-002",
+            "contact": "hit-003",
+            "maximum_excursion": "hit-003",
+            "neutral": "hit-000",
+            "recovery": "hit-005",
+            "terminal": "hit-007"
+          },
+          "playback": "progress",
+          "required_parts": [
+            "helmet-fin",
+            "torso",
+            "left-arm",
+            "right-arm",
+            "left-leg",
+            "right-leg"
+          ],
+          "sampling_profile": "explicit_progress_anchors_v1",
+          "secondary_action": null,
+          "source_fps": 16,
+          "source_frame_count": 4,
+          "witnesses": {
+            "maximum-excursion": "hit-003",
+            "neutral": "hit-000",
+            "terminal": "hit-007"
+          }
+        },
+        "idle": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 30,
+          "frame_count": 30,
+          "holds": [],
+          "intent": "Hold a taut narrow stance while the left and right arms trace a restrained neutral-crossing counter-breath around the stable torso brace.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "maximum_excursion": "idle-009",
+            "neutral": "idle-000",
+            "return": "idle-029"
+          },
+          "playback": "loop",
+          "required_parts": [
+            "helmet-fin",
+            "torso",
+            "left-arm",
+            "right-arm",
+            "left-leg",
+            "right-leg"
+          ],
+          "sampling_profile": "cyclic_c2_periodic_interpolating_v1",
+          "secondary_action": {
+            "amplitude_mdeg": 6500,
+            "basis_id": "fundamental_plus_4pct_second_harmonic_30_v1",
+            "extrema_stabilizer": {
+              "amplitude_units": 40,
+              "basis_id": "second_harmonic_30_v1",
+              "intent": "paired arm vertical counter-shift across raster extrema",
+              "parts": [
+                "left-arm",
+                "right-arm"
+              ],
+              "profile": "paired_opposed_translation_y_second_harmonic_v1"
+            },
+            "intent": "restrained shoulder counter-breath",
+            "joint_clearance": {
+              "basis_id": "paired_arm_outward_clearance_30_v1",
+              "maximum_units": 320,
+              "parts": [
+                "left-arm",
+                "right-arm"
+              ],
+              "profile": "paired_outward_translation_v1"
+            },
+            "parts": [
+              "left-arm",
+              "right-arm"
+            ],
+            "profile": "paired_periodic_counter_motion_v2"
+          },
+          "source_fps": 8,
+          "source_frame_count": 8,
+          "witnesses": {
+            "maximum-excursion": "idle-009",
+            "neutral": "idle-000",
+            "return": "idle-029"
+          }
+        }
+      },
+      "contrast_pairs": [
+        [
+          "idle",
+          "engaged"
+        ],
+        [
+          "advance",
+          "engaged"
+        ],
+        [
+          "hit",
+          "death"
+        ]
+      ],
+      "parts": [
+        "helmet-fin",
+        "torso",
+        "left-arm",
+        "right-arm",
+        "left-leg",
+        "right-leg"
+      ]
+    },
+    "protocol-courier": {
+      "clips": {
+        "advance": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 30,
+          "frame_count": 24,
+          "holds": [],
+          "intent": "Advance with active opposing steps, arms, and backpack fins while head and protected payload cradle remain stable root-carried braces.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "maximum_excursion": "advance-007",
+            "neutral": "advance-000",
+            "return": "advance-023"
+          },
+          "playback": "loop",
+          "required_parts": [
+            "head",
+            "payload-cradle",
+            "left-arm",
+            "right-arm",
+            "left-leg",
+            "right-leg",
+            "backpack-fins"
+          ],
+          "sampling_profile": "cyclic_c1_periodic_pre_wrap_v1",
+          "secondary_action": {
+            "amplitude_mdeg": 16000,
+            "basis_id": "fundamental_24_v1",
+            "extrema_pivot_rotation": {
+              "amplitude_mdeg": 6000,
+              "basis_id": "second_harmonic_24_v1",
+              "intent": "phase-cover the paired-arm gait extrema without translating the backpack attachment",
+              "part": "backpack-fins",
+              "profile": "part_rotation_second_harmonic_v1"
+            },
+            "intent": "readable paired arm gait swing across the full advance cycle",
+            "parts": [
+              "left-arm",
+              "right-arm"
+            ],
+            "profile": "paired_periodic_counter_motion_v2"
+          },
+          "source_fps": 10,
+          "source_frame_count": 8,
+          "witnesses": {
+            "maximum-excursion": "advance-007",
+            "neutral": "advance-000",
+            "return": "advance-023"
+          }
+        },
+        "death": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 30,
+          "frame_count": 30,
+          "holds": [
+            {
+              "end_index": 29,
+              "reason": "terminal",
+              "start_index": 25
+            }
+          ],
+          "intent": "Descend through root-driven shutdown while both arms counter-fall to stabilize the payload, then settle into the unchanged terminal hold.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "anticipation": "death-008",
+            "contact": "death-021",
+            "maximum_excursion": "death-021",
+            "neutral": "death-000",
+            "recovery": "death-025",
+            "terminal": "death-029"
+          },
+          "playback": "progress",
+          "required_parts": [
+            "head",
+            "payload-cradle",
+            "left-arm",
+            "right-arm",
+            "left-leg",
+            "right-leg",
+            "backpack-fins"
+          ],
+          "sampling_profile": "clamped_c2_full_pose_with_sign_preserving_arm_through_action_v1",
+          "secondary_action": {
+            "amplitude_mdeg": 12000,
+            "basis_id": "sign_preserving_cubic_hermite_six_lobe_25_v1",
+            "intent": "carry one payload-stabilizing paired-arm counter-fall through the full shutdown without source-control stop/start joins",
+            "output_anchor_indices": [
+              0,
+              4,
+              8,
+              12,
+              17,
+              21,
+              25
+            ],
+            "parts": [
+              "left-arm",
+              "right-arm"
+            ],
+            "phase_anchor_indices": [
+              0,
+              2,
+              4,
+              6,
+              8,
+              10,
+              12,
+              14,
+              16,
+              18,
+              20,
+              22,
+              25
+            ],
+            "phase_control_basis": [
+              0,
+              10000,
+              0,
+              -10000,
+              0,
+              10000,
+              0,
+              -10000,
+              0,
+              10000,
+              0,
+              -10000,
+              0
+            ],
+            "profile": "paired_arm_sign_preserving_cubic_hermite_v1",
+            "source_control_indices": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ]
+          },
+          "source_fps": 8,
+          "source_frame_count": 8,
+          "witnesses": {
+            "maximum-excursion": "death-021",
+            "neutral": "death-000",
+            "terminal": "death-029"
+          }
+        },
+        "engaged": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 30,
+          "frame_count": 15,
+          "holds": [],
+          "intent": "Make guarded arm-and-fin readiness adjustments while head, payload cradle, and legs participate as stable root-carried braces.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "maximum_excursion": "engaged-006",
+            "neutral": "engaged-000",
+            "return": "engaged-014"
+          },
+          "playback": "loop",
+          "required_parts": [
+            "head",
+            "payload-cradle",
+            "left-arm",
+            "right-arm",
+            "left-leg",
+            "right-leg",
+            "backpack-fins"
+          ],
+          "sampling_profile": "cyclic_c1_periodic_pre_wrap_v1",
+          "secondary_action": {
+            "amplitude_mdeg": 16000,
+            "basis_id": "fundamental_15_v1",
+            "extrema_pivot_rotation": {
+              "amplitude_mdeg": 4000,
+              "basis_id": "second_harmonic_15_v1",
+              "intent": "phase-cover guarded arm-readiness extrema without translating the backpack attachment",
+              "part": "backpack-fins",
+              "profile": "part_rotation_second_harmonic_v1"
+            },
+            "intent": "readable guarded arm-and-fin readiness across the full cycle",
+            "parts": [
+              "left-arm",
+              "right-arm"
+            ],
+            "profile": "paired_periodic_counter_motion_v2"
+          },
+          "source_fps": 12,
+          "source_frame_count": 6,
+          "witnesses": {
+            "maximum-excursion": "engaged-006",
+            "neutral": "engaged-000",
+            "return": "engaged-014"
+          }
+        },
+        "hit": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 32,
+          "frame_count": 8,
+          "holds": [
+            {
+              "end_index": 7,
+              "reason": "terminal",
+              "start_index": 5
+            }
+          ],
+          "intent": "Absorb one root recoil with active arms while head, payload cradle, legs, and backpack fins remain coherent structural braces.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "anticipation": "hit-002",
+            "contact": "hit-002",
+            "maximum_excursion": "hit-002",
+            "neutral": "hit-000",
+            "recovery": "hit-005",
+            "terminal": "hit-007"
+          },
+          "playback": "progress",
+          "required_parts": [
+            "head",
+            "payload-cradle",
+            "left-arm",
+            "right-arm",
+            "left-leg",
+            "right-leg",
+            "backpack-fins"
+          ],
+          "sampling_profile": "clamped_c2_impact_response_s0_1_2_o0_2_5_terminal_hold_v1",
+          "secondary_action": {
+            "amplitude_mdeg": 8000,
+            "control_basis_id": "neutral_recoil_counterbrace_v1",
+            "intent": "carry the paired-arm impact recoil through a readable counter-brace while preserving root timing, nonowned parts, and the exact terminal hold",
+            "output_anchor_indices": [
+              0,
+              2,
+              5
+            ],
+            "parts": [
+              "left-arm",
+              "right-arm"
+            ],
+            "profile": "paired_arm_control_response_clamped_c2_v1",
+            "source_control_indices": [
+              0,
+              1,
+              2
+            ]
+          },
+          "source_fps": 16,
+          "source_frame_count": 4,
+          "witnesses": {
+            "maximum-excursion": "hit-002",
+            "neutral": "hit-000",
+            "terminal": "hit-007"
+          }
+        },
+        "idle": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 30,
+          "frame_count": 30,
+          "holds": [],
+          "intent": "Hold a buoyant neutral carry while the left and right arms trace neutral-crossing counter-motion that visibly balances the payload.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "maximum_excursion": "idle-009",
+            "neutral": "idle-000",
+            "return": "idle-029"
+          },
+          "playback": "loop",
+          "required_parts": [
+            "head",
+            "payload-cradle",
+            "left-arm",
+            "right-arm",
+            "left-leg",
+            "right-leg",
+            "backpack-fins"
+          ],
+          "sampling_profile": "cyclic_c2_periodic_interpolating_v1",
+          "secondary_action": {
+            "amplitude_mdeg": 16000,
+            "basis_id": "fundamental_plus_4pct_second_harmonic_30_v1",
+            "extrema_pivot_rotation": {
+              "amplitude_mdeg": 6000,
+              "basis_id": "second_harmonic_30_v1",
+              "intent": "pivoted backpack-fin response closes arm extrema without translating the attachment seam",
+              "part": "backpack-fins",
+              "profile": "part_rotation_second_harmonic_v1"
+            },
+            "extrema_stabilizer": {
+              "amplitude_units": 80,
+              "basis_id": "second_harmonic_30_v1",
+              "intent": "subtle backpack-fin suspension response",
+              "part": "backpack-fins",
+              "profile": "part_translation_y_second_harmonic_v1"
+            },
+            "intent": "payload-balancing arm counter-motion",
+            "parts": [
+              "left-arm",
+              "right-arm"
+            ],
+            "profile": "paired_periodic_counter_motion_v2"
+          },
+          "source_fps": 8,
+          "source_frame_count": 8,
+          "witnesses": {
+            "maximum-excursion": "idle-009",
+            "neutral": "idle-000",
+            "return": "idle-029"
+          }
+        }
+      },
+      "contrast_pairs": [
+        [
+          "idle",
+          "engaged"
+        ],
+        [
+          "advance",
+          "engaged"
+        ],
+        [
+          "hit",
+          "death"
+        ]
+      ],
+      "parts": [
+        "head",
+        "payload-cradle",
+        "left-arm",
+        "right-arm",
+        "left-leg",
+        "right-leg",
+        "backpack-fins"
+      ]
+    },
+    "signal-hunter": {
+      "clips": {
+        "advance": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 30,
+          "frame_count": 24,
+          "holds": [],
+          "intent": "Pursue with active opposing limbs, a leading probe, and connected tether follow-through while body-head and halo remain stable root-carried braces.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "maximum_excursion": "advance-007",
+            "neutral": "advance-000",
+            "return": "advance-023"
+          },
+          "playback": "loop",
+          "required_parts": [
+            "body-head",
+            "left-arm",
+            "right-arm",
+            "left-leg",
+            "right-leg",
+            "halo",
+            "probe",
+            "tether"
+          ],
+          "sampling_profile": "cyclic_c1_periodic_pre_wrap_v1",
+          "secondary_action": null,
+          "source_fps": 10,
+          "source_frame_count": 8,
+          "witnesses": {
+            "maximum-excursion": "advance-007",
+            "neutral": "advance-000",
+            "return": "advance-023"
+          }
+        },
+        "death": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 30,
+          "frame_count": 30,
+          "holds": [
+            {
+              "end_index": 29,
+              "reason": "terminal",
+              "start_index": 25
+            }
+          ],
+          "intent": "Power down through the root with active limbs, probe, and tether while body-head and halo remain stable braces in a low inert hold.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "anticipation": "death-008",
+            "contact": "death-021",
+            "maximum_excursion": "death-021",
+            "neutral": "death-000",
+            "recovery": "death-025",
+            "terminal": "death-029"
+          },
+          "playback": "progress",
+          "required_parts": [
+            "body-head",
+            "left-arm",
+            "right-arm",
+            "left-leg",
+            "right-leg",
+            "halo",
+            "probe",
+            "tether"
+          ],
+          "sampling_profile": "clamped_c2_base_with_sign_preserving_arm_through_action_v1",
+          "secondary_action": {
+            "amplitude_mdeg": 2500,
+            "basis_id": "sign_preserving_cubic_hermite_six_lobe_25_v1",
+            "intent": "carry one paired-arm scanner shutdown through the full collapse without source-control stop/start joins",
+            "output_anchor_indices": [
+              0,
+              4,
+              8,
+              12,
+              17,
+              21,
+              25
+            ],
+            "parts": [
+              "left-arm",
+              "right-arm"
+            ],
+            "phase_anchor_indices": [
+              0,
+              2,
+              4,
+              6,
+              8,
+              10,
+              12,
+              14,
+              16,
+              18,
+              20,
+              22,
+              25
+            ],
+            "phase_control_basis": [
+              0,
+              10000,
+              0,
+              -10000,
+              0,
+              10000,
+              0,
+              -10000,
+              0,
+              10000,
+              0,
+              -10000,
+              0
+            ],
+            "profile": "paired_arm_sign_preserving_cubic_hermite_v1",
+            "source_control_indices": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ]
+          },
+          "source_fps": 8,
+          "source_frame_count": 8,
+          "witnesses": {
+            "maximum-excursion": "death-021",
+            "neutral": "death-000",
+            "terminal": "death-029"
+          }
+        },
+        "engaged": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 30,
+          "frame_count": 15,
+          "holds": [],
+          "intent": "Lock on with active probe, tether, and limb motion while body-head and halo participate as stable root-carried braces.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "maximum_excursion": "engaged-006",
+            "neutral": "engaged-000",
+            "return": "engaged-014"
+          },
+          "playback": "loop",
+          "required_parts": [
+            "body-head",
+            "left-arm",
+            "right-arm",
+            "left-leg",
+            "right-leg",
+            "halo",
+            "probe",
+            "tether"
+          ],
+          "sampling_profile": "cyclic_c1_periodic_pre_wrap_v1",
+          "secondary_action": {
+            "authored_frame_indices": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14
+            ],
+            "basis_id": "fundamental_15_v1",
+            "intent": "preserve readable probe-and-tether body cadence with one exact periodic basis whose position, velocity, and acceleration remain continuous across the loop boundary",
+            "parts": [
+              "probe",
+              "tether"
+            ],
+            "preserved_boundary_indices": [
+              0
+            ],
+            "probe_rotation_amplitude_mdeg": 6000,
+            "probe_translation_amplitude_units": 36,
+            "profile": "probe_tether_periodic_body_cadence_v1",
+            "tether_rotation_amplitude_mdeg": 4750
+          },
+          "source_fps": 12,
+          "source_frame_count": 6,
+          "witnesses": {
+            "maximum-excursion": "engaged-006",
+            "neutral": "engaged-000",
+            "return": "engaged-014"
+          }
+        },
+        "hit": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 32,
+          "frame_count": 8,
+          "holds": [
+            {
+              "end_index": 7,
+              "reason": "terminal",
+              "start_index": 5
+            }
+          ],
+          "intent": "Break the signal rhythm with active arms, probe, and tether while body-head, halo, and legs share the root recoil as stable braces.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "anticipation": "hit-002",
+            "contact": "hit-002",
+            "maximum_excursion": "hit-002",
+            "neutral": "hit-000",
+            "recovery": "hit-005",
+            "terminal": "hit-007"
+          },
+          "playback": "progress",
+          "required_parts": [
+            "body-head",
+            "left-arm",
+            "right-arm",
+            "left-leg",
+            "right-leg",
+            "halo",
+            "probe",
+            "tether"
+          ],
+          "sampling_profile": "clamped_c2_full_pose_s0_1_2_o0_2_5_terminal_hold_v1",
+          "secondary_action": null,
+          "source_fps": 16,
+          "source_frame_count": 4,
+          "witnesses": {
+            "maximum-excursion": "hit-002",
+            "neutral": "hit-000",
+            "terminal": "hit-007"
+          }
+        },
+        "idle": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 30,
+          "frame_count": 30,
+          "holds": [],
+          "intent": "Hold a scanner-ready stance while both arms trace a compact neutral-crossing orbit around the stable head and torso braces.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "maximum_excursion": "idle-009",
+            "neutral": "idle-000",
+            "return": "idle-029"
+          },
+          "playback": "loop",
+          "required_parts": [
+            "body-head",
+            "left-arm",
+            "right-arm",
+            "left-leg",
+            "right-leg",
+            "halo",
+            "probe",
+            "tether"
+          ],
+          "sampling_profile": "cyclic_c2_periodic_interpolating_v1",
+          "secondary_action": {
+            "amplitude_mdeg": 9000,
+            "basis_id": "fundamental_plus_4pct_second_harmonic_30_v1",
+            "extrema_stabilizer": {
+              "amplitude_units": 100,
+              "basis_id": "second_harmonic_30_v1",
+              "intent": "phase-distributed scanner probe response",
+              "part": "probe",
+              "profile": "part_translation_y_second_harmonic_v1"
+            },
+            "intent": "scanner-ready arm orbit",
+            "parts": [
+              "left-arm",
+              "right-arm"
+            ],
+            "profile": "paired_periodic_counter_motion_v2"
+          },
+          "source_fps": 8,
+          "source_frame_count": 8,
+          "witnesses": {
+            "maximum-excursion": "idle-009",
+            "neutral": "idle-000",
+            "return": "idle-029"
+          }
+        }
+      },
+      "contrast_pairs": [
+        [
+          "idle",
+          "engaged"
+        ],
+        [
+          "advance",
+          "engaged"
+        ],
+        [
+          "hit",
+          "death"
+        ]
+      ],
+      "parts": [
+        "body-head",
+        "left-arm",
+        "right-arm",
+        "left-leg",
+        "right-leg",
+        "halo",
+        "probe",
+        "tether"
+      ]
+    },
+    "site-sentinel": {
+      "clips": {
+        "advance": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 30,
+          "frame_count": 24,
+          "holds": [],
+          "intent": "Advance deliberately with active broad-foot weight and opposing arms while head, torso, shoulder blocks, and hip actuators remain stable root-carried braces.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "maximum_excursion": "advance-007",
+            "neutral": "advance-000",
+            "return": "advance-023"
+          },
+          "playback": "loop",
+          "required_parts": [
+            "head",
+            "torso",
+            "left-shoulder-block",
+            "right-shoulder-block",
+            "left-arm",
+            "right-arm",
+            "left-leg",
+            "right-leg",
+            "left-hip-actuator",
+            "right-hip-actuator"
+          ],
+          "sampling_profile": "cyclic_c1_periodic_pre_wrap_v1",
+          "secondary_action": {
+            "amplitude_mdeg": 4000,
+            "basis_id": "second_harmonic_24_v1",
+            "intent": "make the broad-foot left-right weight cycle readable while preserving the stable head, torso, shoulder, hip, arm, and root braces",
+            "parts": [
+              "left-leg",
+              "right-leg"
+            ],
+            "profile": "paired_leg_second_harmonic_counter_motion_v1"
+          },
+          "source_fps": 10,
+          "source_frame_count": 8,
+          "witnesses": {
+            "maximum-excursion": "advance-007",
+            "neutral": "advance-000",
+            "return": "advance-023"
+          }
+        },
+        "death": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 30,
+          "frame_count": 30,
+          "holds": [
+            {
+              "end_index": 29,
+              "reason": "terminal",
+              "start_index": 25
+            }
+          ],
+          "intent": "Settle through active arms and legs into a low asymmetric shutdown while head, torso, shoulder blocks, and hip actuators remain stable braces.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "anticipation": "death-008",
+            "contact": "death-021",
+            "maximum_excursion": "death-021",
+            "neutral": "death-000",
+            "recovery": "death-025",
+            "terminal": "death-029"
+          },
+          "playback": "progress",
+          "required_parts": [
+            "head",
+            "torso",
+            "left-shoulder-block",
+            "right-shoulder-block",
+            "left-arm",
+            "right-arm",
+            "left-leg",
+            "right-leg",
+            "left-hip-actuator",
+            "right-hip-actuator"
+          ],
+          "sampling_profile": "clamped_c2_full_pose_with_sign_preserving_arm_through_action_v1",
+          "secondary_action": {
+            "amplitude_mdeg": 4000,
+            "basis_id": "sign_preserving_cubic_hermite_six_lobe_25_v1",
+            "intent": "carry one opposed paired-fist shutdown through the full collapse without source-control stop/start joins while the armored braces stay stable",
+            "output_anchor_indices": [
+              0,
+              4,
+              8,
+              12,
+              17,
+              21,
+              25
+            ],
+            "parts": [
+              "left-arm",
+              "right-arm"
+            ],
+            "phase_anchor_indices": [
+              0,
+              2,
+              4,
+              6,
+              8,
+              10,
+              12,
+              14,
+              16,
+              18,
+              20,
+              22,
+              25
+            ],
+            "phase_control_basis": [
+              0,
+              10000,
+              0,
+              -10000,
+              0,
+              10000,
+              0,
+              -10000,
+              0,
+              10000,
+              0,
+              -10000,
+              0
+            ],
+            "profile": "paired_arm_sign_preserving_cubic_hermite_v1",
+            "source_control_indices": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ]
+          },
+          "source_fps": 8,
+          "source_frame_count": 8,
+          "witnesses": {
+            "maximum-excursion": "death-021",
+            "neutral": "death-000",
+            "terminal": "death-029"
+          }
+        },
+        "engaged": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 30,
+          "frame_count": 15,
+          "holds": [],
+          "intent": "Apply defensive pressure through active fists and stance while head, torso, shoulder blocks, and hip actuators remain stable root-carried braces.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "maximum_excursion": "engaged-006",
+            "neutral": "engaged-000",
+            "return": "engaged-014"
+          },
+          "playback": "loop",
+          "required_parts": [
+            "head",
+            "torso",
+            "left-shoulder-block",
+            "right-shoulder-block",
+            "left-arm",
+            "right-arm",
+            "left-leg",
+            "right-leg",
+            "left-hip-actuator",
+            "right-hip-actuator"
+          ],
+          "sampling_profile": "cyclic_c1_periodic_pre_wrap_v1",
+          "secondary_action": {
+            "amplitude_mdeg": 4000,
+            "basis_id": "fundamental_15_v1",
+            "intent": "make the defensive left-right stance pressure readable while preserving the stable head, torso, shoulder, hip, fist, and root braces",
+            "parts": [
+              "left-leg",
+              "right-leg"
+            ],
+            "profile": "paired_leg_fundamental_counter_motion_v1"
+          },
+          "source_fps": 12,
+          "source_frame_count": 6,
+          "witnesses": {
+            "maximum-excursion": "engaged-006",
+            "neutral": "engaged-000",
+            "return": "engaged-014"
+          }
+        },
+        "hit": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 32,
+          "frame_count": 8,
+          "holds": [
+            {
+              "end_index": 7,
+              "reason": "terminal",
+              "start_index": 5
+            }
+          ],
+          "intent": "Absorb one armored root interruption with active fists and legs while head, torso, shoulders, and hip actuators remain stable braces.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "anticipation": "hit-002",
+            "contact": "hit-002",
+            "maximum_excursion": "hit-002",
+            "neutral": "hit-000",
+            "recovery": "hit-005",
+            "terminal": "hit-007"
+          },
+          "playback": "progress",
+          "required_parts": [
+            "head",
+            "torso",
+            "left-shoulder-block",
+            "right-shoulder-block",
+            "left-arm",
+            "right-arm",
+            "left-leg",
+            "right-leg",
+            "left-hip-actuator",
+            "right-hip-actuator"
+          ],
+          "sampling_profile": "clamped_c2_impact_response_s0_1_2_o0_2_5_terminal_hold_v1",
+          "secondary_action": {
+            "amplitude_mdeg": 8000,
+            "control_basis_id": "neutral_impact_terminal_return_v1",
+            "intent": "carry one opposed fist impact through a readable armored recoil and return while preserving root timing, nonowned braces, and the exact terminal hold",
+            "output_anchor_indices": [
+              0,
+              2,
+              5
+            ],
+            "parts": [
+              "left-arm",
+              "right-arm"
+            ],
+            "profile": "paired_arm_control_response_clamped_c2_v1",
+            "source_control_indices": [
+              0,
+              1,
+              2
+            ]
+          },
+          "source_fps": 16,
+          "source_frame_count": 4,
+          "witnesses": {
+            "maximum-excursion": "hit-002",
+            "neutral": "hit-000",
+            "terminal": "hit-007"
+          }
+        },
+        "idle": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 30,
+          "frame_count": 30,
+          "holds": [],
+          "intent": "Hold a heavy guarded stance while both arms trace a slow neutral-crossing shoulder-compression cycle around the stable torso brace.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "maximum_excursion": "idle-009",
+            "neutral": "idle-000",
+            "return": "idle-029"
+          },
+          "playback": "loop",
+          "required_parts": [
+            "head",
+            "torso",
+            "left-shoulder-block",
+            "right-shoulder-block",
+            "left-arm",
+            "right-arm",
+            "left-leg",
+            "right-leg",
+            "left-hip-actuator",
+            "right-hip-actuator"
+          ],
+          "sampling_profile": "cyclic_c2_periodic_interpolating_v1",
+          "secondary_action": {
+            "amplitude_mdeg": 12000,
+            "basis_id": "fundamental_plus_4pct_second_harmonic_30_v1",
+            "extrema_stabilizer": {
+              "amplitude_units": 40,
+              "basis_id": "second_harmonic_30_v1",
+              "intent": "subtle head suspension response",
+              "part": "head",
+              "profile": "part_translation_y_second_harmonic_v1"
+            },
+            "intent": "heavy shoulder compression cycle",
+            "parts": [
+              "left-arm",
+              "right-arm"
+            ],
+            "profile": "paired_periodic_counter_motion_v2"
+          },
+          "source_fps": 8,
+          "source_frame_count": 8,
+          "witnesses": {
+            "maximum-excursion": "idle-009",
+            "neutral": "idle-000",
+            "return": "idle-029"
+          }
+        }
+      },
+      "contrast_pairs": [
+        [
+          "idle",
+          "engaged"
+        ],
+        [
+          "advance",
+          "engaged"
+        ],
+        [
+          "hit",
+          "death"
+        ]
+      ],
+      "parts": [
+        "head",
+        "torso",
+        "left-shoulder-block",
+        "right-shoulder-block",
+        "left-arm",
+        "right-arm",
+        "left-leg",
+        "right-leg",
+        "left-hip-actuator",
+        "right-hip-actuator"
+      ]
+    },
+    "site-warden": {
+      "clips": {
+        "advance": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 30,
+          "frame_count": 24,
+          "holds": [],
+          "intent": "Advance with boss weight, shield lead, weapon counter-motion, and stable rings.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "maximum_excursion": "advance-007",
+            "neutral": "advance-000",
+            "return": "advance-023"
+          },
+          "playback": "loop",
+          "required_parts": [
+            "head",
+            "torso-core",
+            "shield",
+            "weapon-arm",
+            "left-leg",
+            "right-leg",
+            "left-ring",
+            "right-ring"
+          ],
+          "sampling_profile": "cyclic_c1_periodic_pre_wrap_v1",
+          "secondary_action": {
+            "amplitude_mdeg": 5000,
+            "basis_id": "second_harmonic_24_v1",
+            "intent": "make the armored two-step weight transfer readable while preserving the shield-and-weapon guard, stable rings, and exact root path",
+            "parts": [
+              "left-leg",
+              "right-leg"
+            ],
+            "profile": "paired_leg_second_harmonic_counter_motion_v1"
+          },
+          "source_fps": 10,
+          "source_frame_count": 8,
+          "witnesses": {
+            "maximum-excursion": "advance-007",
+            "neutral": "advance-000",
+            "return": "advance-023"
+          }
+        },
+        "broken": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 30,
+          "frame_count": 30,
+          "holds": [],
+          "intent": "Stay alive but degraded with an unsteady lean and one lowered displaced ring.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "maximum_excursion": "broken-009",
+            "neutral": "broken-000",
+            "return": "broken-029"
+          },
+          "playback": "loop",
+          "required_parts": [
+            "head",
+            "torso-core",
+            "shield",
+            "weapon-arm",
+            "left-leg",
+            "right-leg",
+            "left-ring",
+            "right-ring"
+          ],
+          "sampling_profile": "cyclic_c1_periodic_pre_wrap_v1",
+          "secondary_action": {
+            "channels": [
+              {
+                "amplitude_mdeg": 2500,
+                "basis_id": "fundamental_30_v1",
+                "part": "shield"
+              },
+              {
+                "amplitude_mdeg": 2500,
+                "basis_id": "second_harmonic_30_v1",
+                "part": "weapon-arm"
+              }
+            ],
+            "intent": "phase-cover degraded guard extrema while preserving the exact root path, lowered-ring story, neutral frame, timing, and nonowned parts",
+            "parts": [
+              "shield",
+              "weapon-arm"
+            ],
+            "preserved_boundary_indices": [
+              0
+            ],
+            "profile": "shield_weapon_periodic_phase_cover_v1"
+          },
+          "source_fps": 8,
+          "source_frame_count": 8,
+          "witnesses": {
+            "maximum-excursion": "broken-009",
+            "neutral": "broken-000",
+            "return": "broken-029"
+          }
+        },
+        "death": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 30,
+          "frame_count": 30,
+          "holds": [
+            {
+              "end_index": 29,
+              "reason": "terminal",
+              "start_index": 25
+            }
+          ],
+          "intent": "Shut down the whole boss silhouette into a low inert pose distinct from broken, with shield and weapon arm counter-falling around the rooted chassis.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "anticipation": "death-008",
+            "contact": "death-021",
+            "maximum_excursion": "death-021",
+            "neutral": "death-000",
+            "recovery": "death-025",
+            "terminal": "death-029"
+          },
+          "playback": "progress",
+          "required_parts": [
+            "head",
+            "torso-core",
+            "shield",
+            "weapon-arm",
+            "left-leg",
+            "right-leg",
+            "left-ring",
+            "right-ring"
+          ],
+          "sampling_profile": "normalized_progress_v1",
+          "secondary_action": {
+            "amplitude_mdeg": 22000,
+            "basis_id": "sign_preserving_cubic_hermite_counterfall_settle_25_v1",
+            "intent": "carry one shield-and-weapon counter-fall through the full shutdown and settle it into the inert hold without a separate compressed rebound while the containment brace stays stable",
+            "parts": [
+              "shield",
+              "weapon-arm"
+            ],
+            "phase_anchor_indices": [
+              0,
+              4,
+              8,
+              14,
+              25
+            ],
+            "phase_control_basis": [
+              0,
+              10000,
+              0,
+              -10000,
+              0
+            ],
+            "profile": "shield_weapon_sign_preserving_cubic_hermite_settle_v1"
+          },
+          "source_fps": 8,
+          "source_frame_count": 8,
+          "witnesses": {
+            "maximum-excursion": "death-021",
+            "neutral": "death-000",
+            "terminal": "death-029"
+          }
+        },
+        "engaged": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 30,
+          "frame_count": 15,
+          "holds": [],
+          "intent": "Press forward with a focused shield lead and weapon-and-ring readiness.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "maximum_excursion": "engaged-006",
+            "neutral": "engaged-000",
+            "return": "engaged-014"
+          },
+          "playback": "loop",
+          "required_parts": [
+            "head",
+            "torso-core",
+            "shield",
+            "weapon-arm",
+            "left-leg",
+            "right-leg",
+            "left-ring",
+            "right-ring"
+          ],
+          "sampling_profile": "cyclic_c1_periodic_pre_wrap_v1",
+          "secondary_action": {
+            "amplitude_mdeg": 6000,
+            "basis_id": "second_harmonic_15_v1",
+            "intent": "make the guarded left-right readiness readable while preserving the focused shield lead, weapon arm, rings, and exact root path",
+            "parts": [
+              "left-leg",
+              "right-leg"
+            ],
+            "profile": "paired_leg_second_harmonic_counter_motion_v1"
+          },
+          "source_fps": 12,
+          "source_frame_count": 6,
+          "witnesses": {
+            "maximum-excursion": "engaged-006",
+            "neutral": "engaged-000",
+            "return": "engaged-014"
+          }
+        },
+        "hit": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 32,
+          "frame_count": 8,
+          "holds": [
+            {
+              "end_index": 7,
+              "reason": "terminal",
+              "start_index": 5
+            }
+          ],
+          "intent": "Take one strong armored recoil through shield and weapon arm while the whole armored chassis recoils through root motion.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "anticipation": "hit-002",
+            "contact": "hit-002",
+            "maximum_excursion": "hit-002",
+            "neutral": "hit-000",
+            "recovery": "hit-005",
+            "terminal": "hit-007"
+          },
+          "playback": "progress",
+          "required_parts": [
+            "head",
+            "torso-core",
+            "shield",
+            "weapon-arm",
+            "left-leg",
+            "right-leg",
+            "left-ring",
+            "right-ring"
+          ],
+          "sampling_profile": "clamped_c2_full_pose_s0_1_2_o0_2_5_terminal_hold_v1",
+          "secondary_action": {
+            "amplitude_mdeg": 16000,
+            "intent": "armored shield-and-weapon impact recoil",
+            "parts": [
+              "shield",
+              "weapon-arm"
+            ],
+            "profile": "progress_counter_fall_v1",
+            "zero_crossing_indices": [
+              0,
+              5
+            ]
+          },
+          "source_fps": 16,
+          "source_frame_count": 4,
+          "witnesses": {
+            "maximum-excursion": "hit-002",
+            "neutral": "hit-000",
+            "terminal": "hit-007"
+          }
+        },
+        "idle": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 30,
+          "frame_count": 30,
+          "holds": [],
+          "intent": "Hold a boss-weight guard while shield and weapon arm trace distinct neutral-crossing guard-breathing arcs around the stable armored body brace.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "maximum_excursion": "idle-009",
+            "neutral": "idle-000",
+            "return": "idle-029"
+          },
+          "playback": "loop",
+          "required_parts": [
+            "head",
+            "torso-core",
+            "shield",
+            "weapon-arm",
+            "left-leg",
+            "right-leg",
+            "left-ring",
+            "right-ring"
+          ],
+          "sampling_profile": "cyclic_c2_periodic_interpolating_v1",
+          "secondary_action": {
+            "amplitude_mdeg": 14000,
+            "basis_id": "fundamental_plus_4pct_second_harmonic_30_v1",
+            "extrema_stabilizer": {
+              "amplitude_units": 40,
+              "basis_id": "second_harmonic_30_v1",
+              "intent": "subtle armored-crown suspension response",
+              "part": "head",
+              "profile": "part_translation_y_second_harmonic_v1"
+            },
+            "intent": "shield-and-weapon guard breathing",
+            "parts": [
+              "shield",
+              "weapon-arm"
+            ],
+            "profile": "paired_periodic_counter_motion_v2"
+          },
+          "source_fps": 8,
+          "source_frame_count": 8,
+          "witnesses": {
+            "maximum-excursion": "idle-009",
+            "neutral": "idle-000",
+            "return": "idle-029"
+          }
+        }
+      },
+      "contrast_pairs": [
+        [
+          "idle",
+          "engaged"
+        ],
+        [
+          "advance",
+          "engaged"
+        ],
+        [
+          "hit",
+          "death"
+        ],
+        [
+          "death",
+          "broken"
+        ]
+      ],
+      "parts": [
+        "head",
+        "torso-core",
+        "shield",
+        "weapon-arm",
+        "left-leg",
+        "right-leg",
+        "left-ring",
+        "right-ring"
+      ]
+    },
+    "veil-operator": {
+      "clips": {
+        "advance": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 30,
+          "frame_count": 24,
+          "holds": [],
+          "intent": "Advance carefully while every crown panel, hand, and cone leg stays readable.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "maximum_excursion": "advance-006",
+            "neutral": "advance-000",
+            "return": "advance-023"
+          },
+          "playback": "loop",
+          "required_parts": [
+            "core-eye",
+            "shell-crown",
+            "left-arm",
+            "right-arm",
+            "left-leg",
+            "right-leg"
+          ],
+          "sampling_profile": "cyclic_c2_periodic_interpolating_v1",
+          "secondary_action": {
+            "amplitude_mdeg": 2000,
+            "basis_id": "second_harmonic_24_v1",
+            "intent": "keep the careful two-step cone-leg transfer readable after the existing source controls move to periodic-C2 sampling, without changing the root, crown, eye, or open-hand acting",
+            "parts": [
+              "left-leg",
+              "right-leg"
+            ],
+            "profile": "paired_leg_second_harmonic_counter_motion_v1"
+          },
+          "source_fps": 10,
+          "source_frame_count": 8,
+          "witnesses": {
+            "maximum-excursion": "advance-006",
+            "neutral": "advance-000",
+            "return": "advance-023"
+          }
+        },
+        "death": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 30,
+          "frame_count": 30,
+          "holds": [
+            {
+              "end_index": 29,
+              "reason": "terminal",
+              "start_index": 21
+            }
+          ],
+          "intent": "Settle through shutdown while preserving the crown panels in a low inert hold.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "anticipation": "death-008",
+            "contact": "death-021",
+            "maximum_excursion": "death-021",
+            "neutral": "death-000",
+            "recovery": "death-021",
+            "terminal": "death-029"
+          },
+          "playback": "progress",
+          "required_parts": [
+            "core-eye",
+            "shell-crown",
+            "left-arm",
+            "right-arm",
+            "left-leg",
+            "right-leg"
+          ],
+          "sampling_profile": "normalized_progress_v1",
+          "secondary_action": {
+            "amplitude_mdeg": 24000,
+            "basis_id": "sign_preserving_cubic_hermite_counterfall_settle_25_v1",
+            "intent": "carry one paired-arm counter-fall through the full shutdown and settle it into the inert hold without changing the sampled root, crown, eye, or legs",
+            "parts": [
+              "left-arm",
+              "right-arm"
+            ],
+            "phase_anchor_indices": [
+              0,
+              4,
+              8,
+              14,
+              21
+            ],
+            "phase_control_basis": [
+              0,
+              10000,
+              0,
+              -10000,
+              0
+            ],
+            "profile": "paired_arm_sign_preserving_cubic_hermite_v1"
+          },
+          "source_fps": 8,
+          "source_frame_count": 8,
+          "witnesses": {
+            "maximum-excursion": "death-021",
+            "neutral": "death-000",
+            "terminal": "death-029"
+          }
+        },
+        "engaged": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 30,
+          "frame_count": 15,
+          "holds": [],
+          "intent": "Close and reopen the crown while hands and cone legs sustain readiness.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "maximum_excursion": "engaged-006",
+            "neutral": "engaged-000",
+            "return": "engaged-014"
+          },
+          "playback": "loop",
+          "required_parts": [
+            "core-eye",
+            "shell-crown",
+            "left-arm",
+            "right-arm",
+            "left-leg",
+            "right-leg"
+          ],
+          "sampling_profile": "cyclic_c1_periodic_pre_wrap_v1",
+          "secondary_action": {
+            "amplitude_mdeg": 200,
+            "authored_frame_indices": [
+              13
+            ],
+            "basis_id": "single_interior_peak_f12_f14_v1",
+            "intent": "preserve readable crown-panel motion through the final pre-wrap transition without changing the sampled trajectory or loop boundary",
+            "parts": [
+              "shell-left",
+              "shell-right"
+            ],
+            "preserved_boundary_indices": [
+              0,
+              1,
+              12,
+              14
+            ],
+            "profile": "paired_opposed_pre_wrap_rotation_v1"
+          },
+          "source_fps": 12,
+          "source_frame_count": 6,
+          "witnesses": {
+            "maximum-excursion": "engaged-006",
+            "neutral": "engaged-000",
+            "return": "engaged-014"
+          }
+        },
+        "hit": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 32,
+          "frame_count": 8,
+          "holds": [
+            {
+              "end_index": 7,
+              "reason": "terminal",
+              "start_index": 5
+            }
+          ],
+          "intent": "Recoil once through core, crown, open hands, and braced cone legs.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "anticipation": "hit-002",
+            "contact": "hit-002",
+            "maximum_excursion": "hit-002",
+            "neutral": "hit-000",
+            "recovery": "hit-005",
+            "terminal": "hit-007"
+          },
+          "playback": "progress",
+          "required_parts": [
+            "core-eye",
+            "shell-crown",
+            "left-arm",
+            "right-arm",
+            "left-leg",
+            "right-leg"
+          ],
+          "sampling_profile": "clamped_c2_full_pose_s0_1_2_o0_2_5_terminal_hold_v1",
+          "secondary_action": null,
+          "source_fps": 16,
+          "source_frame_count": 4,
+          "witnesses": {
+            "maximum-excursion": "hit-002",
+            "neutral": "hit-000",
+            "terminal": "hit-007"
+          }
+        },
+        "idle": {
+          "authoring_method": "deterministic_part_rig",
+          "cadence_profile": "continuous_30",
+          "fps": 30,
+          "frame_count": 30,
+          "holds": [],
+          "intent": "Hold a controlled tense idle with readable crown and open-hand motion.",
+          "interpolation_method": "deterministic_part_transforms",
+          "markers": {
+            "maximum_excursion": "idle-008",
+            "neutral": "idle-000",
+            "return": "idle-029"
+          },
+          "playback": "loop",
+          "required_parts": [
+            "core-eye",
+            "shell-crown",
+            "left-arm",
+            "right-arm",
+            "left-leg",
+            "right-leg"
+          ],
+          "sampling_profile": "cyclic_c2_periodic_interpolating_v1",
+          "secondary_action": {
+            "basis_id": "periodic_c2_interpolating_source_controls_v1",
+            "intent": "calibrate only the existing opposed arm rotations above the 128px cadence floor without adding a new phase or waveform",
+            "parts": [
+              "left-arm",
+              "right-arm"
+            ],
+            "profile": "paired_arm_peak_calibration_v1",
+            "sampled_base_peak_mdeg": 3650,
+            "selected_peak_mdeg": 17000,
+            "source_control_peak_mdeg": 3500
+          },
+          "source_fps": 8,
+          "source_frame_count": 8,
+          "witnesses": {
+            "maximum-excursion": "idle-008",
+            "neutral": "idle-000",
+            "return": "idle-029"
+          }
+        }
+      },
+      "contrast_pairs": [
+        [
+          "idle",
+          "engaged"
+        ],
+        [
+          "advance",
+          "engaged"
+        ],
+        [
+          "hit",
+          "death"
+        ]
+      ],
+      "parts": [
+        "core-eye",
+        "shell-crown",
+        "left-arm",
+        "right-arm",
+        "left-leg",
+        "right-leg"
+      ]
+    }
+  },
+  "contract": "apn-acting-contract-v3",
+  "review_body_heights_px": [
+    64,
+    80,
+    128
+  ],
+  "revision": "authored-semantic-v3",
+  "schema_version": 3,
+  "source_contract_path": "briefs/authored-semantic-v2/acting-contract.json",
+  "source_contract_sha256": "31d124c5999d0c5668502d56188b91082d91623297a118687bef9a361a8055b6"
+}

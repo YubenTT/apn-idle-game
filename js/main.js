@@ -2,7 +2,7 @@
 
 import { C } from './formulas.js?v=gaf2d-motion-v1';
 import { createState, step, collectAlert, simulateOffline, setSprint, isSprinting, goLive, canGoLive, goLiveAvailableZone } from './game.js?v=gaf2d-motion-v1';
-import { sizeCanvas, draw, bossTimerYFor, enemyFrameFor, inspectEnemyMotion, inspectHeroMotion, legacyCreatureKindForStage } from './render.js?v=gaf2d-motion-v1';
+import { sizeCanvas, draw, bossTimerYFor, enemyFrameFor, inspectEnemyMotion, inspectHeroMotion, inspectStagePresentation, legacyCreatureKindForStage } from './render.js?v=gaf2d-motion-v1';
 import { createAssetStore, getCurrentPackAssets, preloadRouteAssets, packWindowForRoute } from './assets.js?v=gaf2d-motion-v1';
 import { bindUI, renderHUD } from './ui.js?v=gaf2d-motion-v1';
 import { save, load, apply } from './save.js?v=gaf2d-motion-v1';
@@ -17,9 +17,12 @@ import {
 import { setReducedMotion } from './sfx.js?v=gaf2d-motion-v1';
 import {
   createMotionStore,
+  getMotionClipRecord,
   getMotionRecord,
+  motionClipSettled,
   motionDiagnostics,
   releaseColdMotion,
+  warmMotionClip,
   warmMotionSet,
 } from './motion-store.js?v=gaf2d-motion-v1';
 import {
@@ -36,6 +39,10 @@ import {
 import {
   loadMotionPreview,
 } from './motion-preview.js?v=gaf2d-motion-v1';
+import {
+  isMotionReviewRequested,
+  mountMotionReviewSurface,
+} from './motion-review.js?v=gaf2d-motion-v1';
 
 const canvas = document.getElementById('game');
 const s = createState();
@@ -48,6 +55,7 @@ const runtimePacks = motionPreview.packs;
 const banner = document.getElementById('motion-preview-banner');
 const bannerTitle = document.getElementById('motion-preview-title');
 const bannerDetail = document.getElementById('motion-preview-detail');
+const motionReviewPanel = document.getElementById('motion-review-panel');
 if (motionPreview.requested && banner && bannerTitle && bannerDetail) {
   const counts = motionPreview.manifest?.counts;
   banner.hidden = false;
@@ -177,10 +185,44 @@ async function warmMotionRequests(requests) {
   )));
 }
 
+async function warmCurrentAdvanceRequests(requests) {
+  await Promise.all(
+    requests.map(({ pack, assetId }) => {
+      const source = pack?.motion?.characters?.[assetId];
+      return source?.clips?.advance
+        ? warmMotionClip(assetStore.motionStore, pack, assetId, 'advance')
+        : Promise.resolve();
+    }),
+  );
+}
+
 function currentMotionSettled(route = s.route) {
   return currentMotionRequests(route).every(({ pack, assetId }) => {
     const record = getMotionRecord(assetStore.motionStore, pack.id, assetId);
-    return record && (record.status === 'ready' || record.status === 'failed');
+    if (!record || record.status === 'pending') return false;
+    if (
+      record.status === 'ready' &&
+      pack.motion.characters[assetId]?.clips?.advance &&
+      !getMotionClipRecord(
+        assetStore.motionStore,
+        pack.id,
+        assetId,
+        'advance',
+      )
+    ) {
+      void warmMotionClip(
+        assetStore.motionStore,
+        pack,
+        assetId,
+        'advance',
+      ).catch(() => {});
+    }
+    return motionClipSettled(
+      assetStore.motionStore,
+      pack.id,
+      assetId,
+      'advance',
+    );
   });
 }
 
@@ -230,6 +272,7 @@ function syncLegacyCreatureOwner() {
 }
 
 let qaStepRemainderMs = 0;
+let motionReviewSurface = null;
 function renderGameToText() {
   const packId = assetStore.currentId || s.route.currentPackId;
   const packAssets = packId ? assetStore.packs.get(packId) : null;
@@ -283,8 +326,30 @@ function renderGameToText() {
           status: motion.status,
           fallbacks: motion.fallbacks,
           authority: motion.record?.descriptor?.authority ?? null,
+          sourceFamily:
+            motion.record?.descriptor?.sourceFamily ??
+            motion.record?.set?.sourceFamily ??
+            null,
           candidateSha256:
-            motion.record?.descriptor?.previewLineage?.candidateSha256 ?? null,
+            motion.record?.descriptor?.previewLineage?.candidateSha256 ??
+            motion.record?.set?.previewLineage?.candidateSha256 ??
+            null,
+          motionApprovalSha256:
+            motion.record?.descriptor?.releaseLineage?.motionApprovalSha256 ??
+            motion.record?.set?.releaseLineage?.motionApprovalSha256 ??
+            null,
+          runtimeLineageSha256:
+            motion.record?.descriptor?.releaseLineage?.runtimeLineageSha256 ??
+            motion.record?.set?.releaseLineage?.runtimeLineageSha256 ??
+            null,
+          derivativeSetSha256:
+            motion.record?.descriptor?.releaseLineage?.derivativeSetSha256 ??
+            motion.record?.set?.releaseLineage?.derivativeSetSha256 ??
+            null,
+          selectedProfileSha256:
+            motion.record?.descriptor?.lineage?.selectedProfileSha256 ??
+            motion.record?.set?.lineage?.selectedProfileSha256 ??
+            null,
         }
       : {
           assetId: null,
@@ -294,7 +359,12 @@ function renderGameToText() {
           status: null,
           fallbacks: motionDiagnostics(assetStore.motionStore).length,
           authority: null,
+          sourceFamily: null,
           candidateSha256: null,
+          motionApprovalSha256: null,
+          runtimeLineageSha256: null,
+          derivativeSetSha256: null,
+          selectedProfileSha256: null,
         },
     motionPreview: {
       requested: motionPreview.requested,
@@ -302,6 +372,7 @@ function renderGameToText() {
       authority: motionPreview.authority,
       batchSummarySha256: motionPreview.batchSummarySha256,
       error: motionPreview.error,
+      reviewRequested: isMotionReviewRequested(location),
       heroStatus: heroV3AuthorityStatus(),
       heroAuthority: motionPreview.active
         ? motionPreview.manifest?.hero?.authority || null
@@ -343,7 +414,15 @@ function advanceQaTime(milliseconds) {
     syncMotionWindow();
     syncLegacyCreatureOwner();
   }
-  draw(view.ctx, view.w, view.h, s, assetStore, view.stageClearance);
+  draw(
+    view.ctx,
+    view.w,
+    view.h,
+    s,
+    assetStore,
+    view.stageClearance,
+    qaStepRemainderMs / fixedMs,
+  );
   renderHUD(s, Math.max(C.FIXED_DT, amount / 1000));
   return renderGameToText();
 }
@@ -355,6 +434,8 @@ if (qaEnabled) {
     state: s,
     assets: assetStore,
     motionPreview,
+    motionReviewPanel,
+    presentation: () => inspectStagePresentation(s),
     actions: {
       goLive: (id = null, opts = {}) => goLive(s, id, opts),
       canGoLive: () => canGoLive(s),
@@ -370,6 +451,11 @@ if (qaEnabled) {
 // identity-safe Canvas silhouette owned by hero-v2.js.
 const heroV3Load = loadHeroV3(motionPreview.heroBasePath, {
   allowUnapprovedPreview: motionPreview.active,
+  sourceFamily: motionPreview.manifest?.sourceFamily ?? null,
+  expectedSetSha256: motionPreview.manifest?.hero?.setSha256 ?? null,
+  consumerScale: motionPreview.manifest?.hero?.consumerScale ?? null,
+  selectedProfileSha256:
+    motionPreview.manifest?.toolchain?.profileSha256 ?? null,
 })
   .catch(() => null); // identity-safe Canvas silhouette remains active
 
@@ -579,7 +665,15 @@ function frame(now) {
   syncRouteAssets();
   syncMotionWindow();
   syncLegacyCreatureOwner();
-  draw(view.ctx, view.w, view.h, s, assetStore, view.stageClearance);
+  draw(
+    view.ctx,
+    view.w,
+    view.h,
+    s,
+    assetStore,
+    view.stageClearance,
+    acc / C.FIXED_DT,
+  );
 
   if (qaMetricsEnabled) {
     qaFrameCount += 1;
@@ -616,6 +710,14 @@ async function boot() {
   const currentRequests = currentMotionRequests();
   releaseColdMotion(assetStore.motionStore, motionKeepKeys(currentRequests));
   await warmMotionRequests(currentRequests);
+  await warmCurrentAdvanceRequests(currentRequests);
+  if (motionReviewPanel) {
+    motionReviewSurface = mountMotionReviewSurface({
+      panel: motionReviewPanel,
+      motionPreview,
+      locationLike: location,
+    });
+  }
   draw(view.ctx, view.w, view.h, s, assetStore, view.stageClearance);
   renderHUD(s, C.FIXED_DT);
   performance.mark?.('apn-first-playable');

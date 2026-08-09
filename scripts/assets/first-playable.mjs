@@ -35,11 +35,9 @@ export function firstPlayableAssetPaths(packs) {
   const paths = new Set([
     ...BOOT_UI_ASSET_PATHS,
     'assets/mascot/v3/set.json',
+    'assets/mascot/v3/run.webp',
+    'assets/mascot/v3/run.json',
   ]);
-  for (const clip of HERO_V3_CLIPS) {
-    paths.add(`assets/mascot/v3/${clip}.webp`);
-    paths.add(`assets/mascot/v3/${clip}.json`);
-  }
 
   const orderedPacks = [...(Array.isArray(packs) ? packs : [])].sort(
     (left, right) =>
@@ -70,6 +68,16 @@ export function firstPlayableAssetPaths(packs) {
     const record = currentPack.motion.characters[assetId];
     if (typeof record?.image === 'string') paths.add(record.image);
     if (typeof record?.descriptor === 'string') paths.add(record.descriptor);
+    if (
+      typeof record?.set === 'string' &&
+      record?.clips &&
+      typeof record.clips === 'object'
+    ) {
+      paths.add(record.set);
+      const advance = record.clips.advance;
+      if (typeof advance?.image === 'string') paths.add(advance.image);
+      if (typeof advance?.descriptor === 'string') paths.add(advance.descriptor);
+    }
   }
   return paths;
 }

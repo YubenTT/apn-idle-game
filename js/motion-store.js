@@ -1,6 +1,8 @@
 import {
+  validateMotionClipDescriptor,
   validateMotionBundle,
   validateMotionPreviewBundle,
+  validateMotionSetIndex,
 } from './motion-bundle.js?v=gaf2d-motion-v1';
 
 export const DEFAULT_MOTION_DEADLINE_MS = 10_000;
@@ -9,6 +11,8 @@ export const MAX_DESCRIPTOR_BYTES = 256 * 1024;
 const textDecoder = new TextDecoder();
 
 const motionKey = (packId, assetId) => `${packId}/${assetId}`;
+const motionClipKey = (packId, assetId, clipName) =>
+  `${packId}/${assetId}#${clipName}`;
 const withCacheToken = (url, sha256) =>
   `${url}${url.includes('?') ? '&' : '?'}sha256=${sha256}`;
 
@@ -240,8 +244,210 @@ async function loadMotionEntry(store, entry, pack, source) {
   return { descriptor, image };
 }
 
-function beginLoad(store, pack, assetId, source, generation) {
-  const key = motionKey(pack.id, assetId);
+function isPerClipSource(source) {
+  return (
+    source !== null &&
+    typeof source === 'object' &&
+    typeof source.set === 'string' &&
+    typeof source.setSha256 === 'string' &&
+    source.clips !== null &&
+    typeof source.clips === 'object'
+  );
+}
+
+function perClipValidationOptions(pack, assetId, source) {
+  const role = pack?.boss?.id === assetId ? 'boss' : 'character';
+  if (source?.sourceFamily !== 'authored-semantic-v4') return { role };
+  return {
+    role,
+    consumerRole: source.consumerScale?.role,
+    selectedProfileSha256: source.selectedProfileSha256,
+  };
+}
+
+async function loadMotionSetEntry(store, entry, pack, source) {
+  const setUrl = withCacheToken(source.set, source.setSha256);
+  entry.descriptorUrl = setUrl;
+  const setBytes = await guarded(
+    entry,
+    fetchBytes(store, setUrl, entry.abortController.signal),
+  );
+  if (setBytes.byteLength > MAX_DESCRIPTOR_BYTES) {
+    throw createFailure(
+      'descriptor',
+      `set exceeds ${MAX_DESCRIPTOR_BYTES} bytes: ${setBytes.byteLength}`,
+    );
+  }
+  const setHash = await store.hashBytes(setBytes);
+  if (setHash !== source.setSha256) {
+    throw createFailure(
+      'hash',
+      `set SHA-256 mismatch: expected ${source.setSha256}, got ${setHash}`,
+    );
+  }
+  let set;
+  try {
+    set = store.parseJson(textDecoder.decode(setBytes));
+  } catch (error) {
+    throw createFailure('descriptor', `set JSON invalid: ${error.message}`);
+  }
+  const validationErrors = validateMotionSetIndex(
+    set,
+    entry.assetId,
+    perClipValidationOptions(pack, entry.assetId, source),
+  );
+  if (
+    source.sourceFamily === 'authored-semantic-v4' &&
+    set.sourceFamily !== source.sourceFamily
+  ) {
+    validationErrors.unshift(
+      `sourceFamily: expected root authority "${source.sourceFamily}"`,
+    );
+  }
+  if (validationErrors.length > 0) {
+    throw createFailure('descriptor', validationErrors.join('; '));
+  }
+  return { descriptor: set, image: null };
+}
+
+async function loadMotionClipEntry(store, entry, pack, assetEntry, clipName) {
+  const source = pack?.motion?.characters?.[assetEntry.assetId];
+  const clipSource = source?.clips?.[clipName];
+  if (!clipSource) {
+    throw createFailure(
+      'descriptor',
+      `clip "${clipName}" is not owned by motion asset "${assetEntry.assetId}"`,
+    );
+  }
+  const descriptorUrl = withCacheToken(
+    clipSource.descriptor,
+    clipSource.descriptorSha256,
+  );
+  entry.descriptorUrl = descriptorUrl;
+  const descriptorBytes = await guarded(
+    entry,
+    fetchBytes(store, descriptorUrl, entry.abortController.signal),
+  );
+  if (descriptorBytes.byteLength > MAX_DESCRIPTOR_BYTES) {
+    throw createFailure(
+      'descriptor',
+      `descriptor exceeds ${MAX_DESCRIPTOR_BYTES} bytes: ${descriptorBytes.byteLength}`,
+    );
+  }
+  const descriptorHash = await store.hashBytes(descriptorBytes);
+  if (descriptorHash !== clipSource.descriptorSha256) {
+    throw createFailure(
+      'hash',
+      `descriptor SHA-256 mismatch: expected ${clipSource.descriptorSha256}, got ${descriptorHash}`,
+    );
+  }
+  let descriptor;
+  try {
+    descriptor = store.parseJson(textDecoder.decode(descriptorBytes));
+  } catch (error) {
+    throw createFailure('descriptor', `descriptor JSON invalid: ${error.message}`);
+  }
+  const validationErrors = validateMotionClipDescriptor(
+    descriptor,
+    clipName,
+    assetEntry.descriptor,
+    {
+      ...perClipValidationOptions(pack, assetEntry.assetId, source),
+      descriptorSha256: clipSource.descriptorSha256,
+      imageSha256: clipSource.imageSha256,
+    },
+  );
+  if (validationErrors.length > 0) {
+    throw createFailure('descriptor', validationErrors.join('; '));
+  }
+
+  const imageUrl = withCacheToken(clipSource.image, clipSource.imageSha256);
+  entry.imageUrl = imageUrl;
+  const imageBytes = await guarded(
+    entry,
+    fetchBytes(store, imageUrl, entry.abortController.signal),
+  );
+  const imageHash = await store.hashBytes(imageBytes);
+  if (imageHash !== clipSource.imageSha256) {
+    throw createFailure(
+      'hash',
+      `atlas SHA-256 mismatch: expected ${clipSource.imageSha256}, got ${imageHash}`,
+    );
+  }
+  const fetchedValidationErrors = validateMotionClipDescriptor(
+    descriptor,
+    clipName,
+    assetEntry.descriptor,
+    {
+      ...perClipValidationOptions(pack, assetEntry.assetId, source),
+      descriptorSha256: clipSource.descriptorSha256,
+      imageSha256: clipSource.imageSha256,
+      imageBytes: imageBytes.byteLength,
+    },
+  );
+  if (fetchedValidationErrors.length > 0) {
+    throw createFailure('descriptor', fetchedValidationErrors.join('; '));
+  }
+  let image;
+  try {
+    image = await guarded(
+      entry,
+      store.decodeImage(imageBytes, {
+        url: imageUrl,
+        packId: pack.id,
+        assetId: assetEntry.assetId,
+        clipName,
+        signal: entry.abortController.signal,
+      }),
+      (lateImage) => lateImage?.close?.(),
+    );
+  } catch (error) {
+    if (error?.reason || error?.name === 'AbortError') throw error;
+    throw createFailure(
+      'decode',
+      `image decode failed: ${error?.message || String(error)}`,
+    );
+  }
+  if (
+    image.width !== descriptor.atlas.width ||
+    image.height !== descriptor.atlas.height
+  ) {
+    image.close?.();
+    throw createFailure(
+      'decode',
+      `decoded dimensions mismatch: expected ${descriptor.atlas.width}x${descriptor.atlas.height}, got ${image.width}x${image.height}`,
+    );
+  }
+  entry.set = assetEntry.descriptor;
+  return { descriptor, image };
+}
+
+function releaseEntry(store, key, entry, message) {
+  if (entry.status === 'pending') {
+    settleSilently(entry, message);
+  }
+  clearDeadline(store, entry);
+  closeImageOnce(entry);
+  store.entries.delete(key);
+}
+
+function releaseSiblingMotionClips(store, packId, assetId, keepKey) {
+  const prefix = `${motionKey(packId, assetId)}#`;
+  for (const [key, entry] of store.entries) {
+    if (!key.startsWith(prefix) || key === keepKey) continue;
+    releaseEntry(store, key, entry, 'motion clip warm superseded');
+  }
+}
+
+function beginLoad(
+  store,
+  pack,
+  assetId,
+  source,
+  generation,
+  loader = loadMotionEntry,
+  key = motionKey(pack.id, assetId),
+) {
   const entry = {
     key,
     packId: pack.id,
@@ -262,7 +468,7 @@ function beginLoad(store, pack, assetId, source, generation) {
   };
   store.entries.set(key, entry);
   startDeadline(store, entry);
-  entry.promise = loadMotionEntry(store, entry, pack, source)
+  entry.promise = loader(store, entry, pack, source)
     .then(({ descriptor, image }) => {
       clearDeadline(store, entry);
       const current = store.entries.get(key);
@@ -332,7 +538,9 @@ export async function warmMotionSet(store, pack, assetIds) {
     assetIds.map(async (assetId) => {
       const key = motionKey(pack.id, assetId);
       const source = characters[assetId];
-      const descriptorUrl = withCacheToken(source.descriptor, source.descriptorSha256);
+      const descriptorUrl = isPerClipSource(source)
+        ? withCacheToken(source.set, source.setSha256)
+        : withCacheToken(source.descriptor, source.descriptorSha256);
       const existing = store.entries.get(key);
       if (existing) {
         if (
@@ -354,7 +562,14 @@ export async function warmMotionSet(store, pack, assetIds) {
         }
       }
       const generation = (existing?.generation || 0) + 1;
-      return beginLoad(store, pack, assetId, source, generation).promise;
+      return beginLoad(
+        store,
+        pack,
+        assetId,
+        source,
+        generation,
+        isPerClipSource(source) ? loadMotionSetEntry : loadMotionEntry,
+      ).promise;
     }),
   );
 }
@@ -363,14 +578,107 @@ export function getMotionRecord(store, packId, assetId) {
   return store.entries.get(motionKey(packId, assetId)) || null;
 }
 
+export async function warmMotionClip(store, pack, assetId, clipName) {
+  const source = pack?.motion?.characters?.[assetId];
+  if (!isPerClipSource(source)) {
+    throw new Error(`Motion asset "${assetId}" does not expose per-clip preview media`);
+  }
+  const [assetEntry] = await warmMotionSet(store, pack, [assetId]);
+  if (!assetEntry || assetEntry.status !== 'ready') return assetEntry;
+  const key = motionClipKey(pack.id, assetId, clipName);
+  const clipSource = source.clips[clipName];
+  if (!clipSource) {
+    throw new Error(`Motion clip "${clipName}" is not owned by asset "${assetId}"`);
+  }
+  const descriptorUrl = withCacheToken(
+    clipSource.descriptor,
+    clipSource.descriptorSha256,
+  );
+  const existing = store.entries.get(key);
+  if (existing) {
+    if (
+      existing.status === 'pending' &&
+      existing.descriptorUrl === descriptorUrl
+    ) {
+      return existing.promise;
+    }
+    if (
+      existing.status === 'ready' &&
+      existing.descriptorUrl === descriptorUrl
+    ) {
+      return existing;
+    }
+    if (existing.status === 'pending') {
+      settleSilently(existing, 'motion clip warm superseded');
+    } else {
+      closeImageOnce(existing);
+    }
+  }
+  const generation = (existing?.generation || 0) + 1;
+  return beginLoad(
+    store,
+    pack,
+    assetId,
+    source,
+    generation,
+    (localStore, entry) =>
+      loadMotionClipEntry(localStore, entry, pack, assetEntry, clipName),
+    key,
+  ).promise;
+}
+
+export function getMotionClipRecord(store, packId, assetId, clipName) {
+  return store.entries.get(motionClipKey(packId, assetId, clipName)) || null;
+}
+
+/** A per-clip set index is metadata, not a drawable first-spawn body. */
+export function motionClipSettled(
+  store,
+  packId,
+  assetId,
+  clipName = 'advance',
+) {
+  const setRecord = getMotionRecord(store, packId, assetId);
+  if (!setRecord || setRecord.status === 'pending') return false;
+  if (setRecord.status === 'failed') return true;
+  if (
+    ![
+      'authored-semantic-v3',
+      'authored-semantic-v4',
+    ].includes(setRecord.descriptor?.sourceFamily)
+  ) {
+    return true;
+  }
+  const clipRecord = getMotionClipRecord(
+    store,
+    packId,
+    assetId,
+    clipName,
+  );
+  return !!clipRecord &&
+    (clipRecord.status === 'ready' || clipRecord.status === 'failed');
+}
+
+export function pruneMotionClipResidency(store, keepKeys) {
+  for (const [key, entry] of store.entries) {
+    if (!key.includes('#') || keepKeys.has(key)) continue;
+    releaseEntry(store, key, entry, 'motion clip warm superseded');
+  }
+}
+
 export function failMotionRecord(
   store,
   packId,
   assetId,
   reason = 'decode',
   detail = 'motion frame blit failed',
+  clipName = null,
 ) {
-  const entry = store.entries.get(motionKey(packId, assetId));
+  const key =
+    typeof clipName === 'string' && clipName.length > 0
+      ? motionClipKey(packId, assetId, clipName)
+      : motionKey(packId, assetId);
+  const entry = store.entries.get(key);
   if (!entry || entry.status !== 'ready') return entry || null;
   closeImageOnce(entry);
   entry.status = 'failed';
@@ -382,13 +690,9 @@ export function failMotionRecord(
 
 export function releaseColdMotion(store, keepKeys) {
   for (const [key, entry] of store.entries) {
-    if (keepKeys.has(key)) continue;
-    if (entry.status === 'pending') {
-      settleSilently(entry, 'motion warm released');
-    }
-    clearDeadline(store, entry);
-    closeImageOnce(entry);
-    store.entries.delete(key);
+    const parentKey = key.includes('#') ? key.split('#', 1)[0] : key;
+    if (keepKeys.has(key) || keepKeys.has(parentKey)) continue;
+    releaseEntry(store, key, entry, 'motion warm released');
   }
 }
 

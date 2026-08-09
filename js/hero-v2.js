@@ -26,7 +26,12 @@
  */
 
 import { clamp } from './formulas.js?v=gaf2d-motion-v1';
-import { heroV3Ready, pickV3, drawV3Frame } from './hero-v3.js?v=gaf2d-motion-v1';
+import {
+  drawV3Frame,
+  heroV3Ready,
+  pickV3,
+  resolveHeroV3Frame,
+} from './hero-v3.js?v=gaf2d-motion-v1';
 
 const T = 130; // design height in px (HOST_PRESENTATION.target)
 
@@ -60,7 +65,7 @@ export function selectHeroV3Frame(o, st, clips) {
     levelT: o.levelT || 0,
     lootT: o.lootT || 0,
   };
-  return pickV3(selector, clips);
+  return clips ? pickV3(selector, clips) : resolveHeroV3Frame(selector);
 }
 
 function drawV3Body(ctx, o, st) {
@@ -297,7 +302,7 @@ export function drawHeroV2(ctx, x, groundY, opts = {}) {
   // 'idle' pose: no locomotion; weight rests on the breathe
   // cycle (visor sweep + blink keep the character alive). Used by the Gear niche.
   const idle = o.pose === 'idle';
-  // Sprite body decision comes FIRST: the approved V3 clip player is the
+  // Sprite body decision comes FIRST: the authority-validated V3 clip player is the
   // primary renderer. Any V3 load/decode failure uses one deliberately simple
   // identity-safe Canvas silhouette rather than a second character design.
   const v3On = heroV3Ready();
@@ -362,7 +367,7 @@ export function drawHeroV2(ctx, x, groundY, opts = {}) {
   const headCy = -88 * k;
   const headR = 33 * k;
 
-  // —— body: approved V3 clips > identity-safe Canvas silhouette ———————————
+  // —— body: authority-validated V3 clips > identity-safe Canvas silhouette —————
   if (v3On) {
     drawV3Body(ctx, o, { t, attack, recoil, crit, over });
   } else {

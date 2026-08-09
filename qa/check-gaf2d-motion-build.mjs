@@ -11,7 +11,11 @@ import {
   DERIVATIVE_TOOLCHAIN_SHA256,
   webpSize,
 } from '../scripts/assets/build-gaf2d-motion.mjs';
-import { validateMotionBundle } from '../js/motion-bundle.js';
+import {
+  validateMotionBundle,
+  validateMotionClipDescriptor,
+  validateMotionSetIndex,
+} from '../js/motion-bundle.js';
 
 const MAGICK =
   process.env.MAGICK ||
@@ -23,6 +27,18 @@ const CWEBP =
   (fs.existsSync('/opt/homebrew/bin/cwebp')
     ? '/opt/homebrew/bin/cwebp'
     : 'cwebp');
+const ACTUAL_V4_PROJECT = process.env.APN_GAF2D_PROJECT
+  ? path.resolve(process.env.APN_GAF2D_PROJECT)
+  : null;
+const HAS_ACTUAL_V4_RELEASE = Boolean(
+  ACTUAL_V4_PROJECT &&
+    fs.existsSync(
+      path.join(
+        ACTUAL_V4_PROJECT,
+        'assets/entry-runner/export/release/manifest.json',
+      ),
+    ),
+);
 const CLIPS = {
   idle: { playback: 'loop', fps: 8, count: 8 },
   advance: { playback: 'loop', fps: 10, count: 8 },
@@ -416,6 +432,68 @@ function buildOptions(fixture, outputParent, overrides = {}) {
   };
 }
 
+function createActualV4ExportFixture(root, assetId, { boss = false } = {}) {
+  const fixture = fixturePaths(root, assetId);
+  const sourceProject = ACTUAL_V4_PROJECT;
+  assert(
+    sourceProject,
+    'APN_GAF2D_PROJECT is required for the optional actual-release integration lane',
+  );
+  const sourceReleaseDir = path.join(
+    sourceProject,
+    'assets',
+    assetId,
+    'export',
+    'release',
+  );
+  fs.mkdirSync(fixture.gaf2dProject, { recursive: true });
+  fs.mkdirSync(path.dirname(fixture.releaseDir), { recursive: true });
+  fs.cpSync(sourceReleaseDir, fixture.releaseDir, { recursive: true });
+  const approval = JSON.parse(
+    fs.readFileSync(
+      path.join(sourceReleaseDir, 'motion', 'motion-set-approval-v4.json'),
+      'utf8',
+    ),
+  );
+  const semantic = approval.candidate.semantic_authority;
+  const batch = JSON.parse(
+    fs.readFileSync(path.join(sourceProject, semantic.batch_summary.path), 'utf8'),
+  );
+  const batchAsset = batch.assets.find((entry) => entry.asset_id === assetId);
+  const batchBase = path.posix.dirname(semantic.batch_summary.path);
+  const requiredProjectFiles = [
+    semantic.batch_summary.path,
+    semantic.candidate_document.path,
+    semantic.temporal_evidence.path,
+    path.posix.join(batchBase, batchAsset.clip_manifest_path),
+    path.posix.join(batchBase, batchAsset.qa_summary_path),
+  ];
+  for (const relative of requiredProjectFiles) {
+    const source = path.join(sourceProject, relative);
+    const destination = path.join(fixture.gaf2dProject, relative);
+    fs.mkdirSync(path.dirname(destination), { recursive: true });
+    fs.copyFileSync(source, destination);
+  }
+  writeFakeGaf2d(fixture);
+  writeJson(fixture.packFile, {
+    id: 'valorant',
+    targets: [{ id: boss ? 'entry-runner' : assetId }],
+    boss: { id: boss ? assetId : 'site-warden' },
+  });
+  return fixture;
+}
+
+function manifestSubsetByPrefix(fixture, prefixes) {
+  const manifest = JSON.parse(
+    fs.readFileSync(path.join(fixture.releaseDir, 'manifest.json'), 'utf8'),
+  );
+  return manifest.files
+    .filter((record) =>
+      prefixes.some((prefix) => record.path.startsWith(prefix)),
+    )
+    .map((record) => [record.path, record.sha256]);
+}
+
 function expectFailure(message, action, needle) {
   try {
     action();
@@ -503,6 +581,139 @@ try {
         .length === 0,
     'trusted pack boss role requires and admits the eight-frame broken clip',
   );
+
+  if (HAS_ACTUAL_V4_RELEASE) {
+    const actualV4 = createActualV4ExportFixture(
+      path.join(temporaryRoot, 'actual-v4-common'),
+      'entry-runner',
+    );
+    const actualV4First = buildGaf2dMotion(
+      buildOptions(actualV4, path.join(temporaryRoot, 'actual-v4-build-a'), {
+        cwebpPath: '/nonexistent-copy-only-cwebp',
+        magickPath: '/nonexistent-copy-only-magick',
+      }),
+    );
+    const actualV4Second = buildGaf2dMotion(
+      buildOptions(actualV4, path.join(temporaryRoot, 'actual-v4-build-b'), {
+        cwebpPath: '/nonexistent-copy-only-cwebp',
+        magickPath: '/nonexistent-copy-only-magick',
+      }),
+    );
+    const expectedActualV4 = manifestSubsetByPrefix(actualV4, [
+      'runtime/atlas/v4/clips/',
+    ]);
+    const actualV4Set = JSON.parse(
+      fs.readFileSync(path.join(actualV4First.outputDir, 'set.json'), 'utf8'),
+    );
+    check(
+      actualV4First.files['set.json'] === actualV4Second.files['set.json'] &&
+        actualV4Set.authority === 'approved_release' &&
+        actualV4Set.status === 'approved' &&
+        validateMotionSetIndex(actualV4Set, 'entry-runner', {
+          role: 'character',
+          consumerRole: 'standard',
+          selectedProfileSha256: actualV4Set.toolchain.profileSha256,
+        }).length === 0,
+      'real V4 release projects a deterministic approved runtime set',
+    );
+    check(
+      !Object.hasOwn(actualV4First.files, 'motion.json') &&
+        !Object.hasOwn(actualV4First.files, 'motion.webp') &&
+        !Object.keys(actualV4First.files).some((file) =>
+          file.startsWith('runtime/atlas/v4/'),
+        ),
+      'real V4 promotion does not substitute a legacy bundle or expose raw release layout',
+    );
+    check(
+      Object.keys(actualV4First.files).sort().join('|') ===
+        'advance.json|advance.webp|death.json|death.webp|engaged.json|engaged.webp|hit.json|hit.webp|idle.json|idle.webp|set.json',
+      'real V4 promotion publishes only runtime set plus selected clip descriptors and WebPs',
+    );
+    check(
+      expectedActualV4.every(([relative, sha]) => {
+        if (!relative.endsWith('lossless.webp')) {
+          return true;
+        }
+        const clipName = relative.split('/')[4];
+        return actualV4First.files[`${clipName}.webp`] === sha;
+      }),
+      'real V4 promotion keeps exact clip WebP bytes from the approved release',
+    );
+    for (const clipName of ['idle', 'advance', 'engaged', 'hit', 'death']) {
+      const descriptor = JSON.parse(
+        fs.readFileSync(
+          path.join(actualV4First.outputDir, `${clipName}.json`),
+          'utf8',
+        ),
+      );
+      check(
+        descriptor.authority === 'approved_release' &&
+          descriptor.status === 'approved' &&
+          validateMotionClipDescriptor(descriptor, clipName, actualV4Set, {
+            role: 'character',
+            consumerRole: 'standard',
+            descriptorSha256: actualV4Set.clips[clipName].descriptorSha256,
+            imageSha256: actualV4Set.clips[clipName].imageSha256,
+            selectedProfileSha256: actualV4Set.toolchain.profileSha256,
+          }).length === 0,
+        `${clipName} V4 clip descriptor projects as an approved runtime descriptor`,
+      );
+    }
+  } else {
+    check(
+      true,
+      'actual V4 release integration lane is optional without APN_GAF2D_PROJECT',
+    );
+  }
+
+  const heroPackFile = path.join(temporaryRoot, 'hero-v4-pack.json');
+  writeJson(heroPackFile, {
+    id: 'valorant',
+    targets: [{ id: 'apn-hero' }],
+    boss: { id: 'site-warden' },
+  });
+  const missingHeroProject = path.join(
+    temporaryRoot,
+    'missing-hero-gaf2d-project',
+  );
+  fs.mkdirSync(missingHeroProject, { recursive: true });
+  expectFailure(
+    'Hero without a current export release fails closed instead of substituting preview or V3 bytes',
+    () =>
+      buildGaf2dMotion({
+        gaf2dProject: missingHeroProject,
+        assetId: 'apn-hero',
+        packFile: heroPackFile,
+        outputDir: path.join(temporaryRoot, 'hero-v4-build', 'apn-hero'),
+      }),
+    'export/release directory is missing or unsafe',
+  );
+
+  if (HAS_ACTUAL_V4_RELEASE) {
+    const tamperedV4 = createActualV4ExportFixture(
+      path.join(temporaryRoot, 'actual-v4-tampered'),
+      'entry-runner',
+    );
+    editJson(tamperedV4, 'runtime/atlas/v4/derivative-set.json', (set) => {
+      set.clips[0].descriptor_sha256 = '0'.repeat(64);
+    });
+    refreshExportManifest(tamperedV4);
+    expectFailure(
+      'tampered V4 derivative-set descriptor binding is rejected before publication',
+      () =>
+        buildGaf2dMotion(
+          buildOptions(
+            tamperedV4,
+            path.join(temporaryRoot, 'actual-v4-tampered-out'),
+            {
+              cwebpPath: '/nonexistent-copy-only-cwebp',
+              magickPath: '/nonexistent-copy-only-magick',
+            },
+          ),
+        ),
+      'visual-fidelity',
+    );
+  }
 
   const staleRelease = cloneFixture(
     common,

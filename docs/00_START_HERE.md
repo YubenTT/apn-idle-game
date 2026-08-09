@@ -14,10 +14,13 @@ language. Original APN IP, Host mascot, crimson APN UI.
 
 ## Active phase
 
-**Phase: authored-motion rollout.** The static game remains playable while the
-GAF2D identity/motion approval chain, deterministic APN bundle builder, bounded
-runtime loader, and real-browser temporal gates are locked. Technical readiness
-does not claim that unapproved replacement art has shipped.
+**Phase: Visual Fidelity V4 approved production integration.** V3 remains the
+exact semantic acting/timing/root authority. The owner approved all seven V4
+motion sets; six baked creature sets passed complete QA, exported through
+hash-locked releases, and now back the production Valorant pack. APN Hero motion
+is approved but remains outside production at its separate rig-approval gate.
+The exact 7-asset / 39-clip / 795-frame review, same-scale V3↔V4 proof, and
+post-approval three-viewport production Chrome evidence are green.
 
 ## The stack, in one sentence
 

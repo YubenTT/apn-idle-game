@@ -1,5 +1,181 @@
 # APN Idle redesign V1 — QA report
 
+## 2026-08-09 Visual Fidelity V4 browser and approval-gate closure
+
+Status: the owner explicitly approved all seven V4 motion sets. The approval
+does not grant APN Hero rig authority. Six baked creature sets passed complete
+QA, exported through current hash-locked release manifests, and are now the
+production Valorant motion sources. Hero remains outside the production pack at
+the separate `awaiting_rig_approval` gate. V3 remains the immutable semantic
+acting/timing/root source.
+
+Current immutable facts:
+
+- V4 source batch: 7 assets / 39 clips / 795 frames / 920 files;
+- V4 batch SHA-256:
+  `9fbd349f27fb01a008bd9458f03becbc87485c27895d3fb7b5f667aa87658374`;
+- preview manifest SHA-256:
+  `64e31dab8ee529aaf432bc0b1c534ca0fbcbe90ec8ed524e00225034a20a2e9e`;
+- deterministic Chrome report SHA-256:
+  `5cba094a30584038933ec25f1d342e30956927ec325b46b74a772205ed347d25`;
+- same-scale V3↔V4 report SHA-256:
+  `550de2aabdbcce47ac7cc7e97083c25d7dc32e2280bfb60238cef67c7381c317`;
+- selected lossless profile SHA-256:
+  `76d15cc95e8a0bf2f40867abb09f375148679e71f3746e11d51130f83c463dd4`;
+- compressed motion: 23,965,723 / 33,554,432 bytes; Hero:
+  2,961,626 / 3,670,016 bytes;
+- decoded max wave: 39,191,760 / 50,331,648 bytes;
+- motion-only Hero + max-wave residency: 44,764,880 / 67,108,864 bytes;
+- full route-aware hot textures: 63,022,408 / 67,108,864 bytes; and
+- post-approval production Chrome report SHA-256:
+  `05dfae9ab5be885f411345d04cb8947d6354a567548da83d9796eed70353eaa9`.
+
+Hash-locked `MotionSetApprovalV4` records:
+
+- Hero `3b18d9e82a611b738aa5e277c6da2649dc820648cf5fd2d5bbaa8c35b7c3260d`;
+- Entry `54b6fd43c60def0ce0d270bc91ec3729af7e16442d118a8ecaf953c9fc6f2425`;
+- Courier `992f4cdb38d18833412fed6d33cca8359ad4c13031a70ddaa0825f51c87936f4`;
+- Signal `2f128f8fb6851316092819213c82699ce82a23de01fd71007f4bc12bd015c881`;
+- Sentinel `5e2416fdaf9b829c3ea4f26fa0a257f35d3e189c84cfc9f178ed47e2fa48ec8e`;
+- Warden `707e53ae77c2c3a3f37cdec70ba35f59a710c690247b7b1365a49204ad39abae`;
+  and
+- Veil `29852c0f6bbdb5b40b4577eaaf088835c854bb5f73494bc357d68151ab521efa`.
+
+Six current release-manifest hashes are Entry `cbe9946b…d654`, Courier
+`62e18b5a…9c7`, Signal `4bd9fbd3…bf83`, Sentinel `ccc83d3f…6119`, Warden
+`9cd7e5ba…69d39`, and Veil `d25af068…6172`. Every runtime projection is an
+exact-copy, SHA-verified `approved_release`; preview/snapshot/shim authority is
+rejected by the production store.
+
+Two fresh Chrome 151.0.7922.76 runs produced byte-identical deterministic and
+same-scale reports. Every clip completed a full cycle at 60, 90, 120, and
+144 Hz with zero continuity findings. The exact selected-only ledger contains
+7 set, 40 JSON, and 39 WebP requests; all 86 returned HTTP 200. Residency peaked
+at two current sets and three decoded clips including retained/warming state,
+with zero diagnostics. The separate non-authoritative timing reports measured
+39 decodes each, with medians of 17.0 and 16.5 ms and maxima of 48.1 and 51.6 ms.
+
+At DPR2 and the same displayed role size, V4 supplies 219/192 visible/device
+pixels for Hero, 176/144 for standard Courier, 177/168 for elite Sentinel, and
+258/224 for boss Warden. The preserved V3 baseline supplied only 101, 102, 96,
+and 100 source-visible pixels. Mobile, landscape, Wave 1, Wave 10, review,
+native light/dark, and same-scale screenshots were visually inspected with no
+clipping, halo, blank actor, overflow, console, or network finding. The
+machine-readable reports and screenshots are permanently copied under the
+asset project's `review/authored-semantic-v4-evidence/browser/` boundary.
+
+Post-approval Chrome then exercised the production page at 375×812, 428×926,
+and 844×390. All 60 Wave 1–10 standard/reduced cases rendered their exact
+approved release with zero fallback, console, network, or overflow finding;
+Wave 10 break state and fixed-timestamp frame changes were captured. The cold
+request ledger proves current `set + advance`, next `set` only, then next
+`advance` only at the route transition. Two consecutive complete runs produced
+the byte-identical report hash above. The normal page still exposes none of the
+QA globals. Seventy-five screenshots plus `report.json` live under
+`qa/screenshots/gaf2d-production-v4/` and the representative Wave 1/Wave 10
+portrait and landscape images were inspected at original resolution.
+
+The complete game `node qa/run-tests.mjs` gate ends `ALL PASS`; the full GAF2D
+suite passes 1,440 tests; and the asset V4 suite passes 70 tests. Seven
+project-contained V4 candidates also pass zero-write GAF fidelity planning.
+The owner approval authorizes these motion records and six baked releases, not
+Hero rig approval or deployment.
+
+## 2026-08-09 V4 bounded Hero density correction
+
+A bounded APN Hero `hit` witness invalidated the earlier synthetic 256 px Hero
+runtime assumption. Its 512 px master reference has 343 visible pixels; the
+single 320 px derivative measures 214–220 visible pixels across the clip and
+therefore clears the 96 CSS px × DPR 2 demand of 192 device pixels. A 256 px
+Hero derivative would provide approximately 171 visible pixels and is rejected
+as an upscale.
+
+The current role-aware V4 contract is Hero 320, standard 256, elite 256, and
+boss 320. Runtime class remains manifest-bound rather than caller-selected;
+unknown classes and any role/class mismatch fail closed. These measurements are
+mechanical evidence only and do not grant creative approval or production
+promotion.
+
+## 2026-08-09 authored-semantic-v3 browser closure (historical baseline)
+
+Status: offline technical acceptance is green. Creative authority is not.
+The preview remains `unapproved_preview` with `human_review_required` until the
+owner watches and explicitly approves or rejects the complete 39-clip set.
+
+Current immutable facts:
+
+- source batch: 7 assets / 39 clips / 795 frames, 30/32 FPS;
+- source batch SHA-256:
+  `1ab30e7850918cd03446b539eeaf444b14ff5de4d9d0e121782cb92805f10a0e`;
+- preview manifest SHA-256:
+  `75c521d43a9a2214fc75ff7a33e5158c05a1d08f0af34edb07cf4d7caea8d2c8`;
+- browser report SHA-256:
+  `66907b99c380d8c0d1ae8495cc746652f5766f6d56dbc01a48c25f25fdecb948`;
+- compressed motion: 3,006,743 / 3,670,016 bytes, 22.1% headroom;
+- decoded max wave: 21,853,252 / 33,554,432 bytes; hot textures:
+  27,172,756 / 67,108,864 bytes.
+
+Fresh commands:
+
+```console
+node qa/run-tests.mjs
+# ALL PASS
+
+node qa/browser/chrome-motion-continuity.mjs
+# PASS chrome-motion-continuity 39/39 clips across 60/90/120/144 Hz
+```
+
+The Chrome lane decoded and alpha-sampled every frame, found zero continuity
+failures, rendered 18 Hero/regular/boss witnesses at 64/80/128 px on light and
+dark, and proved a cold current-wave set/clip load with no blank active actor.
+The first drawable actor appeared only after `advance` reached `ready`, then
+three consecutive snapshots contained nonzero alpha and zero fallbacks.
+The browser pages use a QA-only seeded random source; two consecutive complete
+runs produced the same report SHA-256 above.
+
+Gameplay evidence is independently captured at 375 × 812, 390 × 844,
+428 × 926, and 844 × 390. Every page asserts that the review panel is hidden,
+the V3 motion is `ready`, horizontal and vertical overflow are zero, and browser
+console/network problems are zero. Screenshots and the machine-readable report
+live under `qa/screenshots/motion-continuity/`.
+
+This closes the stale RED described below. It does not grant motion approval or
+authorize production promotion, commit, push, merge, or deploy.
+
+## 2026-08-08 V3 browser continuity lane
+
+Status: harness added, syntax-checked, and intentionally RED against the
+current local preview because the worktree still exposes the old mixed V2
+authority instead of the real V3 7/39/795 set.
+
+`node --check qa/browser/chrome-motion-continuity.mjs` passes.
+`node qa/browser/chrome-motion-continuity.mjs` currently fails closed with the
+expected blocker:
+
+- `.gaf2d-preview/manifest.json` still reports `sourceFamily=authored-semantic-v2`
+  and `counts=7/39/276`; and
+- creature preview entries still bind legacy
+  `.gaf2d-preview/characters/<asset>/motion.json` and `motion.webp` instead of
+  per-clip `set.json` plus exact clip descriptor/image pairs.
+
+Once the real V3 preview materializes locally, the harness is wired to:
+
+- reject any catalog that is not the exact 39-clip, 795-frame, authored-semantic-v3 review surface;
+- require the review panel to activate instead of the current blocked state;
+- sample all 39 clips at `60/90/120/144` Hz through the real browser review
+  loader and fail on cadence or undeclared-hold regressions;
+- render and alpha-sample every frame of every loaded review clip so a
+  structurally valid but blank/transparent atlas frame cannot pass;
+- enforce progress freeze behavior from descriptor-owned `markers` and `holds`
+  instead of skipping terminal-frame hold validation entirely;
+- collect console/network failures separately for each gameplay viewport CDP
+  session; and
+- prove a real cold gameplay transition from released motion residency to first
+  visible active frames when the per-clip gameplay preview is actually present;
+- capture one native-size light/dark witness board for `64/80/128` px; and
+- capture gameplay screenshots at `375×812`, `390×844`, `428×926`, and
+  `844×390` with zero overflow and an active preview authority.
+
 ## 2026-07-30 stage-presentation contract closure
 
 Status: offline implementation and browser evidence are green. This is not
@@ -18,7 +194,7 @@ explicit human approve/reject decision.
   `hidden=true`, `display=none`, and `0×0`.
 - The exact preview build command was run twice:
 
-  `node scripts/assets/build-gaf2d-preview.mjs --gaf2d-project /Users/talatongu/Code/kimi-projects/apn-idle-game-gaf2d --output .gaf2d-preview`
+  `node scripts/assets/build-gaf2d-preview.mjs --gaf2d-project "$GAF2D_PROJECT" --output .gaf2d-preview`
 
   Both runs reported `GAF2D PREVIEW 7/39/276` and manifest SHA-256
   `2ec2659c795e6e298f86bd7d079a538e193139e546c4b335dd32d9e8a4c5b2e1`.
@@ -127,6 +303,12 @@ Browser clip evidence and unchanged descriptor facts:
 All observed resource responses were successful `127.0.0.1:8790` requests.
 The Playwright session reported zero console errors and zero warnings, and every
 motion-store diagnostic set was empty.
+Permanent runtime lesson: one-sibling-per-asset clip residency is unsafe for
+real gameplay because a dying body and a fresh same-asset spawn can overlap in
+one render.
+The runtime now keeps all clips selected for the current frame, then prunes
+only unselected siblings; the canonical emitted package path remains
+`assets/game-packs/<pack-id>/characters/<asset-id>/...`.
 
 ### Screenshot evidence
 

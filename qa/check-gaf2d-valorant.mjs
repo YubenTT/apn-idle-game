@@ -27,9 +27,11 @@ import {
   bossTimerYFor,
   enemyFrameFor,
   enemyLabelForDisplay,
+  enemyStagePresentationForMotion,
   inspectEnemyMotion,
   stageRoleForEnemy,
 } from '../js/render.js';
+import * as renderRuntime from '../js/render.js';
 import {
   approvalMatchesCurrentManifest,
   eraseArgumentsForFrame,
@@ -48,6 +50,12 @@ import {
   legacySquarePresentation,
   stageFitForActors,
 } from '../js/stage-presentation.js';
+import {
+  createMotionStore,
+  getMotionClipRecord,
+  pruneMotionClipResidency,
+  warmMotionClip,
+} from '../js/motion-store.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const packDir = path.join(root, 'assets/game-packs/valorant');
@@ -55,6 +63,10 @@ const assert = (condition, message) => {
   if (!condition) throw new Error(`GAF2D Valorant: ${message}`);
   console.log(`OK ${message}`);
 };
+const domainBytes = (value) =>
+  JSON.stringify(value, (_key, entry) =>
+    entry instanceof Map ? [...entry.entries()] : entry,
+  );
 const readJson = (file) => JSON.parse(fs.readFileSync(file, 'utf8'));
 const sha256 = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 
@@ -497,6 +509,544 @@ assert(
     readyMotion.clip === 'advance',
   'mapped current-wave identity resolves its authored motion clip before any static fallback',
 );
+const v4NeutralPresentation = structuredClone(
+  syntheticRecord.descriptor.presentation,
+);
+const v4AdvancePresentation = {
+  ...structuredClone(v4NeutralPresentation),
+  reference: {
+    ...v4NeutralPresentation.reference,
+    clip: 'advance',
+  },
+};
+assert(
+  enemyStagePresentationForMotion({
+    status: 'ready',
+    record: {
+      set: {
+        sourceFamily: 'authored-semantic-v4',
+        presentation: v4NeutralPresentation,
+      },
+      descriptor: {
+        sourceFamily: 'authored-semantic-v4',
+        presentation: v4AdvancePresentation,
+      },
+    },
+  })?.reference?.clip === 'idle',
+  'V4 enemy stage fit uses the neutral set presentation instead of the active clip presentation',
+);
+const syntheticV4MotionPack = structuredClone(syntheticMotionPack);
+syntheticV4MotionPack.motion.characters['entry-runner'] = {
+  sourceFamily: 'authored-semantic-v4',
+  set: 'preview/entry-runner/set.json',
+  setSha256: '8'.repeat(64),
+  clips: {
+    advance: {
+      descriptor: 'preview/entry-runner/advance.json',
+      descriptorSha256: '9'.repeat(64),
+      image: 'preview/entry-runner/advance.webp',
+      imageSha256: 'a'.repeat(64),
+    },
+  },
+};
+const syntheticV4SetRecord = {
+  status: 'ready',
+  descriptor: {
+    sourceFamily: 'authored-semantic-v4',
+    clips: { advance: {} },
+    presentation: v4NeutralPresentation,
+  },
+};
+const syntheticV4ClipRecord = {
+  status: 'ready',
+  descriptor: {
+    sourceFamily: 'authored-semantic-v4',
+    fps: 30,
+    frames: [{ x: 0, y: 0, width: 80, height: 96 }],
+    presentation: v4AdvancePresentation,
+  },
+  set: syntheticV4SetRecord.descriptor,
+  image: { width: 80, height: 96 },
+};
+const syntheticV4Store = {
+  motionStore: {
+    entries: new Map([
+      [syntheticKey, syntheticV4SetRecord],
+      [`${syntheticKey}#advance`, syntheticV4ClipRecord],
+    ]),
+    diagnostics: new Map(),
+  },
+};
+const readyV4Motion = inspectEnemyMotion(
+  syntheticEnemy,
+  { ...syntheticPackAssets, pack: syntheticV4MotionPack },
+  syntheticV4Store,
+  syntheticEnv,
+);
+assert(
+  readyV4Motion.status === 'ready' &&
+    readyV4Motion.clip === 'advance' &&
+    readyV4Motion.fps === 30 &&
+    readyV4Motion.record === syntheticV4ClipRecord &&
+    enemyStagePresentationForMotion(readyV4Motion)?.reference?.clip ===
+      'idle',
+  'V4 enemy gameplay resolves its selected clip record while stage fit retains the neutral set presentation',
+);
+{
+  const encoder = new TextEncoder();
+  const smoothClipConfigs = {
+    idle: { playback: 'loop', frames: 30, fps: 30 },
+    advance: { playback: 'loop', frames: 24, fps: 30 },
+    engaged: { playback: 'loop', frames: 15, fps: 30 },
+    hit: { playback: 'progress', frames: 8, fps: 32 },
+    death: { playback: 'progress', frames: 30, fps: 30 },
+  };
+  const smoothImageBytes = new Map(
+    Object.keys(smoothClipConfigs).map((clipName) => [
+      clipName,
+      encoder.encode(`runtime:${clipName}`),
+    ]),
+  );
+  const smoothClips = Object.fromEntries(
+    Object.entries(smoothClipConfigs).map(([clipName, config]) => {
+      const imageBytes = smoothImageBytes.get(clipName);
+      const imageSha256 = crypto
+        .createHash('sha256')
+        .update(Buffer.from(imageBytes))
+        .digest('hex');
+      const descriptor = {
+        grammar: 'gaf2d-motion-clip-v2',
+        authority: 'unapproved_preview',
+        sourceFamily: 'authored-semantic-v3',
+        assetId: 'entry-runner',
+        name: clipName,
+        playback: config.playback,
+        fps: config.fps,
+        sourceFps: 12,
+        cadenceProfile: 'continuous_30',
+        authoringMethod: 'deterministic_part_rig',
+        interpolationMethod: 'deterministic_part_transforms',
+        holds:
+          config.playback === 'progress'
+            ? [{ startIndex: config.frames - 2, endIndex: config.frames - 1, reason: 'terminal' }]
+            : [],
+        markers:
+          config.playback === 'progress'
+            ? { anticipation: 0, contact: Math.floor(config.frames / 2), terminal: config.frames - 1 }
+            : { neutral: 0, maximum_excursion: Math.floor(config.frames / 2), return: config.frames - 1 },
+        frames: Array.from({ length: config.frames }, (_, index) => {
+          const frameSha256 = String(index + 1).padStart(64, '0');
+          const bodyPoseSha256 =
+            config.playback === 'progress' && index === config.frames - 1
+              ? String(config.frames - 1).padStart(64, '0')
+              : frameSha256;
+          return {
+            x: (index % 10) * 96,
+            y: Math.floor(index / 10) * 112,
+            width: 96,
+            height: 112,
+            sourceSha256: frameSha256,
+            bodyPoseSha256,
+          };
+        }),
+        atlas: {
+          width: 960,
+          height: Math.ceil(config.frames / 10) * 112,
+          bytes: imageBytes.byteLength,
+          sha256: imageSha256,
+        },
+        encoder: {
+          name: 'cwebp',
+          version: '1.6.0',
+          arguments: ['-exact', '-q', '90'],
+        },
+      };
+      const descriptorBytes = encoder.encode(JSON.stringify(descriptor));
+      return [
+        clipName,
+        {
+          descriptorBytes,
+          descriptorSha256: crypto
+            .createHash('sha256')
+            .update(Buffer.from(descriptorBytes))
+            .digest('hex'),
+          imageBytes,
+          imageSha256,
+        },
+      ];
+    }),
+  );
+  const smoothSet = {
+    grammar: 'gaf2d-motion-set-index-v2',
+    authority: 'unapproved_preview',
+    status: 'human_review_required',
+    sourceFamily: 'authored-semantic-v3',
+    assetId: 'entry-runner',
+    role: 'character',
+    frameSize: { width: 128, height: 128 },
+    trim: { x: 16, y: 8, width: 96, height: 112 },
+    pivot: { x: 0.5, y: 1 },
+    presentation: syntheticRecord.descriptor.presentation,
+    clips: Object.fromEntries(
+      Object.entries(smoothClips).map(([clipName, clip]) => [
+        clipName,
+        {
+          descriptor: `${clipName}.json`,
+          descriptorSha256: clip.descriptorSha256,
+          image: `${clipName}.webp`,
+          imageSha256: clip.imageSha256,
+        },
+      ]),
+    ),
+    previewLineage: {
+      candidateId: 'entry-runner-authored-semantic-v3',
+      candidateSha256: '2'.repeat(64),
+      temporalEvidenceSha256: '3'.repeat(64),
+      qaSummarySha256: '4'.repeat(64),
+      batchSummarySha256: '5'.repeat(64),
+      sourceManifestVersion: 4,
+    },
+    toolchain: {
+      grammar: 'apn-gaf2d-preview-matrix-toolchain-v1',
+      compositor: { name: 'ImageMagick', version: '7.1.2-13' },
+      encoder: {
+        name: 'cwebp',
+        version: '1.6.0',
+        arguments: ['-exact', '-q', '90'],
+      },
+      operations: [
+        'crop:normalized-png:shared-trim:repage:png32',
+        'resize:lanczos:shared-scale:exact-cell:png32',
+        'montage:row-major:bounded-matrix:shared-cell:no-gap:transparent:alpha-on:png-color-type-6',
+      ],
+      profileSha256:
+        '71f50b2378a4a588d9e49fb2d29700becb2b4a5ae37078a2af3280284eaa8013',
+    },
+  };
+  const smoothSetBytes = encoder.encode(JSON.stringify(smoothSet));
+  const smoothSetSha256 = crypto
+    .createHash('sha256')
+    .update(Buffer.from(smoothSetBytes))
+    .digest('hex');
+  const smoothPack = structuredClone(pack);
+  smoothPack.motion = smoothPack.motion || {
+    grammar: 'gaf2d-motion-bundle-v1',
+    characters: {},
+  };
+  smoothPack.motion.characters = smoothPack.motion.characters || {};
+  smoothPack.motion.characters['entry-runner'] = {
+    authority: 'unapproved_preview',
+    role: 'character',
+    basePath: 'assets/game-packs/valorant/characters/entry-runner/',
+    set: 'assets/game-packs/valorant/characters/entry-runner/set.json',
+    setSha256: smoothSetSha256,
+    clips: Object.fromEntries(
+      Object.entries(smoothClips).map(([clipName, clip]) => [
+        clipName,
+        {
+          descriptor: `assets/game-packs/valorant/characters/entry-runner/${clipName}.json`,
+          descriptorSha256: clip.descriptorSha256,
+          image: `assets/game-packs/valorant/characters/entry-runner/${clipName}.webp`,
+          imageSha256: clip.imageSha256,
+        },
+      ]),
+    ),
+  };
+  assert(
+    typeof renderRuntime.motionClipKeepKeysForStage === 'function' &&
+      [
+        ...renderRuntime.motionClipKeepKeysForStage(
+          [],
+          new Map(),
+          smoothPack,
+          0,
+        ),
+      ].join('|') === 'valorant/entry-runner#advance',
+    'empty stage retains only the current-wave advance clip required for first spawn',
+  );
+  const bytesByUrl = new Map([
+    [
+      `assets/game-packs/valorant/characters/entry-runner/set.json?sha256=${smoothSetSha256}`,
+      smoothSetBytes,
+    ],
+    ...Object.entries(smoothClips).flatMap(([clipName, clip]) => [
+      [
+        `assets/game-packs/valorant/characters/entry-runner/${clipName}.json?sha256=${clip.descriptorSha256}`,
+        clip.descriptorBytes,
+      ],
+      [
+        `assets/game-packs/valorant/characters/entry-runner/${clipName}.webp?sha256=${clip.imageSha256}`,
+        clip.imageBytes,
+      ],
+    ]),
+  ]);
+  const motionStore = createMotionStore({
+    allowUnapprovedPreview: true,
+    fetch: async (url) => {
+      const bytes = bytesByUrl.get(url) || new Uint8Array();
+      return {
+        ok: bytesByUrl.has(url),
+        status: bytesByUrl.has(url) ? 200 : 404,
+        arrayBuffer: async () =>
+          bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
+      };
+    },
+    hashBytes: async (bytes) =>
+      crypto.createHash('sha256').update(Buffer.from(bytes)).digest('hex'),
+    decodeImage: async (_bytes, meta = {}) => ({
+      width: 960,
+      height:
+        Math.ceil((smoothClipConfigs[meta.clipName]?.frames || 30) / 10) *
+        112,
+      closed: 0,
+      close() {
+        this.closed += 1;
+      },
+    }),
+    parseJson: JSON.parse,
+  });
+  const overlapAssetStore = { motionStore };
+  const overlapPackAssets = { ready: true, pack: smoothPack };
+  const dyingEnemy = {
+    ...syntheticEnemy,
+    id: 'motion-corpse',
+    killed: true,
+    deathT: 0.25,
+    deathMax: 0.5,
+  };
+  const liveEnemy = {
+    ...syntheticEnemy,
+    id: 'motion-respawn',
+    killed: false,
+    deathT: 0,
+    x: 300,
+    displayX: 300,
+  };
+  await warmMotionClip(motionStore, smoothPack, 'entry-runner', 'death');
+  const corpseMotion = inspectEnemyMotion(
+    dyingEnemy,
+    overlapPackAssets,
+    overlapAssetStore,
+    syntheticEnv,
+  );
+  const liveMotion = inspectEnemyMotion(
+    liveEnemy,
+    overlapPackAssets,
+    overlapAssetStore,
+    syntheticEnv,
+  );
+  assert(
+    corpseMotion.status === 'ready' &&
+      corpseMotion.clip === 'death' &&
+      liveMotion.status === 'pending' &&
+      liveMotion.clip === 'advance' &&
+      getMotionClipRecord(motionStore, smoothPack.id, 'entry-runner', 'death')?.status === 'ready',
+    'same-asset advance warm does not evict the resident death clip before the corpse frame is drawn',
+  );
+
+  pruneMotionClipResidency(motionStore, new Set());
+  const advanceRecord = await warmMotionClip(
+    motionStore,
+    smoothPack,
+    'entry-runner',
+    'advance',
+  );
+  const liveEnemyBeforeDraw = JSON.stringify(liveEnemy);
+  const liveEnemyKeysBeforeDraw = JSON.stringify(Reflect.ownKeys(liveEnemy));
+  let transitionProbe = createCanvasProbe();
+  drawEnemy(
+    transitionProbe.ctx,
+    liveEnemy,
+    320,
+    1.25,
+    overlapPackAssets,
+    overlapAssetStore,
+    false,
+    1,
+    syntheticEnv,
+  );
+  assert(
+    JSON.stringify(liveEnemy) === liveEnemyBeforeDraw &&
+      JSON.stringify(Reflect.ownKeys(liveEnemy)) === liveEnemyKeysBeforeDraw,
+    'renderer continuity state leaves the simulation enemy bytes and keys unchanged',
+  );
+  assert(
+    transitionProbe.calls[0]?.[0] === advanceRecord.image,
+    'first spawned creature draws its ready advance frame',
+  );
+
+  liveEnemy.x = 160;
+  liveEnemy.displayX = 160;
+  const engagedEnv = { ...syntheticEnv, engagedId: liveEnemy.id };
+  const engagedPendingMotion = inspectEnemyMotion(
+    liveEnemy,
+    overlapPackAssets,
+    overlapAssetStore,
+    engagedEnv,
+  );
+  transitionProbe = createCanvasProbe();
+  drawEnemy(
+    transitionProbe.ctx,
+    liveEnemy,
+    320,
+    1.3,
+    overlapPackAssets,
+    overlapAssetStore,
+    false,
+    1,
+    { ...engagedEnv, motionInfo: engagedPendingMotion },
+  );
+  assert(
+    transitionProbe.calls[0]?.[0] === advanceRecord.image &&
+      engagedPendingMotion.retained === true &&
+      engagedPendingMotion.clip === 'advance' &&
+      engagedPendingMotion.requestedClip === 'engaged',
+    `cold engaged transition keeps the exact last authored advance frame visible (${JSON.stringify({
+      drewRetained: transitionProbe.calls[0]?.[0] === advanceRecord.image,
+      retained: engagedPendingMotion.retained,
+      clip: engagedPendingMotion.clip,
+    })})`,
+  );
+  assert(
+    [
+      ...renderRuntime.motionClipKeepKeysForStage(
+        [liveEnemy],
+        new Map([[liveEnemy.id, engagedPendingMotion]]),
+        smoothPack,
+        0,
+      ),
+    ].sort().join('|') ===
+      [
+        'valorant/entry-runner#advance',
+        'valorant/entry-runner#engaged',
+      ].join('|'),
+    'bounded residency keeps current advance plus the retained/warming transition pair',
+  );
+  const engagedRecord = await warmMotionClip(
+    motionStore,
+    smoothPack,
+    'entry-runner',
+    'engaged',
+  );
+  transitionProbe = createCanvasProbe();
+  drawEnemy(
+    transitionProbe.ctx,
+    liveEnemy,
+    320,
+    1.35,
+    overlapPackAssets,
+    overlapAssetStore,
+    false,
+    1,
+    engagedEnv,
+  );
+  assert(
+    transitionProbe.calls[0]?.[0] === engagedRecord.image,
+    'ready engaged clip atomically replaces the retained advance frame',
+  );
+
+  liveEnemy.hurt = 0.15;
+  const hitPendingMotion = inspectEnemyMotion(
+    liveEnemy,
+    overlapPackAssets,
+    overlapAssetStore,
+    engagedEnv,
+  );
+  transitionProbe = createCanvasProbe();
+  drawEnemy(
+    transitionProbe.ctx,
+    liveEnemy,
+    320,
+    1.4,
+    overlapPackAssets,
+    overlapAssetStore,
+    false,
+    1,
+    { ...engagedEnv, motionInfo: hitPendingMotion },
+  );
+  assert(
+    transitionProbe.calls[0]?.[0] === engagedRecord.image &&
+      hitPendingMotion.retained === true &&
+      hitPendingMotion.clip === 'engaged' &&
+      hitPendingMotion.requestedClip === 'hit',
+    'cold hit transition keeps the exact last authored engaged frame visible',
+  );
+  const hitRecord = await warmMotionClip(
+    motionStore,
+    smoothPack,
+    'entry-runner',
+    'hit',
+  );
+  transitionProbe = createCanvasProbe();
+  drawEnemy(
+    transitionProbe.ctx,
+    liveEnemy,
+    320,
+    1.45,
+    overlapPackAssets,
+    overlapAssetStore,
+    false,
+    1,
+    engagedEnv,
+  );
+  assert(
+    transitionProbe.calls[0]?.[0] === hitRecord.image,
+    'ready hit clip atomically replaces the retained engaged frame',
+  );
+
+  liveEnemy.hurt = 0;
+  liveEnemy.hp = 0;
+  liveEnemy.killed = true;
+  liveEnemy.deathT = 0.25;
+  liveEnemy.deathMax = 0.5;
+  const deathPendingMotion = inspectEnemyMotion(
+    liveEnemy,
+    overlapPackAssets,
+    overlapAssetStore,
+    engagedEnv,
+  );
+  transitionProbe = createCanvasProbe();
+  drawEnemy(
+    transitionProbe.ctx,
+    liveEnemy,
+    320,
+    1.5,
+    overlapPackAssets,
+    overlapAssetStore,
+    false,
+    1,
+    { ...engagedEnv, motionInfo: deathPendingMotion },
+  );
+  assert(
+    transitionProbe.calls[0]?.[0] === hitRecord.image &&
+      deathPendingMotion.retained === true &&
+      deathPendingMotion.clip === 'hit' &&
+      deathPendingMotion.requestedClip === 'death',
+    'cold death transition keeps the exact last authored hit frame visible',
+  );
+  const deathRecord = await warmMotionClip(
+    motionStore,
+    smoothPack,
+    'entry-runner',
+    'death',
+  );
+  transitionProbe = createCanvasProbe();
+  drawEnemy(
+    transitionProbe.ctx,
+    liveEnemy,
+    320,
+    1.55,
+    overlapPackAssets,
+    overlapAssetStore,
+    false,
+    1,
+    engagedEnv,
+  );
+  assert(
+    transitionProbe.calls[0]?.[0] === deathRecord.image,
+    'ready death clip atomically replaces the retained hit frame',
+  );
+}
 function createCanvasProbe({ rejectFirstDraw = false } = {}) {
   const calls = [];
   let drawCount = 0;
@@ -810,6 +1360,291 @@ globalThis.document.createElement ??= () => ({
   height: 0,
   getContext: () => createStageAnchorProbe().ctx,
 });
+const drawPurityState = () => {
+  const state = createState();
+  state.settings.lastTs = 0;
+  const enemy = {
+    ...syntheticEnemy,
+    id: 'draw-purity-runner',
+    previousDisplayX: 100,
+    displayX: 116,
+  };
+  state.world.enemies = [enemy];
+  state.world.floaters = [
+    {
+      x: null,
+      y: null,
+      text: 'PURE',
+      color: '#fff',
+      t: 1,
+      life: 1,
+      vy: -20,
+      anchorId: enemy.id,
+      anchorName: 'floater',
+      anchorLift: 0,
+    },
+  ];
+  state.world.particles = [
+    {
+      x: null,
+      y: null,
+      vx: 1,
+      vy: -1,
+      t: 1,
+      life: 1,
+      c: '#fff',
+      r: 2,
+      kind: 'spark',
+      anchorId: enemy.id,
+      anchorName: 'hit',
+    },
+  ];
+  state.world.lootFlights = [
+    {
+      x: null,
+      y: null,
+      enemyId: enemy.id,
+      anchorName: 'loot',
+      target: 'signal',
+      t: 0.5,
+      life: 1,
+    },
+  ];
+  state.world.shocks = [
+    {
+      x: null,
+      y: null,
+      c: '#fff',
+      r1: 20,
+      t: 0.5,
+      life: 1,
+      delay: 0,
+      w: 2,
+      anchorId: enemy.id,
+      anchorName: 'hit',
+    },
+  ];
+  return state;
+};
+const LEGACY_DRAW_WORLD_KEYS = Object.freeze([
+  'groundY',
+  'stageFit',
+  'actorGeometries',
+]);
+const assertNoLegacyDrawWorldKeys = (label, state) => {
+  for (const key of LEGACY_DRAW_WORLD_KEYS) {
+    assert(
+      Object.hasOwn(state.world, key) === false,
+      `${label} has no own world.${key}`,
+    );
+  }
+};
+const alphaZeroState = drawPurityState();
+const alphaOneState = drawPurityState();
+assertNoLegacyDrawWorldKeys('rootAlpha 0 before draw', alphaZeroState);
+assertNoLegacyDrawWorldKeys('rootAlpha 1 before draw', alphaOneState);
+const alphaZeroBefore = domainBytes(alphaZeroState);
+const alphaOneBefore = domainBytes(alphaOneState);
+draw(
+  createStageAnchorProbe().ctx,
+  600,
+  300,
+  alphaZeroState,
+  null,
+  60,
+  0,
+);
+draw(
+  createStageAnchorProbe().ctx,
+  600,
+  300,
+  alphaOneState,
+  null,
+  60,
+  1,
+);
+const alphaZeroAfter = domainBytes(alphaZeroState);
+const alphaOneAfter = domainBytes(alphaOneState);
+assertNoLegacyDrawWorldKeys('rootAlpha 0 after draw', alphaZeroState);
+assertNoLegacyDrawWorldKeys('rootAlpha 1 after draw', alphaOneState);
+const alphaZeroPresentation =
+  renderRuntime.inspectStagePresentation(alphaZeroState);
+const alphaOnePresentation =
+  renderRuntime.inspectStagePresentation(alphaOneState);
+const repaintBaseState = drawPurityState();
+const repaintOutcomeBytes = (refreshRate) => {
+  const state = structuredClone(repaintBaseState);
+  const enemy = state.world.enemies[0];
+  enemy.x = state.world.heroX + 10;
+  enemy.displayX = enemy.x;
+  enemy.previousDisplayX = enemy.x;
+  enemy.hp = 1e12;
+  enemy.hpMax = 1e12;
+  state.world.alertCd = 999;
+  state.world.attackCd = 0;
+  state.world.shake = 4;
+  for (const effect of [
+    ...state.world.floaters,
+    ...state.world.particles,
+    ...state.world.lootFlights,
+    ...state.world.shocks,
+  ]) {
+    effect.t = 5;
+    effect.life = 5;
+  }
+  let accumulator = 0;
+  let fixedSteps = 0;
+  const originalRandom = Math.random;
+  let randomState = 0x5eed1234;
+  Math.random = () => {
+    randomState = (1664525 * randomState + 1013904223) >>> 0;
+    return randomState / 0x100000000;
+  };
+  try {
+    for (let repaint = 0; repaint < refreshRate; repaint += 1) {
+      accumulator += 1 / refreshRate;
+      while (accumulator + 1e-12 >= C.FIXED_DT) {
+        step(state, C.FIXED_DT, { allowSpawn: false });
+        accumulator -= C.FIXED_DT;
+        fixedSteps += 1;
+      }
+      draw(
+        createStageAnchorProbe().ctx,
+        600,
+        300,
+        state,
+        null,
+        60,
+        accumulator / C.FIXED_DT,
+      );
+    }
+  } finally {
+    Math.random = originalRandom;
+  }
+  assert(fixedSteps === 60, `${refreshRate} Hz executes exactly 60 fixed steps`);
+  return domainBytes(state);
+};
+const repaintOutcomes = Object.fromEntries(
+  [60, 90, 120, 144].map((refreshRate) => [
+    refreshRate,
+    repaintOutcomeBytes(refreshRate),
+  ]),
+);
+const repaintOutcomeHashes = Object.fromEntries(
+  Object.entries(repaintOutcomes).map(([refreshRate, bytes]) => [
+    refreshRate,
+    crypto.createHash('sha256').update(bytes).digest('hex'),
+  ]),
+);
+const drawPurityEvidence = {
+  alpha0: {
+    unchanged: alphaZeroAfter === alphaZeroBefore,
+    presentation: {
+      groundY: alphaZeroPresentation?.groundY,
+      stageFit: alphaZeroPresentation?.stageFit,
+      hitX: alphaZeroPresentation?.actors.find(
+        ({ id }) => id === 'draw-purity-runner',
+      )?.geometry?.anchors?.hitX,
+    },
+  },
+  alpha1: {
+    unchanged: alphaOneAfter === alphaOneBefore,
+    presentation: {
+      groundY: alphaOnePresentation?.groundY,
+      stageFit: alphaOnePresentation?.stageFit,
+      hitX: alphaOnePresentation?.actors.find(
+        ({ id }) => id === 'draw-purity-runner',
+      )?.geometry?.anchors?.hitX,
+    },
+  },
+  repaintInvariant: alphaZeroAfter === alphaOneAfter,
+  fixedStepOutcomeInvariant:
+    new Set(Object.values(repaintOutcomes)).size === 1,
+  repaintOutcomeHashes,
+};
+assert(
+  drawPurityEvidence.alpha0.unchanged &&
+    drawPurityEvidence.alpha1.unchanged &&
+    drawPurityEvidence.repaintInvariant &&
+    drawPurityEvidence.fixedStepOutcomeInvariant,
+  `draw leaves domain bytes untouched at rootAlpha 0 and 1 (${JSON.stringify(drawPurityEvidence)})`,
+);
+const retainedEffectState = createState();
+const retainedEffectEnemy = {
+  ...syntheticEnemy,
+  id: 'retained-effect-runner',
+  previousDisplayX: 216,
+  displayX: 216,
+};
+retainedEffectState.world.enemies = [retainedEffectEnemy];
+retainedEffectState.world.floaters = [
+  {
+    x: 0,
+    y: 0,
+    text: 'RETAINED EFFECT',
+    color: '#fff',
+    t: 2,
+    life: 2,
+    vy: -20,
+    big: false,
+    huge: false,
+    center: false,
+    anchorKind: 'enemy',
+    anchorId: retainedEffectEnemy.id,
+    anchorName: 'floater',
+    anchorRole: 'standard',
+    anchorFallbackX: retainedEffectEnemy.displayX,
+    anchorLift: 0,
+  },
+];
+const retainedEffectPosition = (events) => {
+  const textIndex = events.findIndex(
+    ({ method, args }) =>
+      method === 'strokeText' && args[0] === 'RETAINED EFFECT',
+  );
+  for (let index = textIndex - 1; index >= 0; index -= 1) {
+    if (events[index].method === 'translate') return events[index].args;
+  }
+  return null;
+};
+const retainedEffectFirstProbe = createStageAnchorProbe();
+draw(
+  retainedEffectFirstProbe.ctx,
+  600,
+  300,
+  retainedEffectState,
+  null,
+  60,
+  1,
+);
+const retainedEffectFirstPosition = retainedEffectPosition(
+  retainedEffectFirstProbe.events,
+);
+retainedEffectState.world.enemies = [];
+step(retainedEffectState, C.FIXED_DT, { allowSpawn: false });
+const retainedEffectBeforeRepaint = domainBytes(retainedEffectState);
+const retainedEffectSecondProbe = createStageAnchorProbe();
+draw(
+  retainedEffectSecondProbe.ctx,
+  600,
+  300,
+  retainedEffectState,
+  null,
+  60,
+  1,
+);
+const retainedEffectSecondPosition = retainedEffectPosition(
+  retainedEffectSecondProbe.events,
+);
+assert(
+  retainedEffectFirstPosition?.[0] === retainedEffectSecondPosition?.[0] &&
+    retainedEffectSecondPosition?.[1] < retainedEffectFirstPosition?.[1] &&
+    domainBytes(retainedEffectState) === retainedEffectBeforeRepaint,
+  `renderer retains semantic effect origin and fixed-step motion after actor removal (${JSON.stringify({
+    before: retainedEffectFirstPosition,
+    after: retainedEffectSecondPosition,
+  })})`,
+);
 const landscapeBossProbe = createStageAnchorProbe();
 draw(
   landscapeBossProbe.ctx,
@@ -848,6 +1683,8 @@ const eventRect = (event, height = event?.pathHeight) =>
       }
     : null;
 const bossPlateRect = eventRect(landscapeBossPlateEvent);
+const landscapeBossPresentation =
+  renderRuntime.inspectStagePresentation(landscapeBossState);
 const bossTimerRect =
   landscapeTimerBarEvent && landscapeTimerLabelEvent
     ? eventRect(
@@ -876,7 +1713,7 @@ assert(
     landscapeTimerLabelEvent.args[1] <=
       bossTimerRect.x + bossTimerRect.width,
   `844x390 boss plate and labeled timer occupy non-overlapping safe-stage lanes (${JSON.stringify({
-    fit: landscapeBossState.world.stageFit,
+    fit: landscapeBossPresentation?.stageFit,
     plate: bossPlateRect,
     timer: bossTimerRect,
     label: landscapeTimerLabelEvent?.args,
@@ -926,6 +1763,8 @@ const scrolledLandscapeTimerLabelEvent = scrolledLandscapeBossProbe.events.find(
     method === 'fillText' && args[0] === 'SITE WARDEN',
 );
 const scrolledBossPlateRect = eventRect(scrolledLandscapeBossPlateEvent);
+const scrolledBossPresentation =
+  renderRuntime.inspectStagePresentation(scrolledLandscapeBossState);
 const scrolledBossTimerRect =
   scrolledLandscapeTimerBarEvent && scrolledLandscapeTimerLabelEvent
     ? eventRect(
@@ -945,7 +1784,7 @@ assert(
   `844x390 scrolled boss plate and labeled timer stay visible in screen space (${JSON.stringify({
     scroll: scrolledLandscapeBossState.world.scroll,
     scrollSmooth: scrolledLandscapeBossState.world.scrollSmooth,
-    fit: scrolledLandscapeBossState.world.stageFit,
+    fit: scrolledBossPresentation?.stageFit,
     plate: scrolledBossPlateRect,
     timer: scrolledBossTimerRect,
     label: scrolledLandscapeTimerLabelEvent?.args,
@@ -966,14 +1805,16 @@ draw(
   null,
   105,
 );
-const intermediateGeometry = intermediateState.world.actorGeometries.get(
-  'intermediate-height-runner',
-);
+const intermediatePresentation =
+  renderRuntime.inspectStagePresentation(intermediateState);
+const intermediateGeometry = intermediatePresentation?.actors.find(
+  ({ id }) => id === 'intermediate-height-runner',
+)?.geometry;
 assert(
-  intermediateState.world.stageFit < 0.92 &&
+  intermediatePresentation.stageFit < 0.92 &&
     intermediateGeometry.anchors.hpY - 30 >= 105,
   `compact recompute cannot cross back into the full-plate branch (${JSON.stringify({
-    fit: intermediateState.world.stageFit,
+    fit: intermediatePresentation?.stageFit,
     hpY: intermediateGeometry?.anchors.hpY,
     compactPlateTop:
       intermediateGeometry === undefined
@@ -1216,7 +2057,7 @@ for (const [assetId, record] of Object.entries(motionPack.motion.characters)) {
     record.image,
     assetId === 'site-warden'
       ? MOTION_BUDGETS.bossCompressed + 1
-      : MOTION_BUDGETS.commonCompressed + 64 * 1024,
+      : MOTION_BUDGETS.commonCompressed + 512 * 1024,
     imageWidth,
     imageHeight,
   );

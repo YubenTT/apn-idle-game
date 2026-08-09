@@ -1,0 +1,1370 @@
+{
+  "grammar": "apn-gaf2d-production-v4-browser-evidence-v1",
+  "status": "ok",
+  "baseUrl": "http://127.0.0.1:8792",
+  "outputDir": "qa/screenshots/gaf2d-production-v4",
+  "verified": 60,
+  "findings": [
+    {
+      "viewport": "mobile-375",
+      "wave": 1,
+      "mode": "standard",
+      "label": "Entry Runner",
+      "frame": "common-a",
+      "assetId": "entry-runner",
+      "authority": "approved_release",
+      "motionApprovalSha256": "54b6fd43c60def0ce0d270bc91ec3729af7e16442d118a8ecaf953c9fc6f2425",
+      "runtimeLineageSha256": "413dbf9241455da25cfc3d736ffee27f08a260fa83ce42128422b19135b7fc95",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-375-wave-01.png"
+    },
+    {
+      "viewport": "mobile-375",
+      "wave": 2,
+      "mode": "standard",
+      "label": "Veil Operator",
+      "frame": "common-b",
+      "assetId": "veil-operator",
+      "authority": "approved_release",
+      "motionApprovalSha256": "29852c0f6bbdb5b40b4577eaaf088835c854bb5f73494bc357d68151ab521efa",
+      "runtimeLineageSha256": "ebbac82d31344f38663cf8d2f99ff54e4ed1ecc10fae25cfb2a70357adf5dad2",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-375-wave-02.png"
+    },
+    {
+      "viewport": "mobile-375",
+      "wave": 3,
+      "mode": "standard",
+      "label": "Signal Hunter",
+      "frame": "common-c",
+      "assetId": "signal-hunter",
+      "authority": "approved_release",
+      "motionApprovalSha256": "2f128f8fb6851316092819213c82699ce82a23de01fd71007f4bc12bd015c881",
+      "runtimeLineageSha256": "a5f389422c309f2c9e6157ee8af6da4ba6ab74a96509979477b355321e75f792",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-375-wave-03.png"
+    },
+    {
+      "viewport": "mobile-375",
+      "wave": 4,
+      "mode": "standard",
+      "label": "Entry Runner",
+      "frame": "common-a",
+      "assetId": "entry-runner",
+      "authority": "approved_release",
+      "motionApprovalSha256": "54b6fd43c60def0ce0d270bc91ec3729af7e16442d118a8ecaf953c9fc6f2425",
+      "runtimeLineageSha256": "413dbf9241455da25cfc3d736ffee27f08a260fa83ce42128422b19135b7fc95",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-375-wave-04.png"
+    },
+    {
+      "viewport": "mobile-375",
+      "wave": 5,
+      "mode": "standard",
+      "label": "Site Sentinel",
+      "frame": "elite",
+      "assetId": "site-sentinel",
+      "authority": "approved_release",
+      "motionApprovalSha256": "5e2416fdaf9b829c3ea4f26fa0a257f35d3e189c84cfc9f178ed47e2fa48ec8e",
+      "runtimeLineageSha256": "5d5e49e3d8a27912232931a523083b333a04a0f741a501da07938ab26406b732",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-375-wave-05.png"
+    },
+    {
+      "viewport": "mobile-375",
+      "wave": 6,
+      "mode": "standard",
+      "label": "Entry Runner",
+      "frame": "common-a",
+      "assetId": "entry-runner",
+      "authority": "approved_release",
+      "motionApprovalSha256": "54b6fd43c60def0ce0d270bc91ec3729af7e16442d118a8ecaf953c9fc6f2425",
+      "runtimeLineageSha256": "413dbf9241455da25cfc3d736ffee27f08a260fa83ce42128422b19135b7fc95",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-375-wave-06.png"
+    },
+    {
+      "viewport": "mobile-375",
+      "wave": 7,
+      "mode": "standard",
+      "label": "Veil Operator",
+      "frame": "common-b",
+      "assetId": "veil-operator",
+      "authority": "approved_release",
+      "motionApprovalSha256": "29852c0f6bbdb5b40b4577eaaf088835c854bb5f73494bc357d68151ab521efa",
+      "runtimeLineageSha256": "ebbac82d31344f38663cf8d2f99ff54e4ed1ecc10fae25cfb2a70357adf5dad2",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-375-wave-07.png"
+    },
+    {
+      "viewport": "mobile-375",
+      "wave": 8,
+      "mode": "standard",
+      "label": "Entry Runner",
+      "frame": "common-a",
+      "assetId": "entry-runner",
+      "authority": "approved_release",
+      "motionApprovalSha256": "54b6fd43c60def0ce0d270bc91ec3729af7e16442d118a8ecaf953c9fc6f2425",
+      "runtimeLineageSha256": "413dbf9241455da25cfc3d736ffee27f08a260fa83ce42128422b19135b7fc95",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-375-wave-08.png"
+    },
+    {
+      "viewport": "mobile-375",
+      "wave": 9,
+      "mode": "standard",
+      "label": "Protocol Courier",
+      "frame": "event",
+      "assetId": "protocol-courier",
+      "authority": "approved_release",
+      "motionApprovalSha256": "992f4cdb38d18833412fed6d33cca8359ad4c13031a70ddaa0825f51c87936f4",
+      "runtimeLineageSha256": "8c78d4945834b91d43d44346f32c9551873dc6821359a21b7ebe971f24390b7b",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-375-wave-09.png"
+    },
+    {
+      "viewport": "mobile-375",
+      "wave": 10,
+      "mode": "standard",
+      "label": "Site Warden",
+      "frame": "boss",
+      "assetId": "site-warden",
+      "authority": "approved_release",
+      "motionApprovalSha256": "707e53ae77c2c3a3f37cdec70ba35f59a710c690247b7b1365a49204ad39abae",
+      "runtimeLineageSha256": "b65a1233f52d2c657e65ed4b8dfeb722ccbeaba33f0fbc1042281adacb7f8141",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-375-wave-10.png",
+      "bossBreak": {
+        "frame": "boss-break",
+        "hpRatio": 0.33,
+        "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-375-wave-10-boss-break.png"
+      }
+    },
+    {
+      "viewport": "mobile-375",
+      "wave": 1,
+      "mode": "reduced",
+      "label": "Entry Runner",
+      "frame": "common-a",
+      "assetId": "entry-runner",
+      "authority": "approved_release",
+      "motionApprovalSha256": "54b6fd43c60def0ce0d270bc91ec3729af7e16442d118a8ecaf953c9fc6f2425",
+      "runtimeLineageSha256": "413dbf9241455da25cfc3d736ffee27f08a260fa83ce42128422b19135b7fc95",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-375-wave-01-reduced.png"
+    },
+    {
+      "viewport": "mobile-375",
+      "wave": 2,
+      "mode": "reduced",
+      "label": "Veil Operator",
+      "frame": "common-b",
+      "assetId": "veil-operator",
+      "authority": "approved_release",
+      "motionApprovalSha256": "29852c0f6bbdb5b40b4577eaaf088835c854bb5f73494bc357d68151ab521efa",
+      "runtimeLineageSha256": "ebbac82d31344f38663cf8d2f99ff54e4ed1ecc10fae25cfb2a70357adf5dad2",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-375-wave-02-reduced.png"
+    },
+    {
+      "viewport": "mobile-375",
+      "wave": 3,
+      "mode": "reduced",
+      "label": "Signal Hunter",
+      "frame": "common-c",
+      "assetId": "signal-hunter",
+      "authority": "approved_release",
+      "motionApprovalSha256": "2f128f8fb6851316092819213c82699ce82a23de01fd71007f4bc12bd015c881",
+      "runtimeLineageSha256": "a5f389422c309f2c9e6157ee8af6da4ba6ab74a96509979477b355321e75f792",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-375-wave-03-reduced.png"
+    },
+    {
+      "viewport": "mobile-375",
+      "wave": 4,
+      "mode": "reduced",
+      "label": "Entry Runner",
+      "frame": "common-a",
+      "assetId": "entry-runner",
+      "authority": "approved_release",
+      "motionApprovalSha256": "54b6fd43c60def0ce0d270bc91ec3729af7e16442d118a8ecaf953c9fc6f2425",
+      "runtimeLineageSha256": "413dbf9241455da25cfc3d736ffee27f08a260fa83ce42128422b19135b7fc95",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-375-wave-04-reduced.png"
+    },
+    {
+      "viewport": "mobile-375",
+      "wave": 5,
+      "mode": "reduced",
+      "label": "Site Sentinel",
+      "frame": "elite",
+      "assetId": "site-sentinel",
+      "authority": "approved_release",
+      "motionApprovalSha256": "5e2416fdaf9b829c3ea4f26fa0a257f35d3e189c84cfc9f178ed47e2fa48ec8e",
+      "runtimeLineageSha256": "5d5e49e3d8a27912232931a523083b333a04a0f741a501da07938ab26406b732",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-375-wave-05-reduced.png"
+    },
+    {
+      "viewport": "mobile-375",
+      "wave": 6,
+      "mode": "reduced",
+      "label": "Entry Runner",
+      "frame": "common-a",
+      "assetId": "entry-runner",
+      "authority": "approved_release",
+      "motionApprovalSha256": "54b6fd43c60def0ce0d270bc91ec3729af7e16442d118a8ecaf953c9fc6f2425",
+      "runtimeLineageSha256": "413dbf9241455da25cfc3d736ffee27f08a260fa83ce42128422b19135b7fc95",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-375-wave-06-reduced.png"
+    },
+    {
+      "viewport": "mobile-375",
+      "wave": 7,
+      "mode": "reduced",
+      "label": "Veil Operator",
+      "frame": "common-b",
+      "assetId": "veil-operator",
+      "authority": "approved_release",
+      "motionApprovalSha256": "29852c0f6bbdb5b40b4577eaaf088835c854bb5f73494bc357d68151ab521efa",
+      "runtimeLineageSha256": "ebbac82d31344f38663cf8d2f99ff54e4ed1ecc10fae25cfb2a70357adf5dad2",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-375-wave-07-reduced.png"
+    },
+    {
+      "viewport": "mobile-375",
+      "wave": 8,
+      "mode": "reduced",
+      "label": "Entry Runner",
+      "frame": "common-a",
+      "assetId": "entry-runner",
+      "authority": "approved_release",
+      "motionApprovalSha256": "54b6fd43c60def0ce0d270bc91ec3729af7e16442d118a8ecaf953c9fc6f2425",
+      "runtimeLineageSha256": "413dbf9241455da25cfc3d736ffee27f08a260fa83ce42128422b19135b7fc95",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-375-wave-08-reduced.png"
+    },
+    {
+      "viewport": "mobile-375",
+      "wave": 9,
+      "mode": "reduced",
+      "label": "Protocol Courier",
+      "frame": "event",
+      "assetId": "protocol-courier",
+      "authority": "approved_release",
+      "motionApprovalSha256": "992f4cdb38d18833412fed6d33cca8359ad4c13031a70ddaa0825f51c87936f4",
+      "runtimeLineageSha256": "8c78d4945834b91d43d44346f32c9551873dc6821359a21b7ebe971f24390b7b",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-375-wave-09-reduced.png"
+    },
+    {
+      "viewport": "mobile-375",
+      "wave": 10,
+      "mode": "reduced",
+      "label": "Site Warden",
+      "frame": "boss",
+      "assetId": "site-warden",
+      "authority": "approved_release",
+      "motionApprovalSha256": "707e53ae77c2c3a3f37cdec70ba35f59a710c690247b7b1365a49204ad39abae",
+      "runtimeLineageSha256": "b65a1233f52d2c657e65ed4b8dfeb722ccbeaba33f0fbc1042281adacb7f8141",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-375-wave-10-reduced.png",
+      "bossBreak": {
+        "frame": "boss-break",
+        "hpRatio": 0.33,
+        "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-375-wave-10-reduced-boss-break.png"
+      }
+    },
+    {
+      "viewport": "mobile-428",
+      "wave": 1,
+      "mode": "standard",
+      "label": "Entry Runner",
+      "frame": "common-a",
+      "assetId": "entry-runner",
+      "authority": "approved_release",
+      "motionApprovalSha256": "54b6fd43c60def0ce0d270bc91ec3729af7e16442d118a8ecaf953c9fc6f2425",
+      "runtimeLineageSha256": "413dbf9241455da25cfc3d736ffee27f08a260fa83ce42128422b19135b7fc95",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-428-wave-01.png"
+    },
+    {
+      "viewport": "mobile-428",
+      "wave": 2,
+      "mode": "standard",
+      "label": "Veil Operator",
+      "frame": "common-b",
+      "assetId": "veil-operator",
+      "authority": "approved_release",
+      "motionApprovalSha256": "29852c0f6bbdb5b40b4577eaaf088835c854bb5f73494bc357d68151ab521efa",
+      "runtimeLineageSha256": "ebbac82d31344f38663cf8d2f99ff54e4ed1ecc10fae25cfb2a70357adf5dad2",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-428-wave-02.png"
+    },
+    {
+      "viewport": "mobile-428",
+      "wave": 3,
+      "mode": "standard",
+      "label": "Signal Hunter",
+      "frame": "common-c",
+      "assetId": "signal-hunter",
+      "authority": "approved_release",
+      "motionApprovalSha256": "2f128f8fb6851316092819213c82699ce82a23de01fd71007f4bc12bd015c881",
+      "runtimeLineageSha256": "a5f389422c309f2c9e6157ee8af6da4ba6ab74a96509979477b355321e75f792",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-428-wave-03.png"
+    },
+    {
+      "viewport": "mobile-428",
+      "wave": 4,
+      "mode": "standard",
+      "label": "Entry Runner",
+      "frame": "common-a",
+      "assetId": "entry-runner",
+      "authority": "approved_release",
+      "motionApprovalSha256": "54b6fd43c60def0ce0d270bc91ec3729af7e16442d118a8ecaf953c9fc6f2425",
+      "runtimeLineageSha256": "413dbf9241455da25cfc3d736ffee27f08a260fa83ce42128422b19135b7fc95",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-428-wave-04.png"
+    },
+    {
+      "viewport": "mobile-428",
+      "wave": 5,
+      "mode": "standard",
+      "label": "Site Sentinel",
+      "frame": "elite",
+      "assetId": "site-sentinel",
+      "authority": "approved_release",
+      "motionApprovalSha256": "5e2416fdaf9b829c3ea4f26fa0a257f35d3e189c84cfc9f178ed47e2fa48ec8e",
+      "runtimeLineageSha256": "5d5e49e3d8a27912232931a523083b333a04a0f741a501da07938ab26406b732",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-428-wave-05.png"
+    },
+    {
+      "viewport": "mobile-428",
+      "wave": 6,
+      "mode": "standard",
+      "label": "Entry Runner",
+      "frame": "common-a",
+      "assetId": "entry-runner",
+      "authority": "approved_release",
+      "motionApprovalSha256": "54b6fd43c60def0ce0d270bc91ec3729af7e16442d118a8ecaf953c9fc6f2425",
+      "runtimeLineageSha256": "413dbf9241455da25cfc3d736ffee27f08a260fa83ce42128422b19135b7fc95",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-428-wave-06.png"
+    },
+    {
+      "viewport": "mobile-428",
+      "wave": 7,
+      "mode": "standard",
+      "label": "Veil Operator",
+      "frame": "common-b",
+      "assetId": "veil-operator",
+      "authority": "approved_release",
+      "motionApprovalSha256": "29852c0f6bbdb5b40b4577eaaf088835c854bb5f73494bc357d68151ab521efa",
+      "runtimeLineageSha256": "ebbac82d31344f38663cf8d2f99ff54e4ed1ecc10fae25cfb2a70357adf5dad2",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-428-wave-07.png"
+    },
+    {
+      "viewport": "mobile-428",
+      "wave": 8,
+      "mode": "standard",
+      "label": "Entry Runner",
+      "frame": "common-a",
+      "assetId": "entry-runner",
+      "authority": "approved_release",
+      "motionApprovalSha256": "54b6fd43c60def0ce0d270bc91ec3729af7e16442d118a8ecaf953c9fc6f2425",
+      "runtimeLineageSha256": "413dbf9241455da25cfc3d736ffee27f08a260fa83ce42128422b19135b7fc95",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-428-wave-08.png"
+    },
+    {
+      "viewport": "mobile-428",
+      "wave": 9,
+      "mode": "standard",
+      "label": "Protocol Courier",
+      "frame": "event",
+      "assetId": "protocol-courier",
+      "authority": "approved_release",
+      "motionApprovalSha256": "992f4cdb38d18833412fed6d33cca8359ad4c13031a70ddaa0825f51c87936f4",
+      "runtimeLineageSha256": "8c78d4945834b91d43d44346f32c9551873dc6821359a21b7ebe971f24390b7b",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-428-wave-09.png"
+    },
+    {
+      "viewport": "mobile-428",
+      "wave": 10,
+      "mode": "standard",
+      "label": "Site Warden",
+      "frame": "boss",
+      "assetId": "site-warden",
+      "authority": "approved_release",
+      "motionApprovalSha256": "707e53ae77c2c3a3f37cdec70ba35f59a710c690247b7b1365a49204ad39abae",
+      "runtimeLineageSha256": "b65a1233f52d2c657e65ed4b8dfeb722ccbeaba33f0fbc1042281adacb7f8141",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-428-wave-10.png",
+      "bossBreak": {
+        "frame": "boss-break",
+        "hpRatio": 0.33,
+        "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-428-wave-10-boss-break.png"
+      }
+    },
+    {
+      "viewport": "mobile-428",
+      "wave": 1,
+      "mode": "reduced",
+      "label": "Entry Runner",
+      "frame": "common-a",
+      "assetId": "entry-runner",
+      "authority": "approved_release",
+      "motionApprovalSha256": "54b6fd43c60def0ce0d270bc91ec3729af7e16442d118a8ecaf953c9fc6f2425",
+      "runtimeLineageSha256": "413dbf9241455da25cfc3d736ffee27f08a260fa83ce42128422b19135b7fc95",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-428-wave-01-reduced.png"
+    },
+    {
+      "viewport": "mobile-428",
+      "wave": 2,
+      "mode": "reduced",
+      "label": "Veil Operator",
+      "frame": "common-b",
+      "assetId": "veil-operator",
+      "authority": "approved_release",
+      "motionApprovalSha256": "29852c0f6bbdb5b40b4577eaaf088835c854bb5f73494bc357d68151ab521efa",
+      "runtimeLineageSha256": "ebbac82d31344f38663cf8d2f99ff54e4ed1ecc10fae25cfb2a70357adf5dad2",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-428-wave-02-reduced.png"
+    },
+    {
+      "viewport": "mobile-428",
+      "wave": 3,
+      "mode": "reduced",
+      "label": "Signal Hunter",
+      "frame": "common-c",
+      "assetId": "signal-hunter",
+      "authority": "approved_release",
+      "motionApprovalSha256": "2f128f8fb6851316092819213c82699ce82a23de01fd71007f4bc12bd015c881",
+      "runtimeLineageSha256": "a5f389422c309f2c9e6157ee8af6da4ba6ab74a96509979477b355321e75f792",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-428-wave-03-reduced.png"
+    },
+    {
+      "viewport": "mobile-428",
+      "wave": 4,
+      "mode": "reduced",
+      "label": "Entry Runner",
+      "frame": "common-a",
+      "assetId": "entry-runner",
+      "authority": "approved_release",
+      "motionApprovalSha256": "54b6fd43c60def0ce0d270bc91ec3729af7e16442d118a8ecaf953c9fc6f2425",
+      "runtimeLineageSha256": "413dbf9241455da25cfc3d736ffee27f08a260fa83ce42128422b19135b7fc95",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-428-wave-04-reduced.png"
+    },
+    {
+      "viewport": "mobile-428",
+      "wave": 5,
+      "mode": "reduced",
+      "label": "Site Sentinel",
+      "frame": "elite",
+      "assetId": "site-sentinel",
+      "authority": "approved_release",
+      "motionApprovalSha256": "5e2416fdaf9b829c3ea4f26fa0a257f35d3e189c84cfc9f178ed47e2fa48ec8e",
+      "runtimeLineageSha256": "5d5e49e3d8a27912232931a523083b333a04a0f741a501da07938ab26406b732",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-428-wave-05-reduced.png"
+    },
+    {
+      "viewport": "mobile-428",
+      "wave": 6,
+      "mode": "reduced",
+      "label": "Entry Runner",
+      "frame": "common-a",
+      "assetId": "entry-runner",
+      "authority": "approved_release",
+      "motionApprovalSha256": "54b6fd43c60def0ce0d270bc91ec3729af7e16442d118a8ecaf953c9fc6f2425",
+      "runtimeLineageSha256": "413dbf9241455da25cfc3d736ffee27f08a260fa83ce42128422b19135b7fc95",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-428-wave-06-reduced.png"
+    },
+    {
+      "viewport": "mobile-428",
+      "wave": 7,
+      "mode": "reduced",
+      "label": "Veil Operator",
+      "frame": "common-b",
+      "assetId": "veil-operator",
+      "authority": "approved_release",
+      "motionApprovalSha256": "29852c0f6bbdb5b40b4577eaaf088835c854bb5f73494bc357d68151ab521efa",
+      "runtimeLineageSha256": "ebbac82d31344f38663cf8d2f99ff54e4ed1ecc10fae25cfb2a70357adf5dad2",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-428-wave-07-reduced.png"
+    },
+    {
+      "viewport": "mobile-428",
+      "wave": 8,
+      "mode": "reduced",
+      "label": "Entry Runner",
+      "frame": "common-a",
+      "assetId": "entry-runner",
+      "authority": "approved_release",
+      "motionApprovalSha256": "54b6fd43c60def0ce0d270bc91ec3729af7e16442d118a8ecaf953c9fc6f2425",
+      "runtimeLineageSha256": "413dbf9241455da25cfc3d736ffee27f08a260fa83ce42128422b19135b7fc95",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-428-wave-08-reduced.png"
+    },
+    {
+      "viewport": "mobile-428",
+      "wave": 9,
+      "mode": "reduced",
+      "label": "Protocol Courier",
+      "frame": "event",
+      "assetId": "protocol-courier",
+      "authority": "approved_release",
+      "motionApprovalSha256": "992f4cdb38d18833412fed6d33cca8359ad4c13031a70ddaa0825f51c87936f4",
+      "runtimeLineageSha256": "8c78d4945834b91d43d44346f32c9551873dc6821359a21b7ebe971f24390b7b",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-428-wave-09-reduced.png"
+    },
+    {
+      "viewport": "mobile-428",
+      "wave": 10,
+      "mode": "reduced",
+      "label": "Site Warden",
+      "frame": "boss",
+      "assetId": "site-warden",
+      "authority": "approved_release",
+      "motionApprovalSha256": "707e53ae77c2c3a3f37cdec70ba35f59a710c690247b7b1365a49204ad39abae",
+      "runtimeLineageSha256": "b65a1233f52d2c657e65ed4b8dfeb722ccbeaba33f0fbc1042281adacb7f8141",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-428-wave-10-reduced.png",
+      "bossBreak": {
+        "frame": "boss-break",
+        "hpRatio": 0.33,
+        "screenshot": "qa/screenshots/gaf2d-production-v4/mobile-428-wave-10-reduced-boss-break.png"
+      }
+    },
+    {
+      "viewport": "landscape-844",
+      "wave": 1,
+      "mode": "standard",
+      "label": "Entry Runner",
+      "frame": "common-a",
+      "assetId": "entry-runner",
+      "authority": "approved_release",
+      "motionApprovalSha256": "54b6fd43c60def0ce0d270bc91ec3729af7e16442d118a8ecaf953c9fc6f2425",
+      "runtimeLineageSha256": "413dbf9241455da25cfc3d736ffee27f08a260fa83ce42128422b19135b7fc95",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/landscape-844-wave-01.png"
+    },
+    {
+      "viewport": "landscape-844",
+      "wave": 2,
+      "mode": "standard",
+      "label": "Veil Operator",
+      "frame": "common-b",
+      "assetId": "veil-operator",
+      "authority": "approved_release",
+      "motionApprovalSha256": "29852c0f6bbdb5b40b4577eaaf088835c854bb5f73494bc357d68151ab521efa",
+      "runtimeLineageSha256": "ebbac82d31344f38663cf8d2f99ff54e4ed1ecc10fae25cfb2a70357adf5dad2",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/landscape-844-wave-02.png"
+    },
+    {
+      "viewport": "landscape-844",
+      "wave": 3,
+      "mode": "standard",
+      "label": "Signal Hunter",
+      "frame": "common-c",
+      "assetId": "signal-hunter",
+      "authority": "approved_release",
+      "motionApprovalSha256": "2f128f8fb6851316092819213c82699ce82a23de01fd71007f4bc12bd015c881",
+      "runtimeLineageSha256": "a5f389422c309f2c9e6157ee8af6da4ba6ab74a96509979477b355321e75f792",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/landscape-844-wave-03.png"
+    },
+    {
+      "viewport": "landscape-844",
+      "wave": 4,
+      "mode": "standard",
+      "label": "Entry Runner",
+      "frame": "common-a",
+      "assetId": "entry-runner",
+      "authority": "approved_release",
+      "motionApprovalSha256": "54b6fd43c60def0ce0d270bc91ec3729af7e16442d118a8ecaf953c9fc6f2425",
+      "runtimeLineageSha256": "413dbf9241455da25cfc3d736ffee27f08a260fa83ce42128422b19135b7fc95",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/landscape-844-wave-04.png"
+    },
+    {
+      "viewport": "landscape-844",
+      "wave": 5,
+      "mode": "standard",
+      "label": "Site Sentinel",
+      "frame": "elite",
+      "assetId": "site-sentinel",
+      "authority": "approved_release",
+      "motionApprovalSha256": "5e2416fdaf9b829c3ea4f26fa0a257f35d3e189c84cfc9f178ed47e2fa48ec8e",
+      "runtimeLineageSha256": "5d5e49e3d8a27912232931a523083b333a04a0f741a501da07938ab26406b732",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/landscape-844-wave-05.png"
+    },
+    {
+      "viewport": "landscape-844",
+      "wave": 6,
+      "mode": "standard",
+      "label": "Entry Runner",
+      "frame": "common-a",
+      "assetId": "entry-runner",
+      "authority": "approved_release",
+      "motionApprovalSha256": "54b6fd43c60def0ce0d270bc91ec3729af7e16442d118a8ecaf953c9fc6f2425",
+      "runtimeLineageSha256": "413dbf9241455da25cfc3d736ffee27f08a260fa83ce42128422b19135b7fc95",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/landscape-844-wave-06.png"
+    },
+    {
+      "viewport": "landscape-844",
+      "wave": 7,
+      "mode": "standard",
+      "label": "Veil Operator",
+      "frame": "common-b",
+      "assetId": "veil-operator",
+      "authority": "approved_release",
+      "motionApprovalSha256": "29852c0f6bbdb5b40b4577eaaf088835c854bb5f73494bc357d68151ab521efa",
+      "runtimeLineageSha256": "ebbac82d31344f38663cf8d2f99ff54e4ed1ecc10fae25cfb2a70357adf5dad2",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/landscape-844-wave-07.png"
+    },
+    {
+      "viewport": "landscape-844",
+      "wave": 8,
+      "mode": "standard",
+      "label": "Entry Runner",
+      "frame": "common-a",
+      "assetId": "entry-runner",
+      "authority": "approved_release",
+      "motionApprovalSha256": "54b6fd43c60def0ce0d270bc91ec3729af7e16442d118a8ecaf953c9fc6f2425",
+      "runtimeLineageSha256": "413dbf9241455da25cfc3d736ffee27f08a260fa83ce42128422b19135b7fc95",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/landscape-844-wave-08.png"
+    },
+    {
+      "viewport": "landscape-844",
+      "wave": 9,
+      "mode": "standard",
+      "label": "Protocol Courier",
+      "frame": "event",
+      "assetId": "protocol-courier",
+      "authority": "approved_release",
+      "motionApprovalSha256": "992f4cdb38d18833412fed6d33cca8359ad4c13031a70ddaa0825f51c87936f4",
+      "runtimeLineageSha256": "8c78d4945834b91d43d44346f32c9551873dc6821359a21b7ebe971f24390b7b",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/landscape-844-wave-09.png"
+    },
+    {
+      "viewport": "landscape-844",
+      "wave": 10,
+      "mode": "standard",
+      "label": "Site Warden",
+      "frame": "boss",
+      "assetId": "site-warden",
+      "authority": "approved_release",
+      "motionApprovalSha256": "707e53ae77c2c3a3f37cdec70ba35f59a710c690247b7b1365a49204ad39abae",
+      "runtimeLineageSha256": "b65a1233f52d2c657e65ed4b8dfeb722ccbeaba33f0fbc1042281adacb7f8141",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/landscape-844-wave-10.png",
+      "bossBreak": {
+        "frame": "boss-break",
+        "hpRatio": 0.33,
+        "screenshot": "qa/screenshots/gaf2d-production-v4/landscape-844-wave-10-boss-break.png"
+      }
+    },
+    {
+      "viewport": "landscape-844",
+      "wave": 1,
+      "mode": "reduced",
+      "label": "Entry Runner",
+      "frame": "common-a",
+      "assetId": "entry-runner",
+      "authority": "approved_release",
+      "motionApprovalSha256": "54b6fd43c60def0ce0d270bc91ec3729af7e16442d118a8ecaf953c9fc6f2425",
+      "runtimeLineageSha256": "413dbf9241455da25cfc3d736ffee27f08a260fa83ce42128422b19135b7fc95",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/landscape-844-wave-01-reduced.png"
+    },
+    {
+      "viewport": "landscape-844",
+      "wave": 2,
+      "mode": "reduced",
+      "label": "Veil Operator",
+      "frame": "common-b",
+      "assetId": "veil-operator",
+      "authority": "approved_release",
+      "motionApprovalSha256": "29852c0f6bbdb5b40b4577eaaf088835c854bb5f73494bc357d68151ab521efa",
+      "runtimeLineageSha256": "ebbac82d31344f38663cf8d2f99ff54e4ed1ecc10fae25cfb2a70357adf5dad2",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/landscape-844-wave-02-reduced.png"
+    },
+    {
+      "viewport": "landscape-844",
+      "wave": 3,
+      "mode": "reduced",
+      "label": "Signal Hunter",
+      "frame": "common-c",
+      "assetId": "signal-hunter",
+      "authority": "approved_release",
+      "motionApprovalSha256": "2f128f8fb6851316092819213c82699ce82a23de01fd71007f4bc12bd015c881",
+      "runtimeLineageSha256": "a5f389422c309f2c9e6157ee8af6da4ba6ab74a96509979477b355321e75f792",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/landscape-844-wave-03-reduced.png"
+    },
+    {
+      "viewport": "landscape-844",
+      "wave": 4,
+      "mode": "reduced",
+      "label": "Entry Runner",
+      "frame": "common-a",
+      "assetId": "entry-runner",
+      "authority": "approved_release",
+      "motionApprovalSha256": "54b6fd43c60def0ce0d270bc91ec3729af7e16442d118a8ecaf953c9fc6f2425",
+      "runtimeLineageSha256": "413dbf9241455da25cfc3d736ffee27f08a260fa83ce42128422b19135b7fc95",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/landscape-844-wave-04-reduced.png"
+    },
+    {
+      "viewport": "landscape-844",
+      "wave": 5,
+      "mode": "reduced",
+      "label": "Site Sentinel",
+      "frame": "elite",
+      "assetId": "site-sentinel",
+      "authority": "approved_release",
+      "motionApprovalSha256": "5e2416fdaf9b829c3ea4f26fa0a257f35d3e189c84cfc9f178ed47e2fa48ec8e",
+      "runtimeLineageSha256": "5d5e49e3d8a27912232931a523083b333a04a0f741a501da07938ab26406b732",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/landscape-844-wave-05-reduced.png"
+    },
+    {
+      "viewport": "landscape-844",
+      "wave": 6,
+      "mode": "reduced",
+      "label": "Entry Runner",
+      "frame": "common-a",
+      "assetId": "entry-runner",
+      "authority": "approved_release",
+      "motionApprovalSha256": "54b6fd43c60def0ce0d270bc91ec3729af7e16442d118a8ecaf953c9fc6f2425",
+      "runtimeLineageSha256": "413dbf9241455da25cfc3d736ffee27f08a260fa83ce42128422b19135b7fc95",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/landscape-844-wave-06-reduced.png"
+    },
+    {
+      "viewport": "landscape-844",
+      "wave": 7,
+      "mode": "reduced",
+      "label": "Veil Operator",
+      "frame": "common-b",
+      "assetId": "veil-operator",
+      "authority": "approved_release",
+      "motionApprovalSha256": "29852c0f6bbdb5b40b4577eaaf088835c854bb5f73494bc357d68151ab521efa",
+      "runtimeLineageSha256": "ebbac82d31344f38663cf8d2f99ff54e4ed1ecc10fae25cfb2a70357adf5dad2",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/landscape-844-wave-07-reduced.png"
+    },
+    {
+      "viewport": "landscape-844",
+      "wave": 8,
+      "mode": "reduced",
+      "label": "Entry Runner",
+      "frame": "common-a",
+      "assetId": "entry-runner",
+      "authority": "approved_release",
+      "motionApprovalSha256": "54b6fd43c60def0ce0d270bc91ec3729af7e16442d118a8ecaf953c9fc6f2425",
+      "runtimeLineageSha256": "413dbf9241455da25cfc3d736ffee27f08a260fa83ce42128422b19135b7fc95",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/landscape-844-wave-08-reduced.png"
+    },
+    {
+      "viewport": "landscape-844",
+      "wave": 9,
+      "mode": "reduced",
+      "label": "Protocol Courier",
+      "frame": "event",
+      "assetId": "protocol-courier",
+      "authority": "approved_release",
+      "motionApprovalSha256": "992f4cdb38d18833412fed6d33cca8359ad4c13031a70ddaa0825f51c87936f4",
+      "runtimeLineageSha256": "8c78d4945834b91d43d44346f32c9551873dc6821359a21b7ebe971f24390b7b",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/landscape-844-wave-09-reduced.png"
+    },
+    {
+      "viewport": "landscape-844",
+      "wave": 10,
+      "mode": "reduced",
+      "label": "Site Warden",
+      "frame": "boss",
+      "assetId": "site-warden",
+      "authority": "approved_release",
+      "motionApprovalSha256": "707e53ae77c2c3a3f37cdec70ba35f59a710c690247b7b1365a49204ad39abae",
+      "runtimeLineageSha256": "b65a1233f52d2c657e65ed4b8dfeb722ccbeaba33f0fbc1042281adacb7f8141",
+      "hpRatio": 1,
+      "screenshot": "qa/screenshots/gaf2d-production-v4/landscape-844-wave-10-reduced.png",
+      "bossBreak": {
+        "frame": "boss-break",
+        "hpRatio": 0.33,
+        "screenshot": "qa/screenshots/gaf2d-production-v4/landscape-844-wave-10-reduced-boss-break.png"
+      }
+    }
+  ],
+  "productionMotion": [
+    {
+      "viewport": "mobile-375",
+      "authority": "approved_release",
+      "sourceFamily": "authored-semantic-v4",
+      "motionApprovalSha256": "54b6fd43c60def0ce0d270bc91ec3729af7e16442d118a8ecaf953c9fc6f2425",
+      "runtimeLineageSha256": "413dbf9241455da25cfc3d736ffee27f08a260fa83ce42128422b19135b7fc95",
+      "derivativeSetSha256": "9f28cd3ba0393e59e6cf8331e03cbb69a140288e117ae2283a3fcdff381eed9f",
+      "selectedProfileSha256": "76d15cc95e8a0bf2f40867abb09f375148679e71f3746e11d51130f83c463dd4",
+      "status": "ready",
+      "clip": "advance",
+      "fallbacks": 0,
+      "frames": [
+        {
+          "timestamp": 0,
+          "motion": {
+            "assetId": "entry-runner",
+            "clip": "advance",
+            "fps": 30,
+            "frameIndex": 21,
+            "status": "ready",
+            "fallbacks": 0,
+            "authority": "approved_release",
+            "sourceFamily": "authored-semantic-v4",
+            "candidateSha256": "cdc1db8cf353c0635b123ba40d7a532bae4e1391a48e54877e957e7e9b8ae5b9",
+            "motionApprovalSha256": "54b6fd43c60def0ce0d270bc91ec3729af7e16442d118a8ecaf953c9fc6f2425",
+            "runtimeLineageSha256": "413dbf9241455da25cfc3d736ffee27f08a260fa83ce42128422b19135b7fc95",
+            "derivativeSetSha256": "9f28cd3ba0393e59e6cf8331e03cbb69a140288e117ae2283a3fcdff381eed9f",
+            "selectedProfileSha256": "76d15cc95e8a0bf2f40867abb09f375148679e71f3746e11d51130f83c463dd4"
+          },
+          "geometry": {
+            "role": "standard",
+            "bodyTop": 349.98,
+            "bodyBottom": 421.98,
+            "bodyHeight": 72,
+            "visualGap": 2,
+            "motionTop": 347.13254237288135,
+            "hpY": 337.13254237288135,
+            "shadowY": 423.98
+          },
+          "sample": {
+            "x": 531,
+            "y": 694,
+            "width": 103,
+            "height": 150,
+            "rgba": [
+              28,
+              33,
+              49,
+              255
+            ],
+            "sha256": "2474fbcc4f151591e855a523d3c1764c20da980b72e14e0ed3ccb1a4dde4f62c"
+          }
+        },
+        {
+          "timestamp": 0.13,
+          "motion": {
+            "assetId": "entry-runner",
+            "clip": "advance",
+            "fps": 30,
+            "frameIndex": 1,
+            "status": "ready",
+            "fallbacks": 0,
+            "authority": "approved_release",
+            "sourceFamily": "authored-semantic-v4",
+            "candidateSha256": "cdc1db8cf353c0635b123ba40d7a532bae4e1391a48e54877e957e7e9b8ae5b9",
+            "motionApprovalSha256": "54b6fd43c60def0ce0d270bc91ec3729af7e16442d118a8ecaf953c9fc6f2425",
+            "runtimeLineageSha256": "413dbf9241455da25cfc3d736ffee27f08a260fa83ce42128422b19135b7fc95",
+            "derivativeSetSha256": "9f28cd3ba0393e59e6cf8331e03cbb69a140288e117ae2283a3fcdff381eed9f",
+            "selectedProfileSha256": "76d15cc95e8a0bf2f40867abb09f375148679e71f3746e11d51130f83c463dd4"
+          },
+          "geometry": {
+            "role": "standard",
+            "bodyTop": 349.98,
+            "bodyBottom": 421.98,
+            "bodyHeight": 72,
+            "visualGap": 2,
+            "motionTop": 347.13254237288135,
+            "hpY": 337.13254237288135,
+            "shadowY": 423.98
+          },
+          "sample": {
+            "x": 531,
+            "y": 694,
+            "width": 103,
+            "height": 150,
+            "rgba": [
+              28,
+              33,
+              49,
+              255
+            ],
+            "sha256": "73a91f9d415c1ca47f346baa86b3af71526a67ac846f2f06ed51e480265a0cd9"
+          }
+        },
+        {
+          "timestamp": 0.26,
+          "motion": {
+            "assetId": "entry-runner",
+            "clip": "advance",
+            "fps": 30,
+            "frameIndex": 5,
+            "status": "ready",
+            "fallbacks": 0,
+            "authority": "approved_release",
+            "sourceFamily": "authored-semantic-v4",
+            "candidateSha256": "cdc1db8cf353c0635b123ba40d7a532bae4e1391a48e54877e957e7e9b8ae5b9",
+            "motionApprovalSha256": "54b6fd43c60def0ce0d270bc91ec3729af7e16442d118a8ecaf953c9fc6f2425",
+            "runtimeLineageSha256": "413dbf9241455da25cfc3d736ffee27f08a260fa83ce42128422b19135b7fc95",
+            "derivativeSetSha256": "9f28cd3ba0393e59e6cf8331e03cbb69a140288e117ae2283a3fcdff381eed9f",
+            "selectedProfileSha256": "76d15cc95e8a0bf2f40867abb09f375148679e71f3746e11d51130f83c463dd4"
+          },
+          "geometry": {
+            "role": "standard",
+            "bodyTop": 349.98,
+            "bodyBottom": 421.98,
+            "bodyHeight": 72,
+            "visualGap": 2,
+            "motionTop": 347.13254237288135,
+            "hpY": 337.13254237288135,
+            "shadowY": 423.98
+          },
+          "sample": {
+            "x": 531,
+            "y": 694,
+            "width": 103,
+            "height": 150,
+            "rgba": [
+              28,
+              32,
+              49,
+              255
+            ],
+            "sha256": "8e2963277878f6ee931bd6e2989a2a4eb4226fb0d1d2dd5d9a509679b67797ac"
+          }
+        }
+      ],
+      "lifecycle": [
+        "visible",
+        "hidden",
+        "visible"
+      ],
+      "reducedMotion": {
+        "baseline": {
+          "saved": false,
+          "os": false,
+          "effective": false,
+          "css": false
+        },
+        "osReduced": {
+          "saved": false,
+          "os": true,
+          "effective": true,
+          "css": true
+        },
+        "savedAfterOsChanges": {
+          "saved": true,
+          "os": false,
+          "effective": true,
+          "css": true
+        }
+      },
+      "requests": {
+        "currentSetAndSelectedClip": [
+          "/assets/game-packs/valorant/characters/entry-runner/advance.json?sha256=90ac24be84ad7ef9ce5e8e18ca600c78b1d7fe267936f23c8ad7e5cf8ef89e38",
+          "/assets/game-packs/valorant/characters/entry-runner/advance.webp?sha256=927985d745693b50fdc6853f7326f50074e7904af3a6d9ff9da5f5e052f52ea4",
+          "/assets/game-packs/valorant/characters/entry-runner/set.json?sha256=d10954872beecbe955fb171fa9a1ef96939b82f966d3bd5c3cc3a9198b9e368f"
+        ],
+        "nextSetOnly": [
+          "/assets/game-packs/valorant/characters/veil-operator/set.json?sha256=e40ac304f5f420254b8a93c31f6c68e32a9899bdccead285c6f64319995400d2"
+        ],
+        "routeTransitionSelectedClipAndNextSet": [
+          "/assets/game-packs/valorant/characters/signal-hunter/set.json?sha256=9e7db9a6594f6c3cc49e0618365ebebe805352832221cac600568a76410b12ff",
+          "/assets/game-packs/valorant/characters/veil-operator/advance.json?sha256=6d6d01fcde9f0b0cad9e7e45c315aebd6af8707227da5edbecfee6ab29b49f6d",
+          "/assets/game-packs/valorant/characters/veil-operator/advance.webp?sha256=1b7a8381957574ec24052ae6704261c7cd1ea2dedfb9dd3edc61668a8907d794"
+        ]
+      },
+      "screenshots": [
+        "qa/screenshots/gaf2d-production-v4/mobile-375-wave-01-motion-frame-0.png",
+        "qa/screenshots/gaf2d-production-v4/mobile-375-wave-01-motion-frame-1.png",
+        "qa/screenshots/gaf2d-production-v4/mobile-375-wave-02-motion-next.png"
+      ]
+    },
+    {
+      "viewport": "mobile-428",
+      "authority": "approved_release",
+      "sourceFamily": "authored-semantic-v4",
+      "motionApprovalSha256": "54b6fd43c60def0ce0d270bc91ec3729af7e16442d118a8ecaf953c9fc6f2425",
+      "runtimeLineageSha256": "413dbf9241455da25cfc3d736ffee27f08a260fa83ce42128422b19135b7fc95",
+      "derivativeSetSha256": "9f28cd3ba0393e59e6cf8331e03cbb69a140288e117ae2283a3fcdff381eed9f",
+      "selectedProfileSha256": "76d15cc95e8a0bf2f40867abb09f375148679e71f3746e11d51130f83c463dd4",
+      "status": "ready",
+      "clip": "advance",
+      "fallbacks": 0,
+      "frames": [
+        {
+          "timestamp": 0,
+          "motion": {
+            "assetId": "entry-runner",
+            "clip": "advance",
+            "fps": 30,
+            "frameIndex": 21,
+            "status": "ready",
+            "fallbacks": 0,
+            "authority": "approved_release",
+            "sourceFamily": "authored-semantic-v4",
+            "candidateSha256": "cdc1db8cf353c0635b123ba40d7a532bae4e1391a48e54877e957e7e9b8ae5b9",
+            "motionApprovalSha256": "54b6fd43c60def0ce0d270bc91ec3729af7e16442d118a8ecaf953c9fc6f2425",
+            "runtimeLineageSha256": "413dbf9241455da25cfc3d736ffee27f08a260fa83ce42128422b19135b7fc95",
+            "derivativeSetSha256": "9f28cd3ba0393e59e6cf8331e03cbb69a140288e117ae2283a3fcdff381eed9f",
+            "selectedProfileSha256": "76d15cc95e8a0bf2f40867abb09f375148679e71f3746e11d51130f83c463dd4"
+          },
+          "geometry": {
+            "role": "standard",
+            "bodyTop": 448.02,
+            "bodyBottom": 520.02,
+            "bodyHeight": 72,
+            "visualGap": 2,
+            "motionTop": 445.1725423728813,
+            "hpY": 435.1725423728813,
+            "shadowY": 522.02
+          },
+          "sample": {
+            "x": 531,
+            "y": 890,
+            "width": 103,
+            "height": 150,
+            "rgba": [
+              31,
+              34,
+              51,
+              255
+            ],
+            "sha256": "5c47ddcbc5309f2d853b2a16cee2ecf9223461aa73f4f01cce19450a3a67eb5b"
+          }
+        },
+        {
+          "timestamp": 0.13,
+          "motion": {
+            "assetId": "entry-runner",
+            "clip": "advance",
+            "fps": 30,
+            "frameIndex": 1,
+            "status": "ready",
+            "fallbacks": 0,
+            "authority": "approved_release",
+            "sourceFamily": "authored-semantic-v4",
+            "candidateSha256": "cdc1db8cf353c0635b123ba40d7a532bae4e1391a48e54877e957e7e9b8ae5b9",
+            "motionApprovalSha256": "54b6fd43c60def0ce0d270bc91ec3729af7e16442d118a8ecaf953c9fc6f2425",
+            "runtimeLineageSha256": "413dbf9241455da25cfc3d736ffee27f08a260fa83ce42128422b19135b7fc95",
+            "derivativeSetSha256": "9f28cd3ba0393e59e6cf8331e03cbb69a140288e117ae2283a3fcdff381eed9f",
+            "selectedProfileSha256": "76d15cc95e8a0bf2f40867abb09f375148679e71f3746e11d51130f83c463dd4"
+          },
+          "geometry": {
+            "role": "standard",
+            "bodyTop": 448.02,
+            "bodyBottom": 520.02,
+            "bodyHeight": 72,
+            "visualGap": 2,
+            "motionTop": 445.1725423728813,
+            "hpY": 435.1725423728813,
+            "shadowY": 522.02
+          },
+          "sample": {
+            "x": 531,
+            "y": 890,
+            "width": 103,
+            "height": 150,
+            "rgba": [
+              31,
+              33,
+              51,
+              255
+            ],
+            "sha256": "0cb3f13818550703eee01d90a79d8a2f665e71939f07f10444d5292568d634ae"
+          }
+        },
+        {
+          "timestamp": 0.26,
+          "motion": {
+            "assetId": "entry-runner",
+            "clip": "advance",
+            "fps": 30,
+            "frameIndex": 5,
+            "status": "ready",
+            "fallbacks": 0,
+            "authority": "approved_release",
+            "sourceFamily": "authored-semantic-v4",
+            "candidateSha256": "cdc1db8cf353c0635b123ba40d7a532bae4e1391a48e54877e957e7e9b8ae5b9",
+            "motionApprovalSha256": "54b6fd43c60def0ce0d270bc91ec3729af7e16442d118a8ecaf953c9fc6f2425",
+            "runtimeLineageSha256": "413dbf9241455da25cfc3d736ffee27f08a260fa83ce42128422b19135b7fc95",
+            "derivativeSetSha256": "9f28cd3ba0393e59e6cf8331e03cbb69a140288e117ae2283a3fcdff381eed9f",
+            "selectedProfileSha256": "76d15cc95e8a0bf2f40867abb09f375148679e71f3746e11d51130f83c463dd4"
+          },
+          "geometry": {
+            "role": "standard",
+            "bodyTop": 448.02,
+            "bodyBottom": 520.02,
+            "bodyHeight": 72,
+            "visualGap": 2,
+            "motionTop": 445.1725423728813,
+            "hpY": 435.1725423728813,
+            "shadowY": 522.02
+          },
+          "sample": {
+            "x": 531,
+            "y": 890,
+            "width": 103,
+            "height": 150,
+            "rgba": [
+              31,
+              33,
+              50,
+              255
+            ],
+            "sha256": "72151eb2e1ab64ff0a04567bf6994c51b6ff913a6c060d4fcf1867646d46640f"
+          }
+        }
+      ],
+      "lifecycle": [
+        "visible",
+        "hidden",
+        "visible"
+      ],
+      "reducedMotion": {
+        "baseline": {
+          "saved": false,
+          "os": false,
+          "effective": false,
+          "css": false
+        },
+        "osReduced": {
+          "saved": false,
+          "os": true,
+          "effective": true,
+          "css": true
+        },
+        "savedAfterOsChanges": {
+          "saved": true,
+          "os": false,
+          "effective": true,
+          "css": true
+        }
+      },
+      "requests": {
+        "currentSetAndSelectedClip": [
+          "/assets/game-packs/valorant/characters/entry-runner/advance.json?sha256=90ac24be84ad7ef9ce5e8e18ca600c78b1d7fe267936f23c8ad7e5cf8ef89e38",
+          "/assets/game-packs/valorant/characters/entry-runner/advance.webp?sha256=927985d745693b50fdc6853f7326f50074e7904af3a6d9ff9da5f5e052f52ea4",
+          "/assets/game-packs/valorant/characters/entry-runner/set.json?sha256=d10954872beecbe955fb171fa9a1ef96939b82f966d3bd5c3cc3a9198b9e368f"
+        ],
+        "nextSetOnly": [
+          "/assets/game-packs/valorant/characters/veil-operator/set.json?sha256=e40ac304f5f420254b8a93c31f6c68e32a9899bdccead285c6f64319995400d2"
+        ],
+        "routeTransitionSelectedClipAndNextSet": [
+          "/assets/game-packs/valorant/characters/signal-hunter/set.json?sha256=9e7db9a6594f6c3cc49e0618365ebebe805352832221cac600568a76410b12ff",
+          "/assets/game-packs/valorant/characters/veil-operator/advance.json?sha256=6d6d01fcde9f0b0cad9e7e45c315aebd6af8707227da5edbecfee6ab29b49f6d",
+          "/assets/game-packs/valorant/characters/veil-operator/advance.webp?sha256=1b7a8381957574ec24052ae6704261c7cd1ea2dedfb9dd3edc61668a8907d794"
+        ]
+      },
+      "screenshots": [
+        "qa/screenshots/gaf2d-production-v4/mobile-428-wave-01-motion-frame-0.png",
+        "qa/screenshots/gaf2d-production-v4/mobile-428-wave-01-motion-frame-1.png",
+        "qa/screenshots/gaf2d-production-v4/mobile-428-wave-02-motion-next.png"
+      ]
+    },
+    {
+      "viewport": "landscape-844",
+      "authority": "approved_release",
+      "sourceFamily": "authored-semantic-v4",
+      "motionApprovalSha256": "54b6fd43c60def0ce0d270bc91ec3729af7e16442d118a8ecaf953c9fc6f2425",
+      "runtimeLineageSha256": "413dbf9241455da25cfc3d736ffee27f08a260fa83ce42128422b19135b7fc95",
+      "derivativeSetSha256": "9f28cd3ba0393e59e6cf8331e03cbb69a140288e117ae2283a3fcdff381eed9f",
+      "selectedProfileSha256": "76d15cc95e8a0bf2f40867abb09f375148679e71f3746e11d51130f83c463dd4",
+      "status": "ready",
+      "clip": "advance",
+      "fallbacks": 0,
+      "frames": [
+        {
+          "timestamp": 0,
+          "motion": {
+            "assetId": "entry-runner",
+            "clip": "advance",
+            "fps": 30,
+            "frameIndex": 21,
+            "status": "ready",
+            "fallbacks": 0,
+            "authority": "approved_release",
+            "sourceFamily": "authored-semantic-v4",
+            "candidateSha256": "cdc1db8cf353c0635b123ba40d7a532bae4e1391a48e54877e957e7e9b8ae5b9",
+            "motionApprovalSha256": "54b6fd43c60def0ce0d270bc91ec3729af7e16442d118a8ecaf953c9fc6f2425",
+            "runtimeLineageSha256": "413dbf9241455da25cfc3d736ffee27f08a260fa83ce42128422b19135b7fc95",
+            "derivativeSetSha256": "9f28cd3ba0393e59e6cf8331e03cbb69a140288e117ae2283a3fcdff381eed9f",
+            "selectedProfileSha256": "76d15cc95e8a0bf2f40867abb09f375148679e71f3746e11d51130f83c463dd4"
+          },
+          "geometry": {
+            "role": "standard",
+            "bodyTop": 145.22283371298406,
+            "bodyBottom": 184.66440091116172,
+            "bodyHeight": 39.441567198177665,
+            "visualGap": 1.0955990888382685,
+            "motionTop": 143.66299772209567,
+            "hpY": 133.66299772209567,
+            "shadowY": 185.76
+          },
+          "sample": {
+            "x": 556,
+            "y": 287,
+            "width": 57,
+            "height": 82,
+            "rgba": [
+              21,
+              24,
+              35,
+              255
+            ],
+            "sha256": "6b71f18079af898dd9c18efdc219e20632bb8b78599dea0087b06ccd3cd5cd50"
+          }
+        },
+        {
+          "timestamp": 0.13,
+          "motion": {
+            "assetId": "entry-runner",
+            "clip": "advance",
+            "fps": 30,
+            "frameIndex": 1,
+            "status": "ready",
+            "fallbacks": 0,
+            "authority": "approved_release",
+            "sourceFamily": "authored-semantic-v4",
+            "candidateSha256": "cdc1db8cf353c0635b123ba40d7a532bae4e1391a48e54877e957e7e9b8ae5b9",
+            "motionApprovalSha256": "54b6fd43c60def0ce0d270bc91ec3729af7e16442d118a8ecaf953c9fc6f2425",
+            "runtimeLineageSha256": "413dbf9241455da25cfc3d736ffee27f08a260fa83ce42128422b19135b7fc95",
+            "derivativeSetSha256": "9f28cd3ba0393e59e6cf8331e03cbb69a140288e117ae2283a3fcdff381eed9f",
+            "selectedProfileSha256": "76d15cc95e8a0bf2f40867abb09f375148679e71f3746e11d51130f83c463dd4"
+          },
+          "geometry": {
+            "role": "standard",
+            "bodyTop": 145.22283371298406,
+            "bodyBottom": 184.66440091116172,
+            "bodyHeight": 39.441567198177665,
+            "visualGap": 1.0955990888382685,
+            "motionTop": 143.66299772209567,
+            "hpY": 133.66299772209567,
+            "shadowY": 185.76
+          },
+          "sample": {
+            "x": 556,
+            "y": 287,
+            "width": 57,
+            "height": 82,
+            "rgba": [
+              22,
+              24,
+              35,
+              255
+            ],
+            "sha256": "4df9045825eadc2c1b65a8e7445cc0e96f033e998d816fa57730bead21b5438e"
+          }
+        },
+        {
+          "timestamp": 0.26,
+          "motion": {
+            "assetId": "entry-runner",
+            "clip": "advance",
+            "fps": 30,
+            "frameIndex": 5,
+            "status": "ready",
+            "fallbacks": 0,
+            "authority": "approved_release",
+            "sourceFamily": "authored-semantic-v4",
+            "candidateSha256": "cdc1db8cf353c0635b123ba40d7a532bae4e1391a48e54877e957e7e9b8ae5b9",
+            "motionApprovalSha256": "54b6fd43c60def0ce0d270bc91ec3729af7e16442d118a8ecaf953c9fc6f2425",
+            "runtimeLineageSha256": "413dbf9241455da25cfc3d736ffee27f08a260fa83ce42128422b19135b7fc95",
+            "derivativeSetSha256": "9f28cd3ba0393e59e6cf8331e03cbb69a140288e117ae2283a3fcdff381eed9f",
+            "selectedProfileSha256": "76d15cc95e8a0bf2f40867abb09f375148679e71f3746e11d51130f83c463dd4"
+          },
+          "geometry": {
+            "role": "standard",
+            "bodyTop": 145.22283371298406,
+            "bodyBottom": 184.66440091116172,
+            "bodyHeight": 39.441567198177665,
+            "visualGap": 1.0955990888382685,
+            "motionTop": 143.66299772209567,
+            "hpY": 133.66299772209567,
+            "shadowY": 185.76
+          },
+          "sample": {
+            "x": 556,
+            "y": 287,
+            "width": 57,
+            "height": 82,
+            "rgba": [
+              22,
+              24,
+              35,
+              255
+            ],
+            "sha256": "937c5a14e147b3e752af7adfc955dd1d0d106c756f7d266a801108e1e072015e"
+          }
+        }
+      ],
+      "lifecycle": [
+        "visible",
+        "hidden",
+        "visible"
+      ],
+      "reducedMotion": {
+        "baseline": {
+          "saved": false,
+          "os": false,
+          "effective": false,
+          "css": false
+        },
+        "osReduced": {
+          "saved": false,
+          "os": true,
+          "effective": true,
+          "css": true
+        },
+        "savedAfterOsChanges": {
+          "saved": true,
+          "os": false,
+          "effective": true,
+          "css": true
+        }
+      },
+      "requests": {
+        "currentSetAndSelectedClip": [
+          "/assets/game-packs/valorant/characters/entry-runner/advance.json?sha256=90ac24be84ad7ef9ce5e8e18ca600c78b1d7fe267936f23c8ad7e5cf8ef89e38",
+          "/assets/game-packs/valorant/characters/entry-runner/advance.webp?sha256=927985d745693b50fdc6853f7326f50074e7904af3a6d9ff9da5f5e052f52ea4",
+          "/assets/game-packs/valorant/characters/entry-runner/set.json?sha256=d10954872beecbe955fb171fa9a1ef96939b82f966d3bd5c3cc3a9198b9e368f"
+        ],
+        "nextSetOnly": [
+          "/assets/game-packs/valorant/characters/veil-operator/set.json?sha256=e40ac304f5f420254b8a93c31f6c68e32a9899bdccead285c6f64319995400d2"
+        ],
+        "routeTransitionSelectedClipAndNextSet": [
+          "/assets/game-packs/valorant/characters/signal-hunter/set.json?sha256=9e7db9a6594f6c3cc49e0618365ebebe805352832221cac600568a76410b12ff",
+          "/assets/game-packs/valorant/characters/veil-operator/advance.json?sha256=6d6d01fcde9f0b0cad9e7e45c315aebd6af8707227da5edbecfee6ab29b49f6d",
+          "/assets/game-packs/valorant/characters/veil-operator/advance.webp?sha256=1b7a8381957574ec24052ae6704261c7cd1ea2dedfb9dd3edc61668a8907d794"
+        ]
+      },
+      "screenshots": [
+        "qa/screenshots/gaf2d-production-v4/landscape-844-wave-01-motion-frame-0.png",
+        "qa/screenshots/gaf2d-production-v4/landscape-844-wave-01-motion-frame-1.png",
+        "qa/screenshots/gaf2d-production-v4/landscape-844-wave-02-motion-next.png"
+      ]
+    }
+  ],
+  "noGate": {
+    "checked": true
+  }
+}

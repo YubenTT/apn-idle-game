@@ -1,4 +1,5 @@
 import {
+  validateMotionSetIndex,
   validateMotionPreviewBundle,
 } from './motion-bundle.js?v=gaf2d-motion-v1';
 import {
@@ -7,6 +8,12 @@ import {
   validateHeroClipDescriptor,
   validateHeroSetManifest,
 } from './hero-v3-contract.js?v=gaf2d-motion-v1';
+import {
+  validateConsumerScaleContract,
+  validateQualityProfileBinding,
+  VISUAL_FIDELITY_BUDGETS,
+  visualFidelityEncodedLimit,
+} from './visual-fidelity-v4.js?v=gaf2d-motion-v1';
 
 const MANIFEST_PATH = '.gaf2d-preview/manifest.json';
 const PRODUCTION_HERO_BASE = 'assets/mascot/v3/';
@@ -25,6 +32,22 @@ const CHARACTER_ROLES = Object.freeze({
   'site-warden': 'boss',
   'veil-operator': 'character',
 });
+const CONSUMER_ROLES = Object.freeze({
+  'apn-hero': 'hero',
+  'entry-runner': 'standard',
+  'protocol-courier': 'standard',
+  'signal-hunter': 'standard',
+  'site-sentinel': 'elite',
+  'site-warden': 'boss',
+  'veil-operator': 'standard',
+});
+const VISUAL_FIDELITY_SOURCE_FAMILY = 'authored-semantic-v4';
+const HISTORICAL_SMOOTH_BUDGETS = Object.freeze({
+  heroCompressedBytes: 640 * 1024,
+  newMotionCompressedBytes: 3.5 * 1024 * 1024,
+  maxWaveDecodedBytes: 32 * 1024 * 1024,
+  hotTexturesBytes: 64 * 1024 * 1024,
+});
 const SOURCE_ASSET_IDS = Object.freeze([
   'apn-hero',
   ...Object.keys(CHARACTER_ROLES),
@@ -42,6 +65,7 @@ const TOP_KEYS = new Set([
   'characters',
   'toolchain',
 ]);
+const SMOOTH_TOP_KEYS = new Set([...TOP_KEYS, 'budgets']);
 const COUNTS_KEYS = new Set(['assets', 'clips', 'frames']);
 const SOURCE_KEYS = new Set([
   'batchSummarySha256',
@@ -51,6 +75,11 @@ const SOURCE_KEYS = new Set([
   'networkCalls',
   'providerCalls',
   'providerClipCount',
+]);
+const SMOOTH_SOURCE_KEYS = new Set([
+  ...SOURCE_KEYS,
+  'actingContractPath',
+  'actingContractSha256',
 ]);
 const SOURCE_ASSET_KEYS = new Set([
   'assetManifestSha256',
@@ -64,6 +93,19 @@ const SOURCE_ASSET_KEYS = new Set([
   'reviewHtmlSha256',
   'sourceManifestVersion',
 ]);
+const SMOOTH_SOURCE_ASSET_KEYS = new Set([
+  ...SOURCE_ASSET_KEYS,
+  'actingContractSha256',
+  'temporalEvidenceSha256',
+]);
+const VISUAL_FIDELITY_SOURCE_ASSET_KEYS = new Set([
+  'derivativeSetSha256',
+  'masterSetSha256',
+  'selectedProfileSha256',
+  'sourceBatchSha256',
+  'sourceManifestVersion',
+  'v3LineageSha256',
+]);
 const HERO_KEYS = new Set([
   'authority',
   'assetId',
@@ -73,6 +115,11 @@ const HERO_KEYS = new Set([
   'clips',
   'transform',
 ]);
+const SMOOTH_HERO_KEYS = new Set([...HERO_KEYS, 'role']);
+const VISUAL_FIDELITY_HERO_KEYS = new Set([
+  ...SMOOTH_HERO_KEYS,
+  'consumerScale',
+]);
 const CHARACTER_KEYS = new Set([
   'authority',
   'role',
@@ -81,6 +128,20 @@ const CHARACTER_KEYS = new Set([
   'image',
   'imageSha256',
   'transform',
+]);
+const SMOOTH_CHARACTER_KEYS = new Set([
+  'assetId',
+  'authority',
+  'role',
+  'basePath',
+  'set',
+  'setSha256',
+  'clips',
+  'transform',
+]);
+const VISUAL_FIDELITY_CHARACTER_KEYS = new Set([
+  ...SMOOTH_CHARACTER_KEYS,
+  'consumerScale',
 ]);
 const FILE_KEYS = new Set([
   'descriptor',
@@ -104,12 +165,28 @@ const TOOLCHAIN_KEYS = new Set([
   'operations',
   'profileSha256',
 ]);
+const BUDGETS_KEYS = new Set([
+  'heroCompressed',
+  'newMotionCompressed',
+  'maxWaveDecoded',
+  'hotTextures',
+]);
+const BUDGET_ENTRY_KEYS = new Set(['bytes', 'limit']);
 const COMPOSITOR_KEYS = new Set(['name', 'version']);
 const ENCODER_KEYS = new Set(['name', 'version', 'arguments']);
+const VISUAL_FIDELITY_ENCODER_KEYS = new Set([
+  ...ENCODER_KEYS,
+  'profileSha256',
+]);
 const PREVIEW_OPERATIONS = Object.freeze([
   'crop:normalized-png:shared-trim:repage:png32',
   'resize:lanczos:shared-scale:exact-cell:png32',
   'montage:row-major:bounded-matrix:shared-cell:no-gap:transparent:alpha-on:png-color-type-6',
+]);
+const VISUAL_FIDELITY_OPERATIONS = Object.freeze([
+  'validate:v4-selected-webp:hash-bound-source',
+  'validate:v4-selected-webp:exact-copy-byte-proof',
+  'copy:v4-selected-webp:exact-media-bytes',
 ]);
 const PREVIEW_PROFILE_SHA256 =
   '71f50b2378a4a588d9e49fb2d29700becb2b4a5ae37078a2af3280284eaa8013';
@@ -186,7 +263,7 @@ function validRect(value) {
   );
 }
 
-function validateTransform(value, label) {
+function validateTransform(value, label, options = {}) {
   exactKeys(value, TRANSFORM_KEYS, label);
   requireFact(
     Number.isInteger(value.scalePpm) &&
@@ -208,12 +285,128 @@ function validateTransform(value, label) {
       `${label}.${prefix} trim leaves its frame`,
     );
   }
+  if (options.smooth) {
+    requireFact(
+      value.sourceFrameSize.width === 128 && value.sourceFrameSize.height === 128,
+      `${label}.sourceFrameSize must be exactly 128x128 for authored-semantic-v3`,
+    );
+    const scale = value.scalePpm / 1_000_000;
+    requireFact(
+      value.runtimeFrameSize.width === Math.round(value.sourceFrameSize.width * scale) &&
+        value.runtimeFrameSize.height === Math.round(value.sourceFrameSize.height * scale),
+      `${label}.runtimeFrameSize must equal round(sourceFrameSize * scalePpm)`,
+    );
+    requireFact(
+      value.runtimeFrameSize.width <= value.sourceFrameSize.width &&
+        value.runtimeFrameSize.height <= value.sourceFrameSize.height,
+      `${label}.runtimeFrameSize cannot upscale authored-semantic-v3 source frames`,
+    );
+  }
+  if (options.visualFidelity) {
+    requireFact(
+      value.sourceFrameSize.width === 512 &&
+        value.sourceFrameSize.height === 512,
+      `${label}.sourceFrameSize must be exactly 512x512 for authored-semantic-v4`,
+    );
+    requireFact(
+      value.runtimeFrameSize.width === value.runtimeFrameSize.height &&
+        [256, 320].includes(value.runtimeFrameSize.width),
+      `${label}.runtimeFrameSize must be one square 256px or 320px derivative`,
+    );
+    const scale = value.scalePpm / 1_000_000;
+    requireFact(
+      value.runtimeFrameSize.width ===
+        Math.round(value.sourceFrameSize.width * scale) &&
+        value.runtimeFrameSize.height ===
+          Math.round(value.sourceFrameSize.height * scale),
+      `${label}.runtimeFrameSize must equal round(sourceFrameSize * scalePpm)`,
+    );
+    requireFact(
+      value.runtimeTrim.x === Math.round(value.sourceTrim.x * scale) &&
+        value.runtimeTrim.y === Math.round(value.sourceTrim.y * scale) &&
+        value.runtimeTrim.width === Math.round(value.sourceTrim.width * scale) &&
+        value.runtimeTrim.height === Math.round(value.sourceTrim.height * scale),
+      `${label}.runtimeTrim must equal the one shared 512px source transform`,
+    );
+  }
 }
 
-function validateToolchain(value) {
+function validateConsumerScale(value, expectedRole, transform, label) {
+  const errors = validateConsumerScaleContract(value);
+  requireFact(errors.length === 0, `${label} rejected: ${errors.join('; ')}`);
+  requireFact(
+    value.role === expectedRole,
+    `${label}.role must equal trusted role "${expectedRole}"`,
+  );
+  requireFact(
+    value.runtimeCanvasClass === transform.runtimeFrameSize.width &&
+      value.runtimeCanvasClass === transform.runtimeFrameSize.height,
+    `${label}.runtimeCanvasClass differs from the single runtime derivative`,
+  );
+}
+
+function validateBudgets(value, { visualFidelity = false } = {}) {
+  exactKeys(value, BUDGETS_KEYS, 'manifest.budgets');
+  for (const key of Object.keys(value)) {
+    exactKeys(value[key], BUDGET_ENTRY_KEYS, `manifest.budgets.${key}`);
+    requireFact(
+      Number.isInteger(value[key].bytes) &&
+        value[key].bytes >= 0 &&
+        Number.isInteger(value[key].limit) &&
+        value[key].limit > 0 &&
+        value[key].bytes <= value[key].limit,
+      `manifest.budgets.${key} is invalid`,
+    );
+  }
+  const expected = visualFidelity
+    ? VISUAL_FIDELITY_BUDGETS
+    : HISTORICAL_SMOOTH_BUDGETS;
+  requireFact(
+    value.heroCompressed.limit === expected.heroCompressedBytes &&
+      value.newMotionCompressed.limit === expected.newMotionCompressedBytes &&
+      value.maxWaveDecoded.limit === expected.maxWaveDecodedBytes &&
+      value.hotTextures.limit === expected.hotTexturesBytes,
+    'manifest.budgets limits are not the exact smooth runtime contract',
+  );
+}
+
+function validateToolchain(value, options = {}) {
   exactKeys(value, TOOLCHAIN_KEYS, 'toolchain');
   exactKeys(value.compositor, COMPOSITOR_KEYS, 'toolchain.compositor');
-  exactKeys(value.encoder, ENCODER_KEYS, 'toolchain.encoder');
+  exactKeys(
+    value.encoder,
+    options.visualFidelity
+      ? VISUAL_FIDELITY_ENCODER_KEYS
+      : ENCODER_KEYS,
+    'toolchain.encoder',
+  );
+  if (options.visualFidelity) {
+    requireFact(
+      value.grammar === 'apn-gaf2d-preview-matrix-toolchain-v1' &&
+        value.compositor.name === 'HashBoundCopy' &&
+        value.compositor.version === 'selected-webp-v1' &&
+        value.encoder.name === 'cwebp' &&
+        value.encoder.version === '1.6.0' &&
+        Array.isArray(value.encoder.arguments) &&
+        value.encoder.arguments.length > 0 &&
+        value.encoder.arguments.length <= 64 &&
+        value.encoder.arguments.every((argument) =>
+          typeof argument === 'string') &&
+        arraysEqual(value.operations, VISUAL_FIDELITY_OPERATIONS),
+      'V4 toolchain structure is invalid',
+    );
+    const profileErrors = validateQualityProfileBinding({
+      grammar: 'gaf2d-visual-quality-profile-binding-v4',
+      selectedProfileSha256: value.profileSha256,
+      manifestProfileSha256: value.profileSha256,
+      encoderProfileSha256: value.encoder.profileSha256,
+    });
+    requireFact(
+      profileErrors.length === 0,
+      `V4 toolchain profile rejected: ${profileErrors.join('; ')}`,
+    );
+    return;
+  }
   requireFact(
     value.grammar === 'apn-gaf2d-preview-matrix-toolchain-v1' &&
       value.compositor.name === 'ImageMagick' &&
@@ -227,10 +420,41 @@ function validateToolchain(value) {
   );
 }
 
-function validateSourceAsset(value, assetId) {
-  exactKeys(value, SOURCE_ASSET_KEYS, `assets.${assetId}`);
+function validateSourceAsset(
+  value,
+  assetId,
+  { smooth, visualFidelity, manifest },
+) {
+  if (visualFidelity) {
+    exactKeys(value, VISUAL_FIDELITY_SOURCE_ASSET_KEYS, `assets.${assetId}`);
+    for (const key of [
+      'derivativeSetSha256',
+      'masterSetSha256',
+      'selectedProfileSha256',
+      'sourceBatchSha256',
+      'v3LineageSha256',
+    ]) {
+      requireFact(
+        SHA256.test(value[key] || ''),
+        `assets.${assetId}.${key} is invalid`,
+      );
+    }
+    requireFact(
+      value.sourceManifestVersion === 4 &&
+        value.sourceBatchSha256 === manifest.source.batchSummarySha256 &&
+        value.selectedProfileSha256 === manifest.toolchain.profileSha256,
+      `assets.${assetId} V4 root lineage is stale`,
+    );
+    return;
+  }
+  exactKeys(
+    value,
+    smooth ? SMOOTH_SOURCE_ASSET_KEYS : SOURCE_ASSET_KEYS,
+    `assets.${assetId}`,
+  );
   requireFact(
-    value.candidateId === `${assetId}-authored-semantic-v2`,
+    typeof value.candidateId === 'string' &&
+      value.candidateId.startsWith(`${assetId}-authored-semantic-v`),
     `assets.${assetId}.candidateId is stale`,
   );
   for (const key of [
@@ -253,15 +477,32 @@ function validateSourceAsset(value, assetId) {
       value.sourceManifestVersion > 0,
     `assets.${assetId}.sourceManifestVersion is invalid`,
   );
+  if (smooth) {
+    requireFact(
+      SHA256.test(value.actingContractSha256 || '') &&
+        SHA256.test(value.temporalEvidenceSha256 || ''),
+      `assets.${assetId} smooth lineage hashes are invalid`,
+    );
+  }
 }
 
 function validateManifest(manifest) {
-  exactKeys(manifest, TOP_KEYS, 'manifest');
+  const visualFidelity =
+    manifest.sourceFamily === VISUAL_FIDELITY_SOURCE_FAMILY;
+  const smooth =
+    manifest.sourceFamily === 'authored-semantic-v3' || visualFidelity;
+  exactKeys(manifest, smooth ? SMOOTH_TOP_KEYS : TOP_KEYS, 'manifest');
   requireFact(
     manifest.grammar === 'apn-gaf2d-motion-preview-manifest-v1' &&
       manifest.authority === 'unapproved_preview' &&
       manifest.status === 'human_review_required' &&
-      manifest.sourceFamily === 'authored-semantic-v2' &&
+      [
+        'authored-semantic-v2',
+        'authored-semantic-v3',
+        VISUAL_FIDELITY_SOURCE_FAMILY,
+      ].includes(
+        manifest.sourceFamily,
+      ) &&
       manifest.packId === 'valorant',
     'manifest identity/authority is invalid',
   );
@@ -269,13 +510,22 @@ function validateManifest(manifest) {
   requireFact(
     manifest.counts.assets === 7 &&
       manifest.counts.clips === 39 &&
-      manifest.counts.frames === 276,
-    'manifest counts must be exactly 7/39/276',
+      manifest.counts.frames === (smooth ? 795 : 276),
+    `manifest counts must be exactly 7/39/${smooth ? 795 : 276}`,
   );
-  exactKeys(manifest.source, SOURCE_KEYS, 'manifest.source');
+  exactKeys(
+    manifest.source,
+    smooth ? SMOOTH_SOURCE_KEYS : SOURCE_KEYS,
+    'manifest.source',
+  );
   requireFact(
     SHA256.test(manifest.source.batchSummarySha256 || '') &&
-      manifest.source.contract === 'apn-offline-authored-motion-v1' &&
+      manifest.source.contract ===
+        (visualFidelity
+          ? 'apn-visual-fidelity-v4-batch-v1'
+          : smooth
+          ? 'apn-offline-authored-motion-v3'
+          : 'apn-offline-authored-motion-v1') &&
       manifest.source.mechanicalQa === 'passed' &&
       manifest.source.creativeApproval === 'human_required' &&
       manifest.source.networkCalls === 0 &&
@@ -283,6 +533,14 @@ function validateManifest(manifest) {
       manifest.source.providerClipCount === 0,
     'manifest source gate is invalid',
   );
+  if (smooth) {
+    requireFact(
+      manifest.source.actingContractPath ===
+        'briefs/authored-semantic-v3/acting-contract.json' &&
+        SHA256.test(manifest.source.actingContractSha256 || ''),
+      'manifest smooth acting contract binding is invalid',
+    );
+  }
   requireFact(
     isObject(manifest.assets) &&
       Object.keys(manifest.assets).length === SOURCE_ASSET_IDS.length &&
@@ -291,16 +549,41 @@ function validateManifest(manifest) {
     'manifest source asset membership is invalid',
   );
   for (const assetId of SOURCE_ASSET_IDS) {
-    validateSourceAsset(manifest.assets[assetId], assetId);
+    validateSourceAsset(manifest.assets[assetId], assetId, {
+      smooth,
+      visualFidelity,
+      manifest,
+    });
+  }
+  if (smooth && !visualFidelity) {
+    requireFact(
+      Object.values(manifest.assets).every(
+        (asset) =>
+          asset.actingContractSha256 ===
+          manifest.source.actingContractSha256,
+      ),
+      'manifest smooth assets do not share the root acting contract authority',
+    );
   }
 
-  exactKeys(manifest.hero, HERO_KEYS, 'manifest.hero');
+  exactKeys(
+    manifest.hero,
+    visualFidelity
+      ? VISUAL_FIDELITY_HERO_KEYS
+      : smooth
+        ? SMOOTH_HERO_KEYS
+        : HERO_KEYS,
+    'manifest.hero',
+  );
   requireFact(
     manifest.hero.authority === 'unapproved_preview' &&
       manifest.hero.assetId === 'apn-hero' &&
       SHA256.test(manifest.hero.setSha256 || ''),
     'manifest Hero authority is invalid',
   );
+  if (smooth) {
+    requireFact(manifest.hero.role === 'hero', 'manifest.hero.role must be "hero"');
+  }
   portablePreviewPath(
     manifest.hero.basePath,
     '.gaf2d-preview/hero/',
@@ -337,7 +620,18 @@ function validateManifest(manifest) {
       `manifest.hero.clips.${name} hashes are invalid`,
     );
   }
-  validateTransform(manifest.hero.transform, 'manifest.hero.transform');
+  validateTransform(manifest.hero.transform, 'manifest.hero.transform', {
+    smooth: smooth && !visualFidelity,
+    visualFidelity,
+  });
+  if (visualFidelity) {
+    validateConsumerScale(
+      manifest.hero.consumerScale,
+      CONSUMER_ROLES['apn-hero'],
+      manifest.hero.transform,
+      'manifest.hero.consumerScale',
+    );
+  }
 
   requireFact(
     isObject(manifest.characters) &&
@@ -349,30 +643,93 @@ function validateManifest(manifest) {
   );
   for (const [assetId, role] of Object.entries(CHARACTER_ROLES)) {
     const record = manifest.characters[assetId];
-    exactKeys(record, CHARACTER_KEYS, `manifest.characters.${assetId}`);
-    requireFact(
-      record.authority === 'unapproved_preview' &&
-        record.role === role &&
-        SHA256.test(record.descriptorSha256 || '') &&
-        SHA256.test(record.imageSha256 || ''),
-      `manifest.characters.${assetId} authority/hashes are invalid`,
-    );
-    portablePreviewPath(
-      record.descriptor,
-      `.gaf2d-preview/characters/${assetId}/motion.json`,
-      `manifest.characters.${assetId}.descriptor`,
-    );
-    portablePreviewPath(
-      record.image,
-      `.gaf2d-preview/characters/${assetId}/motion.webp`,
-      `manifest.characters.${assetId}.image`,
-    );
-    validateTransform(
-      record.transform,
-      `manifest.characters.${assetId}.transform`,
-    );
+    if (smooth) {
+      exactKeys(
+        record,
+        visualFidelity
+          ? VISUAL_FIDELITY_CHARACTER_KEYS
+          : SMOOTH_CHARACTER_KEYS,
+        `manifest.characters.${assetId}`,
+      );
+      requireFact(
+        record.assetId === assetId &&
+          record.authority === 'unapproved_preview' &&
+          record.role === role &&
+          SHA256.test(record.setSha256 || ''),
+        `manifest.characters.${assetId} authority/set hash is invalid`,
+      );
+      portablePreviewPath(
+        record.basePath,
+        `.gaf2d-preview/characters/${assetId}/`,
+        `manifest.characters.${assetId}.basePath`,
+      );
+      portablePreviewPath(
+        record.set,
+        `.gaf2d-preview/characters/${assetId}/set.json`,
+        `manifest.characters.${assetId}.set`,
+      );
+      requireFact(
+        isObject(record.clips) &&
+          Object.keys(record.clips).length >= 5,
+        `manifest.characters.${assetId}.clips are invalid`,
+      );
+      for (const [clipName, clipRecord] of Object.entries(record.clips)) {
+        exactKeys(
+          clipRecord,
+          FILE_KEYS,
+          `manifest.characters.${assetId}.clips.${clipName}`,
+        );
+        portablePreviewPath(
+          clipRecord.descriptor,
+          `.gaf2d-preview/characters/${assetId}/${clipName}.json`,
+          `manifest.characters.${assetId}.clips.${clipName}.descriptor`,
+        );
+        portablePreviewPath(
+          clipRecord.image,
+          `.gaf2d-preview/characters/${assetId}/${clipName}.webp`,
+          `manifest.characters.${assetId}.clips.${clipName}.image`,
+        );
+        requireFact(
+          SHA256.test(clipRecord.descriptorSha256 || '') &&
+            SHA256.test(clipRecord.imageSha256 || ''),
+          `manifest.characters.${assetId}.clips.${clipName} hashes are invalid`,
+        );
+      }
+    } else {
+      exactKeys(record, CHARACTER_KEYS, `manifest.characters.${assetId}`);
+      requireFact(
+        record.authority === 'unapproved_preview' &&
+          record.role === role &&
+          SHA256.test(record.descriptorSha256 || '') &&
+          SHA256.test(record.imageSha256 || ''),
+        `manifest.characters.${assetId} authority/hashes are invalid`,
+      );
+      portablePreviewPath(
+        record.descriptor,
+        `.gaf2d-preview/characters/${assetId}/motion.json`,
+        `manifest.characters.${assetId}.descriptor`,
+      );
+      portablePreviewPath(
+        record.image,
+        `.gaf2d-preview/characters/${assetId}/motion.webp`,
+        `manifest.characters.${assetId}.image`,
+      );
+    }
+    validateTransform(record.transform, `manifest.characters.${assetId}.transform`, {
+      smooth: smooth && !visualFidelity,
+      visualFidelity,
+    });
+    if (visualFidelity) {
+      validateConsumerScale(
+        record.consumerScale,
+        CONSUMER_ROLES[assetId],
+        record.transform,
+        `manifest.characters.${assetId}.consumerScale`,
+      );
+    }
   }
-  validateToolchain(manifest.toolchain);
+  if (smooth) validateBudgets(manifest.budgets, { visualFidelity });
+  validateToolchain(manifest.toolchain, { visualFidelity });
 }
 
 async function defaultHashBytes(bytes) {
@@ -464,19 +821,92 @@ function validatePreviewLineage(lineage, manifest, assetId, label) {
       lineage?.sourceManifestVersion === source.sourceManifestVersion,
     `${label} differs from the root source authority`,
   );
+  if (Object.hasOwn(source, 'temporalEvidenceSha256')) {
+    requireFact(
+      lineage?.temporalEvidenceSha256 === source.temporalEvidenceSha256,
+      `${label} differs from the root temporal evidence authority`,
+    );
+  }
+}
+
+function validateTransformBinding(set, transform, label) {
+  requireFact(
+    set?.frameSize?.width === transform.runtimeFrameSize.width &&
+      set?.frameSize?.height === transform.runtimeFrameSize.height,
+    `${label} frameSize differs from its manifest transform`,
+  );
+  requireFact(
+    set?.trim?.x === transform.runtimeTrim.x &&
+      set?.trim?.y === transform.runtimeTrim.y &&
+      set?.trim?.width === transform.runtimeTrim.width &&
+      set?.trim?.height === transform.runtimeTrim.height,
+    `${label} trim differs from its manifest transform`,
+  );
+}
+
+function validateVisualFidelityBinding(manifest, set, record, label) {
+  const source = manifest.assets[record.assetId];
+  requireFact(
+    JSON.stringify(set.consumerScale) ===
+      JSON.stringify(record.consumerScale),
+    `${label} consumer scale differs from the root manifest`,
+  );
+  const profileErrors = validateQualityProfileBinding({
+    grammar: 'gaf2d-visual-quality-profile-binding-v4',
+    selectedProfileSha256: manifest.toolchain.profileSha256,
+    manifestProfileSha256: set.toolchain?.profileSha256,
+    encoderProfileSha256: set.toolchain?.encoder?.profileSha256,
+  });
+  requireFact(
+    profileErrors.length === 0,
+    `${label} quality profile rejected: ${profileErrors.join('; ')}`,
+  );
+  requireFact(
+    set.lineage?.sourceBatchSha256 === source.sourceBatchSha256 &&
+      set.lineage?.derivativeSetSha256 === source.derivativeSetSha256 &&
+      set.lineage?.masterSetSha256 === source.masterSetSha256 &&
+      set.lineage?.selectedProfileSha256 === source.selectedProfileSha256 &&
+      set.lineage?.v3LineageSha256 === source.v3LineageSha256,
+    `${label} V4 derivative lineage differs from the root authority`,
+  );
 }
 
 function buildOverlay(packs, manifest) {
+  const smooth = [
+    'authored-semantic-v3',
+    VISUAL_FIDELITY_SOURCE_FAMILY,
+  ].includes(manifest.sourceFamily);
   const characters = Object.freeze(
     Object.fromEntries(
       Object.entries(manifest.characters).map(([assetId, record]) => [
         assetId,
-        Object.freeze({
-          authority: 'unapproved_preview',
-          descriptor: record.descriptor,
-          descriptorSha256: record.descriptorSha256,
-          image: record.image,
-        }),
+        Object.freeze(
+          smooth
+            ? {
+                authority: 'unapproved_preview',
+                role: record.role,
+                basePath: record.basePath,
+                set: record.set,
+                setSha256: record.setSha256,
+                clips: structuredClone(record.clips),
+                ...(record.consumerScale
+                  ? { consumerScale: structuredClone(record.consumerScale) }
+                  : {}),
+                ...(manifest.sourceFamily === VISUAL_FIDELITY_SOURCE_FAMILY
+                  ? {
+                      sourceFamily: VISUAL_FIDELITY_SOURCE_FAMILY,
+                      selectedProfileSha256:
+                        manifest.toolchain.profileSha256,
+                    }
+                  : {}),
+              }
+            : {
+                authority: 'unapproved_preview',
+                descriptor: record.descriptor,
+                descriptorSha256: record.descriptorSha256,
+                image: record.image,
+              },
+        ),
       ]),
     ),
   );
@@ -514,6 +944,7 @@ export async function loadMotionPreview(options = {}) {
     packs,
     heroBasePath: PRODUCTION_HERO_BASE,
     manifest: null,
+    manifestSha256: null,
     batchSummarySha256: null,
     error: null,
   };
@@ -528,129 +959,254 @@ export async function loadMotionPreview(options = {}) {
       MAX_MANIFEST_BYTES,
       'preview manifest',
     );
+    let manifestSha256;
+    try {
+      manifestSha256 = await hashBytes(manifestBytes);
+    } catch {
+      fail('preview manifest SHA-256 could not be computed');
+    }
+    requireFact(
+      SHA256.test(manifestSha256 || ''),
+      'preview manifest SHA-256 is invalid',
+    );
     const manifest = parseJson(manifestBytes, 'preview manifest');
     validateManifest(manifest);
 
-    const set = await fetchHashLockedJson({
-      fetchImpl,
-      hashBytes,
-      url: manifest.hero.set,
-      expectedSha256: manifest.hero.setSha256,
-      maximumBytes: MAX_SET_BYTES,
-      label: 'APN Hero preview set',
-    });
-    const setErrors = validateHeroSetManifest(set, {
-      allowUnapprovedPreview: true,
-    });
-    requireFact(
-      setErrors.length === 0,
-      `APN Hero preview set rejected: ${setErrors.join('; ')}`,
-    );
-    validatePreviewLineage(
-      set.previewLineage,
-      manifest,
-      'apn-hero',
-      'APN Hero preview set lineage',
-    );
-
-    const heroMedia = await Promise.all(
-      HERO_V3_CLIPS.map(async (name) => {
-        const record = manifest.hero.clips[name];
-        const setRecord = set.clips[name];
-        requireFact(
-          setRecord?.descriptor === `${name}.json` &&
-            setRecord?.descriptorSha256 === record.descriptorSha256 &&
-            setRecord?.image === `${name}.webp` &&
-            setRecord?.imageSha256 === record.imageSha256,
-          `APN Hero/${name} set and root manifest differ`,
-        );
-        const descriptor = await fetchHashLockedJson({
-          fetchImpl,
-          hashBytes,
-          url: record.descriptor,
-          expectedSha256: record.descriptorSha256,
-          maximumBytes: MAX_DESCRIPTOR_BYTES,
-          label: `APN Hero/${name} preview descriptor`,
-        });
-        const errors = validateHeroClipDescriptor(
-          descriptor,
-          name,
-          set,
-          { allowUnapprovedPreview: true },
-        );
-        requireFact(
-          errors.length === 0,
-          `APN Hero/${name} preview descriptor rejected: ${errors.join('; ')}`,
-        );
-        requireFact(
-          descriptor.atlas.sha256 === record.imageSha256,
-          `APN Hero/${name} image hash differs from its descriptor`,
-        );
+    if (
+      manifest.sourceFamily === 'authored-semantic-v3' ||
+      manifest.sourceFamily === VISUAL_FIDELITY_SOURCE_FAMILY
+    ) {
+      const visualFidelity =
+        manifest.sourceFamily === VISUAL_FIDELITY_SOURCE_FAMILY;
+      const heroSet = await fetchHashLockedJson({
+        fetchImpl,
+        hashBytes,
+        url: manifest.hero.set,
+        expectedSha256: manifest.hero.setSha256,
+        maximumBytes: MAX_SET_BYTES,
+        label: 'APN Hero preview set',
+      });
+      const heroSetErrors = validateMotionSetIndex(heroSet, 'apn-hero', {
+        role: 'hero',
+        ...(visualFidelity ? { consumerRole: 'hero' } : {}),
+      });
+      requireFact(
+        heroSetErrors.length === 0,
+        `APN Hero preview set rejected: ${heroSetErrors.join('; ')}`,
+      );
+      if (!visualFidelity) {
         validatePreviewLineage(
-          descriptor.previewLineage,
+          heroSet.previewLineage,
           manifest,
           'apn-hero',
-          `APN Hero/${name} preview lineage`,
+          'APN Hero preview set lineage',
         );
-        return { name, record };
-      }),
-    );
-    for (const { name, record } of heroMedia) {
-      await fetchHashLockedBytes({
+      }
+      validateTransformBinding(
+        heroSet,
+        manifest.hero.transform,
+        'APN Hero preview set',
+      );
+      if (visualFidelity) {
+        validateVisualFidelityBinding(
+          manifest,
+          heroSet,
+          manifest.hero,
+          'APN Hero preview set',
+        );
+      }
+      for (const name of HERO_V3_CLIPS) {
+        const record = manifest.hero.clips[name];
+        requireFact(
+          heroSet.clips?.[name]?.descriptor === `${name}.json` &&
+            heroSet.clips?.[name]?.descriptorSha256 === record.descriptorSha256 &&
+            heroSet.clips?.[name]?.image === `${name}.webp` &&
+            heroSet.clips?.[name]?.imageSha256 === record.imageSha256,
+          `APN Hero/${name} set and root manifest differ`,
+        );
+      }
+      const creatureSets = await Promise.all(
+        Object.entries(CHARACTER_ROLES).map(async ([assetId, role]) => {
+          const record = manifest.characters[assetId];
+          const set = await fetchHashLockedJson({
+            fetchImpl,
+            hashBytes,
+            url: record.set,
+            expectedSha256: record.setSha256,
+            maximumBytes: MAX_SET_BYTES,
+            label: `${assetId} preview set`,
+          });
+          const errors = validateMotionSetIndex(set, assetId, {
+            role,
+            ...(visualFidelity
+              ? { consumerRole: CONSUMER_ROLES[assetId] }
+              : {}),
+          });
+          requireFact(
+            errors.length === 0,
+            `${assetId} preview set rejected: ${errors.join('; ')}`,
+          );
+          if (!visualFidelity) {
+            validatePreviewLineage(
+              set.previewLineage,
+              manifest,
+              assetId,
+              `${assetId} preview set lineage`,
+            );
+            requireFact(
+              manifest.assets[assetId].actingContractSha256 ===
+                manifest.source.actingContractSha256,
+              `${assetId} acting contract differs from the smooth root authority`,
+            );
+          }
+          validateTransformBinding(
+            set,
+            record.transform,
+            `${assetId} preview set`,
+          );
+          if (visualFidelity) {
+            validateVisualFidelityBinding(
+              manifest,
+              set,
+              record,
+              `${assetId} preview set`,
+            );
+          }
+          return { assetId, role, record, set };
+        }),
+      );
+      for (const { assetId, role, record, set } of creatureSets) {
+        for (const [clipName, clipRecord] of Object.entries(record.clips)) {
+          requireFact(
+            set.clips?.[clipName]?.descriptor === `${clipName}.json` &&
+              set.clips?.[clipName]?.descriptorSha256 ===
+                clipRecord.descriptorSha256 &&
+              set.clips?.[clipName]?.image === `${clipName}.webp` &&
+              set.clips?.[clipName]?.imageSha256 === clipRecord.imageSha256,
+            `${assetId}/${clipName} set and root manifest differ`,
+          );
+        }
+      }
+    } else {
+      const set = await fetchHashLockedJson({
         fetchImpl,
         hashBytes,
-        url: record.image,
-        expectedSha256: record.imageSha256,
-        maximumBytes: MAX_HERO_IMAGE_BYTES,
-        label: `APN Hero/${name} preview image`,
+        url: manifest.hero.set,
+        expectedSha256: manifest.hero.setSha256,
+        maximumBytes: MAX_SET_BYTES,
+        label: 'APN Hero preview set',
       });
-    }
-
-    const creatureMedia = await Promise.all(
-      Object.entries(CHARACTER_ROLES).map(async ([assetId, role]) => {
-        const record = manifest.characters[assetId];
-        const descriptor = await fetchHashLockedJson({
+      const setErrors = validateHeroSetManifest(set, {
+        allowUnapprovedPreview: true,
+      });
+      requireFact(
+        setErrors.length === 0,
+        `APN Hero preview set rejected: ${setErrors.join('; ')}`,
+      );
+      validatePreviewLineage(
+        set.previewLineage,
+        manifest,
+        'apn-hero',
+        'APN Hero preview set lineage',
+      );
+      const heroMedia = await Promise.all(
+        HERO_V3_CLIPS.map(async (name) => {
+          const record = manifest.hero.clips[name];
+          const setRecord = set.clips[name];
+          requireFact(
+            setRecord?.descriptor === `${name}.json` &&
+              setRecord?.descriptorSha256 === record.descriptorSha256 &&
+              setRecord?.image === `${name}.webp` &&
+              setRecord?.imageSha256 === record.imageSha256,
+            `APN Hero/${name} set and root manifest differ`,
+          );
+          const descriptor = await fetchHashLockedJson({
+            fetchImpl,
+            hashBytes,
+            url: record.descriptor,
+            expectedSha256: record.descriptorSha256,
+            maximumBytes: MAX_DESCRIPTOR_BYTES,
+            label: `APN Hero/${name} preview descriptor`,
+          });
+          const errors = validateHeroClipDescriptor(
+            descriptor,
+            name,
+            set,
+            { allowUnapprovedPreview: true },
+          );
+          requireFact(
+            errors.length === 0,
+            `APN Hero/${name} preview descriptor rejected: ${errors.join('; ')}`,
+          );
+          requireFact(
+            descriptor.atlas.sha256 === record.imageSha256,
+            `APN Hero/${name} image hash differs from its descriptor`,
+          );
+          validatePreviewLineage(
+            descriptor.previewLineage,
+            manifest,
+            'apn-hero',
+            `APN Hero/${name} preview lineage`,
+          );
+          return { name, record };
+        }),
+      );
+      for (const { name, record } of heroMedia) {
+        await fetchHashLockedBytes({
           fetchImpl,
           hashBytes,
-          url: record.descriptor,
-          expectedSha256: record.descriptorSha256,
-          maximumBytes: MAX_DESCRIPTOR_BYTES,
-          label: `${assetId} preview descriptor`,
+          url: record.image,
+          expectedSha256: record.imageSha256,
+          maximumBytes: MAX_HERO_IMAGE_BYTES,
+          label: `APN Hero/${name} preview image`,
         });
-        const errors = validateMotionPreviewBundle(
-          descriptor,
-          assetId,
-          { role },
-        );
-        requireFact(
-          errors.length === 0,
-          `${assetId} preview descriptor rejected: ${errors.join('; ')}`,
-        );
-        requireFact(
-          descriptor.atlas.sha256 === record.imageSha256,
-          `${assetId} image hash differs from its descriptor`,
-        );
-        validatePreviewLineage(
-          descriptor.previewLineage,
-          manifest,
-          assetId,
-          `${assetId} preview lineage`,
-        );
-        return { assetId, record, role };
-      }),
-    );
-    for (const { assetId, record, role } of creatureMedia) {
-      await fetchHashLockedBytes({
-        fetchImpl,
-        hashBytes,
-        url: record.image,
-        expectedSha256: record.imageSha256,
-        maximumBytes:
-          role === 'boss'
-            ? MAX_BOSS_MEDIA_BYTES
-            : MAX_COMMON_MEDIA_BYTES,
-        label: `${assetId} preview image`,
-      });
+      }
+      const creatureMedia = await Promise.all(
+        Object.entries(CHARACTER_ROLES).map(async ([assetId, role]) => {
+          const record = manifest.characters[assetId];
+          const descriptor = await fetchHashLockedJson({
+            fetchImpl,
+            hashBytes,
+            url: record.descriptor,
+            expectedSha256: record.descriptorSha256,
+            maximumBytes: MAX_DESCRIPTOR_BYTES,
+            label: `${assetId} preview descriptor`,
+          });
+          const errors = validateMotionPreviewBundle(
+            descriptor,
+            assetId,
+            { role },
+          );
+          requireFact(
+            errors.length === 0,
+            `${assetId} preview descriptor rejected: ${errors.join('; ')}`,
+          );
+          requireFact(
+            descriptor.atlas.sha256 === record.imageSha256,
+            `${assetId} image hash differs from its descriptor`,
+          );
+          validatePreviewLineage(
+            descriptor.previewLineage,
+            manifest,
+            assetId,
+            `${assetId} preview lineage`,
+          );
+          return { assetId, record, role };
+        }),
+      );
+      for (const { assetId, record, role } of creatureMedia) {
+        await fetchHashLockedBytes({
+          fetchImpl,
+          hashBytes,
+          url: record.image,
+          expectedSha256: record.imageSha256,
+          maximumBytes:
+            role === 'boss'
+              ? MAX_BOSS_MEDIA_BYTES
+              : MAX_COMMON_MEDIA_BYTES,
+          label: `${assetId} preview image`,
+        });
+      }
     }
 
     return {
@@ -660,6 +1216,7 @@ export async function loadMotionPreview(options = {}) {
       packs: buildOverlay(packs, manifest),
       heroBasePath: manifest.hero.basePath,
       manifest,
+      manifestSha256,
       batchSummarySha256: manifest.source.batchSummarySha256,
       error: null,
     };

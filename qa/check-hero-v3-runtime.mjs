@@ -15,9 +15,14 @@ import {
   HERO_SET_GRAMMAR,
   HERO_TOOLCHAIN_GRAMMAR,
   HERO_TOOLCHAIN_OPERATIONS,
+  HERO_V3_CLIP_CONTRACT,
   validateHeroClipDescriptor,
   validateHeroSetManifest,
 } from '../js/hero-v3-contract.js';
+import {
+  MOTION_CLIP_GRAMMAR,
+  MOTION_SET_INDEX_GRAMMAR,
+} from '../js/motion-bundle.js';
 import {
   disposeHeroV3,
   drawV3Frame,
@@ -27,6 +32,7 @@ import {
   heroV3Ready,
   loadHeroV3,
 } from '../js/hero-v3.js';
+import * as heroV3Runtime from '../js/hero-v3.js';
 import * as renderRuntime from '../js/render.js';
 import { resolveActorGeometry } from '../js/stage-presentation.js';
 
@@ -43,6 +49,26 @@ const assert = (condition, message) => {
 const sha256 = (bytes) =>
   crypto.createHash('sha256').update(Buffer.from(bytes)).digest('hex');
 const canonical = (value) => `${JSON.stringify(value, null, 2)}\n`;
+
+const heroAuthoritySources = [
+  'js/hero-v2.js',
+  'js/hero-v3.js',
+  'js/hero-v3-contract.js',
+  'scripts/assets/build-gaf2d-hero.mjs',
+].map((relative) => fs.readFileSync(path.join(root, relative), 'utf8'));
+assert(
+  heroAuthoritySources.every(
+    (source) =>
+      !source.includes('HERO_V3_APPROVED_CONTRACT') &&
+      !source.includes('approved V3 clip') &&
+      !source.includes('approved V3 clips'),
+  ),
+  'unapproved V3 runtime source uses authority-neutral clip wording',
+);
+assert(
+  HERO_V3_CLIP_CONTRACT === HERO_CLIP_CONTRACT,
+  'Hero V3 clip contract has one authority-neutral canonical object',
+);
 
 const setBytes = fs.readFileSync(path.join(heroRoot, 'set.json'));
 const productionSet = JSON.parse(setBytes.toString('utf8'));
@@ -281,6 +307,258 @@ previewRuntimeFiles.set(
   'assets/preview-v3/set.json',
   encoder.encode(canonical(previewRuntimeSet)),
 );
+const smoothPreviewRuntimeFiles = new Map();
+const smoothPreviewRuntimeClips = {};
+const smoothPreviewPresentation = structuredClone(previewPresentation);
+for (const [name, contract] of [
+  ['idle', { frames: 20, fps: 30, playback: 'loop' }],
+  ['run', { frames: 20, fps: 32, playback: 'loop' }],
+  ['attack', { frames: 15, fps: 30, playback: 'progress' }],
+  ['crit', { frames: 15, fps: 30, playback: 'progress' }],
+  ['sprint', { frames: 15, fps: 30, playback: 'loop' }],
+  ['hit', { frames: 8, fps: 32, playback: 'progress' }],
+  ['death', { frames: 15, fps: 30, playback: 'progress' }],
+  ['celebrate', { frames: 15, fps: 30, playback: 'loop' }],
+]) {
+  const imageBytes = encoder.encode(`smooth-preview-image-${name}`);
+  const imageSha256 = sha256(imageBytes);
+  const descriptor = {
+    grammar: MOTION_CLIP_GRAMMAR,
+    authority: 'unapproved_preview',
+    sourceFamily: 'authored-semantic-v3',
+    assetId: 'apn-hero',
+    name,
+    playback: contract.playback,
+    fps: contract.fps,
+    sourceFps: 12,
+    cadenceProfile: 'continuous_30',
+    authoringMethod: 'deterministic_part_rig',
+    interpolationMethod: 'deterministic_part_transforms',
+    holds: contract.playback === 'progress'
+      ? [{ startIndex: contract.frames - 2, endIndex: contract.frames - 1, reason: 'terminal' }]
+      : [],
+    markers: contract.playback === 'loop'
+      ? { neutral: 0, maximum_excursion: Math.floor(contract.frames / 2), return: contract.frames - 1 }
+      : { anticipation: 0, contact: Math.floor(contract.frames / 2), terminal: contract.frames - 1 },
+    frames: Array.from({ length: contract.frames }, (_, index) => {
+      const pose = String(
+        contract.playback === 'progress' && index === contract.frames - 1
+          ? contract.frames - 1
+          : index + 1,
+      ).padStart(64, '0');
+      return {
+        x: (index % 10) * 64,
+        y: Math.floor(index / 10) * 96,
+        width: 64,
+        height: 96,
+        sourceSha256: pose,
+        bodyPoseSha256: pose,
+      };
+    }),
+    atlas: {
+      width: 640,
+      height: Math.ceil(contract.frames / 10) * 96,
+      bytes: imageBytes.byteLength,
+      sha256: imageSha256,
+    },
+    encoder: approvedEncoder,
+  };
+  const descriptorBytes = encoder.encode(canonical(descriptor));
+  smoothPreviewRuntimeClips[name] = {
+    descriptor: `${name}.json`,
+    descriptorSha256: sha256(descriptorBytes),
+    image: `${name}.webp`,
+    imageSha256,
+  };
+  smoothPreviewRuntimeFiles.set(
+    `assets/preview-smooth-v3/${name}.json`,
+    descriptorBytes,
+  );
+  smoothPreviewRuntimeFiles.set(
+    `assets/preview-smooth-v3/${name}.webp`,
+    imageBytes,
+  );
+}
+const smoothPreviewRuntimeSet = {
+  grammar: MOTION_SET_INDEX_GRAMMAR,
+  authority: 'unapproved_preview',
+  status: 'human_review_required',
+  sourceFamily: 'authored-semantic-v3',
+  assetId: 'apn-hero',
+  role: 'hero',
+  frameSize: { width: 128, height: 128 },
+  trim: { x: 32, y: 32, width: 64, height: 96 },
+  pivot: { x: 0.5, y: 1 },
+  presentation: smoothPreviewPresentation,
+  clips: smoothPreviewRuntimeClips,
+  previewLineage: {
+    candidateId: 'apn-hero-authored-semantic-v3',
+    candidateSha256: 'a'.repeat(64),
+    temporalEvidenceSha256: 'f'.repeat(64),
+    qaSummarySha256: 'b'.repeat(64),
+    batchSummarySha256: 'c'.repeat(64),
+    sourceManifestVersion: 4,
+  },
+  toolchain: {
+    grammar: 'apn-gaf2d-preview-matrix-toolchain-v1',
+    compositor: { name: 'ImageMagick', version: '7.1.2-13' },
+    encoder: approvedEncoder,
+    operations: [...HERO_PREVIEW_TOOLCHAIN_OPERATIONS],
+    profileSha256: HERO_PREVIEW_MATRIX_PROFILE_SHA256,
+  },
+};
+smoothPreviewRuntimeFiles.set(
+  'assets/preview-smooth-v3/set.json',
+  encoder.encode(canonical(smoothPreviewRuntimeSet)),
+);
+const v4HeroProfileSha256 = '4'.repeat(64);
+const v4HeroConsumerScale = {
+  grammar: 'gaf2d-consumer-scale-v4',
+  role: 'hero',
+  maximumCssBodyHeight: 96,
+  maximumDpr: 2,
+  displayedDevicePixels: 192,
+  runtimeCanvasClass: 320,
+  sourceVisiblePixels: 214,
+  scaleRatio: { numerator: 192, denominator: 214 },
+};
+const v4HeroRuntimeFiles = new Map();
+const v4HeroRuntimeClips = {};
+for (const [name, record] of Object.entries(smoothPreviewRuntimeSet.clips)) {
+  const descriptor = JSON.parse(
+    Buffer.from(
+      smoothPreviewRuntimeFiles.get(`assets/preview-smooth-v3/${name}.json`),
+    ).toString('utf8'),
+  );
+  const imageBytes = smoothPreviewRuntimeFiles.get(
+    `assets/preview-smooth-v3/${name}.webp`,
+  );
+  const columns = 8;
+  descriptor.sourceFamily = 'authored-semantic-v4';
+  descriptor.frames = descriptor.frames.map((frame, index) => ({
+    ...frame,
+    x: (index % columns) * 160,
+    y: Math.floor(index / columns) * 280,
+    width: 160,
+    height: 280,
+  }));
+  descriptor.atlas = {
+    width: columns * 160,
+    height: Math.ceil(descriptor.frames.length / columns) * 280,
+    bytes: imageBytes.byteLength,
+    sha256: record.imageSha256,
+  };
+  descriptor.trim =
+    name === 'death'
+      ? { x: 88, y: 28, width: 144, height: 244 }
+      : { x: 80, y: 20, width: 160, height: 280 };
+  descriptor.frames = descriptor.frames.map((frame, index) => ({
+    ...frame,
+    x: (index % columns) * descriptor.trim.width,
+    y: Math.floor(index / columns) * descriptor.trim.height,
+    width: descriptor.trim.width,
+    height: descriptor.trim.height,
+  }));
+  descriptor.atlas = {
+    width: columns * descriptor.trim.width,
+    height: Math.ceil(descriptor.frames.length / columns) * descriptor.trim.height,
+    bytes: imageBytes.byteLength,
+    sha256: record.imageSha256,
+  };
+  descriptor.pivot =
+    name === 'death' ? { x: 0.46875, y: 0.95625 } : { x: 0.5, y: 1 };
+  descriptor.presentation = {
+    ...structuredClone(smoothPreviewRuntimeSet.presentation),
+    reference: {
+      clip: name,
+      frameIndex: 0,
+      sourceSha256: descriptor.frames[0].sourceSha256,
+    },
+    visibleBounds:
+      name === 'death'
+        ? { x: 0, y: 64, width: 144, height: 180 }
+        : { x: 8, y: 8, width: 144, height: 214 },
+    motionBounds:
+      name === 'death'
+        ? { x: 0, y: 0, width: 144, height: 244 }
+        : { x: 4, y: 2, width: 152, height: 276 },
+  };
+  descriptor.encoder = {
+    name: 'cwebp',
+    version: '1.6.0',
+    arguments: ['-quiet', '-exact', '-lossless', '-q', '100', '-m', '6'],
+    profileSha256: v4HeroProfileSha256,
+  };
+  descriptor.lineage = {
+    sourceBatchSha256: '1'.repeat(64),
+    derivativeSetSha256: '2'.repeat(64),
+    sourceDescriptorSha256: '3'.repeat(64),
+    sourceEvidenceSha256: '4'.repeat(64),
+    sourceMediaSha256: record.imageSha256,
+    masterInventorySha256: '5'.repeat(64),
+    masterSetSha256: '6'.repeat(64),
+    selectedProfileSha256: v4HeroProfileSha256,
+    v3LineageSha256: '7'.repeat(64),
+  };
+  const descriptorBytes = encoder.encode(canonical(descriptor));
+  v4HeroRuntimeClips[name] = {
+    descriptor: `${name}.json`,
+    descriptorSha256: sha256(descriptorBytes),
+    image: `${name}.webp`,
+    imageSha256: record.imageSha256,
+  };
+  v4HeroRuntimeFiles.set(
+    `assets/preview-v4/${name}.json`,
+    descriptorBytes,
+  );
+  v4HeroRuntimeFiles.set(
+    `assets/preview-v4/${name}.webp`,
+    imageBytes,
+  );
+}
+const v4HeroRuntimeSet = {
+  ...structuredClone(smoothPreviewRuntimeSet),
+  sourceFamily: 'authored-semantic-v4',
+  frameSize: { width: 320, height: 320 },
+  trim: { x: 80, y: 20, width: 160, height: 280 },
+  presentation: {
+    ...structuredClone(smoothPreviewRuntimeSet.presentation),
+    visibleBounds: { x: 8, y: 8, width: 144, height: 214 },
+    motionBounds: { x: 4, y: 2, width: 152, height: 276 },
+  },
+  clips: v4HeroRuntimeClips,
+  consumerScale: structuredClone(v4HeroConsumerScale),
+  lineage: {
+    sourceBatchSha256: '1'.repeat(64),
+    derivativeSetSha256: '2'.repeat(64),
+    masterSetSha256: '3'.repeat(64),
+    selectedProfileSha256: v4HeroProfileSha256,
+    v3LineageSha256: '4'.repeat(64),
+  },
+  toolchain: {
+    ...structuredClone(smoothPreviewRuntimeSet.toolchain),
+    compositor: {
+      name: 'HashBoundCopy',
+      version: 'selected-webp-v1',
+    },
+    encoder: {
+      name: 'cwebp',
+      version: '1.6.0',
+      arguments: ['-quiet', '-exact', '-lossless', '-q', '100', '-m', '6'],
+      profileSha256: v4HeroProfileSha256,
+    },
+    operations: [
+      'validate:v4-selected-webp:hash-bound-source',
+      'validate:v4-selected-webp:exact-copy-byte-proof',
+      'copy:v4-selected-webp:exact-media-bytes',
+    ],
+    profileSha256: v4HeroProfileSha256,
+  },
+};
+v4HeroRuntimeFiles.set(
+  'assets/preview-v4/set.json',
+  encoder.encode(canonical(v4HeroRuntimeSet)),
+);
 assert(
   validateHeroSetManifest(previewRuntimeSet).some(
     (error) => error.includes('preview') || error.includes('status'),
@@ -354,19 +632,75 @@ function createHarness({ tamperDescriptor = null, sourceFiles = files } = {}) {
 }
 
 disposeHeroV3();
+assert(
+  typeof heroV3Runtime.resolveHeroV3Frame === 'function' &&
+    typeof heroV3Runtime.warmHeroV3Clip === 'function',
+  'Hero runtime exposes explicit lazy clip request and transition arbitration',
+);
 const first = createHarness();
-await loadHeroV3('assets/mascot/v3/', first);
+await loadHeroV3('assets/mascot/v3/', {
+  ...first,
+  expectedSetSha256: sha256(setBytes),
+});
 assert(
   heroV3Ready() && heroV3AuthorityStatus() === 'historical',
   'hash-valid historical set loads without being relabelled approved',
 );
 assert(
-  first.fetches.filter((url) => url.includes('sha256=')).length === 16,
-  'every Hero descriptor and image request carries its immutable file hash',
+  first.fetches.filter((url) => url.includes('sha256=')).length === 3 &&
+    first.fetches.some((url) => url.includes('/run.json')) &&
+    first.fetches.some((url) => url.includes('/run.webp')),
+  'Hero boot fetches only the set and current run clip with immutable hashes',
+);
+assert(
+  first.fetches.some((url) => url.includes('set.json') && url.includes('sha256=')),
+  'Hero set request carries its immutable set hash when one is expected',
+);
+assert(
+  !first.fetches.some((url) => url.includes('/death.json')) &&
+    !first.fetches.some((url) => url.includes('/death.webp')),
+  'Hero death media stays cold until the death semantic is requested',
+);
+const runBeforeTransition = getV3Clip('run');
+drawV3Frame({ drawImage() {} }, 'run', 0, 96);
+const heldRun = heroV3Runtime.resolveHeroV3Frame({
+  t: 0,
+  attack: 0,
+  crit: false,
+  recoil: 0,
+  defeatT: 1,
+});
+assert(
+  heldRun?.clip === 'run' &&
+    heldRun?.requestedClip === 'death' &&
+    heldRun?.warming === true,
+  'cold Hero death transition retains the last authored run frame while warming',
+);
+await heroV3Runtime.warmHeroV3Clip('death');
+const readyDeath = heroV3Runtime.resolveHeroV3Frame({
+  t: 0,
+  attack: 0,
+  crit: false,
+  recoil: 0,
+  defeatT: 1,
+});
+assert(
+  readyDeath?.clip === 'death' &&
+    first.fetches.some((url) => url.includes('/death.json')) &&
+    first.fetches.some((url) => url.includes('/death.webp')),
+  'Hero death descriptor and image load only after the death semantic is requested',
+);
+drawV3Frame({ drawImage() {} }, 'death', readyDeath.frame, 96);
+assert(
+  getV3Clip('run') === null &&
+    getV3Clip('death') !== null &&
+    runBeforeTransition?.image?.closed === 1,
+  'successful Hero clip replacement prunes the previous bitmap after the new frame draws',
 );
 const historicalIdle = JSON.parse(
   fs.readFileSync(path.join(heroRoot, 'idle.json'), 'utf8'),
 );
+await heroV3Runtime.warmHeroV3Clip('idle');
 let drawArguments = null;
 const destination = drawV3Frame(
   {
@@ -390,15 +724,27 @@ assert(
   'Hero blit reconstructs the shared full-frame bottom-center pivot after union trimming',
 );
 
+await heroV3Runtime.warmHeroV3Clip('attack');
+const supersededAttack = getV3Clip('attack');
+await heroV3Runtime.warmHeroV3Clip('sprint');
+assert(
+  getV3Clip('idle') !== null &&
+    getV3Clip('attack') === null &&
+    getV3Clip('sprint') !== null &&
+    supersededAttack?.image?.closed === 1,
+  'Hero lazy cache keeps only the last drawn clip plus one undrawn replacement',
+);
+drawV3Frame({ drawImage() {} }, 'sprint', 0, 96);
+
 const replacement = createHarness();
 await loadHeroV3('assets/mascot/v3/', replacement);
 assert(
-  first.bitmaps.length === 8 &&
+  first.bitmaps.length === 5 &&
     first.bitmaps.every((bitmap) => bitmap.closed === 1),
-  'successful set replacement closes every previous bitmap exactly once',
+  'successful set replacement closes every resident previous bitmap exactly once',
 );
 
-const failed = createHarness({ tamperDescriptor: 'celebrate' });
+const failed = createHarness({ tamperDescriptor: 'run' });
 await loadHeroV3('assets/mascot/v3/', failed).then(
   () => {
     throw new Error('tampered descriptor unexpectedly loaded');
@@ -410,7 +756,7 @@ assert(
   'failed replacement keeps the previous complete Hero set active',
 );
 assert(
-  !failed.fetches.some((url) => url.includes('/celebrate.webp')),
+  !failed.fetches.some((url) => url.includes('/run.webp')),
   'descriptor hash failure blocks the matching image fetch and decode',
 );
 assert(
@@ -423,8 +769,9 @@ await loadHeroV3('assets/approved-v3/', approved);
 assert(
   heroV3AuthorityStatus() === 'approved' &&
     replacement.bitmaps.every((bitmap) => bitmap.closed === 1),
-  'complete approved replacement becomes authoritative and releases the historical set',
+  'approved lazy replacement becomes authoritative and releases the historical set',
 );
+await heroV3Runtime.warmHeroV3Clip('idle');
 let approvedDrawArguments = null;
 const approvedDestination = drawV3Frame(
   {
@@ -467,24 +814,45 @@ assert(
   heroV3AuthorityStatus() === 'preview',
   'Hero preview becomes active only through the explicit loader opt-in',
 );
+const swappedSetFiles = new Map(approvedRuntimeFiles);
+swappedSetFiles.set(
+  'assets/approved-v3/set.json',
+  previewRuntimeFiles.get('assets/preview-v3/set.json'),
+);
+const swappedSet = createHarness({ sourceFiles: swappedSetFiles });
+await loadHeroV3('assets/approved-v3/', {
+  ...swappedSet,
+  expectedSetSha256: sha256(
+    approvedRuntimeFiles.get('assets/approved-v3/set.json'),
+  ),
+}).then(
+  () => {
+    throw new Error('swapped set unexpectedly loaded');
+  },
+  () => {},
+);
+assert(
+  heroV3AuthorityStatus() === 'preview',
+  'a swapped but otherwise valid Hero set cannot replace the active set when the expected hash is bound',
+);
 const presentation = getV3Presentation();
 assert(
   presentation?.visibleBounds.height > 0 &&
     presentation?.motionBounds.height >= presentation.visibleBounds.height,
   'Hero runtime retains one validated presentation record',
 );
-const previewIdle = getV3Clip('idle');
+const previewRuntimeGeometry = heroV3Runtime.getV3Geometry();
 const geometry = resolveActorGeometry({
   actorX: 120,
   groundY: 300,
   fit: 1,
   role: 'hero',
-  frameSize: previewIdle.frameSize,
+  frameSize: previewRuntimeGeometry.frameSize,
   trim: {
-    x: previewIdle.trim.x,
-    y: previewIdle.trim.y,
-    width: previewIdle.trim.w,
-    height: previewIdle.trim.h,
+    x: previewRuntimeGeometry.trim.x,
+    y: previewRuntimeGeometry.trim.y,
+    width: previewRuntimeGeometry.trim.w,
+    height: previewRuntimeGeometry.trim.h,
   },
   pivot: { x: 0.5, y: 1 },
   presentation,
@@ -504,6 +872,152 @@ assert(
     authoredDrawOptions?.geometry.body.bottom === 294,
   'renderer passes authored trim height, pivot, and resolved Hero geometry together',
 );
+const smoothPreview = createHarness({ sourceFiles: smoothPreviewRuntimeFiles });
+await loadHeroV3('assets/preview-smooth-v3/', {
+  ...smoothPreview,
+  allowUnapprovedPreview: true,
+  sourceFamily: 'authored-semantic-v3',
+});
+assert(
+  heroV3AuthorityStatus() === 'human_review_required' &&
+    getV3Clip('run')?.frameSize?.width === 128 &&
+    getV3Presentation()?.visibleBounds?.height === smoothPreviewPresentation.visibleBounds.height,
+  'generic Hero V3 preview loads through the authored-semantic-v3 runtime path',
+);
+const v4Hero = createHarness({ sourceFiles: v4HeroRuntimeFiles });
+const v4HeroSetBytes = v4HeroRuntimeFiles.get('assets/preview-v4/set.json');
+await loadHeroV3('assets/preview-v4/', {
+  ...v4Hero,
+  allowUnapprovedPreview: true,
+  sourceFamily: 'authored-semantic-v4',
+  expectedSetSha256: sha256(v4HeroSetBytes),
+  consumerScale: structuredClone(v4HeroConsumerScale),
+  selectedProfileSha256: v4HeroProfileSha256,
+});
+const residentV4Run = getV3Clip('run');
+const runGeometry = resolveActorGeometry({
+  actorX: 120,
+  groundY: 300,
+  fit: 1,
+  role: 'hero',
+  frameSize: { width: residentV4Run.frameSize.width, height: residentV4Run.frameSize.height },
+  trim: {
+    x: residentV4Run.trim.x,
+    y: residentV4Run.trim.y,
+    width: residentV4Run.trim.w,
+    height: residentV4Run.trim.h,
+  },
+  pivot: { x: residentV4Run.anchor[0], y: residentV4Run.anchor[1] },
+  presentation: residentV4Run.presentation,
+});
+drawV3Frame(
+  { drawImage() {} },
+  'run',
+  0,
+  runGeometry.drawTrimHeight,
+);
+assert(
+  heroV3AuthorityStatus() === 'human_review_required' &&
+    residentV4Run?.frameSize?.width === 320 &&
+    residentV4Run?.trim?.w === 160 &&
+    getV3Presentation()?.visibleBounds?.height === 214 &&
+    getV3Presentation()?.reference?.clip === 'idle' &&
+    residentV4Run?.presentation?.reference?.clip === 'run' &&
+    v4Hero.fetches.filter((url) => url.includes('sha256=')).length === 3 &&
+    v4Hero.fetches.some((url) => url.includes('/run.json')) &&
+    v4Hero.fetches.some((url) => url.includes('/run.webp')) &&
+    !v4Hero.fetches.some((url) => url.includes('/death.')) &&
+    renderRuntime.heroDrawOptions?.(120, 300, 1).geometry.body.height === runGeometry.body.height,
+  'Hero V4 activation keeps neutral set presentation for stage fit, clip presentation for draw, and fetches only the selected run clip',
+);
+await heroV3Runtime.warmHeroV3Clip('death');
+const v4DeathState = {
+  run: {
+    hero: {
+      attackAnim: 0,
+      attackCrit: false,
+      energy: 100,
+      deepOn: true,
+      trackerOn: true,
+      trackerStacks: 1,
+      hitRecoil: 0,
+      levelT: 0,
+      defeatT: 1,
+      lootT: 0,
+    },
+  },
+  world: { sprinting: false },
+  stats: { combo: 0, comboT: 0 },
+  settings: { reducedMotion: false },
+};
+const deathContext = {
+  save() {},
+  restore() {},
+  translate() {},
+  rotate() {},
+  scale() {},
+  beginPath() {},
+  closePath() {},
+  lineTo() {},
+  arcTo() {},
+  arc() {},
+  ellipse() {},
+  fill() {},
+  stroke() {},
+  drawImage() {},
+  createLinearGradient() {
+    return { addColorStop() {} };
+  },
+  createRadialGradient() {
+    return { addColorStop() {} };
+  },
+  moveTo() {},
+  fillText() {},
+};
+const drawnV4DeathGeometry = renderRuntime.drawHero?.(
+  deathContext,
+  120,
+  300,
+  v4DeathState,
+  0.25,
+  1,
+);
+const selectedV4DeathGeometry = renderRuntime.heroDrawOptions?.(
+  120,
+  300,
+  1,
+  { clip: 'death' },
+)?.geometry;
+assert(
+  drawnV4DeathGeometry?.motionEnvelope?.top ===
+    selectedV4DeathGeometry?.motionEnvelope?.top &&
+    drawnV4DeathGeometry?.motionEnvelope?.top !== runGeometry.motionEnvelope.top,
+  'Hero V4 render resolves clip-owned retained geometry from the selected death clip before draw',
+);
+const driftedV4Hero = createHarness({ sourceFiles: v4HeroRuntimeFiles });
+await loadHeroV3('assets/preview-v4/', {
+  ...driftedV4Hero,
+  allowUnapprovedPreview: true,
+  sourceFamily: 'authored-semantic-v4',
+  expectedSetSha256: sha256(v4HeroSetBytes),
+  consumerScale: structuredClone(v4HeroConsumerScale),
+  selectedProfileSha256: '5'.repeat(64),
+}).then(
+  () => {
+    throw new Error('profile-drifted V4 Hero unexpectedly loaded');
+  },
+  () => {},
+);
+assert(
+  getV3Clip('run') === residentV4Run &&
+    driftedV4Hero.fetches.length === 1 &&
+    driftedV4Hero.bitmaps.length === 0,
+  'Hero V4 profile drift fails closed before clip fetch/decode and retains the active frame set',
+);
+await loadHeroV3('assets/preview-v3/', {
+  ...preview,
+  allowUnapprovedPreview: true,
+});
 const overlayCalls = {
   gradients: [],
   moves: [],
@@ -654,7 +1168,9 @@ for (const testCase of [
   await loadHeroV3(`${testCase.base}/`, {
     ...mismatched,
     allowUnapprovedPreview: testCase.base.includes('preview'),
-  }).then(
+    initialClip: 'idle',
+  });
+  await heroV3Runtime.warmHeroV3Clip('run').then(
     () => {},
     () => {
       rejected = true;
@@ -662,8 +1178,10 @@ for (const testCase of [
   );
   assert(
     rejected &&
-      heroV3AuthorityStatus() === 'preview' &&
-      mismatched.bitmaps.every((bitmap) => bitmap.closed === 1),
+      heroV3AuthorityStatus() ===
+        (testCase.base.includes('approved') ? 'approved' : 'preview') &&
+      mismatched.bitmaps[0]?.closed === 0 &&
+      mismatched.bitmaps.slice(1).every((bitmap) => bitmap.closed === 1),
     `modern Hero set rejects clip-local ${testCase.label} drift`,
   );
 }

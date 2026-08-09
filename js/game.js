@@ -77,7 +77,6 @@ import {
   targetForEnemyType,
 } from './wave-roster.js?v=gaf2d-motion-v1';
 import { motionReduced } from './motion-preference.js?v=gaf2d-motion-v1';
-import { STAGE_ROLE_PRESENTATION } from './stage-presentation.js?v=gaf2d-motion-v1';
 
 export function createState() {
   return {
@@ -146,8 +145,10 @@ export function createState() {
     world: {
       heroX: 130,
       heroDisplayX: 130,
+      previousHeroDisplayX: 130,
       scroll: 0,
       scrollSmooth: 0,
+      previousScrollSmooth: 0,
       enemies: [],
       alerts: [],
       floaters: [],
@@ -162,8 +163,6 @@ export function createState() {
       attackCd: 0,
       sprinting: false,
       time: 0,
-      groundY: 0,
-      actorGeometries: new Map(),
       shake: 0,
       /** Cosmetic timescale dips (Wave 3): consumed by the frame loop in main.js.
        *  hitStopT = kill freeze, slowMoT = Go Live beat. Never read by combat math. */
@@ -387,13 +386,73 @@ function tip(s, id) {
 // Domain events carry a semantic visual role; render.js owns the CSS token value.
 const tone = (role) => ({ tone: role });
 
+function semanticEffectFields(anchor) {
+  if (!anchor) {
+    return {
+      anchorKind: null,
+      anchorId: null,
+      anchorName: null,
+      anchorRole: null,
+      anchorFallbackX: null,
+    };
+  }
+  return {
+    anchorKind: anchor.kind,
+    anchorId: anchor.id ?? null,
+    anchorName: anchor.name,
+    anchorRole: anchor.role ?? null,
+    anchorFallbackX: anchor.fallbackX ?? null,
+  };
+}
+
+function enemyEffectAnchor(enemy, name) {
+  return Object.freeze({
+    kind: 'enemy',
+    id: enemy.id,
+    name,
+    role: enemy.type === 'boss' ? 'boss' : 'standard',
+    fallbackX: Number.isFinite(enemy.displayX) ? enemy.displayX : enemy.x,
+    offsetX: 0,
+    offsetY: 0,
+    x: 0,
+    y: 0,
+  });
+}
+
+function heroEffectAnchor(s, name, offsetX = 0, offsetY = 0) {
+  return Object.freeze({
+    kind: 'hero',
+    id: null,
+    name,
+    role: 'hero',
+    fallbackX: s.world.heroX,
+    offsetX,
+    offsetY,
+    x: offsetX,
+    y: offsetY,
+  });
+}
+
 function floater(s, x, y, text, color, big = false, anchorId = null, opts = null) {
   const huge = !!opts?.huge;
-  const anchored = anchorId !== null && anchorId !== undefined;
+  const anchor =
+    opts?.anchor ||
+    (anchorId !== null && anchorId !== undefined
+      ? {
+          kind: 'enemy',
+          id: anchorId,
+          name: opts?.anchorName || 'floater',
+          role: 'standard',
+          fallbackX: x,
+          offsetX: 0,
+          offsetY: 0,
+        }
+      : null);
+  const anchored = anchor !== null;
   if (s.world.floaters.length > 40) s.world.floaters.shift(); // perf cap (PERF-BUDGET)
   s.world.floaters.push({
-    x: anchored ? x : x + (Math.random() - 0.5) * 18,
-    y,
+    x: anchored ? anchor.offsetX || 0 : x + (Math.random() - 0.5) * 18,
+    y: anchored ? anchor.offsetY || 0 : y,
     text,
     color,
     t: huge ? 1.5 : big ? 1.25 : 1.0,
@@ -402,51 +461,20 @@ function floater(s, x, y, text, color, big = false, anchorId = null, opts = null
     big,
     huge,
     center: !!opts?.center,
-    anchorId,
-    anchorName: opts?.anchorName || (anchored ? 'floater' : null),
-    originX: anchored ? x : null,
-    originY: anchored ? y : null,
+    ...semanticEffectFields(anchor),
     anchorLift: opts?.lift || 0, // stacked lines above an anchored target
   });
-}
-
-function actorEffectAnchor(s, enemy, anchorName) {
-  const geometry =
-    s.world.actorGeometries instanceof Map
-      ? s.world.actorGeometries.get(enemy.id)
-      : null;
-  const anchors = geometry?.anchors;
-  const x =
-    anchorName === 'loot'
-      ? anchors?.lootX
-      : anchorName === 'shadow'
-        ? anchors?.shadowX
-        : anchors?.hitX;
-  const y =
-    anchorName === 'loot'
-      ? anchors?.lootY
-      : anchorName === 'floater'
-        ? anchors?.floaterY
-        : anchorName === 'shadow'
-          ? anchors?.shadowY
-          : anchors?.hitY;
-  return {
-    x: Number.isFinite(x) ? x : enemy.displayX,
-    y: Number.isFinite(y) ? y : null,
-    anchorId: enemy.id,
-    anchorName,
-  };
 }
 
 function lootFlight(s, enemy, target, color = null) {
   if (motionReduced(s)) return;
   if (s.world.lootFlights.length > 14) return; // perf cap
-  const origin = actorEffectAnchor(s, enemy, 'loot');
+  const origin = enemyEffectAnchor(enemy, 'loot');
   s.world.lootFlights.push({
-    x: origin.x,
-    y: origin.y,
+    x: origin.offsetX,
+    y: origin.offsetY,
     enemyId: enemy.id,
-    anchorName: origin.anchorName,
+    ...semanticEffectFields(origin),
     target,
     color,
     t: 0.72,
@@ -482,8 +510,8 @@ function particles(
           ? 0.7 + Math.random() * 0.35
           : 0.35 + Math.random() * 0.4;
     s.world.particles.push({
-      x,
-      y,
+      x: anchor ? anchor.offsetX || 0 : x,
+      y: anchor ? anchor.offsetY || 0 : y,
       vx: Math.cos(a) * sp,
       vy: Math.sin(a) * sp - (kind === 'coin' ? 80 : kind === 'shard' ? 60 : 40),
       t: life,
@@ -491,10 +519,7 @@ function particles(
       c: color,
       r: kind === 'coin' ? 3.5 + Math.random() * 2.5 : kind === 'shard' ? 3 + Math.random() * 3.5 : 2 + Math.random() * 3.5,
       kind,
-      anchorId: anchor?.anchorId ?? null,
-      anchorName: anchor?.anchorName || null,
-      originX: anchor ? x : null,
-      originY: anchor ? y : null,
+      ...semanticEffectFields(anchor),
       rot: Math.random() * Math.PI * 2,
       spin: (Math.random() - 0.5) * (kind === 'shard' ? 18 : 12),
     });
@@ -512,49 +537,43 @@ function shockRing(
     life = 0.34,
     delay = 0,
     width = 3,
+    anchor = null,
     anchorId = null,
     anchorName = null,
   } = {},
 ) {
   if (motionReduced(s)) return;
   if (s.world.shocks.length > 14) s.world.shocks.shift(); // perf cap
+  const semanticAnchor =
+    anchor ||
+    (anchorId !== null && anchorId !== undefined
+      ? {
+          kind: 'enemy',
+          id: anchorId,
+          name: anchorName || 'hit',
+          role: 'standard',
+          fallbackX: x,
+          offsetX: 0,
+          offsetY: 0,
+        }
+      : null);
   s.world.shocks.push({
-    x,
-    y,
+    x: semanticAnchor ? semanticAnchor.offsetX || 0 : x,
+    y: semanticAnchor ? semanticAnchor.offsetY || 0 : y,
     c: color,
     r1,
     t: life,
     life,
     delay,
     w: width,
-    anchorId,
-    anchorName,
+    ...semanticEffectFields(semanticAnchor),
   });
-}
-
-/** Stage-aware effect origin: render.js stamps world.groundY every frame; the
- *  headless fallback only matters where no pixel ever renders. */
-function stageY(s, lift = 0) {
-  return (s.world.groundY || 522) - lift;
-}
-
-/** Stage-aware floater origin just above the Host's head (render.js stamps
- *  world.stageFit with world.groundY). Floaters must never spawn inside the
- *  toast band (canvas y ≈112–162 on every viewport). */
-function heroFloatY(s, extra = 0) {
-  return stageY(
-    s,
-    STAGE_ROLE_PRESENTATION.hero.visibleBodyHeight *
-      (s.world.stageFit || 1) +
-      24 +
-      extra,
-  );
 }
 
 /** Token-colored shard spray + ring on kill; boss gets a slower multi-ring burst. */
 function deathBurst(s, e) {
   const boss = e.type === 'boss';
-  const origin = actorEffectAnchor(s, e, 'hit');
+  const origin = enemyEffectAnchor(e, 'hit');
   const n = boss ? 22 : 8 + Math.floor(Math.random() * 7); // 8–14 shards
   particles(s, origin.x, origin.y, e.color, n, 'shard', origin);
   // white-hot accents so even gray feed-noise pops against the dark stage
@@ -576,16 +595,14 @@ function deathBurst(s, e) {
       ...(boss
         ? { r1: 92, life: 0.5, width: 4 }
         : { r1: 46, life: 0.32, width: 3.5 }),
-      anchorId: origin.anchorId,
-      anchorName: origin.anchorName,
+      anchor: origin,
     },
   );
   shockRing(s, origin.x, origin.y, '#F5F6F8', {
     r1: boss ? 48 : 30,
     life: 0.24,
     width: 2,
-    anchorId: origin.anchorId,
-    anchorName: origin.anchorName,
+    anchor: origin,
   });
   if (boss) {
     shockRing(s, origin.x, origin.y, '#FC1243', {
@@ -593,22 +610,20 @@ function deathBurst(s, e) {
       life: 0.45,
       delay: 0.05,
       width: 2.5,
-      anchorId: origin.anchorId,
-      anchorName: origin.anchorName,
+      anchor: origin,
     });
     shockRing(s, origin.x, origin.y, '#e6b84d', {
       r1: 124,
       life: 0.64,
       delay: 0.12,
       width: 3,
-      anchorId: origin.anchorId,
-      anchorName: origin.anchorName,
+      anchor: origin,
     });
   }
 }
 
 /** Confetti burst — rank up, patch kill, shop spend */
-export function confetti(s, x, y, colors, n = 22) {
+export function confetti(s, x, y, colors, n = 22, anchor = null) {
   if (motionReduced(s)) return;
   // hard perf cap (PERF-BUDGET)
   if (s.world.confetti.length + n > 200) n = Math.max(0, 200 - s.world.confetti.length);
@@ -619,8 +634,8 @@ export function confetti(s, x, y, colors, n = 22) {
     const sp = 80 + Math.random() * 180;
     const life = 0.7 + Math.random() * 0.6;
     s.world.confetti.push({
-      x,
-      y,
+      x: anchor ? anchor.offsetX || 0 : x,
+      y: anchor ? anchor.offsetY || 0 : y,
       vx: Math.cos(a) * sp * (0.4 + Math.random()),
       vy: Math.sin(a) * sp,
       t: life,
@@ -630,6 +645,7 @@ export function confetti(s, x, y, colors, n = 22) {
       h: 6 + Math.random() * 8,
       rot: Math.random() * Math.PI,
       spin: (Math.random() - 0.5) * 14,
+      ...semanticEffectFields(anchor),
     });
   }
 }
@@ -697,6 +713,7 @@ export function spawnEnemy(s) {
     color: flavor.color,
     x,
     displayX: x,
+    previousDisplayX: x,
     y: 0,
     hp,
     hpMax: hp,
@@ -715,12 +732,24 @@ function grantXp(s, amount) {
     h.xp -= xpToNext(h.level);
     h.level += 1;
     h.sp += C.SP_PER_LEVEL;
-    floater(s, s.world.heroX, heroFloatY(s, 18), `RANK ${h.level}`, '#10B981', true);
-    floater(s, s.world.heroX + 20, heroFloatY(s), `+${C.SP_PER_LEVEL} SP`, tone('sp'), true);
+    const rankAnchor = heroEffectAnchor(s, 'floater', 0, -18);
+    const skillPointAnchor = heroEffectAnchor(s, 'floater', 20, 0);
+    floater(s, 0, 0, `RANK ${h.level}`, '#10B981', true, null, {
+      anchor: rankAnchor,
+    });
+    floater(s, 0, 0, `+${C.SP_PER_LEVEL} SP`, tone('sp'), true, null, {
+      anchor: skillPointAnchor,
+    });
     toast(s, pick(LEVEL_LINES) + ` (+${C.SP_PER_LEVEL} SP)`, 2.6, 'rank');
     tip(s, 'level');
     if (!motionReduced(s)) h.levelT = 1; // hero-v2 jump + golden halo clock
-    shockRing(s, s.world.heroX, stageY(s, 60), '#e6b84d', { r1: 58, life: 0.42, width: 3 });
+    const rankShockAnchor = heroEffectAnchor(s, 'ground', 0, -60);
+    shockRing(s, 0, 0, '#e6b84d', {
+      r1: 58,
+      life: 0.42,
+      width: 3,
+      anchor: rankShockAnchor,
+    });
     particles(s, s.world.heroX, 200, '#FC1243', 18);
     confetti(s, s.world.heroX, 180, ['#FC1243', '#10B981', '#e6b84d', '#fff'], 28);
     s.ui.fx = { kind: 'rank', t: 0.55 };
@@ -741,11 +770,27 @@ function onKill(s, e) {
   if (s.stats.combo === 10 || s.stats.combo === 25 || s.stats.combo === 50) {
     // Milestone pop — big, centered, brief (canvas floater, not DOM).
     floater(s, 0, 0, `${s.stats.combo}× STREAK`, '#FC1243', true, null, { huge: true, center: true });
-    shockRing(s, s.world.heroX, stageY(s, 60), '#FC1243', { r1: 74, life: 0.42, width: 3.5 });
+    const comboAnchor = heroEffectAnchor(s, 'ground', 0, -60);
+    shockRing(s, 0, 0, '#FC1243', {
+      r1: 74,
+      life: 0.42,
+      width: 3.5,
+      anchor: comboAnchor,
+    });
     tip(s, 'combo');
     if (s.settings.sfx !== false) sfx('combo');
   } else if (s.stats.combo >= 5 && s.stats.combo % 5 === 0) {
-    floater(s, s.world.heroX, heroFloatY(s, 18), `${s.stats.combo}x FEED STREAK`, '#FC1243', true);
+    const comboFloaterAnchor = heroEffectAnchor(s, 'floater', 0, -18);
+    floater(
+      s,
+      0,
+      0,
+      `${s.stats.combo}x FEED STREAK`,
+      '#FC1243',
+      true,
+      null,
+      { anchor: comboFloaterAnchor },
+    );
     tip(s, 'combo');
   }
 
@@ -755,8 +800,8 @@ function onKill(s, e) {
   const gb = gearBonuses(s.meta.gear);
   const eco = economyMult(s);
   const priorityReward = priorityTagRewardMultiplier(e);
-  const floaterOrigin = actorEffectAnchor(s, e, 'floater');
-  const hitOrigin = actorEffectAnchor(s, e, 'hit');
+  const floaterOrigin = enemyEffectAnchor(e, 'floater');
+  const hitOrigin = enemyEffectAnchor(e, 'hit');
   const byteM =
     (1 + metaPer(s, 'byte_gain')) *
     (1 + (gb.signal_pct || 0) / 100) *
@@ -794,7 +839,7 @@ function onKill(s, e) {
     '#6cb8ff',
     false,
     e.id,
-    { lift: 18, anchorName: 'floater' },
+    { lift: 18, anchor: floaterOrigin },
   );
   lootFlight(s, e, 'signal');
   particles(
@@ -832,11 +877,18 @@ function onKill(s, e) {
       `+${p | 0} Notes`, tone('notes'),
       true,
       e.id,
-      { lift: 36, anchorName: 'floater' },
+      { lift: 36, anchor: floaterOrigin },
     );
     lootFlight(s, e, 'notes');
     particles(s, hitOrigin.x, hitOrigin.y, tone('notes'), 20, 'coin', hitOrigin);
-    confetti(s, hitOrigin.x, hitOrigin.y, [tone('notes'), '#fff', '#e6b84d'], 24);
+    confetti(
+      s,
+      hitOrigin.offsetX,
+      hitOrigin.offsetY,
+      [tone('notes'), '#fff', '#e6b84d'],
+      24,
+      hitOrigin,
+    );
     tip(s, 'patch');
     s.ui.chipPulse.patches = 0.45;
   }
@@ -855,9 +907,16 @@ function onKill(s, e) {
       '#FF2F4B',
       true,
       e.id,
-      { lift: 54, anchorName: 'floater' },
+      { lift: 54, anchor: floaterOrigin },
     );
-    confetti(s, hitOrigin.x, hitOrigin.y, ['#FC1243', '#FF2F4B', '#e6b84d', '#fff'], 40);
+    confetti(
+      s,
+      hitOrigin.offsetX,
+      hitOrigin.offsetY,
+      ['#FC1243', '#FF2F4B', '#e6b84d', '#fff'],
+      40,
+      hitOrigin,
+    );
     s.ui.chipPulse.patches = 0.5;
   } else if (Math.random() < 0.35 || s.stats.combo <= 2) {
     floater(
@@ -868,7 +927,7 @@ function onKill(s, e) {
       '#F5F6F8',
       false,
       e.id,
-      { lift: -14, anchorName: 'floater' },
+      { lift: -14, anchor: floaterOrigin },
     );
   }
 
@@ -901,10 +960,11 @@ function onKill(s, e) {
     };
     confetti(
       s,
-      hitOrigin.x,
-      hitOrigin.y,
+      hitOrigin.offsetX,
+      hitOrigin.offsetY,
       [rarityColor(item.rarity), '#fff', '#FC1243'],
       e.type === 'boss' ? 28 : 14,
+      hitOrigin,
     );
     // Soft tip once; no item-name toast spam
     if (!s.ui.seenGearTip) {
@@ -943,7 +1003,8 @@ function onKill(s, e) {
     hubOnZone(s);
     // Zone clear celebration: full-width light sweep + small confetti (cosmetic).
     if (!motionReduced(s)) s.ui.fx = { kind: 'sweep', t: 0.55, life: 0.55 };
-    confetti(s, s.world.heroX + 40, stageY(s, 96), [tone('zone'), '#FC1243', '#fff'], 16);
+    const zoneAnchor = heroEffectAnchor(s, 'ground', 40, -96);
+    confetti(s, 0, 0, [tone('zone'), '#FC1243', '#fff'], 16, zoneAnchor);
 
     // Go Live checkpoint (ADR-0008): mint a pending checkpoint at the boundary
     // and keep it until claimed, so an overshoot never forfeits the checkpoint.
@@ -981,8 +1042,8 @@ function dealDamage(s, e, amount, isCrit) {
     if (isCrit) e.critFlash = 0.16; // white-hot flash frame on the target
   }
 
-  const floaterOrigin = actorEffectAnchor(s, e, 'floater');
-  const hitOrigin = actorEffectAnchor(s, e, 'hit');
+  const floaterOrigin = enemyEffectAnchor(e, 'floater');
+  const hitOrigin = enemyEffectAnchor(e, 'hit');
   floater(
     s,
     floaterOrigin.x,
@@ -992,8 +1053,8 @@ function dealDamage(s, e, amount, isCrit) {
     isCrit,
     e.id,
     isCrit
-      ? { huge: true, anchorName: 'floater' }
-      : { anchorName: 'floater' },
+      ? { huge: true, anchor: floaterOrigin }
+      : { anchor: floaterOrigin },
   );
   particles(
     s,
@@ -1009,8 +1070,7 @@ function dealDamage(s, e, amount, isCrit) {
       r1: 36,
       life: 0.26,
       width: 2.5,
-      anchorId: hitOrigin.anchorId,
-      anchorName: hitOrigin.anchorName,
+      anchor: hitOrigin,
     });
   }
   if (s.settings.sfx !== false) sfx(isCrit ? 'crit' : 'hit');
@@ -1038,6 +1098,17 @@ export function triggerHeroHitReaction(s) {
 
 export function step(s, dt, options = {}) {
   const allowSpawn = options.allowSpawn !== false;
+  s.world.previousHeroDisplayX = Number.isFinite(s.world.heroDisplayX)
+    ? s.world.heroDisplayX
+    : s.world.heroX;
+  s.world.previousScrollSmooth = Number.isFinite(s.world.scrollSmooth)
+    ? s.world.scrollSmooth
+    : s.world.scroll;
+  for (const enemy of s.world.enemies) {
+    enemy.previousDisplayX = Number.isFinite(enemy.displayX)
+      ? enemy.displayX
+      : enemy.x;
+  }
   s.world.time += dt;
   if (s.ui.toastT > 0) {
     s.ui.toastT -= dt;
@@ -1380,7 +1451,9 @@ export function allocSkill(s, id) {
   syncLegacyMasteryFields(s);
   s.ui.panelDirty = true;
   confetti(s, s.world.heroX, 190, ['#FC1243', '#fff', '#3ecf8e'], 16);
-  floater(s, s.world.heroX, heroFloatY(s), `${d.name} ·${cost}SP`, tone('sp'), true);
+  floater(s, 0, 0, `${d.name} ·${cost}SP`, tone('sp'), true, null, {
+    anchor: heroEffectAnchor(s, 'floater'),
+  });
   if (s.settings.sfx !== false) sfx('buy');
   return true;
 }
@@ -1393,7 +1466,16 @@ export function buyScanner(s) {
   toast(s, pick(SCANNER_LINES) + ` (Lv ${s.run.hero.scanner})`);
   particles(s, s.world.heroX, 200, '#FC1243', 16);
   confetti(s, s.world.heroX, 190, ['#FC1243', '#ff6b8a', '#fff'], 16);
-  floater(s, s.world.heroX, heroFloatY(s), `SCANNER Lv ${s.run.hero.scanner}`, '#FC1243', true);
+  floater(
+    s,
+    0,
+    0,
+    `SCANNER Lv ${s.run.hero.scanner}`,
+    '#FC1243',
+    true,
+    null,
+    { anchor: heroEffectAnchor(s, 'floater') },
+  );
   s.ui.chipPulse = s.ui.chipPulse || {};
   s.ui.chipPulse.bytes = 0.3;
   if (s.settings.sfx !== false) sfx('upgrade');
@@ -1421,7 +1503,9 @@ export function shipPatches(s) {
   tip(s, 'ship');
   s.ui.panelDirty = true;
   confetti(s, s.world.heroX, 180, ['#e6b84d', '#FC1243', '#fff', '#3ecf8e'], 32);
-  floater(s, s.world.heroX, heroFloatY(s), `+${gained} REP`, '#e6b84d', true);
+  floater(s, 0, 0, `+${gained} REP`, '#e6b84d', true, null, {
+    anchor: heroEffectAnchor(s, 'floater'),
+  });
   s.ui.chipPulse = s.ui.chipPulse || {};
   s.ui.chipPulse.auth = 0.5;
   s.ui.fx = { kind: 'rank', t: 0.4 };
@@ -1443,7 +1527,9 @@ export function buyMeta(s, id) {
   toast(s, `${d.name} → Lv ${lv + 1}`);
   s.ui.panelDirty = true;
   confetti(s, s.world.heroX, 190, ['#e6b84d', '#fff', '#3ecf8e'], 16);
-  floater(s, s.world.heroX, heroFloatY(s), d.name, '#e6b84d', true);
+  floater(s, 0, 0, d.name, '#e6b84d', true, null, {
+    anchor: heroEffectAnchor(s, 'floater'),
+  });
   if (s.settings.sfx !== false) sfx('upgrade');
   return true;
 }
@@ -1635,7 +1721,12 @@ export function goLive(s, checkpointId = null, opts = {}) {
     s.ui.fx = { kind: 'golive', t: 1.5, life: 1.5, from: liveBefore, to: s.meta.live };
     if (!motionReduced(s)) {
       s.world.slowMoT = 0.85;
-      shockRing(s, s.world.heroX, stageY(s, 60), '#e6b84d', { r1: 130, life: 0.7, width: 4 });
+      shockRing(s, 0, 0, '#e6b84d', {
+        r1: 130,
+        life: 0.7,
+        width: 4,
+        anchor: heroEffectAnchor(s, 'ground', 0, -60),
+      });
     }
     confetti(s, s.world.heroX - 60, 140, ['#e6b84d', '#FC1243', '#fff', '#3ecf8e'], 40);
     confetti(s, s.world.heroX + 130, 120, ['#FC1243', '#e6b84d', '#6cb8ff', '#fff'], 40);
@@ -1694,7 +1785,9 @@ export function claimHubObjective(s, period, id) {
   applyReward(s, def.reward);
   toast(s, `Claimed · ${def.label}`);
   confetti(s, s.world.heroX, 180, ['#FC1243', '#e6b84d', '#fff'], 22);
-  floater(s, s.world.heroX, heroFloatY(s), 'QUEST!', '#e6b84d', true);
+  floater(s, 0, 0, 'QUEST!', '#e6b84d', true, null, {
+    anchor: heroEffectAnchor(s, 'floater'),
+  });
   s.ui.panelDirty = true;
   if (s.settings.sfx !== false) sfx('rank');
   return true;

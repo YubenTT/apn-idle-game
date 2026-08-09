@@ -33,6 +33,9 @@ genuine intermediate part transforms.
 Existing neutral, anticipation, maximum-excursion/contact, recovery/return, and
 terminal poses remain authoritative.
 Terminal duplicates are emitted only inside declared terminal holds.
+Loop clips use periodic `[0, 1)` sampling: the final authored frame is the
+last pre-wrap pose, never a duplicate of frame zero. Canonical GAF raster
+evidence must report `loop_velocity_discontinuity <= 0.25`.
 
 ## Runtime Delivery
 
@@ -46,11 +49,26 @@ Each clip atlas must independently satisfy:
 - maximum dimension 2048;
 - decoded RGBA limit 6 MiB for common characters or 8 MiB for the trusted boss;
 - compressed-byte budget from `docs/PERF-BUDGET.md`;
+- current V3 source canvas exactly 128×128; historical V2 remains 640×640;
+- runtime derivatives may preserve or downscale V3 but never upscale it;
 - one shared source canvas, union trim, pivot, and presentation transform for
   the complete character set.
 
+The complete new/replaced first-pack motion set has one aggregate compressed
+cap of `3.5 MiB` (`3,670,016` bytes). The canonical 7-asset, 39-clip,
+795-frame V3 build measured `3,006,743` bytes on 2026-08-09, leaving `22.1%`
+headroom. This aggregate decision does not change the per-clip, decoded
+residency, or hot-texture limits above.
+
 Only requested clips are fetched and decoded.
 The cache owns explicit close/release semantics.
+One decoded sibling clip per asset is not a valid cache invariant: a real frame
+can contain a dying body on `death` and a fresh same-asset spawn on `advance`
+at the same time.
+Residency must therefore be decided after the frame's clip selection is known:
+keep every selected sibling clip for that render, then release unselected
+siblings without changing the emitted package path
+`assets/game-packs/<pack-id>/characters/<asset-id>/`.
 Current and next wave hot motion remains below 32 MiB decoded RGBA and the full
 GPU/canvas hot texture set remains below 64 MiB.
 
@@ -140,4 +158,3 @@ Unrelated repository issues are not closed merely to make a dashboard empty.
   review.
 - GAF2D, APN Idle Game, and APN Web changes are merged to their remote `main`
   branches and the production route is health-checked after deployment.
-

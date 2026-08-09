@@ -34,16 +34,6 @@ const fakeClips = Object.fromEntries(
     },
   ]),
 );
-const effectGeometry = Object.freeze({
-  anchors: Object.freeze({
-    floaterY: 211,
-    hitX: 222,
-    hitY: 233,
-    lootX: 224,
-    lootY: 247,
-  }),
-});
-
 function stateAfterOutgoingAttack(randomValue) {
   const originalRandom = Math.random;
   Math.random = () => randomValue;
@@ -57,7 +47,6 @@ function stateAfterOutgoingAttack(randomValue) {
     enemy.x = state.world.heroX;
     enemy.displayX = enemy.x;
     state.world.enemies = [enemy];
-    state.world.actorGeometries = new Map([[enemy.id, effectGeometry]]);
     state.world.attackCd = 0;
     game.step(state, 1 / 60, { allowSpawn: false });
     return state;
@@ -71,7 +60,48 @@ check(
   'renderer exposes one testable Hero semantic projection',
 );
 
+check(
+  typeof render.interpolateRootPosition === 'function',
+  'renderer exposes one pure residual-accumulator root interpolator',
+);
+if (typeof render.interpolateRootPosition === 'function') {
+  const rootProbe = Object.freeze({
+    previousDisplayX: 100,
+    displayX: 116,
+  });
+  const schedules = [60, 90, 120, 144].map((hz) => ({
+    hz,
+    position: render.interpolateRootPosition(
+      rootProbe.previousDisplayX,
+      rootProbe.displayX,
+      0.375,
+    ),
+  }));
+  check(
+    schedules.every(({ position }) => position === 106) &&
+      rootProbe.previousDisplayX === 100 &&
+      rootProbe.displayX === 116,
+    '60/90/120/144 Hz repaints share one immutable draw-time root interpolation',
+  );
+}
+
 const ordinaryState = stateAfterOutgoingAttack(1);
+const interpolationState = game.createState();
+const interpolationEnemy = game.spawnEnemy(interpolationState);
+interpolationEnemy.displayX = 260;
+interpolationEnemy.x = 220;
+interpolationState.world.heroDisplayX = 140;
+interpolationState.world.heroX = 130;
+interpolationState.world.scrollSmooth = 8;
+interpolationState.world.scroll = 16;
+interpolationState.world.enemies = [interpolationEnemy];
+game.step(interpolationState, 1 / 60, { allowSpawn: false });
+check(
+  interpolationEnemy.previousDisplayX === 260 &&
+    interpolationState.world.previousHeroDisplayX === 140 &&
+    interpolationState.world.previousScrollSmooth === 8,
+  'each fixed step snapshots previous actor/world roots for repaint interpolation',
+);
 check(
   ordinaryState.run.hero.hitRecoil === 0,
   'outgoing damage never triggers the Hero incoming-hit reaction',
@@ -97,18 +127,19 @@ check(
 check(
   ordinaryState.world.floaters.at(-1)?.anchorId ===
       ordinaryState.world.enemies[0]?.id &&
-    ordinaryState.world.floaters.at(-1)?.originX ===
-      effectGeometry.anchors.hitX &&
-    ordinaryState.world.floaters.at(-1)?.originY ===
-      effectGeometry.anchors.floaterY,
-  'ordinary damage floater snapshots the resolved enemy floater anchor',
+    ordinaryState.world.floaters.at(-1)?.anchorKind === 'enemy' &&
+    ordinaryState.world.floaters.at(-1)?.anchorName === 'floater' &&
+    Number.isFinite(ordinaryState.world.floaters.at(-1)?.anchorFallbackX),
+  'ordinary damage floater carries one semantic enemy floater anchor',
 );
 check(
   critState.world.shocks.at(-1)?.anchorId ===
       critState.world.enemies[0]?.id &&
-    critState.world.shocks.at(-1)?.x === effectGeometry.anchors.hitX &&
-    critState.world.shocks.at(-1)?.y === effectGeometry.anchors.hitY,
-  'critical shock ring snapshots the resolved enemy hit anchor',
+    critState.world.shocks.at(-1)?.anchorKind === 'enemy' &&
+    critState.world.shocks.at(-1)?.anchorName === 'hit' &&
+    critState.world.shocks.at(-1)?.x === 0 &&
+    critState.world.shocks.at(-1)?.y === 0,
+  'critical shock ring carries one semantic enemy hit anchor',
 );
 check(
   resolveHostClip({ attack: 1, crit: true }) === 'crit',
@@ -127,7 +158,6 @@ function stateAfterEnemyKill() {
     enemy.x = state.world.heroX;
     enemy.displayX = enemy.x;
     state.world.enemies = [enemy];
-    state.world.actorGeometries = new Map([[enemy.id, effectGeometry]]);
     state.world.attackCd = 0;
     game.step(state, 1 / 60, { allowSpawn: false });
     return { state, enemy };
@@ -140,25 +170,27 @@ check(
   killedEnemyEffects.state.world.lootFlights.some(
     (flight) =>
       flight.enemyId === killedEnemyEffects.enemy.id &&
-      flight.x === effectGeometry.anchors.lootX &&
-      flight.y === effectGeometry.anchors.lootY,
+      flight.anchorKind === 'enemy' &&
+      flight.anchorName === 'loot' &&
+      flight.x === 0 &&
+      flight.y === 0,
   ),
-  'loot flight snapshots the resolved enemy loot anchor',
+  'loot flight carries one semantic enemy loot anchor',
 );
 check(
   killedEnemyEffects.state.world.particles.some(
     (particle) =>
       particle.anchorId === killedEnemyEffects.enemy.id &&
-      particle.originX === effectGeometry.anchors.hitX &&
-      particle.originY === effectGeometry.anchors.hitY,
+      particle.anchorKind === 'enemy' &&
+      particle.anchorName === 'hit',
   ) &&
     killedEnemyEffects.state.world.shocks.some(
       (shock) =>
         shock.anchorId === killedEnemyEffects.enemy.id &&
-        shock.x === effectGeometry.anchors.hitX &&
-        shock.y === effectGeometry.anchors.hitY,
+        shock.anchorKind === 'enemy' &&
+        shock.anchorName === 'hit',
     ),
-  'death particles and rings share the resolved enemy hit anchor',
+  'death particles and rings share the semantic enemy hit anchor',
 );
 
 if (typeof render.heroRuntimeSemantics === 'function') {
@@ -211,12 +243,13 @@ function sampleFixedSimulation(state, refreshHz, seconds) {
   const fixedSeconds = 1 / 60;
   const repaintCount = Math.ceil(seconds * refreshHz);
   for (let repaint = 0; repaint < repaintCount; repaint += 1) {
-    samples.push(
-      pickV3(
+    samples.push({
+      simulationTime: state.world.time,
+      selected: pickV3(
         render.heroRuntimeSemantics(state, state.world.time).selector,
         fakeClips,
       ),
-    );
+    });
     accumulator += repaintSeconds;
     while (accumulator + 1e-12 >= fixedSeconds) {
       game.step(state, fixedSeconds, { allowSpawn: false });
@@ -228,7 +261,7 @@ function sampleFixedSimulation(state, refreshHz, seconds) {
 
 const uniqueFrames = (samples, clip) => {
   const frames = [];
-  for (const selected of samples) {
+  for (const { selected } of samples) {
     if (
       selected?.clip === clip &&
       Number.isInteger(selected.frame) &&
@@ -239,6 +272,31 @@ const uniqueFrames = (samples, clip) => {
   }
   return frames;
 };
+
+function traceBySimulationTime(samples) {
+  const trace = new Map();
+  for (const { simulationTime, selected } of samples) {
+    if (!trace.has(simulationTime)) trace.set(simulationTime, selected);
+  }
+  return trace;
+}
+
+function matchesSimulationTimeAuthority(authoritySamples, candidateSamples) {
+  const authority = traceBySimulationTime(authoritySamples);
+  const candidate = traceBySimulationTime(candidateSamples);
+  return (
+    candidate.size === authority.size &&
+    [...authority].every(([simulationTime, expected]) => {
+      const actual = candidate.get(simulationTime);
+      return (
+        actual?.clip === expected?.clip &&
+        actual?.frame === expected?.frame
+      );
+    })
+  );
+}
+
+const refreshRates = [60, 90, 120, 144];
 
 function authoredAttackSamples(refreshHz, critical = false) {
   const state = stateAfterOutgoingAttack(critical ? 0 : 1);
@@ -251,7 +309,7 @@ for (const [clip, critical] of [
   ['attack', false],
   ['crit', true],
 ]) {
-  for (const refreshHz of [60, 120]) {
+  for (const refreshHz of refreshRates) {
     check(
       uniqueFrames(
         authoredAttackSamples(refreshHz, critical),
@@ -261,18 +319,15 @@ for (const [clip, critical] of [
     );
   }
   const at60 = authoredAttackSamples(60, critical);
-  const at120On60HzTicks = authoredAttackSamples(
-    120,
-    critical,
-  ).filter((_sample, index) => index % 2 === 0);
-  check(
-    at60.every(
-      (sample, index) =>
-        sample?.clip === at120On60HzTicks[index]?.clip &&
-        sample?.frame === at120On60HzTicks[index]?.frame,
-    ),
-    `60 Hz and 120 Hz repaints observe the same authored ${clip} frame at equal fixed-simulation times`,
-  );
+  for (const refreshHz of refreshRates.slice(1)) {
+    check(
+      matchesSimulationTimeAuthority(
+        at60,
+        authoredAttackSamples(refreshHz, critical),
+      ),
+      `60 Hz and ${refreshHz} Hz repaints observe the same authored ${clip} frame at equal fixed-simulation times`,
+    );
+  }
 }
 
 function continuousCombatCycles(sprinting) {
@@ -345,7 +400,7 @@ function authoredProgressSamples(refreshHz, configure, durationSeconds) {
   );
 }
 
-for (const refreshHz of [60, 120]) {
+for (const refreshHz of refreshRates) {
   check(
     uniqueFrames(
       authoredProgressSamples(
@@ -382,19 +437,15 @@ for (const [clip, duration, configure] of [
   ],
 ]) {
   const at60 = authoredProgressSamples(60, configure, duration);
-  const at120On60HzTicks = authoredProgressSamples(
-    120,
-    configure,
-    duration,
-  ).filter((_sample, index) => index % 2 === 0);
-  check(
-    at60.every(
-      (sample, index) =>
-        sample?.clip === at120On60HzTicks[index]?.clip &&
-        sample?.frame === at120On60HzTicks[index]?.frame,
-    ),
-    `60 Hz and 120 Hz repaints observe the same authored ${clip} frame at equal fixed-simulation times`,
-  );
+  for (const refreshHz of refreshRates.slice(1)) {
+    check(
+      matchesSimulationTimeAuthority(
+        at60,
+        authoredProgressSamples(refreshHz, configure, duration),
+      ),
+      `60 Hz and ${refreshHz} Hz repaints observe the same authored ${clip} frame at equal fixed-simulation times`,
+    );
+  }
 }
 
 check(
@@ -526,14 +577,20 @@ check(
 );
 
 const floaterState = game.createState();
-floaterState.world.groundY = 300;
-floaterState.world.stageFit = 1;
 floaterState.run.bytes = 1_000_000;
 floaterState.settings.sfx = false;
+const floaterGeometry = render.heroDrawOptions(130, 300, 1).geometry;
 check(
   game.buyScanner(floaterState) === true &&
-    floaterState.world.floaters.at(-1)?.y === 180,
-  'Hero floater clearance uses the 96 px role body plus the documented 24 px margin',
+    floaterState.world.floaters.at(-1)?.anchorKind === 'hero' &&
+    floaterState.world.floaters.at(-1)?.anchorName === 'floater' &&
+    floaterState.world.floaters.at(-1)?.x === 0 &&
+    floaterState.world.floaters.at(-1)?.y === 0 &&
+    300 - floaterGeometry.targetBodyHeight - 24 === 180 &&
+    !Object.hasOwn(floaterState.world, 'groundY') &&
+    !Object.hasOwn(floaterState.world, 'stageFit') &&
+    !Object.hasOwn(floaterState.world, 'actorGeometries'),
+  'Hero floater stays semantic while presentation resolves the 96 px body plus 24 px margin',
 );
 
 const sharedSelectorState = game.createState();

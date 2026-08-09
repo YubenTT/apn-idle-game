@@ -1,5 +1,5 @@
 /**
- * APN Hero V3 — approved raster clip player (primary hero body).
+ * APN Hero V3 — authority-validated raster clip player (primary hero body).
  *
  * The hero body is one set descriptor plus 8 hash-locked short clips:
  * assets/mascot/v3/set.json and {clip}.webp + {clip}.json. The set owns
@@ -27,6 +27,10 @@
 import { clamp } from './formulas.js?v=gaf2d-motion-v1';
 import { withRuntimeVersion } from './cache.js?v=gaf2d-motion-v1';
 import {
+  validateMotionClipDescriptor,
+  validateMotionSetIndex,
+} from './motion-bundle.js?v=gaf2d-motion-v1';
+import {
   HERO_V3_CLIPS,
   MAX_HERO_DESCRIPTOR_BYTES,
   MAX_HERO_IMAGE_BYTES,
@@ -34,13 +38,19 @@ import {
   validateHeroClipDescriptor,
   validateHeroSetManifest,
 } from './hero-v3-contract.js?v=gaf2d-motion-v1';
+import { visualFidelityEncodedLimit } from './visual-fidelity-v4.js?v=gaf2d-motion-v1';
 
 export const V3_CLIPS = HERO_V3_CLIPS;
 
-let V3 = null; // { status, clips: { name: { image, frames, fps, frameSize, anchor, trim } } }
+let V3 = null; // One validated set, one resident drawn clip, and at most one warm replacement.
 let loadGeneration = 0;
 let activeLoadController = null;
 const fatalDecoder = new TextDecoder('utf-8', { fatal: true });
+const VISUAL_FIDELITY_SOURCE_FAMILY = 'authored-semantic-v4';
+const GENERIC_PREVIEW_SOURCE_FAMILIES = new Set([
+  'authored-semantic-v3',
+  VISUAL_FIDELITY_SOURCE_FAMILY,
+]);
 
 const withHashToken = (url, sha256) => {
   const versioned = withRuntimeVersion(url);
@@ -67,22 +77,47 @@ function stableJson(value) {
     .join(',')}}`;
 }
 
-function assertConsistentModernSet(set) {
-  if (set?.status === 'historical') return;
-  const idle = set?.clips?.idle;
-  if (!idle) throw new Error('hero-v3: modern set is missing idle');
-  const sharedFields = [
-    ['full-frame size', 'frameSize'],
-    ['shared trim', 'trim'],
-    ['pivot', 'anchor'],
-    ['presentation', 'presentation'],
-  ];
-  for (const name of V3_CLIPS) {
-    const clip = set.clips[name];
-    for (const [label, field] of sharedFields) {
-      if (stableJson(clip?.[field]) !== stableJson(idle[field])) {
-        throw new Error(`hero-v3: ${name} ${label} differs from idle`);
-      }
+function clipGeometry(clip) {
+  return {
+    frameSize: clip.frameSize,
+    trim: clip.trim,
+    anchor: clip.anchor,
+    presentation: clip.presentation,
+  };
+}
+
+function setGeometry(set) {
+  return {
+    frameSize: set.frameSize,
+    trim: {
+      x: set.trim.x,
+      y: set.trim.y,
+      w: set.trim.width,
+      h: set.trim.height,
+    },
+    anchor: [set.pivot.x, set.pivot.y],
+    presentation: set.presentation,
+  };
+}
+
+function assertConsistentModernClip(state, name, clip) {
+  if (state?.status === 'historical') return;
+  const sharedFields =
+    state?.set?.sourceFamily === VISUAL_FIDELITY_SOURCE_FAMILY
+      ? [['full-frame size', 'frameSize']]
+      : [
+          ['full-frame size', 'frameSize'],
+          ['shared trim', 'trim'],
+          ['pivot', 'anchor'],
+          ['presentation', 'presentation'],
+        ];
+  for (const [label, field] of sharedFields) {
+    if (
+      stableJson(clip?.[field]) !== stableJson(state.geometry?.[field])
+    ) {
+      throw new Error(
+        `hero-v3: ${name} ${label} differs from the resident set geometry`,
+      );
     }
   }
 }
@@ -155,8 +190,42 @@ function atlasFacts(descriptor, status) {
       };
 }
 
-function runtimeClip(descriptor, image, status) {
+function runtimeClip(descriptor, image, status, options = {}) {
   if (status === 'historical') return { ...descriptor, image };
+  if (options.genericPreview) {
+    const visualFidelity =
+      options.set?.sourceFamily === VISUAL_FIDELITY_SOURCE_FAMILY;
+    return {
+      image,
+      frames: descriptor.frames.map((frame) => ({
+        x: frame.x,
+        y: frame.y,
+        w: frame.width,
+        h: frame.height,
+      })),
+      fps: descriptor.fps,
+      frameSize: options.set.frameSize,
+      anchor: visualFidelity
+        ? [descriptor.pivot.x, descriptor.pivot.y]
+        : [options.set.pivot.x, options.set.pivot.y],
+      presentation: visualFidelity
+        ? descriptor.presentation
+        : options.set.presentation,
+      trim: visualFidelity
+        ? {
+            x: descriptor.trim.x,
+            y: descriptor.trim.y,
+            w: descriptor.trim.width,
+            h: descriptor.trim.height,
+          }
+        : {
+            x: options.set.trim.x,
+            y: options.set.trim.y,
+            w: options.set.trim.width,
+            h: options.set.trim.height,
+          },
+    };
+  }
   return {
     image,
     frames: descriptor.frames.map((frame) => ({
@@ -187,9 +256,14 @@ async function loadClip({
   hashBytes,
   parseJsonImpl,
   allowUnapprovedPreview,
+  sourceFamily,
+  selectedProfileSha256,
   signal,
 }) {
   const record = set.clips[name];
+  const genericPreview =
+    allowUnapprovedPreview === true &&
+    GENERIC_PREVIEW_SOURCE_FAMILIES.has(sourceFamily);
   const descriptorUrl = withHashToken(
     `${base}${record.descriptor}`,
     record.descriptorSha256,
@@ -211,12 +285,21 @@ async function loadClip({
     `${name} descriptor`,
     parseJsonImpl,
   );
-  const descriptorErrors = validateHeroClipDescriptor(
-    descriptor,
-    name,
-    set,
-    { allowUnapprovedPreview },
-  );
+  const descriptorErrors = genericPreview
+    ? validateMotionClipDescriptor(descriptor, name, set, {
+        role: 'hero',
+        ...(sourceFamily === VISUAL_FIDELITY_SOURCE_FAMILY
+          ? {
+              consumerRole: 'hero',
+              selectedProfileSha256,
+            }
+          : {}),
+        descriptorSha256: record.descriptorSha256,
+        imageSha256: record.imageSha256,
+      })
+    : validateHeroClipDescriptor(descriptor, name, set, {
+        allowUnapprovedPreview,
+      });
   if (descriptorErrors.length > 0) {
     throw new Error(
       `hero-v3: ${name} descriptor rejected: ${descriptorErrors.join('; ')}`,
@@ -230,14 +313,23 @@ async function loadClip({
   const imageBytes = await fetchBounded(
     fetchImpl,
     imageUrl,
-    MAX_HERO_IMAGE_BYTES,
+    sourceFamily === VISUAL_FIDELITY_SOURCE_FAMILY
+      ? visualFidelityEncodedLimit('hero')
+      : MAX_HERO_IMAGE_BYTES,
     signal,
   );
   const imageHash = await hashBytes(imageBytes);
   if (imageHash !== record.imageSha256) {
     throw new Error(`hero-v3: ${name} image SHA-256 mismatch`);
   }
-  const expected = atlasFacts(descriptor, set.status);
+  const expected =
+    genericPreview
+      ? {
+          width: descriptor.atlas.width,
+          height: descriptor.atlas.height,
+          bytes: descriptor.atlas.bytes,
+        }
+      : atlasFacts(descriptor, set.status);
   if (imageBytes.byteLength !== expected.bytes) {
     throw new Error(
       `hero-v3: ${name} image byte count differs from its descriptor`,
@@ -260,7 +352,10 @@ async function loadClip({
         `hero-v3: ${name} decoded dimensions differ from its descriptor`,
       );
     }
-    return runtimeClip(descriptor, image, set.status);
+    return runtimeClip(descriptor, image, set.status, {
+      genericPreview,
+      set,
+    });
   } catch (error) {
     closeImage(image);
     throw error;
@@ -268,8 +363,9 @@ async function loadClip({
 }
 
 /**
- * Load one complete hash-locked set. A failed or stale replacement closes every
- * partial bitmap and leaves the previous complete set active.
+ * Load one hash-locked set index plus its current gameplay clip. Other clip
+ * bodies stay cold until requested. A failed or stale replacement closes its
+ * partial bitmap and leaves the previous set active.
  */
 export async function loadHeroV3(basePath, options = {}) {
   const base = basePath.endsWith('/') ? basePath : `${basePath}/`;
@@ -279,6 +375,12 @@ export async function loadHeroV3(basePath, options = {}) {
   const parseJsonImpl = options.parseJson || JSON.parse;
   const allowUnapprovedPreview =
     options.allowUnapprovedPreview === true;
+  const sourceFamily = options.sourceFamily ?? null;
+  const expectedSetSha256 = options.expectedSetSha256 ?? null;
+  const consumerScale = options.consumerScale ?? null;
+  const selectedProfileSha256 =
+    options.selectedProfileSha256 ?? null;
+  const initialClip = options.initialClip ?? 'run';
   const AbortControllerImpl =
     options.AbortController || globalThis.AbortController;
   const generation = ++loadGeneration;
@@ -289,43 +391,90 @@ export async function loadHeroV3(basePath, options = {}) {
   try {
     const setBytes = await fetchBounded(
       fetchImpl,
-      withRuntimeVersion(`${base}set.json`),
+      expectedSetSha256
+        ? withHashToken(`${base}set.json`, expectedSetSha256)
+        : withRuntimeVersion(`${base}set.json`),
       MAX_HERO_SET_BYTES,
       controller.signal,
     );
+    if (expectedSetSha256) {
+      const setSha256 = await hashBytes(setBytes);
+      if (setSha256 !== expectedSetSha256) {
+        throw new Error(
+          `hero-v3: set descriptor SHA-256 mismatch`,
+        );
+      }
+    }
     const set = parseJson(setBytes, 'set descriptor', parseJsonImpl);
-    const setErrors = validateHeroSetManifest(set, {
-      allowUnapprovedPreview,
-    });
+    const genericPreview =
+      allowUnapprovedPreview &&
+      GENERIC_PREVIEW_SOURCE_FAMILIES.has(sourceFamily);
+    const setErrors = genericPreview
+      ? validateMotionSetIndex(set, 'apn-hero', {
+          role: 'hero',
+          ...(sourceFamily === VISUAL_FIDELITY_SOURCE_FAMILY
+            ? {
+                consumerRole: 'hero',
+                selectedProfileSha256,
+              }
+            : {}),
+        })
+      : validateHeroSetManifest(set, {
+          allowUnapprovedPreview,
+        });
+    if (
+      genericPreview &&
+      sourceFamily === VISUAL_FIDELITY_SOURCE_FAMILY &&
+      stableJson(set.consumerScale) !== stableJson(consumerScale)
+    ) {
+      setErrors.push(
+        'consumerScale: set differs from the root preview manifest',
+      );
+    }
     if (setErrors.length > 0) {
       throw new Error(`hero-v3: set descriptor rejected: ${setErrors.join('; ')}`);
     }
-    const settled = await Promise.allSettled(
-      V3_CLIPS.map((name) =>
-        loadClip({
-          base,
-          name,
-          set,
-          fetchImpl,
-          decodeImage,
-          hashBytes,
-          parseJsonImpl,
-          allowUnapprovedPreview,
-          signal: controller.signal,
-        }),
-      ),
-    );
-    const entries = {};
-    for (let index = 0; index < settled.length; index += 1) {
-      const result = settled[index];
-      if (result.status === 'fulfilled') {
-        entries[V3_CLIPS[index]] = result.value;
-      }
+    if (!V3_CLIPS.includes(initialClip) || !set.clips?.[initialClip]) {
+      throw new Error(`hero-v3: invalid initial clip "${initialClip}"`);
     }
-    candidate = { status: set.status, clips: entries };
-    const failed = settled.find((result) => result.status === 'rejected');
-    if (failed) throw failed.reason;
-    assertConsistentModernSet(candidate);
+    const initial = await loadClip({
+      base,
+      name: initialClip,
+      set,
+      fetchImpl,
+      decodeImage,
+      hashBytes,
+      parseJsonImpl,
+      allowUnapprovedPreview,
+      sourceFamily,
+      selectedProfileSha256,
+      signal: controller.signal,
+    });
+    candidate = {
+      status: set.status,
+      set,
+      clips: { [initialClip]: initial },
+      geometry:
+        set.sourceFamily === VISUAL_FIDELITY_SOURCE_FAMILY
+          ? setGeometry(set)
+          : clipGeometry(initial),
+      lastDrawn: null,
+      pending: null,
+      failed: new Map(),
+      clipGeneration: 0,
+      loader: {
+        base,
+        set,
+        fetchImpl,
+        decodeImage,
+        hashBytes,
+        parseJsonImpl,
+        allowUnapprovedPreview,
+        sourceFamily,
+        selectedProfileSha256,
+        AbortControllerImpl,
+      },
+    };
     if (
       generation !== loadGeneration ||
       activeLoadController !== controller ||
@@ -347,7 +496,7 @@ export async function loadHeroV3(basePath, options = {}) {
 }
 
 export function heroV3Ready() {
-  return !!V3;
+  return !!V3 && Object.keys(V3.clips).length > 0;
 }
 
 export function heroV3AuthorityStatus() {
@@ -358,6 +507,7 @@ export function disposeHeroV3() {
   loadGeneration += 1;
   activeLoadController?.abort();
   activeLoadController = null;
+  V3?.pending?.controller?.abort();
   closeClipSet(V3);
   V3 = null;
 }
@@ -368,7 +518,89 @@ export function getV3Clip(name) {
 }
 
 export function getV3Presentation() {
-  return V3?.clips?.idle?.presentation || null;
+  if (V3?.set?.sourceFamily === VISUAL_FIDELITY_SOURCE_FAMILY) {
+    return V3.set.presentation || null;
+  }
+  return V3?.geometry?.presentation || null;
+}
+
+/** Geometry remains resident independently of the bounded bitmap cache. */
+export function getV3Geometry(selected = null) {
+  if (!V3) return null;
+  const clipName = selected?.clip;
+  const clip = clipName ? V3.clips[clipName] : null;
+  return clip ? clipGeometry(clip) : V3.geometry || null;
+}
+
+/**
+ * Warm exactly one semantic clip. A newer semantic request cancels an older
+ * pending request; the last successfully drawn clip remains resident until the
+ * replacement is both decoded and drawn.
+ */
+export async function warmHeroV3Clip(name) {
+  const state = V3;
+  if (!state) throw new Error('hero-v3: set is not loaded');
+  if (!V3_CLIPS.includes(name) || !state.set?.clips?.[name]) {
+    throw new Error(`hero-v3: unknown clip "${name}"`);
+  }
+  if (state.clips[name]) return state.clips[name];
+  if (state.pending?.name === name) return state.pending.promise;
+
+  if (state.pending) {
+    state.pending.controller.abort();
+    state.pending = null;
+  }
+  const generation = ++state.clipGeneration;
+  const controller = new state.loader.AbortControllerImpl();
+  const promise = loadClip({
+    base: state.loader.base,
+    name,
+    set: state.loader.set,
+    fetchImpl: state.loader.fetchImpl,
+    decodeImage: state.loader.decodeImage,
+    hashBytes: state.loader.hashBytes,
+    parseJsonImpl: state.loader.parseJsonImpl,
+    allowUnapprovedPreview: state.loader.allowUnapprovedPreview,
+    sourceFamily: state.loader.sourceFamily,
+    selectedProfileSha256: state.loader.selectedProfileSha256,
+    signal: controller.signal,
+  })
+    .then((clip) => {
+      if (
+        V3 !== state ||
+        state.pending?.generation !== generation ||
+        controller.signal.aborted
+      ) {
+        closeImage(clip.image);
+        throw new Error('hero-v3: stale clip load');
+      }
+      try {
+        assertConsistentModernClip(state, name, clip);
+      } catch (error) {
+        closeImage(clip.image);
+        throw error;
+      }
+      const retainedName =
+        state.lastDrawn?.clip || Object.keys(state.clips)[0] || null;
+      state.clips[name] = clip;
+      for (const [residentName, resident] of Object.entries(state.clips)) {
+        if (residentName === name || residentName === retainedName) continue;
+        closeImage(resident.image);
+        delete state.clips[residentName];
+      }
+      state.failed.delete(name);
+      state.pending = null;
+      return clip;
+    })
+    .catch((error) => {
+      if (V3 === state && state.pending?.generation === generation) {
+        state.pending = null;
+        if (!controller.signal.aborted) state.failed.set(name, error);
+      }
+      throw error;
+    });
+  state.pending = { name, generation, controller, promise };
+  return promise;
 }
 
 /**
@@ -388,11 +620,16 @@ export function pickV3(st, clips = V3?.clips) {
   if (!clips) return null;
   const loop = (name) => {
     const c = clips[name];
-    return { clip: name, frame: Math.floor(st.t * c.fps) % c.frames.length };
+    return {
+      clip: name,
+      frame: c
+        ? Math.floor(st.t * c.fps) % c.frames.length
+        : 0,
+    };
   };
   const sequence = (name, progress) => {
     const c = clips[name];
-    const n = c.frames.length;
+    const n = c?.frames?.length || 1;
     return {
       clip: name,
       frame: Math.min(n - 1, Math.floor(clamp(progress, 0, 1) * n)),
@@ -422,6 +659,45 @@ export function pickV3(st, clips = V3?.clips) {
 }
 
 /**
+ * Resolve a semantic Hero pose without ever returning an undrawable cold clip.
+ * The requested clip warms in the background while the exact last authored
+ * frame remains visible.
+ */
+export function resolveHeroV3Frame(st) {
+  if (!V3) return null;
+  const requested = pickV3(st, V3.clips);
+  if (!requested) return null;
+  if (V3.clips[requested.clip]) {
+    return {
+      ...requested,
+      requestedClip: requested.clip,
+      warming: false,
+    };
+  }
+  const warming = !V3.failed.has(requested.clip);
+  if (warming) {
+    void warmHeroV3Clip(requested.clip).catch(() => {});
+  }
+  const retained =
+    V3.lastDrawn && V3.clips[V3.lastDrawn.clip]
+      ? V3.lastDrawn
+      : (() => {
+          const clip = Object.keys(V3.clips)[0];
+          const runtime = V3.clips[clip];
+          return {
+            clip,
+            frame: Math.floor((st.t || 0) * runtime.fps) % runtime.frames.length,
+          };
+        })();
+  return {
+    ...retained,
+    requestedClip: requested.clip,
+    warming,
+    failed: !warming,
+  };
+}
+
+/**
  * Blit one V3 frame with its source pivot at the current transform origin.
  * drawTrimHeight is the resolved shared-trim height in px. Returns the
  * destination rect { dx, dy, dw, dh }
@@ -443,5 +719,14 @@ export function drawV3Frame(ctx, clipName, frame, drawTrimHeight) {
   const dx = (tr.x - frameWidth * c.anchor[0]) * scale;
   const dy = (tr.y - frameHeight * c.anchor[1]) * scale;
   ctx.drawImage(c.image, f.x, f.y, f.w, f.h, dx, dy, dw, dh);
+  if (V3 && V3.clips[clipName] === c) {
+    V3.geometry = clipGeometry(c);
+    V3.lastDrawn = { clip: clipName, frame };
+    for (const [residentName, resident] of Object.entries(V3.clips)) {
+      if (residentName === clipName) continue;
+      closeImage(resident.image);
+      delete V3.clips[residentName];
+    }
+  }
   return { dx, dy, dw, dh };
 }

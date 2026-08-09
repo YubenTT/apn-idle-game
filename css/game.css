@@ -98,6 +98,108 @@ canvas {
   color: var(--apn-primary-hi);
 }
 
+.motion-review-panel {
+  flex: 0 0 auto;
+  display: grid;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3) var(--sp-3);
+  border-bottom: 1px solid var(--border-700);
+  background: var(--surface-900);
+}
+
+.motion-review-panel[hidden] {
+  display: none;
+}
+
+.motion-review-head,
+.motion-review-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+
+.motion-review-head strong,
+.motion-review-meta {
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+}
+
+.motion-review-head strong {
+  color: var(--text-high);
+  letter-spacing: 0.04em;
+}
+
+.motion-review-head span,
+.motion-review-meta div {
+  color: var(--text-mid);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.motion-review-panel[data-state="blocked"] .motion-review-head span {
+  color: var(--apn-primary-hi);
+}
+
+.motion-review-controls {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-2);
+}
+
+.motion-review-controls label {
+  display: grid;
+  gap: var(--sp-1);
+}
+
+.motion-review-controls span {
+  color: var(--text-mid);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.motion-review-controls select {
+  width: 100%;
+  min-height: var(--touch-min);
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--border-600);
+  border-radius: var(--r-chip);
+  background: var(--surface-800);
+  color: var(--text-high);
+  font: inherit;
+}
+
+.motion-review-panel canvas {
+  width: 100%;
+  max-width: 320px;
+  aspect-ratio: 1;
+  margin: 0 auto;
+  display: block;
+  border-radius: var(--r-slot);
+  border: 1px solid var(--border-700);
+  background:
+    linear-gradient(45deg, var(--surface-800) 25%, transparent 25%, transparent 75%, var(--surface-800) 75%),
+    linear-gradient(45deg, var(--surface-800) 25%, transparent 25%, transparent 75%, var(--surface-800) 75%),
+    var(--surface-900);
+  background-position: 0 0, var(--sp-3) var(--sp-3);
+  background-size: var(--sp-6) var(--sp-6);
+}
+
+@media (max-width: 380px) {
+  .motion-review-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .motion-review-head,
+  .motion-review-meta {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
 .hud-brand {
   display: flex;
   align-items: center;

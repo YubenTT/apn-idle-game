@@ -18,7 +18,7 @@ import {
 } from './build-gaf2d-motion.mjs';
 import { MOTION_BUDGETS } from './lib.mjs';
 import {
-  HERO_V3_APPROVED_CONTRACT,
+  HERO_V3_CLIP_CONTRACT,
   HERO_V3_CLIPS,
   MAX_HERO_APPROVED_DECODED_BYTES,
   validateApprovedHeroDescriptor as validateSharedApprovedHeroDescriptor,
@@ -32,7 +32,7 @@ export const HERO_CLIP_CONTRACT = Object.freeze({
     Object.fromEntries(
       HERO_V3_CLIPS.map((name) => [
         name,
-        HERO_V3_APPROVED_CONTRACT[name].frames,
+        HERO_V3_CLIP_CONTRACT[name].frames,
       ]),
     ),
   ),
@@ -40,7 +40,7 @@ export const HERO_CLIP_CONTRACT = Object.freeze({
     Object.fromEntries(
       HERO_V3_CLIPS.map((name) => [
         name,
-        HERO_V3_APPROVED_CONTRACT[name].playback,
+        HERO_V3_CLIP_CONTRACT[name].playback,
       ]),
     ),
   ),

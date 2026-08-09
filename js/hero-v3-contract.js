@@ -31,7 +31,7 @@ export const HERO_PREVIEW_TOOLCHAIN_OPERATIONS = Object.freeze([
   'montage:row-major:bounded-matrix:shared-cell:no-gap:transparent:alpha-on:png-color-type-6',
 ]);
 
-export const HERO_V3_APPROVED_CONTRACT = Object.freeze({
+export const HERO_V3_CLIP_CONTRACT = Object.freeze({
   idle: Object.freeze({ frames: 8, playback: 'loop' }),
   run: Object.freeze({ frames: 10, playback: 'loop' }),
   attack: Object.freeze({ frames: 8, playback: 'progress' }),
@@ -41,9 +41,9 @@ export const HERO_V3_APPROVED_CONTRACT = Object.freeze({
   death: Object.freeze({ frames: 8, playback: 'progress' }),
   celebrate: Object.freeze({ frames: 8, playback: 'loop' }),
 });
-export const HERO_CLIP_CONTRACT = HERO_V3_APPROVED_CONTRACT;
+export const HERO_CLIP_CONTRACT = HERO_V3_CLIP_CONTRACT;
 export const HERO_V3_CLIPS = Object.freeze(
-  Object.keys(HERO_V3_APPROVED_CONTRACT),
+  Object.keys(HERO_V3_CLIP_CONTRACT),
 );
 
 export const MAX_HERO_SET_BYTES = 64 * 1024;
@@ -571,7 +571,7 @@ function validateModernHeroDescriptor(
   };
   const isPreview = authorityMode === 'preview';
   const label = `${authorityMode} ${clipName}`;
-  const contract = HERO_V3_APPROVED_CONTRACT[clipName];
+  const contract = HERO_V3_CLIP_CONTRACT[clipName];
   if (!contract) {
     return [`${authorityMode} clip: unknown name "${String(clipName)}"`];
   }

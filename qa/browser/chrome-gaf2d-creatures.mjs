@@ -2,7 +2,6 @@ import fs from 'node:fs';
 import net from 'node:net';
 import os from 'node:os';
 import path from 'node:path';
-import { createHash } from 'node:crypto';
 import { spawn, execFileSync } from 'node:child_process';
 
 function resolveChrome() {
@@ -124,49 +123,23 @@ function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
-const SYNTHETIC_MOTION_ROOT = path.resolve('qa/fixtures/browser-motion');
-const SYNTHETIC_MOTION_IDS = Object.freeze(['entry-runner', 'veil-operator']);
-const SYNTHETIC_MOTION_INTEGRITY = JSON.parse(
-  fs.readFileSync(path.join(SYNTHETIC_MOTION_ROOT, 'integrity.json'), 'utf8'),
-);
-
-function sha256File(file) {
-  return createHash('sha256').update(fs.readFileSync(file)).digest('hex');
-}
-
-function loadSyntheticMotionFixture(assetId) {
-  const fixtureDir = path.join(SYNTHETIC_MOTION_ROOT, assetId);
-  const descriptorFile = path.join(fixtureDir, 'motion.json');
-  const imageFile = path.join(fixtureDir, 'motion.webp');
-  const descriptor = JSON.parse(fs.readFileSync(descriptorFile, 'utf8'));
-  const descriptorSha256 = sha256File(descriptorFile);
-  const imageSha256 = sha256File(imageFile);
-  const expected = SYNTHETIC_MOTION_INTEGRITY.assets?.[assetId];
-  assert(expected, `${assetId}: missing synthetic integrity record`);
-  assert(
-    expected.descriptorSha256 === descriptorSha256,
-    `${assetId}: synthetic descriptor hash drift`,
-  );
-  assert(
-    expected.atlasSha256 === imageSha256,
-    `${assetId}: synthetic atlas integrity hash drift`,
-  );
-  assert(descriptor.assetId === assetId, `${assetId}: synthetic descriptor identity mismatch`);
-  assert(descriptor.atlas.sha256 === imageSha256, `${assetId}: synthetic atlas hash mismatch`);
-  return {
-    assetId,
-    descriptor,
-    source: {
-      descriptor: `/qa/fixtures/browser-motion/${assetId}/motion.json`,
-      image: `/qa/fixtures/browser-motion/${assetId}/motion.webp`,
-      descriptorSha256,
-    },
-  };
-}
-
-const SYNTHETIC_MOTION_FIXTURES = Object.freeze(
-  SYNTHETIC_MOTION_IDS.map(loadSyntheticMotionFixture),
-);
+const VISUAL_FIDELITY_SOURCE_FAMILY = 'authored-semantic-v4';
+const VISUAL_FIDELITY_PROFILE_SHA256 =
+  '76d15cc95e8a0bf2f40867abb09f375148679e71f3746e11d51130f83c463dd4';
+const APPROVED_MOTION_SHA256 = Object.freeze({
+  'entry-runner':
+    '54b6fd43c60def0ce0d270bc91ec3729af7e16442d118a8ecaf953c9fc6f2425',
+  'protocol-courier':
+    '992f4cdb38d18833412fed6d33cca8359ad4c13031a70ddaa0825f51c87936f4',
+  'signal-hunter':
+    '2f128f8fb6851316092819213c82699ce82a23de01fd71007f4bc12bd015c881',
+  'site-sentinel':
+    '5e2416fdaf9b829c3ea4f26fa0a257f35d3e189c84cfc9f178ed47e2fa48ec8e',
+  'site-warden':
+    '707e53ae77c2c3a3f37cdec70ba35f59a710c690247b7b1365a49204ad39abae',
+  'veil-operator':
+    '29852c0f6bbdb5b40b4577eaaf088835c854bb5f73494bc357d68151ab521efa',
+});
 
 function screenshotFile(outputDir, viewportLabel, wave, suffix = '') {
   const waveLabel = String(wave).padStart(2, '0');
@@ -179,6 +152,14 @@ async function captureScreenshot(cdp, outputPath) {
 }
 
 function consoleProblems(events) {
+  const requestUrls = new Map(
+    events
+      .filter((event) => event.method === 'Network.requestWillBeSent')
+      .map((event) => [
+        event.params?.requestId,
+        event.params?.request?.url || 'unknown request',
+      ]),
+  );
   return events
     .filter((event) => {
       if (event.method === 'Runtime.exceptionThrown') return true;
@@ -199,7 +180,7 @@ function consoleProblems(events) {
           .join(' ');
       }
       if (event.method === 'Network.loadingFailed') {
-        return `${event.params?.errorText || 'network load failed'} ${event.params?.blockedReason || ''}`.trim();
+        return `${event.params?.errorText || 'network load failed'} ${requestUrls.get(event.params?.requestId) || 'unknown request'} ${event.params?.blockedReason || ''}`.trim();
       }
       if (event.method === 'Network.responseReceived') {
         return `${event.params?.response?.status || 0} ${event.params?.response?.url || ''}`.trim();
@@ -218,36 +199,38 @@ const VIEWPORTS = [
   { label: 'landscape-844', width: 844, height: 390, mobile: true, scale: 2 },
 ];
 const WAVE_EXPECTATIONS = {
-  1: [{ label: 'Entry Runner', frame: 'common-a' }],
-  2: [{ label: 'Veil Operator', frame: 'common-b' }],
-  3: [{ label: 'Signal Hunter', frame: 'common-c' }],
+  1: [{ assetId: 'entry-runner', label: 'Entry Runner', frame: 'common-a' }],
+  2: [{ assetId: 'veil-operator', label: 'Veil Operator', frame: 'common-b' }],
+  3: [{ assetId: 'signal-hunter', label: 'Signal Hunter', frame: 'common-c' }],
   4: [
-    { label: 'Entry Runner', frame: 'common-a' },
-    { label: 'Veil Operator', frame: 'common-b' },
+    { assetId: 'entry-runner', label: 'Entry Runner', frame: 'common-a' },
+    { assetId: 'veil-operator', label: 'Veil Operator', frame: 'common-b' },
   ],
-  5: [{ label: 'Site Sentinel', frame: 'elite' }],
+  5: [{ assetId: 'site-sentinel', label: 'Site Sentinel', frame: 'elite' }],
   6: [
-    { label: 'Entry Runner', frame: 'common-a' },
-    { label: 'Signal Hunter', frame: 'common-c' },
+    { assetId: 'entry-runner', label: 'Entry Runner', frame: 'common-a' },
+    { assetId: 'signal-hunter', label: 'Signal Hunter', frame: 'common-c' },
   ],
   7: [
-    { label: 'Veil Operator', frame: 'common-b' },
-    { label: 'Site Sentinel', frame: 'elite' },
+    { assetId: 'veil-operator', label: 'Veil Operator', frame: 'common-b' },
+    { assetId: 'site-sentinel', label: 'Site Sentinel', frame: 'elite' },
   ],
   8: [
-    { label: 'Entry Runner', frame: 'common-a' },
-    { label: 'Veil Operator', frame: 'common-b' },
-    { label: 'Signal Hunter', frame: 'common-c' },
-    { label: 'Site Sentinel', frame: 'elite' },
+    { assetId: 'entry-runner', label: 'Entry Runner', frame: 'common-a' },
+    { assetId: 'veil-operator', label: 'Veil Operator', frame: 'common-b' },
+    { assetId: 'signal-hunter', label: 'Signal Hunter', frame: 'common-c' },
+    { assetId: 'site-sentinel', label: 'Site Sentinel', frame: 'elite' },
   ],
-  9: [{ label: 'Protocol Courier', frame: 'event' }],
-  10: [{ label: 'Site Warden', frame: 'boss' }],
+  9: [{ assetId: 'protocol-courier', label: 'Protocol Courier', frame: 'event' }],
+  10: [{ assetId: 'site-warden', label: 'Site Warden', frame: 'boss' }],
 };
 
 fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 
-function allowedLabelFrame(wave, label, frame) {
-  return WAVE_EXPECTATIONS[wave]?.some((entry) => entry.label === label && entry.frame === frame) === true;
+function expectedWaveIdentity(wave, label, frame) {
+  return WAVE_EXPECTATIONS[wave]?.find(
+    (entry) => entry.label === label && entry.frame === frame,
+  ) || null;
 }
 
 function smokeUrl(wave, includeQaGate = true) {
@@ -336,6 +319,33 @@ async function prepareWave(cdp, wave) {
   })()`);
 }
 
+async function advanceUntilCurrentMotionCanSpawn(cdp) {
+  return evaluate(cdp, `(async () => {
+    const q = window.__APN_QA__;
+    const store = q.assets.motionStore;
+    const waitForPendingMotion = async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      const deadline = performance.now() + 3000;
+      while (
+        [...store.entries.values()].some((entry) => entry?.status === 'pending')
+      ) {
+        if (performance.now() >= deadline) {
+          throw new Error('timed out waiting for current-wave motion');
+        }
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+    };
+    for (let attempt = 1; attempt <= 4; attempt += 1) {
+      window.advanceTime(17);
+      await waitForPendingMotion();
+      if (q.state.world.enemies.some((candidate) => candidate.hp > 0)) {
+        return attempt;
+      }
+    }
+    return 0;
+  })()`);
+}
+
 async function readState(cdp) {
   const raw = await evaluate(cdp, `window.render_game_to_text()`);
   const parsed = JSON.parse(raw);
@@ -354,26 +364,33 @@ async function readState(cdp) {
   return { ...parsed, extra };
 }
 
-async function installSyntheticMotion(cdp) {
-  const characters = Object.fromEntries(
-    SYNTHETIC_MOTION_FIXTURES.map(({ assetId, source }) => [assetId, source]),
-  );
+async function resetProductionMotionEvidence(cdp) {
+  const expectedAssetIds = Object.keys(APPROVED_MOTION_SHA256).sort();
   return evaluate(cdp, `(async () => {
-    const { warmMotionSet, releaseColdMotion, motionDiagnostics } =
+    const { releaseColdMotion } =
       await import('/js/motion-store.js?v=gaf2d-motion-v1');
     const q = window.__APN_QA__;
     const packAssets = q?.assets?.packs?.get('valorant');
     if (!packAssets?.pack || !q.assets.motionStore) {
-      throw new Error('Synthetic motion injection requires the query-gated asset store');
+      throw new Error('Production motion evidence requires the query-gated asset store');
     }
-    const pack = {
-      ...packAssets.pack,
-      motion: {
-        grammar: 'gaf2d-motion-bundle-v1',
-        characters: ${JSON.stringify(characters)},
-      },
-    };
-    packAssets.pack = pack;
+    const pack = packAssets.pack;
+    const expectedAssetIds = ${JSON.stringify(expectedAssetIds)};
+    const actualAssetIds = Object.keys(pack.motion?.characters || {}).sort();
+    if (JSON.stringify(actualAssetIds) !== JSON.stringify(expectedAssetIds)) {
+      throw new Error('Production motion mapping is not the exact approved six-asset set');
+    }
+    if (Object.hasOwn(pack.motion.characters, 'apn-hero')) {
+      throw new Error('Hero entered production without the separate rig authority');
+    }
+    for (const [assetId, source] of Object.entries(pack.motion.characters)) {
+      if (
+        source.sourceFamily !== ${JSON.stringify(VISUAL_FIDELITY_SOURCE_FAMILY)} ||
+        source.selectedProfileSha256 !== ${JSON.stringify(VISUAL_FIDELITY_PROFILE_SHA256)}
+      ) {
+        throw new Error(assetId + ': production V4 source/profile authority drift');
+      }
+    }
     releaseColdMotion(q.assets.motionStore, new Set());
     q.assets.motionStore.diagnostics.clear();
     performance.clearResourceTimings();
@@ -386,20 +403,18 @@ async function installSyntheticMotion(cdp) {
     ]) {
       performance.clearMarks(name);
     }
+    return { assetIds: actualAssetIds };
+  })()`);
+}
 
-    performance.mark('qa-motion-current-start');
-    await warmMotionSet(q.assets.motionStore, pack, ['entry-runner']);
-    performance.mark('qa-motion-current-ready');
-    q.state.world.time = 0;
-    window.advanceTime(0);
-    performance.mark('qa-motion-first-frame');
-    performance.mark('qa-motion-next-start');
-    await warmMotionSet(q.assets.motionStore, pack, ['veil-operator']);
-    performance.mark('qa-motion-next-ready');
-
+async function productionMotionSnapshot(cdp) {
+  return evaluate(cdp, `(async () => {
+    const { motionDiagnostics } =
+      await import('/js/motion-store.js?v=gaf2d-motion-v1');
+    const q = window.__APN_QA__;
     const resources = performance
       .getEntriesByType('resource')
-      .filter((entry) => entry.name.includes('/qa/fixtures/browser-motion/'))
+      .filter((entry) => entry.name.includes('/assets/game-packs/valorant/characters/'))
       .map((entry) => ({
         name: entry.name,
         startTime: entry.startTime,
@@ -413,10 +428,16 @@ async function installSyntheticMotion(cdp) {
         .map((entry) => [entry.name, entry.startTime]),
     );
     return {
-      statuses: Object.fromEntries(
-        ['entry-runner', 'veil-operator'].map((assetId) => [
-          assetId,
-          q.assets.motionStore.entries.get('valorant/' + assetId)?.status || null,
+      entries: Object.fromEntries(
+        [...q.assets.motionStore.entries.entries()].map(([key, entry]) => [
+          key,
+          {
+            status: entry?.status || null,
+            authority: entry?.descriptor?.authority || null,
+            sourceFamily:
+              entry?.descriptor?.sourceFamily || entry?.set?.sourceFamily || null,
+            clip: entry?.descriptor?.name || null,
+          },
         ]),
       ),
       diagnostics: motionDiagnostics(q.assets.motionStore),
@@ -426,23 +447,25 @@ async function installSyntheticMotion(cdp) {
   })()`);
 }
 
-async function observeSyntheticMotion(cdp, timestamp) {
+async function observeProductionMotion(cdp, timestamp) {
   return evaluate(cdp, `(async () => {
     const q = window.__APN_QA__;
     const state = q.state;
     const enemy = state.world.enemies.find((candidate) => candidate.hp > 0);
-    if (!enemy) throw new Error('Synthetic motion enemy is missing');
+    if (!enemy) throw new Error('Production motion enemy is missing');
     state.world.time = ${JSON.stringify(timestamp)};
     window.advanceTime(0);
     const text = JSON.parse(window.render_game_to_text());
     const canvas = document.querySelector('#game');
-    const ratioX = canvas.width / canvas.parentElement.clientWidth;
-    // sizeCanvas() intentionally floors short landscape stages to a 160px
-    // logical canvas, so clientHeight may be cropped by flex layout. Canvas 2D
-    // uses one uniform DPR transform; derive it from the uncropped width.
+    // Canvas 2D uses one exact DPR transform. Parent layout width can straddle
+    // a fractional CSS pixel on mobile Chrome, which would move the evidence
+    // crop by one device pixel between otherwise identical fresh runs.
+    const ratioX = window.devicePixelRatio;
     const ratioY = ratioX;
-    const geometry = state.world.actorGeometries?.get(enemy.id);
-    if (!geometry) throw new Error('Synthetic motion geometry is missing');
+    const geometry = q.presentation?.()?.actors?.find(
+      (actor) => actor.id === enemy.id,
+    )?.geometry;
+    if (!geometry) throw new Error('Production motion geometry is missing');
     const logicalBounds = geometry.motionEnvelope;
     const x = Math.max(0, Math.round(logicalBounds.left * ratioX));
     const y = Math.max(0, Math.round(logicalBounds.top * ratioY));
@@ -473,40 +496,12 @@ async function observeSyntheticMotion(cdp, timestamp) {
       .map((value) => value.toString(16).padStart(2, '0'))
       .join('');
     const rgba = [0, 0, 0, 0];
-    let posePixels = 0;
-    let poseX = 0;
-    let poseY = 0;
-    let strongestPose = { score: -Infinity, red: 0, green: 0, blue: 0, x: 0, y: 0 };
     const pixelCount = pixels.length / 4;
     for (let index = 0; index < pixels.length; index += 4) {
       rgba[0] += pixels[index];
       rgba[1] += pixels[index + 1];
       rgba[2] += pixels[index + 2];
       rgba[3] += pixels[index + 3];
-      const pixelIndex = index / 4;
-      const cyanScore =
-        Math.min(pixels[index + 1], pixels[index + 2]) - pixels[index];
-      if (cyanScore > strongestPose.score) {
-        strongestPose = {
-          score: cyanScore,
-          red: pixels[index],
-          green: pixels[index + 1],
-          blue: pixels[index + 2],
-          x: pixelIndex % width,
-          y: Math.floor(pixelIndex / width),
-        };
-      }
-      if (
-        pixels[index] < 90 &&
-        pixels[index + 1] > 100 &&
-        pixels[index + 2] > 100 &&
-        cyanScore > 70 &&
-        pixels[index + 3] > 220
-      ) {
-        posePixels += 1;
-        poseX += pixelIndex % width;
-        poseY += Math.floor(pixelIndex / width);
-      }
     }
     return {
       timestamp: state.world.time,
@@ -528,12 +523,6 @@ async function observeSyntheticMotion(cdp, timestamp) {
         height,
         rgba: rgba.map((value) => Math.round(value / pixelCount)),
         sha256: hash,
-        pose: {
-          pixels: posePixels,
-          centroidX: posePixels ? poseX / posePixels / width : null,
-          centroidY: posePixels ? poseY / posePixels / height : null,
-          strongest: strongestPose,
-        },
       },
     };
   })()`);
@@ -684,14 +673,27 @@ async function validateReducedMotionAuthority(cdp) {
   };
 }
 
-async function validateSyntheticMotion(cdp, viewport, outputDir, port) {
+async function validateProductionMotion(cdp, viewport, outputDir, port) {
   await prepareWave(cdp, 1);
-  await evaluate(cdp, `window.advanceTime(17)`);
+  const reset = await resetProductionMotionEvidence(cdp);
+  assert(
+    JSON.stringify(reset.assetIds) ===
+      JSON.stringify(Object.keys(APPROVED_MOTION_SHA256).sort()),
+    `${viewport.label}: production motion mapping is not the approved six-asset set`,
+  );
+  await evaluate(cdp, `performance.mark('qa-motion-current-start')`);
+  const spawnAttempt = await advanceUntilCurrentMotionCanSpawn(cdp);
+  assert(
+    spawnAttempt > 0,
+    `${viewport.label}: production Entry Runner never opened the spawn gate`,
+  );
   await evaluate(cdp, `(() => {
+    performance.mark('qa-motion-current-ready');
+    performance.mark('qa-motion-first-frame');
     const state = window.__APN_QA__.state;
     const enemy = state.world.enemies.find((candidate) => candidate.hp > 0);
-    if (!enemy) throw new Error('Enemy missing before synthetic motion injection');
-    enemy.id = 'qa-58';
+    if (!enemy) throw new Error('Enemy missing before production motion observation');
+    enemy.id = 'qa-production-entry';
     enemy.type = 'stale';
     enemy.label = 'Entry Runner';
     enemy.packId = 'valorant';
@@ -713,37 +715,63 @@ async function validateSyntheticMotion(cdp, viewport, outputDir, port) {
     return true;
   })()`);
 
-  const warm = await installSyntheticMotion(cdp);
-  assert(warm.statuses['entry-runner'] === 'ready', `${viewport.label}: current motion did not become ready`);
-  assert(warm.statuses['veil-operator'] === 'ready', `${viewport.label}: next-wave motion did not become ready`);
-  assert(warm.diagnostics.length === 0, `${viewport.label}: synthetic warm recorded fallback diagnostics`);
-
-  const currentResources = warm.resources.filter((entry) => entry.name.includes('/entry-runner/'));
-  const nextResources = warm.resources.filter((entry) => entry.name.includes('/veil-operator/'));
-  assert(currentResources.length === 2, `${viewport.label}: current motion did not request descriptor + atlas exactly once`);
-  assert(nextResources.length === 2, `${viewport.label}: next motion did not request descriptor + atlas exactly once`);
-  assert(
-    currentResources.every((entry) => entry.name.includes('sha256=')) &&
-      nextResources.every((entry) => entry.name.includes('sha256=')),
-    `${viewport.label}: motion ResourceTiming entries lack immutable hash tokens`,
+  const currentWarm = await productionMotionSnapshot(cdp);
+  const currentResources = currentWarm.resources.filter((entry) =>
+    entry.name.includes('/entry-runner/'),
+  );
+  const nextSetResources = currentWarm.resources.filter((entry) =>
+    entry.name.includes('/veil-operator/'),
   );
   assert(
-    warm.marks['qa-motion-current-ready'] <= warm.marks['qa-motion-next-start'] &&
-      warm.marks['qa-motion-current-ready'] <= warm.marks['qa-motion-first-frame'] &&
-      warm.marks['qa-motion-first-frame'] <= warm.marks['qa-motion-next-start'] &&
-      currentResources.every((entry) => entry.startTime <= warm.marks['qa-motion-first-frame']) &&
-      nextResources.every((entry) => entry.startTime >= warm.marks['qa-motion-first-frame']),
-    `${viewport.label}: next-wave warm started before the current motion's first drawable frame`,
+    currentWarm.entries['valorant/entry-runner']?.status === 'ready' &&
+      currentWarm.entries['valorant/entry-runner#advance']?.status === 'ready' &&
+      currentWarm.entries['valorant/veil-operator']?.status === 'ready' &&
+      !Object.keys(currentWarm.entries).some((key) =>
+        key.startsWith('valorant/veil-operator#'),
+      ),
+    `${viewport.label}: route window did not keep next-wave V4 metadata warm and its clip body cold`,
+  );
+  assert(
+    currentResources.length === 3 &&
+      currentResources.some((entry) => entry.name.includes('/set.json?')) &&
+      currentResources.some((entry) => entry.name.includes('/advance.json?')) &&
+      currentResources.some((entry) => entry.name.includes('/advance.webp?')) &&
+      nextSetResources.length === 1 &&
+      nextSetResources[0].name.includes('/set.json?'),
+    `${viewport.label}: current/next production request partition is not set+selected-clip / set-only`,
+  );
+  assert(
+    [...currentResources, ...nextSetResources].every((entry) =>
+      entry.name.includes('sha256='),
+    ) &&
+      currentResources.every(
+        (entry) =>
+          entry.responseEnd <= currentWarm.marks['qa-motion-first-frame'],
+      ),
+    `${viewport.label}: production resources are not immutable and ready before first draw`,
+  );
+  assert(
+    currentWarm.diagnostics.length === 0,
+    `${viewport.label}: production warm recorded fallback diagnostics`,
   );
 
-  const frame0 = await observeSyntheticMotion(cdp, 0);
+  const frame0 = await observeProductionMotion(cdp, 0);
   await captureScreenshot(cdp, screenshotFile(outputDir, viewport.label, 1, '-motion-frame-0'));
   assert(
     frame0.motion.status === 'ready' &&
       frame0.motion.assetId === 'entry-runner' &&
       frame0.motion.clip === 'advance' &&
-      frame0.motion.frameIndex === 0 &&
+      Number.isInteger(frame0.motion.frameIndex) &&
       frame0.motion.fallbacks === 0 &&
+      frame0.motion.authority === 'approved_release' &&
+      frame0.motion.sourceFamily === VISUAL_FIDELITY_SOURCE_FAMILY &&
+      frame0.motion.motionApprovalSha256 ===
+        APPROVED_MOTION_SHA256['entry-runner'] &&
+      frame0.motion.selectedProfileSha256 ===
+        VISUAL_FIDELITY_PROFILE_SHA256 &&
+      /^[a-f0-9]{64}$/.test(frame0.motion.candidateSha256 || '') &&
+      /^[a-f0-9]{64}$/.test(frame0.motion.runtimeLineageSha256 || '') &&
+      /^[a-f0-9]{64}$/.test(frame0.motion.derivativeSetSha256 || '') &&
       frame0.geometry.role === 'standard' &&
       Math.abs(
         frame0.geometry.visualGap / frame0.geometry.bodyHeight - 2 / 72,
@@ -756,31 +784,28 @@ async function validateSyntheticMotion(cdp, viewport, outputDir, port) {
       Math.abs(
         frame0.geometry.hpY - frame0.geometry.motionTop + 10,
       ) < 1e-9 &&
-      frame0.sample.pose.pixels > 0,
-    `${viewport.label}: timestamp 0 did not select ready advance frame 0 with resolved standard geometry and zero fallback (${JSON.stringify(frame0)})`,
+      /^[a-f0-9]{64}$/.test(frame0.sample.sha256),
+    `${viewport.label}: first production V4 frame lacks approved release authority, geometry, or pixels (${JSON.stringify(frame0)})`,
   );
-  const frame1 = await observeSyntheticMotion(cdp, 0.13);
+  const frame1 = await observeProductionMotion(cdp, 0.13);
   assert(
       frame1.motion.status === 'ready' &&
       frame1.motion.clip === 'advance' &&
-      frame1.motion.frameIndex === 1 &&
       frame1.motion.fallbacks === 0 &&
-      frame1.sample.pose.pixels > 0 &&
-      frame1.sample.pose.centroidX > frame0.sample.pose.centroidX + 0.25 &&
-      frame1.sample.pose.centroidY < frame0.sample.pose.centroidY - 0.05,
-    `${viewport.label}: timestamp 0.13 did not select advance frame 1 with zero fallback (${JSON.stringify(frame1)})`,
+      frame1.motion.frameIndex !== frame0.motion.frameIndex,
+    `${viewport.label}: production V4 advance did not change frame at timestamp 0.13 (${JSON.stringify(frame1)})`,
   );
   assert(
     frame0.sample.sha256 !== frame1.sample.sha256,
-    `${viewport.label}: changing authored frame produced identical sampled pixels`,
+    `${viewport.label}: changing production V4 frame produced identical sampled pixels`,
   );
   await captureScreenshot(cdp, screenshotFile(outputDir, viewport.label, 1, '-motion-frame-1'));
 
-  const replay0 = await observeSyntheticMotion(cdp, 0);
+  const replay0 = await observeProductionMotion(cdp, 0);
   assert(
     replay0.motion.frameIndex === frame0.motion.frameIndex &&
       replay0.sample.sha256 === frame0.sample.sha256,
-    `${viewport.label}: fixed simulation timestamp did not reproduce exact frame pixels`,
+    `${viewport.label}: fixed simulation timestamp did not reproduce exact production pixels`,
   );
 
   await evaluate(cdp, `(() => {
@@ -790,7 +815,7 @@ async function validateSyntheticMotion(cdp, viewport, outputDir, port) {
     });
     return true;
   })()`);
-  const beforeLifecycle = await observeSyntheticMotion(cdp, 0.13);
+  const beforeLifecycle = await observeProductionMotion(cdp, 0.13);
   const coverPage = await createPage(port);
   try {
     await waitFor(cdp, `document.visibilityState === 'hidden'`, 'hidden-tab lifecycle state');
@@ -800,7 +825,7 @@ async function validateSyntheticMotion(cdp, viewport, outputDir, port) {
   } finally {
     await closePage(port, coverPage.id);
   }
-  const afterLifecycle = await observeSyntheticMotion(cdp, 0.13);
+  const afterLifecycle = await observeProductionMotion(cdp, 0.13);
   const lifecycleStates = await evaluate(cdp, `window.__APN_QA_LIFECYCLE__`);
   assert(
     lifecycleStates.includes('hidden') && lifecycleStates.at(-1) === 'visible',
@@ -813,38 +838,98 @@ async function validateSyntheticMotion(cdp, viewport, outputDir, port) {
       afterLifecycle.sample.sha256 === beforeLifecycle.sample.sha256,
     `${viewport.label}: lifecycle resume corrupted the fixed authored frame`,
   );
-  const frame2 = await observeSyntheticMotion(cdp, 0.26);
+  const frame2 = await observeProductionMotion(cdp, 0.26);
   assert(
-    frame2.motion.frameIndex === 2 &&
+    frame2.motion.frameIndex !== frame1.motion.frameIndex &&
       frame2.motion.fallbacks === 0 &&
-      frame2.sample.sha256 !== frame1.sample.sha256 &&
-      frame2.sample.pose.pixels > 0 &&
-      frame2.sample.pose.centroidX < frame1.sample.pose.centroidX - 0.25 &&
-      Math.abs(frame2.sample.pose.centroidX - frame0.sample.pose.centroidX) < 0.15 &&
-      frame2.sample.pose.centroidY < frame0.sample.pose.centroidY - 0.05,
-    `${viewport.label}: post-resume timestamp did not advance to authored frame 2 (${JSON.stringify(frame2)})`,
+      frame2.sample.sha256 !== frame1.sample.sha256,
+    `${viewport.label}: post-resume timestamp did not advance production V4 pixels (${JSON.stringify(frame2)})`,
   );
 
   const reducedMotion = await validateReducedMotionAuthority(cdp);
+  await evaluate(cdp, `performance.mark('qa-motion-next-start')`);
+  await prepareWave(cdp, 2);
+  const nextSpawnAttempt = await advanceUntilCurrentMotionCanSpawn(cdp);
+  assert(
+    nextSpawnAttempt > 0,
+    `${viewport.label}: production Veil Operator never opened the next-wave spawn gate`,
+  );
+  await evaluate(cdp, `performance.mark('qa-motion-next-ready')`);
+  const nextState = await readState(cdp);
+  const nextWarm = await productionMotionSnapshot(cdp);
+  const nextStart = nextWarm.marks['qa-motion-next-start'];
+  const transitionResources = nextWarm.resources.filter(
+    (entry) => entry.startTime >= nextStart,
+  );
+  const veilTransitionResources = transitionResources.filter((entry) =>
+    entry.name.includes('/veil-operator/'),
+  );
+  const signalTransitionResources = transitionResources.filter((entry) =>
+    entry.name.includes('/signal-hunter/'),
+  );
+  assert(
+    nextState.motion?.status === 'ready' &&
+      nextState.motion?.assetId === 'veil-operator' &&
+      nextState.motion?.clip === 'advance' &&
+      nextState.motion?.authority === 'approved_release' &&
+      nextState.motion?.sourceFamily === VISUAL_FIDELITY_SOURCE_FAMILY &&
+      nextState.motion?.motionApprovalSha256 ===
+        APPROVED_MOTION_SHA256['veil-operator'] &&
+      nextState.motion?.fallbacks === 0,
+    `${viewport.label}: next route did not draw approved Veil Operator advance`,
+  );
+  assert(
+    veilTransitionResources.length === 2 &&
+      veilTransitionResources.some((entry) =>
+        entry.name.includes('/advance.json?'),
+      ) &&
+      veilTransitionResources.some((entry) =>
+        entry.name.includes('/advance.webp?'),
+      ) &&
+      signalTransitionResources.length === 1 &&
+      signalTransitionResources[0].name.includes('/set.json?') &&
+      transitionResources.every((entry) => entry.name.includes('sha256=')),
+    `${viewport.label}: route transition fetched more than the selected Veil clip plus next Signal set`,
+  );
+  await captureScreenshot(
+    cdp,
+    screenshotFile(outputDir, viewport.label, 2, '-motion-next'),
+  );
   const problems = consoleProblems(cdp.events);
-  assert(problems.length === 0, `${viewport.label}: authored-motion browser problems: ${problems.join(' | ')}`);
+  assert(problems.length === 0, `${viewport.label}: production-motion browser problems: ${problems.join(' | ')}`);
+
+  const normalizeResources = (resources) =>
+    resources
+      .map((entry) => {
+        const url = new URL(entry.name);
+        return `${url.pathname}${url.search}`;
+      })
+      .sort();
 
   return {
     viewport: viewport.label,
+    authority: frame2.motion.authority,
+    sourceFamily: frame2.motion.sourceFamily,
+    motionApprovalSha256: frame2.motion.motionApprovalSha256,
+    runtimeLineageSha256: frame2.motion.runtimeLineageSha256,
+    derivativeSetSha256: frame2.motion.derivativeSetSha256,
+    selectedProfileSha256: frame2.motion.selectedProfileSha256,
     status: frame2.motion.status,
     clip: frame2.motion.clip,
     fallbacks: frame2.motion.fallbacks,
     frames: [frame0, frame1, frame2],
     lifecycle: lifecycleStates,
     reducedMotion,
-    resourceOrder: {
-      marks: warm.marks,
-      current: currentResources,
-      next: nextResources,
+    requests: {
+      currentSetAndSelectedClip: normalizeResources(currentResources),
+      nextSetOnly: normalizeResources(nextSetResources),
+      routeTransitionSelectedClipAndNextSet:
+        normalizeResources(transitionResources),
     },
     screenshots: [
       path.relative(process.cwd(), screenshotFile(outputDir, viewport.label, 1, '-motion-frame-0')),
       path.relative(process.cwd(), screenshotFile(outputDir, viewport.label, 1, '-motion-frame-1')),
+      path.relative(process.cwd(), screenshotFile(outputDir, viewport.label, 2, '-motion-next')),
     ],
   };
 }
@@ -875,7 +960,11 @@ async function validateWave(
   reducedMotion = false,
 ) {
   await prepareWave(cdp, wave);
-  await evaluate(cdp, `window.advanceTime(17)`);
+  const spawnAttempt = await advanceUntilCurrentMotionCanSpawn(cdp);
+  assert(
+    spawnAttempt > 0,
+    `${viewport.label} wave ${wave}: current-wave motion never opened the spawn gate`,
+  );
   // Keep the actual spawn path under test, then dock the spawned target inside
   // the review-safe stage area so every captured viewport proves the art itself.
   await evaluate(cdp, `(() => {
@@ -893,6 +982,9 @@ async function validateWave(
   const state = await readState(cdp);
   const problems = consoleProblems(cdp.events);
   const enemy = state.enemy;
+  const expectedIdentity = enemy
+    ? expectedWaveIdentity(wave, enemy.label, enemy.frame)
+    : null;
 
   assert(state.routeZone === wave, `${viewport.label} wave ${wave}: route zone mismatch`);
   assert(state.packWave === wave, `${viewport.label} wave ${wave}: pack wave mismatch`);
@@ -908,7 +1000,22 @@ async function validateWave(
   assert(state.viewport?.overflowX === 0, `${viewport.label} wave ${wave}: horizontal overflow detected`);
   assert(state.extra?.overflowY === 0, `${viewport.label} wave ${wave}: vertical overflow detected`);
   assert(enemy, `${viewport.label} wave ${wave}: no spawned enemy`);
-  assert(allowedLabelFrame(wave, enemy.label, enemy.frame), `${viewport.label} wave ${wave}: unexpected ${enemy.label}/${enemy.frame}`);
+  assert(expectedIdentity, `${viewport.label} wave ${wave}: unexpected ${enemy.label}/${enemy.frame}`);
+  assert(
+    state.motion?.assetId === expectedIdentity.assetId &&
+      state.motion?.status === 'ready' &&
+      state.motion?.clip === 'advance' &&
+      state.motion?.fallbacks === 0 &&
+      state.motion?.authority === 'approved_release' &&
+      state.motion?.sourceFamily === VISUAL_FIDELITY_SOURCE_FAMILY &&
+      state.motion?.motionApprovalSha256 ===
+        APPROVED_MOTION_SHA256[expectedIdentity.assetId] &&
+      state.motion?.selectedProfileSha256 ===
+        VISUAL_FIDELITY_PROFILE_SHA256 &&
+      /^[a-f0-9]{64}$/.test(state.motion?.runtimeLineageSha256 || '') &&
+      /^[a-f0-9]{64}$/.test(state.motion?.derivativeSetSha256 || ''),
+    `${viewport.label} wave ${wave}: enemy is not backed by the approved V4 release (${JSON.stringify(state.motion)})`,
+  );
   if (wave === 10) {
     assert(
       state.bossTimerY >= state.extra.stageHudBottomY + 2,
@@ -936,6 +1043,10 @@ async function validateWave(
     mode: reducedMotion ? 'reduced' : 'standard',
     label: enemy.label,
     frame: enemy.frame,
+    assetId: state.motion.assetId,
+    authority: state.motion.authority,
+    motionApprovalSha256: state.motion.motionApprovalSha256,
+    runtimeLineageSha256: state.motion.runtimeLineageSha256,
     hpRatio: enemy.hpRatio,
     screenshot: path.relative(
       process.cwd(),
@@ -1035,7 +1146,7 @@ try {
   await waitForChrome(port, chromeStderrRef);
 
   const findings = [];
-  const motionFindings = [];
+  const productionMotionFindings = [];
   for (const viewport of VIEWPORTS) {
     const { cdp, page } = await bootstrapPage(port, viewport, smokeUrl(1, true));
     try {
@@ -1051,7 +1162,9 @@ try {
         );
       }
       await setOsReducedMotion(cdp, false);
-      motionFindings.push(await validateSyntheticMotion(cdp, viewport, OUTPUT_DIR, port));
+      productionMotionFindings.push(
+        await validateProductionMotion(cdp, viewport, OUTPUT_DIR, port),
+      );
     } finally {
       cdp.close();
       await closePage(port, page.id);
@@ -1059,15 +1172,21 @@ try {
   }
 
   const noGate = await verifyNoGatePage(port, VIEWPORTS[0]);
-  console.log(JSON.stringify({
+  const report = {
+    grammar: 'apn-gaf2d-production-v4-browser-evidence-v1',
     status: 'ok',
     baseUrl: BASE_URL,
     outputDir: path.relative(process.cwd(), OUTPUT_DIR),
     verified: findings.length,
     findings,
-    authoredMotion: motionFindings,
+    productionMotion: productionMotionFindings,
     noGate,
-  }, null, 2));
+  };
+  fs.writeFileSync(
+    path.join(OUTPUT_DIR, 'report.json'),
+    `${JSON.stringify(report, null, 2)}\n`,
+  );
+  console.log(JSON.stringify(report, null, 2));
 } finally {
   chrome?.kill('SIGTERM');
   await Promise.race([chromeExit, delay(3000)]);

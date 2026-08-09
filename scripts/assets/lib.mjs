@@ -15,7 +15,7 @@ export const MOTION_BUDGETS = Object.freeze({
   commonCompressed: 160 * 1024,
   bossCompressed: 240 * 1024,
   heroCompressed: 640 * 1024,
-  newMotionCompressed: Math.floor(1.8 * 1024 * 1024),
+  newMotionCompressed: 3.5 * 1024 * 1024,
   commonDecoded: 6 * 1024 * 1024,
   bossDecoded: 8 * 1024 * 1024,
   waveDecoded: 32 * 1024 * 1024,
@@ -161,6 +161,94 @@ export function validatePackManifest(pack, label = pack?.id || 'pack') {
           }
           if (!record || typeof record !== 'object' || Array.isArray(record)) {
             errors.push(`${motionLabel}: motion record must be an object`);
+            continue;
+          }
+          const perClipSource =
+            typeof record.set === 'string' &&
+            typeof record.setSha256 === 'string' &&
+            record.clips &&
+            typeof record.clips === 'object' &&
+            !Array.isArray(record.clips);
+          if (perClipSource) {
+            rejectUnknownProperties(
+              record,
+              new Set([
+                'authority',
+                'role',
+                'basePath',
+                'set',
+                'setSha256',
+                'clips',
+                'sourceFamily',
+                'consumerScale',
+                'selectedProfileSha256',
+              ]),
+              motionLabel,
+              errors,
+            );
+            if (record.sourceFamily !== 'authored-semantic-v4') {
+              errors.push(`${motionLabel}: sourceFamily must equal "authored-semantic-v4"`);
+            }
+            if (!/^[0-9a-f]{64}$/.test(record.setSha256 || '')) {
+              errors.push(`${motionLabel}: setSha256 must be 64 lowercase hex characters`);
+            }
+            if (!/^[0-9a-f]{64}$/.test(record.selectedProfileSha256 || '')) {
+              errors.push(
+                `${motionLabel}: selectedProfileSha256 must be 64 lowercase hex characters`,
+              );
+            }
+            const expectedSet =
+              `assets/game-packs/${pack.id}/characters/${assetId}/set.json`;
+            if (record.set !== expectedSet) {
+              errors.push(`${motionLabel}: set must equal ${expectedSet}`);
+            }
+            if (typeof record.basePath === 'string') {
+              const expectedBase =
+                `assets/game-packs/${pack.id}/characters/${assetId}/`;
+              if (record.basePath !== expectedBase) {
+                errors.push(`${motionLabel}: basePath must equal ${expectedBase}`);
+              }
+            }
+            if (typeof record.set === 'string') seenPaths.add(record.set);
+            for (const [clipName, clipRecord] of Object.entries(record.clips)) {
+              if (!clipRecord || typeof clipRecord !== 'object' || Array.isArray(clipRecord)) {
+                errors.push(`${motionLabel}/clips/${clipName}: clip source must be an object`);
+                continue;
+              }
+              rejectUnknownProperties(
+                clipRecord,
+                new Set(['descriptor', 'descriptorSha256', 'image', 'imageSha256']),
+                `${motionLabel}/clips/${clipName}`,
+                errors,
+              );
+              if (!/^[0-9a-f]{64}$/.test(clipRecord.descriptorSha256 || '')) {
+                errors.push(
+                  `${motionLabel}/clips/${clipName}: descriptorSha256 must be 64 lowercase hex characters`,
+                );
+              }
+              if (!/^[0-9a-f]{64}$/.test(clipRecord.imageSha256 || '')) {
+                errors.push(
+                  `${motionLabel}/clips/${clipName}: imageSha256 must be 64 lowercase hex characters`,
+                );
+              }
+              for (const [field, extension] of [
+                ['descriptor', 'json'],
+                ['image', 'webp'],
+              ]) {
+                const value = clipRecord[field];
+                if (typeof value === 'string' && seenPaths.has(value)) {
+                  errors.push(`${motionLabel}: duplicate motion path ${value}`);
+                }
+                if (typeof value === 'string') seenPaths.add(value);
+                const expected =
+                  `assets/game-packs/${pack.id}/characters/${assetId}/${clipName}.${extension}`;
+                if (value !== expected) {
+                  errors.push(
+                    `${motionLabel}/clips/${clipName}: ${field} must equal ${expected}`,
+                  );
+                }
+              }
+            }
             continue;
           }
           rejectUnknownProperties(

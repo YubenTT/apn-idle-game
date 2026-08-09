@@ -372,7 +372,8 @@ Compressed limits:
 - common/event creature bundle: `≤ 160 KB` each;
 - pack-declared boss bundle: `≤ 240 KB`;
 - all Hero WebP clips: `≤ 640 KB`;
-- all new/replaced first-pack motion WebP + JSON: `≤ 1.8 MB`;
+- all new/replaced first-pack motion WebP + JSON: `≤ 3.5 MiB`
+  (`3,670,016` bytes);
 - measured first-playable asset payload: `< 5,242,879 bytes`.
 
 Decoded limits:

@@ -116,9 +116,7 @@ export function checkEconomyColorContract() {
     },
     {
       name: 'Notes confetti',
-      pass: gameLines.some(
-        (line) => line.includes('confetti(') && line.includes("tone('notes')"),
-      ),
+      pass: /confetti\([\s\S]{0,180}\[\s*tone\('notes'\)/.test(gameJs),
     },
   ];
   const missingEventRoles = eventRoleChecks

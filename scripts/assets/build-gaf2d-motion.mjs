@@ -6,7 +6,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { validateMotionBundle } from '../../js/motion-bundle.js';
+import {
+  validateMotionBundle,
+  validateMotionClipDescriptor,
+  validateMotionSetIndex,
+} from '../../js/motion-bundle.js';
 import { MOTION_BUDGETS } from './lib.mjs';
 
 const SHA256 = /^[a-f0-9]{64}$/;
@@ -152,8 +156,68 @@ export const DERIVATIVE_TOOLCHAIN = Object.freeze({
 export const DERIVATIVE_TOOLCHAIN_SHA256 = canonicalSha256(
   DERIVATIVE_TOOLCHAIN,
 );
+const V4_RUNTIME_TOOLCHAIN = Object.freeze({
+  grammar: 'apn-gaf2d-preview-matrix-toolchain-v1',
+  compositor: Object.freeze({
+    name: 'HashBoundCopy',
+    version: 'selected-webp-v1',
+  }),
+  operations: Object.freeze([
+    'validate:v4-selected-webp:hash-bound-source',
+    'validate:v4-selected-webp:exact-copy-byte-proof',
+    'copy:v4-selected-webp:exact-media-bytes',
+  ]),
+});
+
+function writeCanonical(file, value) {
+  const bytes = Buffer.from(canonicalJson(value), 'utf8');
+  fs.writeFileSync(file, bytes, { flag: 'wx' });
+  return bytes;
+}
+
+function v4ConsumerRoleFor(assetId, role) {
+  if (assetId === 'site-sentinel') return 'elite';
+  if (role === 'boss') return 'boss';
+  return 'standard';
+}
+
+function markerIndices(sourceClip, assetId, clipName) {
+  return Object.fromEntries(
+    Object.entries(sourceClip.markers).map(([role, frameId]) => {
+      const index = sourceClip.frame_ids.indexOf(frameId);
+      assert(index >= 0, `${assetId}/${clipName} marker "${role}" leaves its clip`);
+      return [role, index];
+    }),
+  );
+}
+
+function v4ClipPresentation(trim, consumerScale, clipName, sourceSha256) {
+  const visibleHeight = Math.min(trim.height, consumerScale.source_visible_pixels);
+  return {
+    schemaVersion: 1,
+    scaleContract: 'visible-body',
+    reference: {
+      clip: clipName,
+      frameIndex: 0,
+      sourceSha256,
+    },
+    visibleBounds: {
+      x: 0,
+      y: trim.height - visibleHeight,
+      width: trim.width,
+      height: visibleHeight,
+    },
+    motionBounds: {
+      x: 0,
+      y: 0,
+      width: trim.width,
+      height: trim.height,
+    },
+  };
+}
 
 function readBoundedFile(file, maximumBytes, label) {
+  assert(fs.existsSync(file), `${label} is missing`);
   const stats = fs.lstatSync(file);
   assert(stats.isFile() && !stats.isSymbolicLink(), `${label} must be a regular file`);
   assert(stats.size > 0 && stats.size <= maximumBytes, `${label} exceeds its byte boundary`);
@@ -201,12 +265,17 @@ function resolveReleaseFile(releaseDir, relative, label) {
 
 function validateRelease(gaf2dProject, assetId) {
   const project = path.resolve(gaf2dProject);
+  assert(fs.existsSync(project), 'GAF2D project root is missing');
   const projectStats = fs.lstatSync(project);
   assert(
     projectStats.isDirectory() && !projectStats.isSymbolicLink(),
     'GAF2D project root must be a real directory',
   );
   const releaseDir = path.join(project, 'assets', assetId, 'export', 'release');
+  assert(
+    fs.existsSync(releaseDir),
+    'current GAF2D export/release directory is missing or unsafe',
+  );
   const releaseStats = fs.lstatSync(releaseDir);
   assert(
     releaseStats.isDirectory() && !releaseStats.isSymbolicLink(),
@@ -1250,6 +1319,813 @@ function validateRuntimeLineage(
   };
 }
 
+function validateMotionApprovalV4(approval, assetId, contract, approvalSha256) {
+  exactKeys(
+    approval,
+    [
+      'approved_at',
+      'approver_label',
+      'candidate',
+      'candidate_sha256',
+      'review_evidence_path',
+      'review_evidence_sha256',
+      'review_html_path',
+      'review_html_sha256',
+      'schema_version',
+    ],
+    'motion-set approval v4',
+  );
+  assert(approval.schema_version === 4, 'motion-set approval v4 schema must be 4');
+  assert(
+    typeof approval.approver_label === 'string' && approval.approver_label.length > 0,
+    'motion-set approval v4 requires a human approver label',
+  );
+  assert(
+    typeof approval.approved_at === 'string' &&
+      Number.isFinite(Date.parse(approval.approved_at)),
+    'motion-set approval v4 timestamp is invalid',
+  );
+  for (const field of [
+    'candidate_sha256',
+    'review_evidence_sha256',
+    'review_html_sha256',
+  ]) {
+    assert(SHA256.test(approval[field]), `motion-set approval v4 ${field} is invalid`);
+  }
+  for (const field of ['review_evidence_path', 'review_html_path']) {
+    portablePath(approval[field], `motion-set approval v4 ${field}`);
+  }
+  const candidate = approval.candidate;
+  exactKeys(
+    candidate,
+    [
+      'asset_id',
+      'candidate_id',
+      'fidelity_evidence',
+      'grammar',
+      'lossless_masters',
+      'runtime_derivatives',
+      'semantic_authority',
+      'source_manifest_version',
+    ],
+    'motion-set candidate v4',
+  );
+  assert(candidate.grammar === 'gaf2d-motion-set-v4', 'motion-set candidate must use V4');
+  assert(candidate.asset_id === assetId, 'motion-set candidate targets a different asset');
+  assert(GAF_IDENTIFIER.test(candidate.candidate_id), 'motion-set candidate v4 ID is invalid');
+  assert(
+    Number.isInteger(candidate.source_manifest_version) &&
+      candidate.source_manifest_version >= 1,
+    'motion-set candidate v4 source manifest version is invalid',
+  );
+  assert(
+    approval.candidate_sha256 === canonicalSha256(candidate),
+    'motion-set candidate v4 metadata hash is stale',
+  );
+  const derivatives = Array.isArray(candidate.runtime_derivatives)
+    ? candidate.runtime_derivatives
+    : [];
+  assert(derivatives.length > 0, 'motion-set candidate v4 has no runtime derivative');
+  const approvedDerivative = derivatives.find(
+    (entry) =>
+      entry?.grammar === 'gaf2d-runtime-derivative-binding-v4' &&
+      entry?.manifest?.path ===
+        `motion/authored-semantic-v4/${assetId}/derivative-set.json`,
+  );
+  assert(approvedDerivative, 'motion-set candidate v4 lacks the canonical visual-fidelity derivative');
+  assert(
+    SHA256.test(approvedDerivative.manifest?.sha256 || ''),
+    'motion-set candidate v4 manifest hash is invalid',
+  );
+  assert(
+    approvedDerivative.files?.every(
+      (file) =>
+        isObject(file) &&
+        isPortablePath(file.path) &&
+        SHA256.test(file.sha256 || ''),
+    ),
+    'motion-set candidate v4 runtime file binding is invalid',
+  );
+  assert(
+    Array.isArray(contract?.clipNames) &&
+      contract.clipNames.length > 0 &&
+      contract.clipNames.every((clipName) =>
+        approvedDerivative.files.some((file) =>
+          file.path ===
+            `motion/authored-semantic-v4/${assetId}/clips/${clipName}/descriptor.json`,
+        ),
+      ),
+    'motion-set candidate v4 clip membership is stale',
+  );
+  return {
+    approval,
+    approvalSha256,
+    candidate,
+    derivative: approvedDerivative,
+  };
+}
+
+function validateVisualFidelityDerivativeSet(
+  release,
+  assetId,
+  contract,
+  derivativeFacts,
+) {
+  const relative = 'runtime/atlas/v4/derivative-set.json';
+  const record = release.byPath.get(relative);
+  assert(record, 'visual-fidelity derivative-set export is missing');
+  const payload = readJson(record.absolute, 'visual-fidelity derivative-set');
+  exactKeys(
+    payload,
+    [
+      'asset_id',
+      'authority_status',
+      'clip_count',
+      'clips',
+      'consumer_scale',
+      'contract',
+      'creative_approval',
+      'frame_count',
+      'master_set_sha256',
+      'profile',
+      'runtime_density',
+      'schema_version',
+      'semantic_clip_order',
+      'v3_lineage_sha256',
+    ],
+    'visual-fidelity derivative-set',
+  );
+  assert(payload.schema_version === 1, 'visual-fidelity derivative-set schema must be 1');
+  assert(
+    payload.contract === 'apn-visual-fidelity-v4-derivative-set-v1',
+    'visual-fidelity derivative-set contract is invalid',
+  );
+  assert(payload.asset_id === assetId, 'visual-fidelity derivative-set targets a different asset');
+  assert(
+    payload.authority_status === 'unapproved_candidate' &&
+      payload.creative_approval === 'human_required',
+    'visual-fidelity derivative-set approval state drifted',
+  );
+  assert(
+    payload.clip_count === contract.clipNames.length &&
+      Array.isArray(payload.clips) &&
+      payload.clips.length === contract.clipNames.length,
+    'visual-fidelity derivative-set clip count is stale',
+  );
+  assert(
+    Array.isArray(payload.semantic_clip_order) &&
+      payload.semantic_clip_order.length === contract.clipNames.length &&
+      payload.semantic_clip_order.every(
+        (entry, index) => entry?.clip_id === contract.clipNames[index],
+      ),
+    'visual-fidelity derivative-set semantic clip order is stale',
+  );
+  assert(
+    payload.clips.every(
+      (clip, index) =>
+        isObject(clip) &&
+        clip.clip_id === contract.clipNames[index] &&
+        SHA256.test(clip.descriptor_sha256 || '') &&
+        SHA256.test(clip.media_file_sha256 || ''),
+    ),
+    'visual-fidelity derivative-set clip authority is invalid',
+  );
+  assert(
+    payload.profile?.profile_id === 'lossless-webp' &&
+      SHA256.test(payload.profile?.profile_sha256 || '') &&
+      SHA256.test(payload.profile?.selection_authority_sha256 || ''),
+    'visual-fidelity derivative-set profile binding is invalid',
+  );
+  assert(
+    payload.consumer_scale?.role === derivativeFacts.derivative.consumer_scale?.role,
+    'visual-fidelity derivative-set consumer scale role drifted',
+  );
+  assert(
+    record.sha256 === derivativeFacts.derivative.manifest.sha256,
+    'visual-fidelity derivative-set hash drifted from the approved derivative binding',
+  );
+  const clipFiles = [];
+  const clipRecords = [];
+  for (const clip of payload.clips) {
+    const descriptorRelative =
+      `runtime/atlas/v4/clips/${clip.clip_id}/descriptor.json`;
+    const descriptorRecord = release.byPath.get(descriptorRelative);
+    assert(
+      descriptorRecord?.sha256 === clip.descriptor_sha256,
+      `visual-fidelity descriptor for "${clip.clip_id}" drifted`,
+    );
+    const evidenceRelative =
+      `runtime/atlas/v4/clips/${clip.clip_id}/evidence.json`;
+    const evidenceRecord = release.byPath.get(evidenceRelative);
+    assert(evidenceRecord, `visual-fidelity evidence for "${clip.clip_id}" is missing`);
+    const mediaRelative =
+      `runtime/atlas/v4/clips/${clip.clip_id}/derivative/lossless.webp`;
+    const mediaRecord = release.byPath.get(mediaRelative);
+    assert(
+      mediaRecord?.sha256 === clip.media_file_sha256,
+      `visual-fidelity media for "${clip.clip_id}" drifted`,
+    );
+    clipFiles.push(descriptorRelative, evidenceRelative, mediaRelative);
+    clipRecords.push({
+      clipId: clip.clip_id,
+      derivative: clip,
+      descriptorRelative,
+      descriptorRecord,
+      evidenceRelative,
+      evidenceRecord,
+      mediaRelative,
+      mediaRecord,
+    });
+  }
+  assert(
+    derivativeFacts.derivative.files.length === clipFiles.length &&
+      derivativeFacts.derivative.files.every((file) => {
+        const prefix = `motion/authored-semantic-v4/${assetId}/clips/`;
+        assert(
+          typeof file.path === 'string' && file.path.startsWith(prefix),
+          `visual-fidelity source file "${String(file.path)}" is not asset-contained`,
+        );
+        const relative = `runtime/atlas/v4/${file.path.slice(
+          `motion/authored-semantic-v4/${assetId}/`.length,
+        )}`;
+        return release.byPath.get(relative)?.sha256 === file.sha256;
+      }),
+    'approved derivative source bindings drifted from the exported V4 runtime files',
+  );
+  return {
+    authority: { relative, record, payload },
+    clipFiles: clipFiles.sort(),
+    clipRecords,
+  };
+}
+
+function validateVisualFidelityLineage(release, assetId, derivativeFacts, setFacts) {
+  const relative = 'runtime/atlas/v4/visual-fidelity-lineage.json';
+  const record = release.byPath.get(relative);
+  assert(record, 'visual-fidelity lineage export is missing');
+  const payload = readJson(record.absolute, 'visual-fidelity lineage');
+  exactKeys(
+    payload,
+    [
+      'asset_id',
+      'candidate_document_path',
+      'candidate_document_sha256',
+      'candidate_sha256',
+      'consumer_scale',
+      'derivative_id',
+      'encoder_profile_sha256',
+      'grammar',
+      'motion_approval_path',
+      'motion_approval_sha256',
+      'runtime_files',
+      'runtime_manifest_path',
+      'runtime_manifest_sha256',
+      'source_master_manifest_path',
+      'source_master_manifest_sha256',
+      'source_runtime_manifest_path',
+      'source_runtime_manifest_sha256',
+    ],
+    'visual-fidelity lineage',
+  );
+  assert(
+    payload.grammar === 'gaf2d-visual-fidelity-derivative-lineage-v4',
+    'visual-fidelity lineage grammar is invalid',
+  );
+  assert(payload.asset_id === assetId, 'visual-fidelity lineage targets a different asset');
+  assert(
+    payload.motion_approval_path ===
+      `assets/${assetId}/approved/motion/motion-set-approval-v4.json` &&
+      payload.motion_approval_sha256 === derivativeFacts.approvalSha256,
+    'visual-fidelity lineage motion approval binding drifted',
+  );
+  assert(
+    payload.candidate_sha256 === derivativeFacts.approval.candidate_sha256,
+    'visual-fidelity lineage candidate binding drifted',
+  );
+  assert(
+    payload.runtime_manifest_path ===
+      `assets/${assetId}/work/runtime/atlas/v4/derivative-set.json` &&
+      payload.runtime_manifest_sha256 === setFacts.authority.record.sha256 &&
+      payload.source_runtime_manifest_path ===
+        `motion/authored-semantic-v4/${assetId}/derivative-set.json` &&
+      payload.source_runtime_manifest_sha256 ===
+        derivativeFacts.derivative.manifest.sha256,
+    'visual-fidelity lineage runtime manifest binding drifted',
+  );
+  assert(
+    Array.isArray(payload.runtime_files) &&
+      payload.runtime_files.length === setFacts.clipFiles.length,
+    'visual-fidelity lineage runtime file set is incomplete',
+  );
+  const runtimeFiles = payload.runtime_files.map((entry) => {
+    exactKeys(entry, ['path', 'sha256'], 'visual-fidelity lineage runtime file');
+    portablePath(entry.path, 'visual-fidelity lineage runtime file path');
+    assert(
+      entry.path.startsWith(`assets/${assetId}/work/runtime/atlas/v4/`),
+      `visual-fidelity lineage file "${entry.path}" escapes the asset runtime`,
+    );
+    const relative = `runtime/${entry.path.slice(`assets/${assetId}/work/runtime/`.length)}`;
+    assert(
+      release.byPath.get(relative)?.sha256 === entry.sha256,
+      `visual-fidelity lineage file "${relative}" drifted`,
+    );
+    return relative;
+  });
+  assert(
+    arraysEqual(runtimeFiles.sort(), [...setFacts.clipFiles].sort()),
+    'visual-fidelity lineage runtime file coverage drifted',
+  );
+  return {
+    authority: { relative, record, payload },
+    runtimeFiles: runtimeFiles.sort(),
+  };
+}
+
+function validateGenericRuntimeExportLineage(release, assetId, approvalSha256, copiedRuntimeFiles) {
+  const relative = 'runtime/lineage.json';
+  const record = release.byPath.get(relative);
+  assert(record, 'runtime export lineage is missing');
+  const payload = readJson(record.absolute, 'runtime export lineage');
+  exactKeys(payload, ['schema_version', 'asset_id', 'artifacts'], 'runtime export lineage');
+  assert(payload.schema_version === 1, 'runtime export lineage schema must be 1');
+  assert(payload.asset_id === assetId, 'runtime export lineage asset drifted');
+  const covered = [];
+  for (const artifact of payload.artifacts || []) {
+    exactKeys(artifact, ['artifact_path', 'artifact_sha256', 'approvals'], 'runtime export lineage artifact');
+    portablePath(artifact.artifact_path, 'runtime export lineage artifact path');
+    assert(
+      artifact.artifact_path.startsWith(`assets/${assetId}/work/runtime/`),
+      `runtime export lineage artifact "${artifact.artifact_path}" escapes the asset runtime`,
+    );
+    const relativePath = `runtime/${artifact.artifact_path.slice(`assets/${assetId}/work/runtime/`.length)}`;
+    assert(
+      release.byPath.get(relativePath)?.sha256 === artifact.artifact_sha256,
+      `runtime export lineage artifact "${relativePath}" drifted`,
+    );
+    assert(isObject(artifact.approvals), `runtime export lineage approvals for "${relativePath}" are invalid`);
+    assert(
+      artifact.approvals.motion?.approval_kind === 'motion' &&
+        artifact.approvals.motion?.sha256 === approvalSha256,
+      `runtime export lineage motion approval for "${relativePath}" drifted`,
+    );
+    assert(
+      artifact.approvals.identity?.approval_kind === 'identity' &&
+        SHA256.test(artifact.approvals.identity?.sha256 || ''),
+      `runtime export lineage identity approval for "${relativePath}" is invalid`,
+    );
+    covered.push(relativePath);
+  }
+  assert(
+    arraysEqual(covered.sort(), [...copiedRuntimeFiles].sort()),
+    'runtime export lineage does not cover the exact copied runtime files',
+  );
+  return { authority: { relative, record, payload } };
+}
+
+function loadValidatedVisualFidelityV4Source(release, assetId, contract) {
+  const approvalRelative = 'motion/motion-set-approval-v4.json';
+  const approvalRecord = release.byPath.get(approvalRelative);
+  assert(approvalRecord, 'motion-set approval v4 export is missing');
+  const derivativeFacts = validateMotionApprovalV4(
+    readJson(approvalRecord.absolute, 'motion-set approval v4'),
+    assetId,
+    contract,
+    approvalRecord.sha256,
+  );
+  const setFacts = validateVisualFidelityDerivativeSet(
+    release,
+    assetId,
+    contract,
+    derivativeFacts,
+  );
+  const visualFidelityLineage = validateVisualFidelityLineage(
+    release,
+    assetId,
+    derivativeFacts,
+    setFacts,
+  );
+  const runtimeFiles = [
+    ...visualFidelityLineage.runtimeFiles,
+    setFacts.authority.relative,
+    visualFidelityLineage.authority.relative,
+  ].sort();
+  const genericLineage = validateGenericRuntimeExportLineage(
+    release,
+    assetId,
+    derivativeFacts.approvalSha256,
+    runtimeFiles,
+  );
+  const copiedFiles = [
+    approvalRelative,
+    genericLineage.authority.relative,
+    ...runtimeFiles,
+  ].sort();
+  return {
+    mode: 'visual-fidelity-v4-copy',
+    release,
+    approvalAuthority: {
+      relative: approvalRelative,
+      record: approvalRecord,
+      payload: derivativeFacts.approval,
+    },
+    derivativeFacts,
+    setFacts,
+    visualFidelityLineage,
+    genericLineage,
+    copiedFiles,
+  };
+}
+
+function resolveProjectFile(projectRoot, relative, label) {
+  portablePath(relative, label);
+  const absolute = path.resolve(projectRoot, ...relative.split('/'));
+  const root = path.resolve(projectRoot);
+  assert(
+    absolute.startsWith(`${root}${path.sep}`),
+    `${label} escapes the GAF2D project`,
+  );
+  return absolute;
+}
+
+function readTrackedProjectJson(projectRoot, relative, expectedSha256, label) {
+  assert(SHA256.test(expectedSha256 || ''), `${label} hash is invalid`);
+  const absolute = resolveProjectFile(projectRoot, relative, label);
+  const bytes = readBoundedFile(absolute, MAX_JSON_BYTES, label);
+  assert(sha256Bytes(bytes) === expectedSha256, `${label} drifted`);
+  return {
+    absolute,
+    bytes,
+    value: JSON.parse(bytes.toString('utf8')),
+  };
+}
+
+function readTrackedProjectBytes(projectRoot, relative, expectedSha256, label) {
+  assert(SHA256.test(expectedSha256 || ''), `${label} hash is invalid`);
+  const absolute = resolveProjectFile(projectRoot, relative, label);
+  const bytes = readBoundedFile(absolute, MAX_ARTIFACT_BYTES, label);
+  assert(sha256Bytes(bytes) === expectedSha256, `${label} drifted`);
+  return { absolute, bytes };
+}
+
+function loadValidatedVisualFidelityProjection(source, role) {
+  const semanticAuthority = source.derivativeFacts.approval.candidate.semantic_authority;
+  exactKeys(
+    semanticAuthority,
+    [
+      'acting_contract',
+      'approved_identity_sha256',
+      'batch_summary',
+      'candidate_document',
+      'candidate_sha256',
+      'canonical_root_track',
+      'grammar',
+      'pose_authority',
+      'pose_manifest',
+      'temporal_evidence',
+    ],
+    'visual-fidelity semantic authority',
+  );
+  assert(
+    semanticAuthority.grammar === 'gaf2d-semantic-authority-v3-binding-v4',
+    'visual-fidelity semantic authority grammar is invalid',
+  );
+  const candidateRecord = readTrackedProjectJson(
+    source.release.project,
+    semanticAuthority.candidate_document.path,
+    semanticAuthority.candidate_document.sha256,
+    'V3 semantic candidate document',
+  );
+  const candidate = candidateRecord.value;
+  assert(
+    candidate.asset_id === source.release.manifest.asset_id &&
+      candidate.candidate_id.startsWith(`${source.release.manifest.asset_id}-`),
+    'V3 semantic candidate binding drifted',
+  );
+  const batchRecord = readTrackedProjectJson(
+    source.release.project,
+    semanticAuthority.batch_summary.path,
+    semanticAuthority.batch_summary.sha256,
+    'V3 batch summary',
+  );
+  const batch = batchRecord.value;
+  const batchAsset = (Array.isArray(batch.assets) ? batch.assets : []).find(
+    (entry) => entry?.asset_id === source.release.manifest.asset_id,
+  );
+  assert(batchAsset, 'V3 batch summary asset record is missing');
+  const batchBase = path.posix.dirname(semanticAuthority.batch_summary.path);
+  const clipManifestRecord = readTrackedProjectJson(
+    source.release.project,
+    path.posix.join(batchBase, batchAsset.clip_manifest_path),
+    batchAsset.clip_manifest_sha256,
+    'V3 clip manifest',
+  );
+  const clipManifest = clipManifestRecord.value;
+  const qaRecord = readTrackedProjectJson(
+    source.release.project,
+    path.posix.join(batchBase, batchAsset.qa_summary_path),
+    batchAsset.qa_summary_sha256,
+    'V3 QA summary',
+  );
+  const qa = qaRecord.value;
+  readTrackedProjectJson(
+    source.release.project,
+    semanticAuthority.temporal_evidence.path,
+    semanticAuthority.temporal_evidence.sha256,
+    'V3 temporal evidence',
+  );
+  const clips = [];
+  for (const clipRecord of source.setFacts.clipRecords) {
+    const descriptor = readJson(
+      clipRecord.descriptorRecord.absolute,
+      `${clipRecord.clipId} V4 clip descriptor`,
+    );
+    assert(
+      descriptor.evidence?.sha256 === clipRecord.evidenceRecord.sha256 &&
+        descriptor.evidence?.path ===
+          `${source.release.manifest.asset_id}/clips/${clipRecord.clipId}/evidence.json`,
+      `visual-fidelity evidence binding for "${clipRecord.clipId}" drifted`,
+    );
+    assert(
+      descriptor.media?.file_sha256 === clipRecord.mediaRecord.sha256 &&
+        descriptor.media?.path === clipRecord.derivative.media_path,
+      `visual-fidelity media binding for "${clipRecord.clipId}" drifted`,
+    );
+    const sourceAuthority = descriptor.source_authority;
+    const sourceClip = candidate.clips?.[clipRecord.clipId];
+    const clipManifestClip = clipManifest.clips?.[clipRecord.clipId];
+    const qaClip = qa.clips?.[clipRecord.clipId];
+    assert(sourceClip, `V3 semantic clip "${clipRecord.clipId}" is missing`);
+    assert(clipManifestClip, `V3 clip manifest "${clipRecord.clipId}" is missing`);
+    assert(qaClip, `V3 QA clip "${clipRecord.clipId}" is missing`);
+    assert(
+      sourceAuthority?.v3_acting_contract_sha256 === semanticAuthority.acting_contract.sha256 &&
+        sourceAuthority?.v3_batch_summary_path === semanticAuthority.batch_summary.path &&
+        sourceAuthority?.v3_batch_summary_sha256 === semanticAuthority.batch_summary.sha256 &&
+        sourceAuthority?.v3_clip_manifest_path === batchAsset.clip_manifest_path &&
+        sourceAuthority?.v3_clip_manifest_sha256 === batchAsset.clip_manifest_sha256 &&
+        sourceAuthority?.v3_pose_manifest_path === batchAsset.pose_manifest_path &&
+        sourceAuthority?.v3_pose_manifest_sha256 === batchAsset.pose_manifest_sha256 &&
+        sourceAuthority?.v3_pose_authority_path === batchAsset.pose_authority_path &&
+        sourceAuthority?.v3_pose_authority_sha256 === batchAsset.pose_authority_sha256 &&
+        sourceAuthority?.v3_producer_clip_manifest_path ===
+          batchAsset.producer_clip_manifest_path &&
+        sourceAuthority?.v3_producer_clip_manifest_sha256 ===
+          batchAsset.producer_clip_manifest_sha256 &&
+        sourceAuthority?.v3_transform_timeline_sha256 ===
+          clipManifestClip.transform_timeline_sha256,
+      `visual-fidelity source authority for "${clipRecord.clipId}" drifted`,
+    );
+    assert(
+      Array.isArray(qaClip.body_pose_sha256) &&
+        qaClip.body_pose_sha256.length === descriptor.frames.length,
+      `V3 QA body pose projection for "${clipRecord.clipId}" drifted`,
+    );
+    clips.push({
+      clipId: clipRecord.clipId,
+      descriptor,
+      descriptorSha256: clipRecord.descriptorRecord.sha256,
+      mediaSha256: clipRecord.mediaRecord.sha256,
+      mediaBytes: fs.readFileSync(clipRecord.mediaRecord.absolute),
+      sourceClip,
+      bodyPoseSha256: qaClip.body_pose_sha256,
+    });
+  }
+  return {
+    assetId: source.release.manifest.asset_id,
+    role,
+    candidate,
+    candidateSha256: semanticAuthority.candidate_sha256,
+    temporalEvidenceSha256: semanticAuthority.temporal_evidence.sha256,
+    qaSummarySha256: batchAsset.qa_summary_sha256,
+    batchSummarySha256: semanticAuthority.batch_summary.sha256,
+    manifestVersion: source.derivativeFacts.approval.candidate.source_manifest_version,
+    derivativeSetSha256: source.setFacts.authority.record.sha256,
+    masterSetSha256: source.setFacts.authority.payload.master_set_sha256,
+    selectedProfileSha256: source.setFacts.authority.payload.profile.profile_sha256,
+    v3LineageSha256: source.setFacts.authority.payload.v3_lineage_sha256,
+    consumerScale: source.setFacts.authority.payload.consumer_scale,
+    motionApprovalSha256: source.approvalAuthority.record.sha256,
+    visualFidelityLineageSha256:
+      source.visualFidelityLineage.authority.record.sha256,
+    runtimeLineageSha256: source.genericLineage.authority.record.sha256,
+    clips,
+  };
+}
+
+function buildApprovedVisualFidelityMotionSet(source, outputDirectory) {
+  fs.mkdirSync(outputDirectory, { recursive: true });
+  const setClips = {};
+  const setLineage = {
+    sourceBatchSha256: source.batchSummarySha256,
+    derivativeSetSha256: source.derivativeSetSha256,
+    masterSetSha256: source.masterSetSha256,
+    selectedProfileSha256: source.selectedProfileSha256,
+    v3LineageSha256: source.v3LineageSha256,
+  };
+  const setReleaseLineage = {
+    motionApprovalSha256: source.motionApprovalSha256,
+    derivativeSetSha256: source.derivativeSetSha256,
+    visualFidelityLineageSha256: source.visualFidelityLineageSha256,
+    runtimeLineageSha256: source.runtimeLineageSha256,
+  };
+  const descriptorBuilds = new Map();
+  let aggregateTrim = null;
+  let aggregatePresentation = null;
+  let encoderArguments = null;
+  for (const clipSource of source.clips) {
+    const runtimeCanvas = clipSource.descriptor.runtime_canvas;
+    const trim = { ...clipSource.descriptor.packing.source_trim };
+    const pivot = {
+      x:
+        clipSource.descriptor.packing.shared_pivot.runtime_canvas_pixels[0] /
+        runtimeCanvas[0],
+      y:
+        clipSource.descriptor.packing.shared_pivot.runtime_canvas_pixels[1] /
+        runtimeCanvas[1],
+    };
+    const frames = clipSource.descriptor.frames.map((frame, index) => ({
+      x: frame.atlas_rect[0],
+      y: frame.atlas_rect[1],
+      width: frame.atlas_rect[2],
+      height: frame.atlas_rect[3],
+      sourceSha256: frame.master.file_sha256,
+      bodyPoseSha256: clipSource.bodyPoseSha256[index],
+    }));
+    const projected = {
+      grammar: 'gaf2d-motion-clip-v2',
+      authority: 'approved_release',
+      status: 'approved',
+      sourceFamily: 'authored-semantic-v4',
+      assetId: source.assetId,
+      name: clipSource.clipId,
+      playback: clipSource.sourceClip.playback,
+      fps: clipSource.sourceClip.fps,
+      sourceFps: clipSource.sourceClip.source_fps,
+      cadenceProfile: clipSource.sourceClip.cadence_profile,
+      authoringMethod: clipSource.sourceClip.authoring_method,
+      interpolationMethod: clipSource.sourceClip.interpolation_method,
+      holds: clipSource.sourceClip.holds.map((hold) => ({
+        startIndex: hold.start_index,
+        endIndex: hold.end_index,
+        reason: hold.reason,
+      })),
+      markers: markerIndices(clipSource.sourceClip, source.assetId, clipSource.clipId),
+      frames,
+      atlas: {
+        width: clipSource.descriptor.media.decoded_canvas[0],
+        height: clipSource.descriptor.media.decoded_canvas[1],
+        bytes: clipSource.mediaBytes.length,
+        sha256: clipSource.mediaSha256,
+      },
+      trim,
+      pivot,
+      presentation: v4ClipPresentation(
+        trim,
+        clipSource.descriptor.consumer_scale,
+        clipSource.clipId,
+        clipSource.descriptor.frames[0].master.file_sha256,
+      ),
+      lineage: {
+        ...setLineage,
+        sourceDescriptorSha256: clipSource.descriptorSha256,
+        sourceEvidenceSha256: clipSource.descriptor.evidence.sha256,
+        sourceMediaSha256: clipSource.mediaSha256,
+        masterInventorySha256: clipSource.descriptor.master_inventory_sha256,
+      },
+      releaseLineage: {
+        sourceDescriptorSha256: clipSource.descriptorSha256,
+        sourceEvidenceSha256: clipSource.descriptor.evidence.sha256,
+        sourceMediaSha256: clipSource.mediaSha256,
+        masterInventorySha256: clipSource.descriptor.master_inventory_sha256,
+        ...setReleaseLineage,
+      },
+      encoder: {
+        name: 'cwebp',
+        version: '1.6.0',
+        arguments: [...clipSource.descriptor.profile.arguments],
+        profileSha256: source.selectedProfileSha256,
+      },
+    };
+    encoderArguments = encoderArguments ?? projected.encoder.arguments;
+    assert(
+      JSON.stringify(projected.encoder.arguments) === JSON.stringify(encoderArguments),
+      `${source.assetId} V4 projected clip encoder arguments drifted`,
+    );
+    const descriptorPath = path.join(outputDirectory, `${clipSource.clipId}.json`);
+    const mediaPath = path.join(outputDirectory, `${clipSource.clipId}.webp`);
+    const descriptorBytes = writeCanonical(descriptorPath, projected);
+    fs.writeFileSync(mediaPath, clipSource.mediaBytes, { flag: 'wx' });
+    assert(
+      sha256File(mediaPath) === clipSource.mediaSha256,
+      `${source.assetId}/${clipSource.clipId} exact WebP copy changed after write`,
+    );
+    setClips[clipSource.clipId] = {
+      descriptor: `${clipSource.clipId}.json`,
+      descriptorSha256: sha256Bytes(descriptorBytes),
+      image: `${clipSource.clipId}.webp`,
+      imageSha256: clipSource.mediaSha256,
+    };
+    descriptorBuilds.set(clipSource.clipId, {
+      descriptor: projected,
+      descriptorSha256: sha256Bytes(descriptorBytes),
+      imageSha256: clipSource.mediaSha256,
+      imageBytes: clipSource.mediaBytes.length,
+    });
+    if (!aggregatePresentation) {
+      aggregateTrim = trim;
+      aggregatePresentation = projected.presentation;
+    }
+  }
+  const frameSize = {
+    width: source.consumerScale.runtime_canvas_class,
+    height: source.consumerScale.runtime_canvas_class,
+  };
+  const set = {
+    grammar: 'gaf2d-motion-set-index-v2',
+    authority: 'approved_release',
+    status: 'approved',
+    sourceFamily: 'authored-semantic-v4',
+    assetId: source.assetId,
+    role: source.role,
+    frameSize,
+    trim: aggregateTrim,
+    pivot: { x: 0.5, y: 1 },
+    presentation: aggregatePresentation,
+    clips: setClips,
+    consumerScale: {
+      grammar: source.consumerScale.grammar,
+      role: source.consumerScale.role,
+      maximumCssBodyHeight: source.consumerScale.maximum_css_body_height,
+      maximumDpr: source.consumerScale.maximum_dpr_numerator,
+      displayedDevicePixels: source.consumerScale.displayed_device_pixels,
+      runtimeCanvasClass: source.consumerScale.runtime_canvas_class,
+      sourceVisiblePixels: source.consumerScale.source_visible_pixels,
+      scaleRatio: {
+        numerator: source.consumerScale.scale_ratio.numerator,
+        denominator: source.consumerScale.scale_ratio.denominator,
+      },
+    },
+    previewLineage: {
+      candidateId: source.candidate.candidate_id,
+      candidateSha256: source.candidateSha256,
+      temporalEvidenceSha256: source.temporalEvidenceSha256,
+      qaSummarySha256: source.qaSummarySha256,
+      batchSummarySha256: source.batchSummarySha256,
+      sourceManifestVersion: source.manifestVersion,
+    },
+    lineage: setLineage,
+    releaseLineage: setReleaseLineage,
+    toolchain: {
+      grammar: V4_RUNTIME_TOOLCHAIN.grammar,
+      compositor: { ...V4_RUNTIME_TOOLCHAIN.compositor },
+      encoder: {
+        name: 'cwebp',
+        version: '1.6.0',
+        arguments: [...encoderArguments],
+        profileSha256: source.selectedProfileSha256,
+      },
+      operations: [...V4_RUNTIME_TOOLCHAIN.operations],
+      profileSha256: source.selectedProfileSha256,
+    },
+  };
+  const setErrors = validateMotionSetIndex(set, source.assetId, {
+    role: source.role,
+    consumerRole: v4ConsumerRoleFor(source.assetId, source.role),
+    selectedProfileSha256: source.selectedProfileSha256,
+  });
+  assert(
+    setErrors.length === 0,
+    `${source.assetId} V4 motion-set index failed runtime validation: ${setErrors.join('; ')}`,
+  );
+  for (const [clipName, build] of descriptorBuilds) {
+    const descriptorErrors = validateMotionClipDescriptor(
+      build.descriptor,
+      clipName,
+      set,
+      {
+        role: source.role,
+        consumerRole: v4ConsumerRoleFor(source.assetId, source.role),
+        descriptorSha256: build.descriptorSha256,
+        imageSha256: build.imageSha256,
+        imageBytes: build.imageBytes,
+        selectedProfileSha256: source.selectedProfileSha256,
+      },
+    );
+    assert(
+      descriptorErrors.length === 0,
+      `${source.assetId}/${clipName} V4 clip descriptor failed runtime validation: ${descriptorErrors.join('; ')}`,
+    );
+  }
+  const setBytes = writeCanonical(path.join(outputDirectory, 'set.json'), set);
+  return {
+    setSha256: sha256Bytes(setBytes),
+    files: Object.fromEntries(
+      ['set.json', ...source.clips.flatMap((clip) => [`${clip.clipId}.json`, `${clip.clipId}.webp`])]
+        .map((relative) => [relative, sha256File(path.join(outputDirectory, relative))]),
+    ),
+  };
+}
+
 function trustedPackRole(packFile, assetId) {
   const resolved = path.resolve(packFile);
   const pack = readJson(resolved, 'trusted APN pack manifest');
@@ -1489,13 +2365,7 @@ export function loadValidatedGaf2dMotionSource(options, contract) {
     'derivative clip contract is invalid',
   );
   for (const clipName of contract.clipNames) {
-    assert(
-      GAF_IDENTIFIER.test(clipName) &&
-        Number.isInteger(contract.frameCounts?.[clipName]) &&
-        contract.frameCounts[clipName] >= 2 &&
-        ['loop', 'progress'].includes(contract.playback?.[clipName]),
-      `derivative clip contract for "${clipName}" is invalid`,
-    );
+    assert(GAF_IDENTIFIER.test(clipName), `derivative clip contract for "${clipName}" is invalid`);
   }
   const release = validateRelease(options.gaf2dProject, assetId);
   validateCurrentGaf2dExport(
@@ -1503,6 +2373,17 @@ export function loadValidatedGaf2dMotionSource(options, contract) {
     assetId,
     options.gaf2dExecutable ?? process.env.GAF2D ?? 'gaf2d',
   );
+  if (release.byPath.has('motion/motion-set-approval-v4.json')) {
+    return loadValidatedVisualFidelityV4Source(release, assetId, contract);
+  }
+  for (const clipName of contract.clipNames) {
+    assert(
+      Number.isInteger(contract.frameCounts?.[clipName]) &&
+        contract.frameCounts[clipName] >= 2 &&
+        ['loop', 'progress'].includes(contract.playback?.[clipName]),
+      `derivative clip contract for "${clipName}" is invalid`,
+    );
+  }
   const approvalAuthority = findJsonAuthority(
     release,
     (payload) =>
@@ -1603,6 +2484,52 @@ export function buildGaf2dMotion(options) {
       ? BOSS_CREATURE_CONTRACT
       : COMMON_CREATURE_CONTRACT,
   );
+  if (source.mode === 'visual-fidelity-v4-copy') {
+    const parent = path.dirname(outputDir);
+    fs.mkdirSync(parent, { recursive: true });
+    const parentStats = fs.lstatSync(parent);
+    assert(
+      parentStats.isDirectory() && !parentStats.isSymbolicLink(),
+      'output parent must be a real directory',
+    );
+    const staged = fs.mkdtempSync(path.join(parent, `.${assetId}.motion.`));
+    let published = false;
+    try {
+      const projectedSource = loadValidatedVisualFidelityProjection(
+        source,
+        roleFacts.role,
+      );
+      const projected = buildApprovedVisualFidelityMotionSet(
+        projectedSource,
+        staged,
+      );
+      const publish = atomicPublishDirectory(staged, outputDir);
+      published = true;
+      return {
+        assetId,
+        packId: roleFacts.packId,
+        role: roleFacts.role,
+        mode: 'visual-fidelity-v4-copy',
+        outputDir,
+        files: projected.files,
+        atlas: null,
+        source: {
+          exportManifestSha256: source.release.manifestSha256,
+          motionSetApprovalSha256: source.approvalAuthority.record.sha256,
+          derivativeSetSha256: source.setFacts.authority.record.sha256,
+          visualFidelityLineageSha256:
+            source.visualFidelityLineage.authority.record.sha256,
+          runtimeLineageSha256: source.genericLineage.authority.record.sha256,
+          setSha256: projected.setSha256,
+        },
+        warnings: publish.cleanupWarning ? [publish.cleanupWarning] : [],
+      };
+    } finally {
+      if (!published && fs.existsSync(staged)) {
+        fs.rmSync(staged, { recursive: true });
+      }
+    }
+  }
   const {
     release,
     approvalAuthority,

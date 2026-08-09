@@ -179,6 +179,25 @@ process.stdout.write(
   })
 );
 process.stdout.write(
+  execFileSync(process.execPath, [fileURLToPath(new URL('./check-motion-review.mjs', import.meta.url))], {
+    encoding: 'utf8',
+  })
+);
+process.stdout.write(
+  execFileSync(
+    process.execPath,
+    [fileURLToPath(new URL('./check-motion-continuity.mjs', import.meta.url))],
+    { encoding: 'utf8' },
+  ),
+);
+process.stdout.write(
+  execFileSync(
+    process.execPath,
+    [fileURLToPath(new URL('./check-visual-fidelity-v4.mjs', import.meta.url))],
+    { encoding: 'utf8' },
+  ),
+);
+process.stdout.write(
   execFileSync(process.execPath, [fileURLToPath(new URL('./check-motion-preference.mjs', import.meta.url))], {
     encoding: 'utf8',
   })
@@ -222,6 +241,11 @@ process.stdout.write(
   execFileSync(process.execPath, [fileURLToPath(new URL('./check-gaf2d-valorant.mjs', import.meta.url))], {
     encoding: 'utf8',
   })
+);
+execFileSync(
+  process.execPath,
+  ['--check', fileURLToPath(new URL('./browser/chrome-motion-continuity.mjs', import.meta.url))],
+  { stdio: 'inherit' },
 );
 
 let fails = 0;

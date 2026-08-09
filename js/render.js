@@ -6,8 +6,9 @@ import { resolveHostClip } from './host-contract.js?v=gaf2d-motion-v1';
 import { drawHeroV2 } from './hero-v2.js?v=gaf2d-motion-v1';
 import {
   getV3Clip,
+  getV3Geometry,
   getV3Presentation,
-  pickV3,
+  resolveHeroV3Frame,
 } from './hero-v3.js?v=gaf2d-motion-v1';
 import {
   STAGE_OVERHEAD_GAP,
@@ -24,14 +25,20 @@ import {
 } from './motion-bundle.js?v=gaf2d-motion-v1';
 import {
   failMotionRecord,
+  getMotionClipRecord,
   getMotionRecord,
   motionDiagnostics,
+  pruneMotionClipResidency,
+  warmMotionClip,
 } from './motion-store.js?v=gaf2d-motion-v1';
 import { drawTarget } from './enemies-v2.js?v=gaf2d-motion-v1';
 import { drawScenery } from './scenery-v2.js?v=gaf2d-motion-v1';
 import { CREATURES, creatureKindFor } from './content.js?v=gaf2d-motion-v1';
 import { creatureClipReady, drawCreature } from './creatures.js?v=gaf2d-motion-v1';
-import { targetForEnemyType } from './wave-roster.js?v=gaf2d-motion-v1';
+import {
+  packWaveIdentityIds,
+  targetForEnemyType,
+} from './wave-roster.js?v=gaf2d-motion-v1';
 
 const LEGACY_ENEMY_PRESENTATION = legacySquarePresentation({ sourceSize: 1 });
 const LEGACY_ENEMY_INTRINSICS = Object.freeze({
@@ -156,15 +163,55 @@ export function stageRoleForEnemy(enemy) {
 }
 
 function enemyIntrinsicsForMotion(motionInfo) {
+  const record =
+    motionInfo?.status === 'ready' ? motionInfo.record : null;
+  const clipDescriptor = record?.descriptor;
+  if (
+    clipDescriptor?.sourceFamily === 'authored-semantic-v4' &&
+    clipDescriptor?.presentation &&
+    clipDescriptor?.trim &&
+    clipDescriptor?.pivot
+  ) {
+    return {
+      frameSize: record?.set?.frameSize,
+      trim: clipDescriptor.trim,
+      pivot: clipDescriptor.pivot,
+      presentation: clipDescriptor.presentation,
+    };
+  }
   const descriptor =
-    motionInfo?.status === 'ready' ? motionInfo.record?.descriptor : null;
-  if (!descriptor?.presentation) return LEGACY_ENEMY_INTRINSICS;
+    record?.set && typeof record.set === 'object'
+      ? record.set
+      : record?.descriptor;
+  if (!descriptor?.presentation) {
+    if (clipDescriptor?.presentation) {
+      return {
+        frameSize: clipDescriptor.frameSize,
+        trim: clipDescriptor.trim,
+        pivot: clipDescriptor.pivot,
+        presentation: clipDescriptor.presentation,
+      };
+    }
+    return LEGACY_ENEMY_INTRINSICS;
+  }
   return {
     frameSize: descriptor.frameSize,
     trim: descriptor.trim,
     pivot: descriptor.pivot,
     presentation: descriptor.presentation,
   };
+}
+
+export function enemyStagePresentationForMotion(motionInfo) {
+  const record =
+    motionInfo?.status === 'ready' ? motionInfo.record : null;
+  if (
+    record?.set?.sourceFamily === 'authored-semantic-v4' &&
+    record.set.presentation
+  ) {
+    return record.set.presentation;
+  }
+  return enemyIntrinsicsForMotion(motionInfo).presentation;
 }
 
 function resolveEnemyGeometry(enemy, groundY, fit, motionInfo) {
@@ -253,6 +300,231 @@ export function sizeCanvas(canvas) {
   return { w, h, ctx, stageClearance };
 }
 
+/** Interpolate display roots only; authored body pixels remain discrete. */
+export function interpolateRootPosition(previous, current, alpha = 1) {
+  const resolvedCurrent = Number.isFinite(current) ? current : 0;
+  const resolvedPrevious = Number.isFinite(previous)
+    ? previous
+    : resolvedCurrent;
+  const resolvedAlpha = Number.isFinite(alpha)
+    ? clamp(alpha, 0, 1)
+    : 1;
+  return resolvedPrevious +
+    (resolvedCurrent - resolvedPrevious) * resolvedAlpha;
+}
+
+function presentationNoise(seed) {
+  const sample = Math.sin(seed) * 43758.5453123;
+  return sample - Math.floor(sample);
+}
+
+// Render continuity is presentation state, never simulation state. Weak keys
+// release each retained frame automatically when the world drops its enemy
+// object after death, so the cache follows the domain object's lifecycle
+// without adding serializable fields or requiring an unbounded id registry.
+const enemyMotionRetention = new WeakMap();
+
+// Stage layout and effect origins are repaint-owned presentation state. The
+// state key releases the complete stage snapshot with the game session, while
+// each effect key releases its retained origin when fixed-step cleanup drops
+// that transient object. Neither cache is serializable or reachable from the
+// domain tree.
+const stagePresentationRetention = new WeakMap();
+const effectOriginRetention = new WeakMap();
+
+export function inspectStagePresentation(state) {
+  return stagePresentationRetention.get(state)?.snapshot || null;
+}
+
+function liveEffects(state) {
+  return [
+    ...(state.world.floaters || []),
+    ...(state.world.particles || []),
+    ...(state.world.lootFlights || []),
+    ...(state.world.shocks || []),
+    ...(state.world.confetti || []),
+  ];
+}
+
+function retainStagePresentation(
+  state,
+  { groundY, stageFit, heroGeometry, actorGeometries },
+) {
+  const previous = stagePresentationRetention.get(state);
+  const retainedActorGeometries = new Map(actorGeometries);
+  for (const effect of liveEffects(state)) {
+    if (effect.anchorKind !== 'enemy' || effect.anchorId === null) continue;
+    if (retainedActorGeometries.has(effect.anchorId)) continue;
+    const retained = previous?.actorGeometries?.get(effect.anchorId);
+    if (retained) retainedActorGeometries.set(effect.anchorId, retained);
+  }
+  const actors = Object.freeze(
+    [...actorGeometries].map(([id, geometry]) =>
+      Object.freeze({ id, geometry }),
+    ),
+  );
+  const snapshot = Object.freeze({
+    groundY,
+    stageFit,
+    heroGeometry,
+    actors,
+  });
+  const presentation = Object.freeze({
+    groundY,
+    stageFit,
+    heroGeometry,
+    actorGeometries: retainedActorGeometries,
+    snapshot,
+  });
+  stagePresentationRetention.set(state, presentation);
+  return presentation;
+}
+
+function geometryAnchor(effect, geometry, presentation) {
+  const name = effect.anchorName;
+  if (name === 'ground' || name === 'shadow') {
+    return {
+      x: geometry.anchors.shadowX,
+      y: geometry.anchors.shadowY,
+    };
+  }
+  if (name === 'floater') {
+    if (effect.anchorKind === 'hero') {
+      return {
+        x: geometry.anchors.hitX,
+        y:
+          presentation.groundY -
+          geometry.targetBodyHeight -
+          24,
+      };
+    }
+    return {
+      x: geometry.anchors.hitX,
+      y: Math.max(
+        geometry.anchors.floaterY,
+        Math.min(170, presentation.groundY - 32),
+      ),
+    };
+  }
+  if (name === 'loot') {
+    return { x: geometry.anchors.lootX, y: geometry.anchors.lootY };
+  }
+  return { x: geometry.anchors.hitX, y: geometry.anchors.hitY };
+}
+
+function fallbackAnchor(effect, presentation) {
+  if (!Number.isFinite(effect.anchorFallbackX)) return null;
+  const role = Object.hasOwn(
+    STAGE_ROLE_PRESENTATION,
+    effect.anchorRole,
+  )
+    ? effect.anchorRole
+    : 'standard';
+  const targetBodyHeight =
+    STAGE_ROLE_PRESENTATION[role].visibleBodyHeight * presentation.stageFit;
+  const visualGap =
+    STAGE_ROLE_PRESENTATION[role].visualGap * presentation.stageFit;
+  const bodyBottom = presentation.groundY - visualGap;
+  if (effect.anchorName === 'ground' || effect.anchorName === 'shadow') {
+    return { x: effect.anchorFallbackX, y: presentation.groundY };
+  }
+  if (effect.anchorName === 'floater') {
+    const y =
+      role === 'hero'
+        ? presentation.groundY - targetBodyHeight - 24
+        : Math.max(
+            bodyBottom - targetBodyHeight - STAGE_OVERHEAD_GAP * 2,
+            Math.min(170, presentation.groundY - 32),
+          );
+    return { x: effect.anchorFallbackX, y };
+  }
+  return {
+    x: effect.anchorFallbackX,
+    y: bodyBottom - targetBodyHeight / 2,
+  };
+}
+
+function resolveEffectOrigin(effect, presentation, follow = false) {
+  if (
+    effect.anchorKind !== 'enemy' &&
+    effect.anchorKind !== 'hero'
+  ) {
+    return null;
+  }
+  const geometry =
+    effect.anchorKind === 'hero'
+      ? presentation.heroGeometry
+      : presentation.actorGeometries.get(effect.anchorId);
+  const current = geometry
+    ? geometryAnchor(effect, geometry, presentation)
+    : fallbackAnchor(effect, presentation);
+  const retained = effectOriginRetention.get(effect) || null;
+  if (current && (follow || !retained)) {
+    const origin = Object.freeze({ x: current.x, y: current.y });
+    effectOriginRetention.set(effect, origin);
+    return origin;
+  }
+  return retained || current;
+}
+
+function retainedEnemyMotion(enemy) {
+  return enemy && typeof enemy === 'object'
+    ? enemyMotionRetention.get(enemy) || null
+    : null;
+}
+
+function retainEnemyMotion(enemy, retained) {
+  if (!enemy || typeof enemy !== 'object') return;
+  enemyMotionRetention.set(enemy, retained);
+}
+
+/**
+ * Keep the drawable predecessor plus its warming replacement. With no actor on
+ * stage, retain only current-wave advance media so the spawn gate cannot race
+ * the renderer's bounded-cache pruning.
+ */
+export function motionClipKeepKeysForStage(
+  enemies,
+  motionInfoByEnemyId,
+  pack,
+  zone = 0,
+) {
+  const keepClipKeys = new Set();
+  if (!pack?.motion?.characters) return keepClipKeys;
+  const packWave = ((Math.max(0, Math.floor(zone)) % 10) + 1);
+  for (const assetId of packWaveIdentityIds(pack, packWave)) {
+    if (pack.motion.characters[assetId]?.clips?.advance) {
+      keepClipKeys.add(`${pack.id}/${assetId}#advance`);
+    }
+  }
+  for (const enemy of enemies) {
+    const motionInfo = motionInfoByEnemyId.get(enemy.id);
+    const assetId = motionInfo?.assetId;
+    const source = assetId ? pack.motion.characters[assetId] : null;
+    const retained = retainedEnemyMotion(enemy);
+    if (
+      retained?.packId === pack.id &&
+      retained.assetId === assetId &&
+      source?.clips?.[retained.clip]
+    ) {
+      keepClipKeys.add(`${pack.id}/${assetId}#${retained.clip}`);
+    }
+    if (
+      motionInfo?.requestedStatus === 'pending' &&
+      source?.clips?.[motionInfo.requestedClip]
+    ) {
+      keepClipKeys.add(`${pack.id}/${assetId}#${motionInfo.requestedClip}`);
+    } else if (
+      !retained &&
+      motionInfo?.status === 'ready' &&
+      source?.clips?.[motionInfo.clip]
+    ) {
+      keepClipKeys.add(`${pack.id}/${assetId}#${motionInfo.clip}`);
+    }
+  }
+  return keepClipKeys;
+}
+
 export function draw(
   ctx,
   w,
@@ -260,13 +532,22 @@ export function draw(
   s,
   assetStore = null,
   stageClearance = STAGE_CLEARANCE_FALLBACK,
+  rootAlpha = 1,
 ) {
   const gy = h * 0.86;
-  s.world.groundY = gy;
   const t = s.world.time;
-  const scroll = s.world.scrollSmooth;
-  const shakeX = s.world.shake ? (Math.random() - 0.5) * s.world.shake : 0;
-  const shakeY = s.world.shake ? (Math.random() - 0.5) * s.world.shake : 0;
+  const scroll = interpolateRootPosition(
+    s.world.previousScrollSmooth,
+    s.world.scrollSmooth,
+    rootAlpha,
+  );
+  const repaintTime = t + clamp(rootAlpha, 0, 1) * C.FIXED_DT;
+  const shakeX = s.world.shake
+    ? (presentationNoise(repaintTime * 1009 + 17) - 0.5) * s.world.shake
+    : 0;
+  const shakeY = s.world.shake
+    ? (presentationNoise(repaintTime * 1013 + 29) - 0.5) * s.world.shake
+    : 0;
   const packAssets = assetStore ? getCurrentPackAssets(assetStore, s.route) : null;
   const heroX = s.world.heroX;
   const enemyEnv = {
@@ -289,16 +570,17 @@ export function draw(
   );
   const heroStageActor = {
     role: 'hero',
-    presentation: heroIntrinsicGeometry().presentation,
+    presentation:
+      getV3Presentation() || heroIntrinsicGeometry().presentation,
   };
   const enemyStageActors = (plateFit) =>
     show.map((enemy) => {
       const role = stageRoleForEnemy(enemy);
       return {
         role,
-        presentation: enemyIntrinsicsForMotion(
+        presentation: enemyStagePresentationForMotion(
           motionInfoByEnemyId.get(enemy.id),
-        ).presentation,
+        ),
         overheadClearance: enemyPlateClearance(role, plateFit),
       };
     });
@@ -318,8 +600,6 @@ export function draw(
       ENEMY_PLATE_COMPACT_FIT - Number.EPSILON,
     );
   }
-  s.world.stageFit = stageFit;
-
   ctx.save();
   ctx.translate(shakeX, shakeY);
 
@@ -340,9 +620,17 @@ export function draw(
   // creature clips (advance / attack / hit / death / broken) track the domain
   const actorGeometries = new Map();
   show.forEach((e) => {
+    const renderEnemy = {
+      ...e,
+      displayX: interpolateRootPosition(
+        e.previousDisplayX,
+        e.displayX,
+        rootAlpha,
+      ),
+    };
     const geometry = drawEnemy(
       ctx,
-      e,
+      renderEnemy,
       gy,
       t,
       packAssets,
@@ -353,52 +641,77 @@ export function draw(
         ...enemyEnv,
         stageClearance,
         motionInfo: motionInfoByEnemyId.get(e.id),
+        retentionOwner: e,
       },
     );
     actorGeometries.set(e.id, geometry);
   });
-  s.world.actorGeometries = actorGeometries;
+  if (assetStore?.motionStore && packAssets?.pack?.motion?.characters) {
+    pruneMotionClipResidency(
+      assetStore.motionStore,
+      motionClipKeepKeysForStage(
+        show,
+        motionInfoByEnemyId,
+        packAssets.pack,
+        s.route?.zone ?? 0,
+      ),
+    );
+  }
 
   // hero
-  drawHero(ctx, s.world.heroDisplayX, gy, s, t, stageFit);
+  const heroGeometry = drawHero(
+    ctx,
+    interpolateRootPosition(
+      s.world.previousHeroDisplayX,
+      s.world.heroDisplayX,
+      rootAlpha,
+    ),
+    gy,
+    s,
+    t,
+    stageFit,
+  );
+  const stagePresentation = retainStagePresentation(s, {
+    groundY: gy,
+    stageFit,
+    heroGeometry,
+    actorGeometries,
+  });
 
   // particles
-  for (const p of s.world.particles) drawParticle(ctx, p, actorGeometries);
+  for (const p of s.world.particles) {
+    drawParticle(ctx, p, stagePresentation);
+  }
 
   // shock rings (crit pops, death bursts, rank halo)
   for (const sh of s.world.shocks || []) {
-    drawShock(ctx, sh, actorGeometries);
+    drawShock(ctx, sh, stagePresentation);
   }
 
   // Currency reward travels from the defeated target to its owning HUD chip.
   for (const flight of s.world.lootFlights || []) {
-    drawLootFlight(ctx, flight, w, h, actorGeometries);
+    drawLootFlight(ctx, flight, w, h, stagePresentation);
   }
 
   // confetti
-  for (const c of s.world.confetti || []) drawConfettiBit(ctx, c);
+  for (const c of s.world.confetti || []) {
+    drawConfettiBit(ctx, c, stagePresentation);
+  }
 
   // floaters
   ctx.textAlign = 'center';
   for (const f of s.world.floaters) {
-    if (f.anchorId !== null && f.anchorId !== undefined) {
-      const geometry = actorGeometries.get(f.anchorId);
-      if (geometry) {
-        f.x = geometry.anchors.hitX;
-        // Above the target's head, stacked by anchorLift — but never inside the
-        // toast band (canvas y ≈112–162): short stages push text just under it.
-        const headY = geometry.anchors.floaterY;
-        const base = Math.max(headY, Math.min(170, gy - 32));
-        f.y = base - (f.anchorLift || 0);
-      }
-    }
+    const origin = resolveEffectOrigin(f, stagePresentation, true);
     const life = f.life || 1;
     const u = clamp(f.t / life, 0, 1);
     const a = easeOutCubic(u);
     const pop = f.huge ? 1 + (1 - u) * 0.75 : f.big ? 1 + (1 - u) * 0.4 : 1 + (1 - u) * 0.2;
     // Centered milestone counters live at stage center, not at the kill point.
-    const fx = f.center ? w / 2 : f.x;
-    const fy = f.center ? h * 0.42 : f.y;
+    const fx = f.center ? w / 2 : (origin?.x || 0) + f.x;
+    const fy = f.center
+      ? h * 0.42
+      : (origin?.y || 0) + f.y - (f.anchorLift || 0);
+    if (!f.center && (!Number.isFinite(fx) || !Number.isFinite(fy))) continue;
     ctx.save();
     ctx.globalAlpha = a;
     ctx.translate(fx, fy);
@@ -536,14 +849,14 @@ export function inspectHeroMotion(s, t = s?.world?.time || 0) {
   if (!s?.run?.hero || !s?.world) {
     return { status: 'unavailable', clip: null, fps: null, frameIndex: null };
   }
-  const selected = pickV3(heroRuntimeSemantics(s, t).selector);
+  const selected = resolveHeroV3Frame(heroRuntimeSemantics(s, t).selector);
   if (!selected) {
     return { status: 'pending', clip: null, fps: null, frameIndex: null };
   }
   const clip = getV3Clip(selected.clip);
   return {
-    status: clip ? 'ready' : 'failed',
-    clip: selected.clip,
+    status: selected.warming ? 'pending' : clip ? 'ready' : 'failed',
+    clip: selected.requestedClip || selected.clip,
     fps: clip?.fps ?? null,
     frameIndex: selected.frame,
   };
@@ -557,34 +870,34 @@ const LEGACY_HERO_INTRINSICS = Object.freeze({
   presentation: LEGACY_HERO_PRESENTATION,
 });
 
-function heroIntrinsicGeometry() {
-  const idle = getV3Clip('idle');
-  const presentation = getV3Presentation();
-  if (!idle || !presentation) return LEGACY_HERO_INTRINSICS;
+function heroIntrinsicGeometry(selected = null) {
+  const geometry = getV3Geometry(selected);
+  const presentation = geometry?.presentation || getV3Presentation();
+  if (!geometry || !presentation) return LEGACY_HERO_INTRINSICS;
   const frameSize =
-    typeof idle.frameSize === 'number'
-      ? { width: idle.frameSize, height: idle.frameSize }
-      : idle.frameSize;
+    typeof geometry.frameSize === 'number'
+      ? { width: geometry.frameSize, height: geometry.frameSize }
+      : geometry.frameSize;
   return {
     frameSize,
     trim: {
-      x: idle.trim.x,
-      y: idle.trim.y,
-      width: idle.trim.w,
-      height: idle.trim.h,
+      x: geometry.trim.x,
+      y: geometry.trim.y,
+      width: geometry.trim.w,
+      height: geometry.trim.h,
     },
-    pivot: { x: idle.anchor[0], y: idle.anchor[1] },
+    pivot: { x: geometry.anchor[0], y: geometry.anchor[1] },
     presentation,
   };
 }
 
-export function heroDrawOptions(actorX, groundY, fit = 1) {
+export function heroDrawOptions(actorX, groundY, fit = 1, selected = null) {
   const geometry = resolveActorGeometry({
     actorX,
     groundY,
     fit,
     role: 'hero',
-    ...heroIntrinsicGeometry(),
+    ...heroIntrinsicGeometry(selected),
   });
   return Object.freeze({
     drawTrimHeight: geometry.drawTrimHeight,
@@ -595,13 +908,14 @@ export function heroDrawOptions(actorX, groundY, fit = 1) {
 
 export function drawHero(ctx, x, gy, s, t, fit = 1) {
   const semantics = heroRuntimeSemantics(s, t);
+  const selected = resolveHeroV3Frame(semantics.selector);
   const h = semantics.hero;
   const attack = semantics.attack;
   const sprinting = semantics.sprinting;
   const overdrive = semantics.overdrive;
   const tracker = semantics.tracker;
   const hostPose = semantics.pose;
-  const drawOptions = heroDrawOptions(x, gy, fit);
+  const drawOptions = heroDrawOptions(x, gy, fit, selected);
   const geometry = drawOptions.geometry;
   const bodyScale =
     geometry.body.height / STAGE_ROLE_PRESENTATION.hero.visibleBodyHeight;
@@ -803,6 +1117,95 @@ export function inspectEnemyMotion(enemy, packAssets = null, assetStore = null, 
     time: env?.t,
     timestamp: env?.t,
   });
+  if (
+    assetStore?.motionStore &&
+    typeof record.descriptor?.sourceFamily === 'string' &&
+    [
+      'authored-semantic-v3',
+      'authored-semantic-v4',
+    ].includes(record.descriptor.sourceFamily)
+  ) {
+    const clipRecord = getMotionClipRecord(
+      assetStore.motionStore,
+      pack.id,
+      assetId,
+      selection.clip,
+    );
+    if (!clipRecord || clipRecord.status === 'pending') {
+      void warmMotionClip(
+        assetStore.motionStore,
+        pack,
+        assetId,
+        selection.clip,
+      ).catch(() => {});
+      const retained = retainedEnemyMotion(env?.retentionOwner || enemy);
+      const retainedRecord =
+        retained?.packId === pack.id &&
+        retained.assetId === assetId &&
+        typeof retained.clip === 'string'
+          ? getMotionClipRecord(
+              assetStore.motionStore,
+              pack.id,
+              assetId,
+              retained.clip,
+            )
+          : null;
+      if (
+        retainedRecord?.status === 'ready' &&
+        Number.isInteger(retained.frameIndex)
+      ) {
+        return {
+          mode: 'motion',
+          status: 'ready',
+          assetId,
+          clip: retained.clip,
+          fps: retainedRecord.descriptor?.fps ?? null,
+          frameIndex: retained.frameIndex,
+          requestedClip: selection.clip,
+          requestedStatus: 'pending',
+          retained: true,
+          fallbacks: fallbackCount,
+          record: retainedRecord,
+          target,
+        };
+      }
+      return {
+        mode: 'pending',
+        status: 'pending',
+        assetId,
+        clip: selection.clip,
+        requestedClip: selection.clip,
+        requestedStatus: 'pending',
+        frameIndex: null,
+        fallbacks: fallbackCount,
+        target,
+      };
+    }
+    if (clipRecord.status === 'failed') {
+      return {
+        mode: 'static-fallback',
+        status: 'failed',
+        assetId,
+        clip: selection.clip,
+        frameIndex: null,
+        fallbacks: fallbackCount,
+        target,
+      };
+    }
+    return {
+      mode: 'motion',
+      status: 'ready',
+      assetId,
+      clip: selection.clip,
+      requestedClip: selection.clip,
+      requestedStatus: 'ready',
+      fps: clipRecord.descriptor?.fps ?? null,
+      frameIndex: frameIndexForClip(clipRecord.descriptor, selection.value),
+      fallbacks: fallbackCount,
+      record: clipRecord,
+      target,
+    };
+  }
   const clip = record.descriptor?.clips?.[selection.clip];
   if (!clip) {
     return {
@@ -896,6 +1299,17 @@ export function drawEnemy(ctx, e, gy, t, packAssets = null, assetStore = null, r
         geometry.pivotY,
         geometry.drawTrimHeight,
       );
+      if (
+        onStage &&
+        motionInfo.record?.key?.includes('#')
+      ) {
+        retainEnemyMotion(env?.retentionOwner || e, {
+          packId: packAssets.pack.id,
+          assetId: motionInfo.assetId,
+          clip: motionInfo.clip,
+          frameIndex: motionInfo.frameIndex,
+        });
+      }
     } catch (error) {
       failureDetail = `motion frame blit failed: ${error?.message || String(error)}`;
       onStage = false;
@@ -907,6 +1321,7 @@ export function drawEnemy(ctx, e, gy, t, packAssets = null, assetStore = null, r
         motionInfo.assetId,
         'decode',
         failureDetail,
+        motionInfo.record?.key?.includes('#') ? motionInfo.clip : null,
       );
     }
   } else if (motionInfo.status === 'pending') {
@@ -1173,21 +1588,19 @@ function drawCreatureTarget(ctx, e, kind, o) {
   return true;
 }
 
-function drawLootFlight(ctx, flight, w, h, actorGeometries) {
-  const geometry = actorGeometries.get(flight.enemyId);
-  if (geometry) {
-    flight.x = geometry.anchors.lootX;
-    if (!Number.isFinite(flight.y)) flight.y = geometry.anchors.lootY;
-  }
-  if (!Number.isFinite(flight.x) || !Number.isFinite(flight.y)) return;
+function drawLootFlight(ctx, flight, w, h, presentation) {
+  const origin = resolveEffectOrigin(flight, presentation);
+  const sourceX = (origin?.x || 0) + flight.x;
+  const sourceY = (origin?.y || 0) + flight.y;
+  if (!Number.isFinite(sourceX) || !Number.isFinite(sourceY)) return;
   const u = easeOutCubic(1 - clamp(flight.t / flight.life, 0, 1));
   // Gear drops dive to the in-stage bag FAB (bottom-left); currency to the top chips.
   const isGear = flight.target === 'gear';
   const targetX = isGear ? 34 : flight.target === 'notes' ? w * 0.62 : w * 0.11;
   const targetY = isGear ? h - 38 : -56;
   const posAt = (uu) => ({
-    x: flight.x + (targetX - flight.x) * uu,
-    y: flight.y + (targetY - flight.y) * uu - Math.sin(uu * Math.PI) * 34,
+    x: sourceX + (targetX - sourceX) * uu,
+    y: sourceY + (targetY - sourceY) * uu - Math.sin(uu * Math.PI) * 34,
   });
   const { x, y } = posAt(u);
   const paint = flight.color || { tone: flight.target === 'notes' ? 'notes' : 'signal' };
@@ -1220,17 +1633,12 @@ function drawLootFlight(ctx, flight, w, h, actorGeometries) {
 }
 
 /** Expanding shock ring (crit pop / death burst / rank halo). */
-function drawShock(ctx, sh, actorGeometries) {
+function drawShock(ctx, sh, presentation) {
   if (sh.delay > 0) return;
-  const geometry =
-    sh.anchorId !== null && sh.anchorId !== undefined
-      ? actorGeometries.get(sh.anchorId)
-      : null;
-  if (geometry && sh.anchorName === 'hit') {
-    if (!Number.isFinite(sh.x)) sh.x = geometry.anchors.hitX;
-    if (!Number.isFinite(sh.y)) sh.y = geometry.anchors.hitY;
-  }
-  if (!Number.isFinite(sh.x) || !Number.isFinite(sh.y)) return;
+  const origin = resolveEffectOrigin(sh, presentation);
+  const x = (origin?.x || 0) + sh.x;
+  const y = (origin?.y || 0) + sh.y;
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return;
   const u = 1 - clamp(sh.t / (sh.life || 0.34), 0, 1);
   const r = 6 + easeOutCubic(u) * ((sh.r1 || 46) - 6);
   ctx.save();
@@ -1238,7 +1646,7 @@ function drawShock(ctx, sh, actorGeometries) {
   ctx.strokeStyle = resolveCanvasPaint(sh.c);
   ctx.lineWidth = Math.max(1, (sh.w || 3) * (1 - u * 0.6));
   ctx.beginPath();
-  ctx.arc(sh.x, sh.y, r, 0, Math.PI * 2);
+  ctx.arc(x, y, r, 0, Math.PI * 2);
   ctx.stroke();
   ctx.restore();
 }
@@ -1364,20 +1772,15 @@ function drawGoLiveFx(ctx, w, h, fx, reduced) {
   ctx.restore();
 }
 
-function drawParticle(ctx, p, actorGeometries) {
-  const geometry =
-    p.anchorId !== null && p.anchorId !== undefined
-      ? actorGeometries.get(p.anchorId)
-      : null;
-  if (geometry && p.anchorName === 'hit') {
-    if (!Number.isFinite(p.x)) p.x = geometry.anchors.hitX;
-    if (!Number.isFinite(p.y)) p.y = geometry.anchors.hitY;
-  }
-  if (!Number.isFinite(p.x) || !Number.isFinite(p.y)) return;
+function drawParticle(ctx, p, presentation) {
+  const origin = resolveEffectOrigin(p, presentation);
+  const x = (origin?.x || 0) + p.x;
+  const y = (origin?.y || 0) + p.y;
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return;
   const a = clamp(p.t / (p.life || 0.5), 0, 1);
   ctx.save();
   ctx.globalAlpha = a;
-  ctx.translate(p.x, p.y);
+  ctx.translate(x, y);
   if (p.rot) ctx.rotate(p.rot);
   if (p.kind === 'coin') {
     // diamond / note chip
@@ -1416,11 +1819,15 @@ function drawParticle(ctx, p, actorGeometries) {
   ctx.restore();
 }
 
-function drawConfettiBit(ctx, c) {
+function drawConfettiBit(ctx, c, presentation) {
+  const origin = resolveEffectOrigin(c, presentation);
+  const x = (origin?.x || 0) + c.x;
+  const y = (origin?.y || 0) + c.y;
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return;
   const a = clamp(c.t / (c.life || 1), 0, 1);
   ctx.save();
   ctx.globalAlpha = a;
-  ctx.translate(c.x, c.y);
+  ctx.translate(x, y);
   ctx.rotate(c.rot);
   ctx.fillStyle = resolveCanvasPaint(c.c);
   ctx.fillRect(-c.w / 2, -c.h / 2, c.w, c.h);

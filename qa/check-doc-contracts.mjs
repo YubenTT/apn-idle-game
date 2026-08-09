@@ -359,6 +359,7 @@ for (const { path: documentPath, content, obligations } of stageDocumentObligati
   }
 }
 for (const [label, guidance] of gaf2dGuidance) {
+  const normalizedGuidance = guidance.toLocaleLowerCase('en-US').replace(/\s+/g, ' ');
   for (const phrase of [
     'GAF2D owns intrinsic geometry',
     'the game owns role scale',
@@ -367,7 +368,7 @@ for (const [label, guidance] of gaf2dGuidance) {
     'never ground each frame independently',
     'mechanical geometry does not approve motion',
   ]) {
-    if (!guidance.includes(phrase)) {
+    if (!normalizedGuidance.includes(phrase.toLocaleLowerCase('en-US'))) {
       failures.push(`GAF2D ${label}: ${phrase}`);
     }
   }

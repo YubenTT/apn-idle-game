@@ -97,9 +97,10 @@ try {
     await cdp.send('Page.navigate', { url: 'http://127.0.0.1:8791/?autostart=1&mute=1&chrome-smoke=1&zone=3' });
     await waitFor(cdp, `window.__APN_QA__?.state && document.querySelector('#title-screen')?.hidden`, 'app ready');
     await evaluate(cdp, `(() => { const s = window.__APN_QA__.state; s.ui.toast = 'Zone 3 cleared — on to Zone 4'; s.ui.toastT = 30; })()`);
-    await delay(700); // let toast-drop animation settle + a few frames stamp groundY
+    await delay(700); // let toast-drop animation and stage presentation settle
     const report = JSON.parse(await evaluate(cdp, `JSON.stringify((() => {
       const s = window.__APN_QA__.state;
+      const presentation = window.__APN_QA__.presentation?.();
       const c = document.querySelector('#game').getBoundingClientRect();
       const rel = (sel) => {
         const n = document.querySelector(sel);
@@ -109,12 +110,14 @@ try {
       };
       return {
         canvas: { w: +c.width.toFixed(1), h: +c.height.toFixed(1) },
-        groundY: +((s.world.groundY || 0).toFixed(1)),
+        groundY: +((presentation?.groundY || 0).toFixed(1)),
         context: rel('.stage-context'),
         hud: rel('.stage-hud'),
         toast: rel('#toast'),
         actors: s.world.enemies.map((enemy) => {
-          const geometry = s.world.actorGeometries?.get(enemy.id);
+          const geometry = presentation?.actors?.find(
+            (actor) => actor.id === enemy.id,
+          )?.geometry;
           if (!geometry) return null;
           return {
             role: geometry.role,

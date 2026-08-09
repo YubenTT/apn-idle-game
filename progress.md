@@ -1,5 +1,101 @@
 Original prompt: Complete the APN Idle redesign autonomously, including QA, review, and a muted localhost build for the final integrated user gate.
 
+## 2026-08-09/10 V4 owner approval and production promotion
+
+- The owner explicitly approved all seven `MotionSetCandidateV4` records. Seven
+  hash-locked `MotionSetApprovalV4` documents now bind the approved candidates;
+  this motion approval does not grant the separate APN Hero rig authority.
+- Entry Runner, Protocol Courier, Signal Hunter, Site Sentinel, Site Warden,
+  and Veil Operator passed current complete QA and deterministic export. Their
+  production projection is exact-copy `approved_release` V4 WebP/JSON with
+  release, approval, derivative, profile, candidate, and source hashes checked
+  fail-closed. APN Hero is intentionally absent from the pack and remains
+  `awaiting_rig_approval`.
+- `valorant/pack.json` maps exactly those six releases. Current and next route
+  windows load set metadata first and only the selected clip body. Preview,
+  snapshot, synthetic-fixture, and shim authority cannot activate production
+  motion.
+- Route-aware memory accounting found and fixed an impossible-maxima sum. The
+  real worst window is Valorant Wave 8+9 at 63,022,408 / 67,108,864 hot bytes;
+  the 64 MiB cap remains frozen. V4 budget selection now scans every ordered
+  pack instead of depending on catalog position.
+- Real Chrome passed 60 production cases: Wave 1–10, normal/reduced, at
+  375×812, 428×926, and 844×390. All six identities reported
+  `approved_release`, exact approval lineage, zero fallback, zero overflow, and
+  zero final console/network findings. Entry fixed-timestamp frames were
+  pixel-distinct and replay-stable across hidden→visible lifecycle; Veil became
+  drawable only after its selected `advance` descriptor/WebP loaded.
+- Two consecutive complete Chrome runs produced byte-identical
+  `qa/screenshots/gaf2d-production-v4/report.json`, SHA-256
+  `05dfae9ab5be885f411345d04cb8947d6354a567548da83d9796eed70353eaa9`.
+  Seventy-five screenshots plus the report form the durable production lane;
+  representative portrait/landscape Wave 1/Wave 10 images were inspected at
+  original resolution.
+- Fresh broad gates: GAF2D 1,440 tests; asset V4 70 tests; game Node suite
+  `ALL PASS`. No deploy or Hero rig approval was inferred.
+
+## 2026-08-09 V3 technical closure and evidence lessons
+
+- The loopback preview now consumes the exact `authored-semantic-v3` batch:
+  7 assets, 39 clips, 795 frames, 30/32 FPS, and manifest SHA-256
+  `75c521d43a9a2214fc75ff7a33e5158c05a1d08f0af34edb07cf4d7caea8d2c8`.
+  It remains visibly labeled `unapproved_preview` / `human_review_required`.
+- Real Chrome passes all 39 clips at 60/90/120/144 Hz, renders 18 native-size
+  light/dark witnesses, and proves three nonblank authored frames immediately
+  after a fully cold current-wave set/advance load. The four gameplay captures
+  are the actual game (review panel hidden), authored motion is `ready`, console
+  and network problems are zero, and viewport overflow is zero.
+- Two evidence bugs were found by inspecting the screenshots rather than
+  trusting filenames. First, deterministic simulation steps ran in one browser
+  turn and starved asynchronous fetch/decode; the cold test now yields between
+  fixed steps, matching the real repaint loop. Second, files named `gameplay`
+  still showed the review overlay; the capture lane now omits `motion-review=1`
+  and asserts the panel is hidden. A test artifact must prove its named claim.
+- A third evidence leak was caught by comparing repeat-run hashes: random spawn
+  IDs/timing made the JSON report change even when every assertion passed. The
+  disposable Chrome QA pages now use a fixed random seed, and consecutive full
+  runs produce the same report bytes without changing production randomness.
+- Final review also tested whether `advance` and Hero `run` should become
+  optional. They must not: V3 character/boss sets are closed-world and require
+  `advance`, while Hero sets require the exact eight-clip vocabulary including
+  `run`. A future role with a different vocabulary needs an explicit versioned
+  contract, not a permissive runtime fallback that could hide malformed art.
+- The Luna/ComfyUI comparison reinforced the production rule: nominal 100 FPS
+  can still be duplicated or ping-ponged motion, while a 16.7 FPS GIF can hide
+  a hard loop seam, topology pops, and prop drift. GAF2D therefore judges
+  semantic body changes, integral loops, root/body coupling, topology/contact,
+  alpha on light/dark, native game size, and the real consumer independently.
+- Runtime remains lazy and bounded: set metadata is not drawable readiness;
+  spawn waits for the current `advance` clip, cold transitions retain the last
+  authored frame, and only selected clips are fetched/decoded. The compressed
+  V3 total is 3,006,743 / 3,670,016 bytes (22.1% headroom).
+- Fresh verification: `node qa/run-tests.mjs` ends `ALL PASS`,
+  `node qa/browser/chrome-motion-continuity.mjs` passes 39/39, syntax and
+  whitespace checks are clean. No paid call, upload, approval, production
+  promotion, push, or deploy occurred. The remaining gate is human review of
+  the complete animated set.
+
+## 2026-08-08 V3 continuity harness lane
+
+- Added `qa/browser/chrome-motion-continuity.mjs` as the missing real Chrome
+  continuity lane for authored-semantic-v3 review authority.
+- The harness is self-contained: it can serve the repo locally, open headless
+  Chrome, verify the review surface, sample all 39 clips at `60/90/120/144`
+  Hz, render native-size `64/80/128` light/dark witnesses, and capture the
+  four requested gameplay viewports once the real V3 bundle exists.
+- Follow-up hardening added reviewer-requested checks inside the same lane:
+  per-viewport console/network assertions, rendered alpha/bounds validation for
+  every loaded clip frame, descriptor-owned progress hold checks, and a real
+  cold-start gameplay visibility proof when the per-clip runtime is present.
+- Current RED is deliberate and verified: the local `.gaf2d-preview` still
+  exposes `sourceFamily=authored-semantic-v2`, `7/39/276`, and legacy creature
+  `motion.json`/`motion.webp` entries, so the review surface stays blocked and
+  the continuity lane fails closed instead of fabricating pass evidence.
+- `qa/run-tests.mjs` and CI now syntax-check the harness. CI only executes the
+  runtime lane when `.gaf2d-preview/manifest.json` exists in the checkout,
+  which avoids breaking the shared branch before the V3 materialization task
+  lands.
+
 ## 2026-07-28 authored-motion authority and honest rollout
 
 - Finalized one future-character-safe contract: pack metadata owns identity and
@@ -331,3 +427,268 @@ Original prompt: Complete the APN Idle redesign autonomously, including QA, revi
   `human_review_required`. No paid call, upload, push, publish, or deploy
   occurred. The only remaining gate is explicit human approval or rejection
   of the complete authored motion set.
+
+## 2026-07-31 high-cadence runtime verification
+
+- Re-ran the focused runtime contract after adding the 30+ FPS authored-motion
+  path. `node qa/check-motion-bundle.mjs` and
+  `node qa/check-hero-motion-semantics.mjs` both pass.
+- The independent elapsed-time oracle checks every repaint tick for 60, 90,
+  120, and 144 Hz, including exact loop wrap, progress-bin clamping, queued
+  Hero attacks, hit/death progression, and fixed simulation timestamps.
+- This is runtime timing evidence only. The final 7-asset / 39-clip /
+  795-frame producer-v2 pack is not integrated yet, and no creative approval,
+  export, push, merge, or deploy has occurred.
+- Freezing the canonical V3 acting contract exposed two stale parallel
+  assumptions in the preview validator: loop sampling accepted only the C1
+  profile, and secondary actions accepted only the smallest shape. The
+  canonical contract also contains C2 interpolating loops plus typed joint
+  clearance, extrema stabilizer, basis, and zero-crossing evidence. The focused
+  preview build first failed on both stale assumptions, then passed after the
+  validator learned those exact bounded variants.
+- `scripts/assets/motion-v3-acting-contract.json` is now an exact byte copy of
+  the corrected canonical APN 7/39/795 contract, SHA-256
+  `92e851f19934c86a791a3a705090af6d67c1dece88c9f1a14e614c2d6da08457`.
+  The audit rejected the earlier bytes because Courier and Hunter extrema
+  amplitudes were transposed. The focused preview builder passes two
+  byte-identical builds, hash-binds the corrected snapshot into every asset,
+  and keeps the result `unapproved_preview` / `human_review_required`.
+- APN Hero idle now declares the same periodic C2 sampler used by its producer
+  and final-raster path. This removes two sub-threshold extrema transitions
+  without adding a secondary action or weakening cadence QA. The game contract
+  validator also accepts canonical ordered zero-crossing boundaries beginning
+  at frame zero; Site Warden hit freezes the valid `[0, 4, 5]` profile.
+
+## 2026-08-01 authored-semantic-v3 runtime core
+
+- Runtime preview loader now accepts both legacy `authored-semantic-v2` creature bundles and per-clip `authored-semantic-v3` creature sets under the same fail-closed loopback gate.
+- `js/motion-store.js` now supports a two-stage warm path for V3 creatures: asset-level `set.json` first, then lazy clip-level descriptor/WebP fetch on first clip demand. Cold release still stays asset-window scoped.
+- `js/render.js` now requests V3 creature clips lazily from actual selected combat state and uses the fetched clip descriptor for frame selection and blitting.
+- `js/motion-bundle.js` blitter now accepts both legacy bundle records and V3 clip records with set-owned trim/frame/pivot geometry.
+- Added red/green QA for V3 preview manifest acceptance and lazy clip load:
+  - `qa/check-motion-preview.mjs`
+  - `qa/check-motion-store.mjs`
+- Focused green commands used the active workspace Node runtime because the
+  then-installed Homebrew Node was missing `libsimdjson.29.dylib`:
+  - `$NODE qa/check-motion-store.mjs`
+  - `$NODE qa/check-motion-preview.mjs`
+  - `$NODE qa/check-motion-bundle.mjs`
+  - `$NODE qa/check-gaf2d-valorant.mjs`
+  - `$NODE qa/check-motion-preview-ui.mjs`
+- Remaining from the parent ask: the dedicated loopback review/query UI for selecting every actual asset/clip and watching the real animation in-browser is not implemented in this slice yet.
+
+## 2026-08-01 loopback 39-clip review surface
+
+- Added a loopback-only real-browser review surface at `?motion-preview=1&motion-review=1`.
+- The panel is hidden outside the existing loopback preview gate and stays fail-closed when the active preview package is not the exact smooth `authored-semantic-v3` 7/39/795 batch.
+- `js/motion-review.js` owns:
+  - explicit review query gating
+  - exact 39-entry catalog construction from the smooth preview manifest
+  - portable-path validation for every preview descriptor/image/set path
+  - hash-locked set/descriptor/image loading for both Hero and creature clips
+  - actual canvas playback using declared clip FPS/playback and real frame descriptors
+  - per-clip viewed state in localStorage keyed by batch SHA-256
+- UI wiring:
+  - `index.html` review panel markup
+  - `css/game.css` review panel styles
+  - `js/main.js` mount path after preview activation
+- Focused QA added:
+  - `qa/check-motion-review.mjs`
+  - updated `qa/check-motion-preview-ui.mjs`
+- Focused green commands (workspace Node runtime):
+  - `$NODE qa/check-motion-review.mjs`
+  - `$NODE qa/check-motion-preview-ui.mjs`
+  - `$NODE qa/check-motion-preview.mjs`
+  - `$NODE qa/check-motion-store.mjs`
+- Not added in this slice: a separate automated Chrome continuity harness for the review panel itself. The runtime/path/state contracts are covered; live browser capture remains for the parent task if required.
+- Follow-up full-suite review rejected raw review-surface palette literals and a
+  formatting-sensitive GAF2D documentation check. The panel now uses canonical
+  design tokens, while doc QA normalizes case and whitespace without dropping
+  any required runtime-geometry phrase.
+- Follow-up lifecycle review found that visiting all 39 clips would retain every
+  decoded bitmap and that rapid selection could let a stale async load replace
+  the current clip. `createMotionReviewSession` now owns exactly one active
+  decoded runtime, generation-tags selections, closes previous/stale/destroyed
+  completions, and surfaces current-load failures without an unhandled promise.
+- The review loader also rejects and closes a hash-bound WebP whose decoded
+  dimensions differ from its descriptor atlas. Catalog validation now locks the
+  exact seven assets and per-asset 39-clip vocabulary instead of trusting counts
+  alone. These regressions are covered by `qa/check-motion-review.mjs`.
+
+## 2026-08-01 canonical V3 canvas handoff
+
+- Reconciled the implementation with the authoritative high-smoothness design:
+  historical V2 stays exactly 640×640, while new authored-semantic-v3 sources
+  are exactly 128×128. This avoids carrying the stale V2 canvas into the final
+  795-frame package.
+- Added a red/green preview-builder contract that rejects any V3 candidate not
+  using the canonical 128×128 canvas, derives runtime geometry from the locked
+  candidate canvas, and proves every V3 asset remains at scalePpm 1,000,000 in
+  the representative package (no runtime-source upscaling).
+- Focused command is green with the workspace Node runtime:
+  `$NODE qa/check-gaf2d-preview-build.mjs`.
+- The complete pre-integration game matrix is also green with
+  `GAF2D_ROOT=<gaf2d-worktree>`
+  and bundled Node: `qa/run-tests.mjs` exits 0 with `ALL PASS`. This freezes a
+  clean baseline before the real V3 package replaces the synthetic fixture.
+- The canonical Hero correction profiles are now explicit acting authority,
+  not hidden producer constants. The game snapshot and preview validator bind
+  acting-contract SHA-256
+  `34337bb58b611bad012f4e431042337c97774bf4dc0305c36b0484d2e0a437c8`
+  and validate exact typed variants for idle peak calibration, run/celebrate
+  phase-locked second harmonics, and death arm scaling. The focused preview
+  build is green with the new snapshot and rejects unknown profile shapes.
+- Final producer materialization, real derivative build, complete suite, and
+  browser viewing of all 39 clips remain pending. Creative motion approval,
+  export, push, merge, and deploy remain closed.
+
+## 2026-08-01 V3 integration lesson
+
+- Real builder-output to runtime integration is the contract gate; hand-built
+  partial fixtures can guide unit coverage, but they cannot authorize cross-layer
+  assumptions about manifest budgets, smooth Hero set shape, root acting/temporal
+  lineage, transform bindings, or role-specific image caps.
+- The REDs that exposed this were exact: smooth manifests illegally carrying a
+  `firstPlayable` budget, generic Hero V3 still routed through the specialized
+  Hero validator/draw path, swapped-valid Hero set bytes loading without a bound
+  set hash, and smooth set/image mutations failing by stale-hash accident instead
+  of the intended fail-closed authority checks.
+- Permanent regression coverage now stays fail-closed at the real boundaries:
+  builder schema asserts exact four-key manifest budgets, preview/review/runtime
+  bind root acting and temporal authorities, set geometry must match manifest
+  runtime transforms, generic Hero review draw consumes loader-normalized runtime
+  geometry, and smooth clip bytes are capped and byte-count-checked by role.
+
+## 2026-08-01 V3 runtime ownership lesson
+
+- Per-clip authored-semantic-v3 runtime records do not own presentation
+  geometry; the validated set index does. Any render path that reads stage
+  intrinsics only from the clip descriptor silently falls back to legacy
+  geometry even when the store and builder are otherwise correct.
+- Runtime memory and builder budgets must describe the same thing. Keeping
+  every independently loadable sibling clip decoded for one asset while
+  budgeting only one active clip is false accounting. The current invariant is
+  stricter and truthful: non-hero authored-semantic-v3 preview budgets sum all
+  independently loadable clip atlases per asset unless a narrower mechanical
+  state-machine bound is proven, while runtime frame arbitration keeps every
+  clip selected for the current render and prunes only unselected siblings.
+- Exact fetched-byte validation is part of the boundary contract. Hash-consistent
+  clip descriptors with stale `atlas.bytes` must still fail before decode using
+  the real fetched `imageBytes.byteLength`, not pass because the store validated
+  only hashes and grammar.
+- The permanent gate for this review round is one real builder-output to
+  store-to-render integration assertion plus the sequential `advance -> engaged
+  -> hit -> death` residency test. Synthetic partial fixtures remain useful, but
+  they are not sufficient evidence for set ownership, resident-budget truth, or
+  fetched-byte fail-closed behavior.
+
+## 2026-08-08 lazy authored-motion runtime lesson
+
+- A validated `set.json` is metadata readiness, not drawable readiness. Spawn is
+  now gated by the selected current-wave `advance` clip reaching `ready` or
+  `failed`; boot also awaits those exact pixels before first playable.
+- Hero V3 no longer treats eight independent clips as one eager download. Boot
+  loads only `set.json` plus `run`; every other descriptor/WebP is requested by
+  live semantics. The bitmap invariant is one last-drawn authored clip plus at
+  most one decoded replacement until its first successful draw.
+- Creature transitions use the same continuity rule: `engaged`, `hit`, and
+  `death` may warm independently, while the exact last successfully drawn frame
+  remains visible. Cache pruning runs after drawing and preserves current-wave
+  `advance`, the retained frame, and a warming replacement; it never substitutes
+  the static body during a cold transition and never preloads all 39 clips.
+- That retained frame is renderer state, not game state. It lives in a
+  renderer-local `WeakMap` keyed by the enemy object, leaves simulation/save
+  bytes untouched, and is reclaimed with the enemy object's lifecycle.
+- The canonical asset manifest now marks seven non-current Hero clips cold.
+  Measured first-playable compressed bytes are 271,795 in focused QA.
+- Permanent focused regressions cover selected-only Hero fetches, cold
+  `death.webp`, Hero replacement close accounting, set-vs-clip spawn gating,
+  ready/failed gate semantics, first-spawn body visibility, no-blank
+  `advance -> engaged -> hit -> death`, and bounded retained/warming residency.
+- Preview activation now reads only the root manifest plus the seven small,
+  hash-locked set indexes. All 39 clip descriptors and WebPs stay cold until
+  gameplay or the explicit 39-clip review requests them; descriptor validation,
+  byte limits, hashes, decoded dimensions, and diagnostics remain fail-closed at
+  that demand boundary. This keeps package topology preflight separate from
+  clip residency instead of disguising metadata eager-loading as lazy delivery.
+
+## 2026-08-08 acting-contract ownership lesson
+
+- The preview consumer previously hash-bound the canonical acting contract and
+  then reimplemented producer-owned sampling-profile and secondary-action
+  grammars. A valid new Site Warden death settle profile therefore failed in the
+  game even though runtime never evaluates that authoring method.
+- The consumer now verifies exact canonical contract bytes and SHA-256, the
+  7-asset / 39-clip vocabulary, playback timing, and runtime-owned geometry and
+  budgets. Producer sampling and secondary-action payloads remain opaque.
+- The current snapshot SHA-256 is
+  `fe5b7f5675dc543312fcb9691d4787f1ebd5a2871f8f4ad6f12e8f8f0307b4b8`.
+  `qa/check-gaf2d-preview-build.mjs` passes the 7/39/795 real-shape fixture and
+  statically rejects reintroducing a parallel producer-profile parser.
+- This supersedes the 2026-08-01 note that the game should reject unknown
+  profile shapes. GAF2D owns that grammar; the game owns faithful consumption.
+
+## 2026-08-08 draw-pure presentation ownership
+
+- The exact RED proved that `draw()` changed domain bytes and leaked repaint
+  phase into later effects: root alpha 0 stamped enemy hit X 100, root alpha 1
+  stamped hit X 116, and fixed 60-step outcomes produced four different hashes
+  at 60/90/120/144 Hz.
+- Stage geometry, semantic effect origins, and actor-removal retention now live
+  only in renderer-owned `WeakMap` caches. `game.js` no longer owns or reads
+  `world.groundY`, `world.stageFit`, or `world.actorGeometries`; floaters,
+  particles, loot flights, shocks, and anchored confetti keep relative
+  fixed-step motion plus semantic Hero/enemy anchors.
+- Camera shake uses deterministic presentation noise, so repaint count cannot
+  consume the domain RNG stream. Authored body frames remain discrete and only
+  actor/world roots use residual-accumulator interpolation.
+- A frozen `inspectStagePresentation()` snapshot replaces browser access to
+  draw-stamped world fields. Focused GREEN leaves both alpha states unchanged,
+  retains an enemy floater from `[216,170]` to
+  `[216,169.66666666666666]` after actor removal, and gives all four refresh
+  schedules SHA-256
+  `53d04ddaef74768a13395f1c9a482d9a68fbcf7a80055cc7269570f3a8eab2f5`.
+- `node qa/run-tests.mjs` ends `ALL PASS`; browser scripts were syntax-checked
+  but not executed because this task explicitly prohibited starting a server.
+
+## 2026-08-09 V3 contract-snapshot refresh lesson
+
+- The game snapshot is an opaque, repo-versioned byte pin for the producer
+  contract; it is not a second authoring schema. The current source and game
+  snapshot are byte-identical at SHA-256
+  `976700bb8168f8f3113625674785b0c56eea13b8d4fcb1e73002f4729a2bb8e2`.
+- Repeated JSON keys such as `secondary_action` and `amplitude_mdeg` make broad
+  textual replacement unsafe: a syntactically valid edit can land on the wrong
+  asset. Every refresh must patch within asset/clip context, then require an
+  empty byte diff against the canonical GAF2D contract before running preview
+  QA. Hash equality is the final guard, not visual inspection of a few hunks.
+- Runtime continues to validate only consumer-owned facts: exact contract
+  bytes/hash, 7/39 vocabulary, timing, geometry, budgets, and temporal evidence.
+  Sampling profiles and secondary-action payloads remain producer-owned and
+  opaque to the game.
+
+## 2026-08-09 Visual Fidelity V4 human-gate closure
+
+- The current loopback preview is now `authored-semantic-v4`: exact 7 assets,
+  39 clips, 795 frames, selected lossless WebP bytes copied without re-encoding,
+  and explicit `unapproved_preview` / `human_review_required` state. V3 remains
+  the immutable semantic authority rather than being rewritten or relabeled.
+- Two fresh Chrome 151 runs completed all 39 clips at 60/90/120/144 Hz with
+  zero continuity findings. Their deterministic report is byte-identical at
+  SHA-256 `5cba094a30584038933ec25f1d342e30956927ec325b46b74a772205ed347d25`;
+  the same-scale V3↔V4 report is byte-identical at
+  `550de2aabdbcce47ac7cc7e97083c25d7dc32e2280bfb60238cef67c7381c317`.
+- Same-size DPR2 evidence closes the original density failure: source-visible /
+  displayed-device pixels are Hero 219/192, Courier 176/144, Sentinel 177/168,
+  and Warden 258/224. V3 supplied only 101, 102, 96, and 100 pixels.
+- Selected-only delivery is exact: seven set indexes, 40 JSON requests, and 39
+  WebPs, all HTTP 200. Residency stays bounded to two current sets and three
+  decoded clips including retained/warming state, with zero diagnostics.
+- Wave 1, Wave 10, four gameplay viewports, native light/dark, review-surface,
+  and same-scale screenshots were visually inspected without clipping, halo,
+  blank actors, overflow, console, or network findings. `node qa/run-tests.mjs`
+  ends `ALL PASS`.
+- Project-contained evidence and V4 candidate documents are ready, and every
+  asset passes zero-write GAF fidelity planning. No approval, pack, export, git,
+  PR, merge, or deploy operation has run; the next gate is the owner's complete
+  39-clip animated review.

@@ -17,6 +17,7 @@ import {
   validateMotionSetIndex,
 } from '../js/motion-bundle.js';
 import * as renderRuntime from '../js/render.js';
+import { VISUAL_FIDELITY_BUDGETS } from '../js/visual-fidelity-v4.js';
 
 const readJson = (name) =>
   JSON.parse(
@@ -208,9 +209,7 @@ function smoothClipDescriptor(set = smoothSetIndex(), name = 'idle') {
   const [count, fps, playback] = contracts[set.role][name];
   const frames = Array.from({ length: count }, (_, index) => {
     const poseSha256 =
-      index === count - 1 && playback === 'loop'
-        ? String(1).padStart(64, '0')
-        : index === count - 1 && playback === 'progress'
+      index === count - 1 && playback === 'progress'
           ? String(count - 1).padStart(64, '0')
           : String(index + 1).padStart(64, '0');
     return {
@@ -253,6 +252,109 @@ function smoothClipDescriptor(set = smoothSetIndex(), name = 'idle') {
       arguments: ['-exact', '-q', '90'],
     },
   };
+}
+
+function visualFidelityV4SetIndex() {
+  const set = smoothSetIndex('character');
+  const profileSha256 = '4'.repeat(64);
+  set.sourceFamily = 'authored-semantic-v4';
+  set.frameSize = { width: 256, height: 256 };
+  set.trim = { x: 32, y: 16, width: 192, height: 224 };
+  set.presentation.visibleBounds = { x: 16, y: 8, width: 144, height: 176 };
+  set.presentation.motionBounds = { x: 4, y: 2, width: 176, height: 208 };
+  set.consumerScale = {
+    grammar: 'gaf2d-consumer-scale-v4',
+    role: 'standard',
+    maximumCssBodyHeight: 72,
+    maximumDpr: 2,
+    displayedDevicePixels: 144,
+    runtimeCanvasClass: 256,
+    sourceVisiblePixels: 176,
+    scaleRatio: { numerator: 144, denominator: 176 },
+  };
+  set.toolchain.encoder = {
+    name: 'cwebp',
+    version: '1.6.0',
+    arguments: ['-exact', '-q', '94'],
+    profileSha256,
+  };
+  set.toolchain.compositor = {
+    name: 'HashBoundCopy',
+    version: 'selected-webp-v1',
+  };
+  set.toolchain.operations = [
+    'validate:v4-selected-webp:hash-bound-source',
+    'validate:v4-selected-webp:exact-copy-byte-proof',
+    'copy:v4-selected-webp:exact-media-bytes',
+  ];
+  set.toolchain.profileSha256 = profileSha256;
+  set.lineage = {
+    sourceBatchSha256: '1'.repeat(64),
+    derivativeSetSha256: '2'.repeat(64),
+    masterSetSha256: '7'.repeat(64),
+    selectedProfileSha256: profileSha256,
+    v3LineageSha256: '8'.repeat(64),
+  };
+  return set;
+}
+
+function visualFidelityV4ClipDescriptor(
+  set = visualFidelityV4SetIndex(),
+  name = 'idle',
+) {
+  const descriptor = smoothClipDescriptor(set, name);
+  const columns = 8;
+  descriptor.sourceFamily = 'authored-semantic-v4';
+  descriptor.frames = descriptor.frames.map((frame, index) => ({
+    ...frame,
+    x: (index % columns) * set.trim.width,
+    y: Math.floor(index / columns) * set.trim.height,
+    width: set.trim.width,
+    height: set.trim.height,
+  }));
+  descriptor.atlas.width = columns * set.trim.width;
+  descriptor.atlas.height =
+    Math.ceil(descriptor.frames.length / columns) * set.trim.height;
+  descriptor.trim =
+    name === 'advance'
+      ? { x: 24, y: 12, width: 176, height: 208 }
+      : structuredClone(set.trim);
+  descriptor.pivot =
+    name === 'advance' ? { x: 0.546875, y: 0.953125 } : structuredClone(set.pivot);
+  descriptor.presentation = {
+    schemaVersion: 1,
+    scaleContract: 'visible-body',
+    reference: {
+      clip: name,
+      frameIndex: 0,
+      sourceSha256: descriptor.frames[0].sourceSha256,
+    },
+    visibleBounds: {
+      x: 0,
+      y: Math.max(0, descriptor.trim.height - set.consumerScale.sourceVisiblePixels),
+      width: descriptor.trim.width,
+      height: set.consumerScale.sourceVisiblePixels,
+    },
+    motionBounds: {
+      x: 0,
+      y: 0,
+      width: descriptor.trim.width,
+      height: descriptor.trim.height,
+    },
+  };
+  descriptor.lineage = {
+    sourceBatchSha256: '1'.repeat(64),
+    derivativeSetSha256: '2'.repeat(64),
+    sourceDescriptorSha256: '3'.repeat(64),
+    sourceEvidenceSha256: '4'.repeat(64),
+    sourceMediaSha256: '5'.repeat(64),
+    masterInventorySha256: '6'.repeat(64),
+    masterSetSha256: '7'.repeat(64),
+    selectedProfileSha256: set.toolchain.profileSha256,
+    v3LineageSha256: '8'.repeat(64),
+  };
+  descriptor.encoder = structuredClone(set.toolchain.encoder);
+  return descriptor;
 }
 
 function addBrokenClip(bundle) {
@@ -474,6 +576,180 @@ assert(
       { role: 'boss' },
     ).some((error) => error.includes('245760 byte boss clip budget')),
     'V2 boss clip rejects one byte above its compressed budget',
+  );
+}
+{
+  const set = visualFidelityV4SetIndex();
+  const descriptor = visualFidelityV4ClipDescriptor(set);
+  const setErrors = validateMotionSetIndex(set, 'entry-runner', {
+    role: 'character',
+    consumerRole: 'standard',
+  });
+  const descriptorErrors = validateMotionClipDescriptor(
+    descriptor,
+    'idle',
+    set,
+    {
+      role: 'character',
+      consumerRole: 'standard',
+      descriptorSha256: 'a'.repeat(64),
+      imageSha256: 'b'.repeat(64),
+      selectedProfileSha256: set.toolchain.profileSha256,
+    },
+  );
+  assert(
+    setErrors.length === 0,
+    `V4 set accepts one role-aware 256px derivative while preserving V3 lineage (${setErrors.join('; ')})`,
+  );
+  assert(
+    descriptorErrors.length === 0,
+    `V4 clip accepts the selected generic quality profile without a hardcoded quality rule (${descriptorErrors.join('; ')})`,
+  );
+  const advance = visualFidelityV4ClipDescriptor(set, 'advance');
+  const drawCalls = [];
+  const drawn = drawMotionFrame(
+    { drawImage(...args) { drawCalls.push(args); } },
+    {
+      image: { width: advance.atlas.width, height: advance.atlas.height },
+      descriptor: advance,
+      set,
+    },
+    'advance',
+    0,
+    200,
+    300,
+    104,
+  );
+  assert(
+    set.previewLineage.candidateId === 'entry-runner-authored-semantic-v3',
+    'V4 derivative keeps V3 semantic candidate lineage',
+  );
+  assert(
+    drawCalls.length === 1 &&
+      drawn.destination.height === 104 &&
+      drawn.destination.width === 88 &&
+      drawn.destination.x !== 200 + (set.trim.x - set.frameSize.width * set.pivot.x) * (104 / set.trim.height),
+    'V4 draw uses clip-owned trim and pivot instead of the set-wide shared geometry',
+  );
+
+  assert(
+    validateMotionSetIndex(set, 'entry-runner', {
+      role: 'character',
+      consumerRole: 'standard',
+      selectedProfileSha256: '5'.repeat(64),
+    }).some((error) => /profile.*drift/i.test(error)),
+    'V4 set rejects root-selected profile drift before clip activation',
+  );
+
+  const independentlyRoundedVisible = copy(set);
+  independentlyRoundedVisible.presentation.visibleBounds.height -= 1;
+  assert(
+    validateMotionSetIndex(independentlyRoundedVisible, 'entry-runner', {
+      role: 'character',
+      consumerRole: 'standard',
+    }).length === 0,
+    'V4 set accepts independently rounded presentation geometry when both density facts forbid upscale',
+  );
+
+  const undersizedVisible = copy(set);
+  undersizedVisible.presentation.visibleBounds.height =
+    undersizedVisible.consumerScale.displayedDevicePixels - 1;
+  assert(
+    validateMotionSetIndex(undersizedVisible, 'entry-runner', {
+      role: 'character',
+      consumerRole: 'standard',
+    }).some((error) => /presentation.*displayed device pixels/i.test(error)),
+    'V4 set rejects presentation geometry below displayed device pixels',
+  );
+
+  const wrongRole = copy(set);
+  wrongRole.consumerScale.role = 'elite';
+  wrongRole.consumerScale.maximumCssBodyHeight = 84;
+  wrongRole.consumerScale.displayedDevicePixels = 168;
+  wrongRole.consumerScale.scaleRatio.numerator = 168;
+  assert(
+    validateMotionSetIndex(wrongRole, 'entry-runner', {
+      role: 'character',
+      consumerRole: 'standard',
+    }).some((error) => /consumer scale role.*trusted/i.test(error)),
+    'V4 set cannot self-promote its trusted consumer role',
+  );
+
+  const profileDrift = copy(descriptor);
+  profileDrift.encoder.profileSha256 = '5'.repeat(64);
+  assert(
+    validateMotionClipDescriptor(profileDrift, 'idle', set, {
+      role: 'character',
+      consumerRole: 'standard',
+      selectedProfileSha256: set.toolchain.profileSha256,
+    }).some((error) => /profile.*drift|profile.*differ/i.test(error)),
+    'V4 clip rejects encoder profile drift from manifest and set authority',
+  );
+
+  const higherCommonBytes = copy(descriptor);
+  higherCommonBytes.atlas.bytes = 196370;
+  assert(
+    validateMotionClipDescriptor(higherCommonBytes, 'idle', set, {
+      role: 'character',
+      consumerRole: 'standard',
+      selectedProfileSha256: set.toolchain.profileSha256,
+      imageBytes: higherCommonBytes.atlas.bytes,
+    }).length === 0,
+    'V4 common clip accepts provisional selected media above the retired V3 cap',
+  );
+
+  const bossSet = smoothSetIndex('boss');
+  bossSet.sourceFamily = 'authored-semantic-v4';
+  bossSet.assetId = 'site-warden';
+  bossSet.frameSize = { width: 320, height: 320 };
+  bossSet.trim = { x: 48, y: 32, width: 224, height: 256 };
+  bossSet.presentation.visibleBounds = { x: 16, y: 8, width: 176, height: 224 };
+  bossSet.presentation.motionBounds = { x: 4, y: 2, width: 208, height: 256 };
+  bossSet.consumerScale = {
+    grammar: 'gaf2d-consumer-scale-v4',
+    role: 'boss',
+    maximumCssBodyHeight: 112,
+    maximumDpr: 2,
+    displayedDevicePixels: 224,
+    runtimeCanvasClass: 320,
+    sourceVisiblePixels: 224,
+    scaleRatio: { numerator: 224, denominator: 224 },
+  };
+  bossSet.toolchain = structuredClone(set.toolchain);
+  bossSet.lineage = {
+    sourceBatchSha256: '1'.repeat(64),
+    derivativeSetSha256: '2'.repeat(64),
+    masterSetSha256: '7'.repeat(64),
+    selectedProfileSha256: set.toolchain.profileSha256,
+    v3LineageSha256: '8'.repeat(64),
+  };
+  bossSet.consumerScale.role = 'boss';
+  const bossDescriptor = visualFidelityV4ClipDescriptor(bossSet, 'broken');
+  bossDescriptor.atlas.bytes = 352820;
+  assert(
+    validateMotionClipDescriptor(bossDescriptor, 'broken', bossSet, {
+      role: 'boss',
+      consumerRole: 'boss',
+      selectedProfileSha256: bossSet.toolchain.profileSha256,
+      imageBytes: bossDescriptor.atlas.bytes,
+    }).length === 0,
+    'V4 boss clip accepts provisional selected media above the retired V3 cap',
+  );
+
+  const aboveV4 = copy(descriptor);
+  aboveV4.atlas.bytes = VISUAL_FIDELITY_BUDGETS.commonEncodedBytes + 1;
+  assert(
+    validateMotionClipDescriptor(aboveV4, 'idle', set, {
+      role: 'character',
+      consumerRole: 'standard',
+      selectedProfileSha256: set.toolchain.profileSha256,
+      imageBytes: aboveV4.atlas.bytes,
+    }).some((error) =>
+      error.includes(
+        `${VISUAL_FIDELITY_BUDGETS.commonEncodedBytes} byte character clip budget`,
+      ),
+    ),
+    'V4 clip rejects one byte above the rounded measured selected-media cap',
   );
 }
 expectValid(valid, 'entry-runner', 'valid common motion bundle accepted');
@@ -1235,18 +1511,69 @@ assert(
     frameIndexForClip(valid.clips.idle, 0.4),
   'loop frame selection uses simulation timestamp',
 );
-const repaintFrames = (refreshHz, seconds) =>
-  Array.from(
-    { length: refreshHz * seconds + 1 },
-    (_, tick) => frameIndexForClip(valid.clips.idle, tick / refreshHz),
-  );
-const framesAt60Hz = repaintFrames(60, 2);
-const framesAt120HzSampledAt60Hz = repaintFrames(120, 2).filter(
-  (_frame, tick) => tick % 2 === 0,
-);
+const refreshRates = [60, 90, 120, 144];
 assert(
-  framesAt60Hz.join('|') === framesAt120HzSampledAt60Hz.join('|'),
-  '60 Hz and 120 Hz repaint schedules select identical frames at identical elapsed times',
+  refreshRates.join('|') === '60|90|120|144',
+  'refresh-rate independence QA covers 60, 90, 120, and 144 Hz',
+);
+const commonElapsedTimestamps = Array.from(
+  { length: 13 },
+  (_value, step) => step / 6,
+);
+const frameIndexContractOracle = (clip, value) => {
+  const count = clip.frames.length;
+  const safeValue = Number.isFinite(value) ? value : 0;
+  if (clip.playback === 'loop') {
+    return (
+      Math.floor(Math.max(0, safeValue) * clip.fps) % count
+    );
+  }
+  const progress = Math.min(1, Math.max(0, safeValue));
+  return Math.min(count - 1, Math.floor(progress * count));
+};
+const elapsedTimeAuthority = commonElapsedTimestamps.map((timestamp) =>
+  frameIndexContractOracle(valid.clips.idle, timestamp),
+);
+for (const refreshHz of refreshRates) {
+  const everyRepaintMatchesContract = Array.from(
+    { length: refreshHz * 2 + 1 },
+    (_value, tick) => tick,
+  ).every((tick) => {
+    const elapsedSeconds = tick / refreshHz;
+    const runtimeFrame = frameIndexForClip(
+      valid.clips.idle,
+      elapsedSeconds,
+    );
+    return (
+      runtimeFrame ===
+      frameIndexContractOracle(valid.clips.idle, elapsedSeconds)
+    );
+  });
+  assert(
+    everyRepaintMatchesContract,
+    `${refreshHz} Hz selects the contract frame at every repaint tick across two seconds`,
+  );
+  const repaintFramesAtCommonTimes = commonElapsedTimestamps.map(
+    (timestamp) => {
+      const repaintTick = Math.round(timestamp * refreshHz);
+      return frameIndexForClip(
+        valid.clips.idle,
+        repaintTick / refreshHz,
+      );
+    },
+  );
+  assert(
+    repaintFramesAtCommonTimes.join('|') ===
+      elapsedTimeAuthority.join('|'),
+    `${refreshHz} Hz repaint schedule matches elapsed-time authority at common exact timestamps`,
+  );
+}
+const idleCycleSeconds =
+  valid.clips.idle.frames.length / valid.clips.idle.fps;
+assert(
+  frameIndexForClip(valid.clips.idle, 0) ===
+    frameIndexForClip(valid.clips.idle, idleCycleSeconds),
+  'loop clip wraps to its first frame at one exact cycle',
 );
 assert(
   frameIndexForClip(valid.clips.death, 1) === 7,
@@ -1261,6 +1588,14 @@ assert(
     frameIndexForClip(valid.clips.hit, value),
   ).join('|') === '0|0|1|2|3|3',
   'progress clip uses equal normalized bins and holds the final frame at one',
+);
+assert(
+  [-1, 0, 0.249999, 0.25, 0.5, 0.75, 1, 2].every(
+    (value) =>
+      frameIndexForClip(valid.clips.hit, value) ===
+      frameIndexContractOracle(valid.clips.hit, value),
+  ),
+  'progress clip selection matches the normalized contract oracle',
 );
 const hugeTimestampFrame = frameIndexForClip(
   valid.clips.idle,
