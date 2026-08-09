@@ -4,6 +4,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
+import { createPortableDerivativeTools } from './portable-derivative-tools.mjs';
+
 import {
   buildGaf2dHero,
   HERO_CLIP_CONTRACT,
@@ -18,16 +20,8 @@ import {
   webpSize,
 } from '../scripts/assets/build-gaf2d-motion.mjs';
 
-const MAGICK =
-  process.env.MAGICK ||
-  (fs.existsSync('/opt/homebrew/bin/magick')
-    ? '/opt/homebrew/bin/magick'
-    : 'magick');
-const CWEBP =
-  process.env.CWEBP ||
-  (fs.existsSync('/opt/homebrew/bin/cwebp')
-    ? '/opt/homebrew/bin/cwebp'
-    : 'cwebp');
+let MAGICK = process.env.MAGICK || null;
+let CWEBP = process.env.CWEBP || null;
 
 let failures = 0;
 function check(condition, message) {
@@ -446,6 +440,11 @@ const temporaryRoot = fs.mkdtempSync(
   path.join(os.tmpdir(), 'apn-gaf2d-hero-'),
 );
 try {
+  if (!MAGICK || !CWEBP) {
+    const portableTools = createPortableDerivativeTools(temporaryRoot);
+    MAGICK ||= portableTools.magick;
+    CWEBP ||= portableTools.cwebp;
+  }
   const fixture = createHeroExport(path.join(temporaryRoot, 'approved'));
   const first = buildGaf2dHero(
     options(fixture, path.join(temporaryRoot, 'build-a')),
