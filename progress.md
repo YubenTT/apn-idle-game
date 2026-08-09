@@ -31,6 +31,11 @@ Original prompt: Complete the APN Idle redesign autonomously, including QA, revi
   Seventy-five screenshots plus the report form the durable production lane;
   representative portrait/landscape Wave 1/Wave 10 images were inspected at
   original resolution.
+- CI exposed a machine-only test assumption: the legacy derivative harness
+  expected locally installed exact ImageMagick/cwebp binaries. The harness now
+  uses deterministic subprocess fixture tools when explicit tool paths are
+  absent, while the local real-tool + real-release lane remains separately
+  green. Tool version pins and production release bytes were not relaxed.
 - Fresh broad gates: GAF2D 1,440 tests; asset V4 70 tests; game Node suite
   `ALL PASS`. No deploy or Hero rig approval was inferred.
 
