@@ -25,6 +25,23 @@ experimental proof/measurement tooling were removed before integration, so this
 checkpoint makes no full-body or new-atlas quality claim. Issue #23 remains open
 for a different full-body identity approach.
 
+## PR-5.1 regression follow-up · creature walk + Host fallback hardening
+
+On 2026-07-28 we fixed two live-reported regressions without changing the approved
+UX contract:
+
+- creature entities now spawn ahead of melee-stop and carry explicit movement state (`approach`,
+  `engaged`, `idle`) so walk (advance) clips are always observable before contact;
+- creature renderer now prefers explicit enemy state and falls back safely when animation clips are missing;
+- Host V3 loader now tolerates partial clip failures and uses deterministic fallback per semantic state
+  instead of failing the whole character rig on one missing clip.
+
+Validation:
+
+- `node qa/run-tests.mjs` → `ALL PASS`
+- `node --check js/game.js js/render.js js/hero-v3.js` → passed
+- quick smoke checks confirm no syntax/runtime-breaking exception in the modified flow.
+
 ## PR-4b · Build V2 UI + Priority Tag
 
 Issue #22 removes SP from the Run strip and makes Build its sole owning surface.

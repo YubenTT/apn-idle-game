@@ -44,6 +44,8 @@ export function sizeCanvas(canvas) {
   canvas.style.width = `${w}px`;
   canvas.style.height = `${h}px`;
   const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   return { w, h, ctx };
 }
@@ -332,9 +334,20 @@ function drawEnemy(ctx, e, gy, t, packAssets = null, reducedMotion = false, fit 
   // V3 vinyl creatures take the stage when their atlases are decoded; any gap
   // falls straight back to the procedural feed-noise family.
   const kind = env ? creatureKindFor(e, env.zone) : null;
+  const meleeStop = env?.meleeStop ?? 0;
+  const inMelee = meleeStop !== 0 ? e.x <= meleeStop + 0.5 : env?.engagedId === e.id;
+  const state = e.state || (inMelee ? 'engaged' : 'approach');
   const onStage =
     kind &&
-    drawCreatureTarget(ctx, e, kind, { t, gy, size, reducedMotion, meleeStop: env.meleeStop, engagedId: env.engagedId });
+    drawCreatureTarget(ctx, e, kind, {
+      t,
+      gy,
+      size,
+      reducedMotion,
+      meleeStop: env.meleeStop,
+      engagedId: env.engagedId,
+      state,
+    });
   if (!onStage) {
     drawTarget(ctx, e, {
       t,
@@ -469,7 +482,7 @@ function creatureSpawnScale(e, t) {
  * idle otherwise (loop).
  */
 function drawCreatureTarget(ctx, e, kind, o) {
-  const { t, gy, size, reducedMotion, meleeStop, engagedId } = o;
+  const { t, gy, size, reducedMotion, meleeStop, engagedId, state } = o;
   const x = e.displayX;
   const dying = e.deathT > 0 && e.killed;
   const deathU = dying ? 1 - clamp(e.deathT / (e.deathMax || 0.5), 0, 1) : 0;
@@ -482,6 +495,7 @@ function drawCreatureTarget(ctx, e, kind, o) {
   // Broken phase swap — the exact Version Gate threshold (render + enemies-v2
   // both use hp/hpMax < 0.34); hit/death still outrank it, like the classic boss.
   const breaking = kind === 'curator' && !dying && e.hp / e.hpMax < 0.34;
+  const inferredState = state || (e.x > meleeStop + 0.5 ? 'approach' : engagedId === e.id ? 'engaged' : 'idle');
 
   let clip;
   let clipT;
@@ -494,10 +508,10 @@ function drawCreatureTarget(ctx, e, kind, o) {
   } else if (breaking) {
     clip = 'broken';
     clipT = t + phase;
-  } else if (e.x > meleeStop + 0.5) {
+  } else if (inferredState === 'approach') {
     clip = 'advance';
     clipT = t + phase;
-  } else if (engagedId === e.id) {
+  } else if (inferredState === 'engaged') {
     clip = 'attack';
     clipT = t + phase;
   } else {

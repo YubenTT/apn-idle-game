@@ -537,8 +537,8 @@ export function spawnEnemy(s) {
   const corruptionTier = Math.max(0, pack?.tier || s.route.corruptionByPack?.[s.route.currentPackId] || 0);
   const hp = routeEnemyHp(zone, s.run.hero.scanner, permanentPower, corruptionTier, typeHpMult(type));
   const alive = s.world.enemies.filter((e) => e.hp > 0);
-  // Spawn ahead of melee stop so approach is clear (enemy not glued to mascot)
-  const x = s.world.heroX + 150 + Math.random() * 28;
+  // Spawn ahead of melee stop so approach is visible before engagement.
+  const x = s.world.heroX + (C.MELEE_RANGE + 140) + Math.random() * 40;
   const flavor = ENEMY_FLAVOR[type] || ENEMY_FLAVOR.stale;
   const targetIndex = ({ stale: 0, rumor: 1, lag: 2, spoiler: 3, patch: 3, event: 4 })[type] ?? 0;
   const target = type === 'boss' ? pack?.boss : pack?.targets?.[targetIndex];
@@ -917,6 +917,7 @@ export function step(s, dt) {
 
   // enemies approach
   const hx = s.world.heroX;
+  const engaged = s.world.enemies.find((e) => e.hp > 0 && e.x <= hx + C.MELEE_RANGE);
   for (const e of s.world.enemies) {
     if (e.hp <= 0) continue;
     if (e.hitFlash > 0) e.hitFlash -= dt;
@@ -927,6 +928,11 @@ export function step(s, dt) {
       const approach =
         speed * (e.type === 'boss' ? 0.5 : 0.82) * (s.world.sprintApproach || 1) * dt;
       e.x -= approach;
+      e.state = 'approach';
+    } else if (engaged && e.id === engaged.id) {
+      e.state = 'engaged';
+    } else {
+      e.state = 'idle';
     }
     // smooth display
     e.displayX = lerp(e.displayX, e.x, 1 - Math.exp(-14 * dt));
@@ -934,9 +940,7 @@ export function step(s, dt) {
 
   // AUTO ATTACK — the critical path
   s.world.attackCd -= dt;
-  const target = s.world.enemies.find(
-    (e) => e.hp > 0 && e.x <= hx + C.MELEE_RANGE
-  );
+  const target = engaged;
   if (target && s.world.attackCd <= 0) {
     s.world.attackCd = st.interval;
     let hit = st.dmg;

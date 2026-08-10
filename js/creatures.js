@@ -127,6 +127,14 @@ export function drawCreature(ctx, kind, clip, t, x, footY, height) {
     : Math.min(n - 1, Math.floor(Math.min(1, Math.max(0, t)) * n));
   const f = frames[i];
   const tr = meta.trim;
+  const anchorX =
+    meta.anchorPx && Number.isFinite(meta.anchorPx[0]) && Number.isFinite(meta.anchorPx[1])
+      ? meta.anchorPx[0]
+      : (Number.isFinite(meta.anchor?.[0]) ? meta.anchor[0] * meta.frameSize : tr.w * 0.5);
+  const anchorY =
+    meta.anchorPx && Number.isFinite(meta.anchorPx[0]) && Number.isFinite(meta.anchorPx[1])
+      ? meta.anchorPx[1]
+      : (Number.isFinite(meta.anchor?.[1]) ? meta.anchor[1] * meta.frameSize : tr.h);
   const s = height / tr.h;
   ctx.drawImage(
     img,
@@ -134,8 +142,8 @@ export function drawCreature(ctx, kind, clip, t, x, footY, height) {
     f.y,
     f.w,
     f.h,
-    x - (tr.x + tr.w * 0.5) * s,
-    footY - (tr.y + tr.h) * s,
+    x - anchorX * s,
+    footY - anchorY * s,
     tr.w * s,
     tr.h * s
   );

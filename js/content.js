@@ -221,7 +221,8 @@ export const ENEMY_FLAVOR = {
  * Presentational layer only: game.js domain types stay untouched and no
  * existing enemy kind is removed — creatureKindFor maps living targets onto
  * these kinds so the first zones rotate them in:
- *  - elites (lag/spoiler/event) → The Recon / The Hotshot, per-enemy stable
+ *  - all non-boss combat enemies (stale/rumor/lag/spoiler/patch/event) →
+ *    The Recon / The Hotshot, per-enemy stable
  *  - boss → The Curator on odd boss-zone ordinals (the FIRST boss zone
  *    included), classic Version Gate on even ones
  * The Curator mirrors the Version Gate broken-phase contract: below 34% HP its
@@ -252,8 +253,8 @@ export const CREATURES = {
 };
 export const CREATURE_KINDS = Object.freeze(Object.keys(CREATURES));
 
-const CREATURE_ELITE_TYPES = new Set(['lag', 'spoiler', 'event']);
-const CREATURE_ELITE_ROTATION = ['recon', 'hotshot'];
+const CREATURE_MOTION_ENEMY_TYPES = new Set(['stale', 'rumor', 'lag', 'spoiler', 'patch', 'event']);
+const CREATURE_ENEMY_ROTATION = ['recon', 'hotshot'];
 
 /** Deterministic per-enemy pick (stable across frames, like render phases). */
 function creatureHash(id) {
@@ -279,8 +280,8 @@ export function creatureKindFor(enemy, zone = 0) {
   if (enemy.type === 'boss') {
     return bossZoneOrdinal(zone) % 2 === 1 ? 'curator' : null;
   }
-  if (CREATURE_ELITE_TYPES.has(enemy.type)) {
-    return CREATURE_ELITE_ROTATION[creatureHash(enemy.id) % CREATURE_ELITE_ROTATION.length];
+  if (CREATURE_MOTION_ENEMY_TYPES.has(enemy.type)) {
+    return CREATURE_ENEMY_ROTATION[creatureHash(enemy.id) % CREATURE_ENEMY_ROTATION.length];
   }
   return null;
 }
