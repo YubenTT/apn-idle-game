@@ -232,8 +232,9 @@ export function verifySizes(
       pack?.motion?.characters || {},
     )) {
       const key = `${pack.id}/${assetId}`;
+      const isHero = pack.id === 'valorant' && assetId === 'apn-hero';
       const isBoss = pack?.boss?.id === assetId;
-      const role = isBoss ? 'boss' : 'character';
+      const role = isHero ? 'hero' : isBoss ? 'boss' : 'character';
       const perClipSource =
         record?.sourceFamily === 'authored-semantic-v4' &&
         typeof record?.set === 'string' &&
@@ -369,7 +370,7 @@ export function verifySizes(
           .sort((left, right) => right - left)
           .slice(0, 2)
           .reduce((sum, value) => sum + value, 0);
-        motionRecords.set(key, { compressed, decoded });
+        motionRecords.set(key, { compressed, decoded, role });
         continue;
       }
       const image = path.join(rootDir, record.image || '');
@@ -454,40 +455,46 @@ export function verifySizes(
           budgetError(`${assetId} motion decoded`, decoded, decodedCap),
         );
       }
-      motionRecords.set(key, { compressed, decoded });
+      motionRecords.set(key, { compressed, decoded, role });
     }
   }
 
-  let heroCompressed = 0;
-  let heroNewMotionCompressed = 0;
-  let heroDecoded = 0;
-  const heroSet = path.join(rootDir, 'assets/mascot/v3/set.json');
-  if (fs.existsSync(heroSet)) {
-    heroNewMotionCompressed += fs.statSync(heroSet).size;
-  }
-  for (const clip of HERO_V3_CLIPS) {
-    const image = path.join(rootDir, `assets/mascot/v3/${clip}.webp`);
-    const descriptor = path.join(rootDir, `assets/mascot/v3/${clip}.json`);
-    if (fs.existsSync(image)) {
-      const bytes = fs.statSync(image).size;
-      heroCompressed += bytes;
-      heroNewMotionCompressed += bytes;
-      try {
-        heroDecoded += decodedImageBytes(image);
-      } catch (error) {
-        errors.push(`Hero ${clip} texture: ${error.message}`);
+  const productionHeroMotion = motionRecords.get('valorant/apn-hero');
+  let heroCompressed = productionHeroMotion?.compressed || 0;
+  let heroNewMotionCompressed = productionHeroMotion?.compressed || 0;
+  let heroDecoded = productionHeroMotion?.decoded || 0;
+  if (!productionHeroMotion) {
+    const heroSet = path.join(rootDir, 'assets/mascot/v3/set.json');
+    if (fs.existsSync(heroSet)) {
+      heroNewMotionCompressed += fs.statSync(heroSet).size;
+    }
+    for (const clip of HERO_V3_CLIPS) {
+      const image = path.join(rootDir, `assets/mascot/v3/${clip}.webp`);
+      const descriptor = path.join(rootDir, `assets/mascot/v3/${clip}.json`);
+      if (fs.existsSync(image)) {
+        const bytes = fs.statSync(image).size;
+        heroCompressed += bytes;
+        heroNewMotionCompressed += bytes;
+        try {
+          heroDecoded += decodedImageBytes(image);
+        } catch (error) {
+          errors.push(`Hero ${clip} texture: ${error.message}`);
+        }
+      }
+      if (fs.existsSync(descriptor)) {
+        heroNewMotionCompressed += fs.statSync(descriptor).size;
       }
     }
-    if (fs.existsSync(descriptor)) {
-      heroNewMotionCompressed += fs.statSync(descriptor).size;
-    }
   }
-  if (heroCompressed > MOTION_BUDGETS.heroCompressed) {
+  const heroCompressedCap = productionHeroMotion
+    ? VISUAL_FIDELITY_BUDGETS.heroCompressedBytes
+    : MOTION_BUDGETS.heroCompressed;
+  if (heroCompressed > heroCompressedCap) {
     errors.push(
       budgetError(
         'Hero motion compressed',
         heroCompressed,
-        MOTION_BUDGETS.heroCompressed,
+        heroCompressedCap,
       ),
     );
   }
@@ -530,8 +537,9 @@ export function verifySizes(
       };
   let newMotionCompressed = heroNewMotionCompressed;
   for (const assetId of Object.keys(firstPack?.motion?.characters || {})) {
-    newMotionCompressed +=
-      motionRecords.get(`${firstPack.id}/${assetId}`)?.compressed || 0;
+    const motionRecord = motionRecords.get(`${firstPack.id}/${assetId}`);
+    if (motionRecord?.role === 'hero') continue;
+    newMotionCompressed += motionRecord?.compressed || 0;
   }
   if (newMotionCompressed > motionBudgetCaps.newMotionCompressed) {
     errors.push(

@@ -155,6 +155,42 @@ assert(
   validatePackManifest(v4FixturePack).length === 0,
   'visual-fidelity V4 motion pack map is accepted',
 );
+const heroV4FixturePack = structuredClone(v4FixturePack);
+heroV4FixturePack.motion.characters['apn-hero'] = {
+  role: 'hero',
+  basePath: 'assets/game-packs/valorant/characters/apn-hero/',
+  set: 'assets/game-packs/valorant/characters/apn-hero/set.json',
+  setSha256: validSetSha256,
+  sourceFamily: 'authored-semantic-v4',
+  consumerScale: {
+    grammar: 'gaf2d-consumer-scale-v4',
+    role: 'hero',
+    maximumCssBodyHeight: 96,
+    maximumDpr: 2,
+    displayedDevicePixels: 192,
+    runtimeCanvasClass: 320,
+    sourceVisiblePixels: 219,
+    scaleRatio: {
+      numerator: 192,
+      denominator: 219,
+    },
+  },
+  selectedProfileSha256: validProfileSha256,
+  clips: {
+    run: {
+      descriptor: 'assets/game-packs/valorant/characters/apn-hero/run.json',
+      descriptorSha256: validDescriptorSha256,
+      image: 'assets/game-packs/valorant/characters/apn-hero/run.webp',
+      imageSha256: validImageSha256,
+    },
+  },
+};
+assert(
+  validatePackManifest(heroV4FixturePack).length === 0 &&
+    !heroV4FixturePack.targets.some((target) => target.id === 'apn-hero') &&
+    heroV4FixturePack.boss.id !== 'apn-hero',
+  'approved APN Hero V4 is a trusted hero source, never a target or boss',
+);
 const duplicateRole = structuredClone(fixturePack);
 duplicateRole.targets[1].role = 'common-a';
 assert(
@@ -239,6 +275,7 @@ assert(
   'motion image and descriptor paths are unique',
 );
 const productionMotionAssets = [
+  'apn-hero',
   'entry-runner',
   'protocol-courier',
   'signal-hunter',
@@ -251,7 +288,6 @@ assert(
     productionPack.motion?.grammar === 'gaf2d-motion-bundle-v1' &&
     Object.keys(productionPack.motion.characters).sort().join('|') ===
       productionMotionAssets.join('|') &&
-    !Object.hasOwn(productionPack.motion.characters, 'apn-hero') &&
     productionMotionAssets.every((assetId) => {
       const record = productionPack.motion.characters[assetId];
       return (
@@ -264,8 +300,12 @@ assert(
         typeof record?.clips === 'object' &&
         Object.keys(record.clips).length >= 5
       );
-    }),
-  'production Valorant pack exposes exactly six approved V4 motion sources and keeps Hero absent',
+    }) &&
+    productionPack.motion.characters['apn-hero'].role === 'hero' &&
+    productionPack.motion.characters['apn-hero'].consumerScale.role === 'hero' &&
+    !productionPack.targets.some((target) => target.id === 'apn-hero') &&
+    productionPack.boss.id !== 'apn-hero',
+  'production Valorant pack exposes seven approved V4 sources with Hero outside enemy roles',
 );
 
 const firstPlayablePacks = readJson(
@@ -306,20 +346,33 @@ firstPlayablePacks[0].motion.characters['entry-runner'] = {
     },
   },
 };
+firstPlayablePacks[0].motion.characters['apn-hero'] = structuredClone(
+  heroV4FixturePack.motion.characters['apn-hero'],
+);
 const firstPlayablePaths = firstPlayableAssetPaths(firstPlayablePacks);
 assert(
-  firstPlayablePaths.has('assets/mascot/v3/run.webp') &&
-    firstPlayablePaths.has('assets/mascot/v3/run.json') &&
+  firstPlayablePaths.has(
+    'assets/game-packs/valorant/characters/apn-hero/run.webp',
+  ) &&
+    firstPlayablePaths.has(
+      'assets/game-packs/valorant/characters/apn-hero/run.json',
+    ) &&
     HERO_V3_CLIPS.filter((clip) => clip !== 'run').every(
       (clip) =>
-        !firstPlayablePaths.has(`assets/mascot/v3/${clip}.webp`) &&
-        !firstPlayablePaths.has(`assets/mascot/v3/${clip}.json`),
+        !firstPlayablePaths.has(
+          `assets/game-packs/valorant/characters/apn-hero/${clip}.webp`,
+        ) &&
+        !firstPlayablePaths.has(
+          `assets/game-packs/valorant/characters/apn-hero/${clip}.json`,
+        ),
     ),
-  'only the current Hero run clip is first-playable; seven semantic clips stay cold',
+  'only the approved V4 Hero run clip is first-playable; seven semantic clips stay cold',
 );
 assert(
-  firstPlayablePaths.has('assets/mascot/v3/set.json'),
-  'Hero set authority is part of the real first-playable request set',
+  firstPlayablePaths.has(
+    'assets/game-packs/valorant/characters/apn-hero/set.json',
+  ) && !firstPlayablePaths.has('assets/mascot/v3/set.json'),
+  'approved V4 Hero set replaces the historical Hero in the first-playable request set',
 );
 for (const pack of firstPlayablePacks.slice(0, 2)) {
   assert(
@@ -374,16 +427,25 @@ const motionPreviewSource = fs.readFileSync(
   'utf8',
 );
 assert(
-  /\bloadHeroV3\(motionPreview\.heroBasePath,\s*\{\s*allowUnapprovedPreview:\s*motionPreview\.active,\s*sourceFamily:\s*motionPreview\.manifest\?\.sourceFamily\s*\?\?\s*null,\s*expectedSetSha256:\s*motionPreview\.manifest\?\.hero\?\.setSha256\s*\?\?\s*null,\s*consumerScale:\s*motionPreview\.manifest\?\.hero\?\.consumerScale\s*\?\?\s*null,\s*selectedProfileSha256:\s*motionPreview\.manifest\?\.toolchain\?\.profileSha256\s*\?\?\s*null,\s*\}\)/.test(
-    mainSource,
-  ) &&
+  mainSource.includes("GAME_PACKS.find((pack) => pack.id === 'valorant')") &&
+    mainSource.includes("motion?.characters?.['apn-hero']") &&
+    mainSource.includes('const heroRuntimeSource = motionPreview.active') &&
+    /loadHeroV3\(\s*heroRuntimeSource\?\.basePath\s*\?\?\s*motionPreview\.heroBasePath/.test(
+      mainSource,
+    ) &&
+    mainSource.includes('sourceFamily: heroRuntimeSource?.sourceFamily ?? null') &&
+    mainSource.includes('expectedSetSha256: heroRuntimeSource?.setSha256 ?? null') &&
+    mainSource.includes('consumerScale: heroRuntimeSource?.consumerScale ?? null') &&
+    mainSource.includes(
+      'selectedProfileSha256: heroRuntimeSource?.selectedProfileSha256 ?? null',
+    ) &&
     /const PRODUCTION_HERO_BASE = ['"]assets\/mascot\/v3\/['"]/.test(
       motionPreviewSource,
     ) &&
     /heroBasePath:\s*PRODUCTION_HERO_BASE/.test(motionPreviewSource) &&
     !/\bloadCreatures\(\)/.test(mainSource) &&
     /\bpreloadRouteAssets\(assetStore,\s*s\.route\)/.test(mainSource),
-  'first-playable contract is gated by fail-closed Hero V3 and pack-shell boot loaders only',
+  'first-playable contract selects the approved pack-bound V4 Hero and fails closed to the Canvas silhouette',
 );
 const bootSource = mainSource.match(
   /async function boot\(\) \{([\s\S]*?)\n\}/,
@@ -510,9 +572,9 @@ const secondHash = crypto.createHash('sha256').update(secondBytes).digest('hex')
 assert(firstHash === secondHash && first.assets.length === second.assets.length, 'asset manifest generation byte-stable');
 const generatedByPath = new Map(first.assets.map((asset) => [asset.path, asset]));
 for (const hotPath of [
-  'assets/mascot/v3/run.webp',
-  'assets/mascot/v3/run.json',
-  'assets/mascot/v3/set.json',
+  'assets/game-packs/valorant/characters/apn-hero/run.webp',
+  'assets/game-packs/valorant/characters/apn-hero/run.json',
+  'assets/game-packs/valorant/characters/apn-hero/set.json',
   'assets/game-packs/valorant/background.webp',
   'assets/game-packs/valorant/targets.json',
   'assets/game-packs/league/corruption-mask.webp',
@@ -525,6 +587,9 @@ for (const hotPath of [
   );
 }
 for (const coldPath of [
+  'assets/mascot/v3/run.webp',
+  'assets/mascot/v3/run.json',
+  'assets/mascot/v3/set.json',
   'assets/mascot/v3/idle.webp',
   'assets/mascot/v3/death.webp',
   'assets/apn-mascot-glb-host.glb',
@@ -564,7 +629,9 @@ assert(
 );
 const staleManifest = structuredClone(first);
 const staleHot = staleManifest.assets.find(
-  (asset) => asset.path === 'assets/mascot/v3/run.webp',
+  (asset) =>
+    asset.path ===
+    'assets/game-packs/valorant/characters/apn-hero/run.webp',
 );
 const staleCold = staleManifest.assets.find(
   (asset) => asset.path === 'assets/apn-mascot-glb-host.glb',
@@ -578,7 +645,9 @@ const staleResult = verifySizes(staleManifestPath, {
 });
 assert(
   staleResult.errors.some((error) =>
-    error.includes('assets/mascot/v3/run.webp') &&
+    error.includes(
+      'assets/game-packs/valorant/characters/apn-hero/run.webp',
+    ) &&
     error.includes('firstPlayable must equal true'),
   ) &&
     staleResult.errors.some((error) =>
@@ -590,7 +659,9 @@ assert(
 const normalCliStaleResult = verifySizes(staleManifestPath);
 assert(
   normalCliStaleResult.errors.some((error) =>
-    error.includes('assets/mascot/v3/run.webp') &&
+    error.includes(
+      'assets/game-packs/valorant/characters/apn-hero/run.webp',
+    ) &&
     error.includes('firstPlayable must equal true'),
   ) &&
     normalCliStaleResult.errors.some((error) =>
@@ -602,7 +673,9 @@ assert(
 
 const missingManifestRecord = structuredClone(first);
 missingManifestRecord.assets = missingManifestRecord.assets.filter(
-  (asset) => asset.path !== 'assets/mascot/v3/run.webp',
+  (asset) =>
+    asset.path !==
+    'assets/game-packs/valorant/characters/apn-hero/run.webp',
 );
 const missingManifestRecordPath = path.join(
   temp,
@@ -616,7 +689,9 @@ const missingManifestRecordResult = verifySizes(missingManifestRecordPath);
 assert(
   missingManifestRecordResult.errors.some(
     (error) =>
-      error.includes('assets/mascot/v3/run.webp') &&
+      error.includes(
+        'assets/game-packs/valorant/characters/apn-hero/run.webp',
+      ) &&
       error.includes('missing manifest asset record'),
   ),
   'normal verifier discovery rejects a missing canonical first-playable manifest record',

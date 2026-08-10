@@ -14,14 +14,16 @@ V2 rig fallback. Those statements and paths disagreed, and every old direction
 could reintroduce legs that do not exist in the owner's nine-view APN Hero
 reference.
 
-The filename `v3` is a stable runtime interface, not permission to reuse old
-geometry or bypass a new identity approval. Current historical V3 bytes also do
-not prove that the owner-requested replacement has been delivered.
+The filename `v3` is a stable loader interface, not permission to reuse old
+geometry or bypass a new identity approval. Historical V3 bytes also do not
+prove that the owner-requested replacement has been delivered.
 
 ## Decision
 
-`hero-v3.js` exclusively owns approved Hero raster clips at
-`assets/mascot/v3/{clip}.webp|json`. `hero-v2.js` remains the Canvas
+`hero-v3.js` exclusively owns approved Hero raster playback. The production
+source is the pack-bound, hash-locked V4 set at
+`assets/game-packs/valorant/characters/apn-hero/`; the retained
+`assets/mascot/v3/` tree is historical compatibility data. `hero-v2.js` remains the Canvas
 presentation/orchestration entry point for juice and semantic state, but it is
 not a second character source.
 
@@ -31,21 +33,20 @@ floating capsule torso, and two short capsule arms. The historical segmented
 V2 rig is never loaded or drawn. Ground position is a bottom-center pivot; it
 does not imply feet.
 
-Replacing the historical V3 bytes requires the exact owner-reference identity
+Replacing production Hero bytes requires the exact owner-reference identity
 approval, one complete Hero motion-set approval, the editable-rig gate when
-that lane is used, complete mechanical QA, and release authorization. Runtime
-readiness and fallback correctness cannot approve those bytes.
+that lane is used, complete mechanical QA, and release authorization. The V4
+set, eight descriptors, and eight selected WebPs move together through the
+character-owned pack record. Runtime readiness and fallback correctness cannot
+approve those bytes.
 
 ## Consequences
 
 There is one approved-art owner, one identity-safe failure body, and no biped
-fallback. Cache generations can replace all eight clips atomically without
-changing the public filenames.
-
-Until the creative gates pass, production must be described honestly as using
-the historical clip set. The repository may prove the replacement runtime and
-candidate path offline, but it may not claim that the final Hero identity or
-acting is shipped.
+fallback. Cache generations can replace the set and all eight clips atomically
+without changing the loader interface. The 2026-08-10 V4 release passed the
+identity, motion, rig, complete-QA, and export gates; production may claim only
+those exact hash-bound bytes.
 
 ## Revisit when
 

@@ -559,6 +559,56 @@ v4HeroRuntimeFiles.set(
   'assets/preview-v4/set.json',
   encoder.encode(canonical(v4HeroRuntimeSet)),
 );
+const approvedV4HeroRuntimeFiles = new Map();
+const approvedV4HeroClips = {};
+for (const [name, record] of Object.entries(v4HeroRuntimeClips)) {
+  const descriptor = JSON.parse(
+    Buffer.from(
+      v4HeroRuntimeFiles.get(`assets/preview-v4/${name}.json`),
+    ).toString('utf8'),
+  );
+  descriptor.authority = 'approved_release';
+  descriptor.status = 'approved';
+  descriptor.releaseLineage = {
+    sourceDescriptorSha256: descriptor.lineage.sourceDescriptorSha256,
+    sourceEvidenceSha256: descriptor.lineage.sourceEvidenceSha256,
+    sourceMediaSha256: descriptor.lineage.sourceMediaSha256,
+    masterInventorySha256: descriptor.lineage.masterInventorySha256,
+    motionApprovalSha256: '8'.repeat(64),
+    derivativeSetSha256: descriptor.lineage.derivativeSetSha256,
+    visualFidelityLineageSha256: '9'.repeat(64),
+    runtimeLineageSha256: 'a'.repeat(64),
+  };
+  const descriptorBytes = encoder.encode(canonical(descriptor));
+  approvedV4HeroClips[name] = {
+    ...record,
+    descriptorSha256: sha256(descriptorBytes),
+  };
+  approvedV4HeroRuntimeFiles.set(
+    `assets/approved-v4/${name}.json`,
+    descriptorBytes,
+  );
+  approvedV4HeroRuntimeFiles.set(
+    `assets/approved-v4/${name}.webp`,
+    v4HeroRuntimeFiles.get(`assets/preview-v4/${name}.webp`),
+  );
+}
+const approvedV4HeroSet = {
+  ...structuredClone(v4HeroRuntimeSet),
+  authority: 'approved_release',
+  status: 'approved',
+  clips: approvedV4HeroClips,
+  releaseLineage: {
+    motionApprovalSha256: '8'.repeat(64),
+    derivativeSetSha256: v4HeroRuntimeSet.lineage.derivativeSetSha256,
+    visualFidelityLineageSha256: '9'.repeat(64),
+    runtimeLineageSha256: 'a'.repeat(64),
+  },
+};
+approvedV4HeroRuntimeFiles.set(
+  'assets/approved-v4/set.json',
+  encoder.encode(canonical(approvedV4HeroSet)),
+);
 assert(
   validateHeroSetManifest(previewRuntimeSet).some(
     (error) => error.includes('preview') || error.includes('status'),
@@ -1013,6 +1063,25 @@ assert(
     driftedV4Hero.fetches.length === 1 &&
     driftedV4Hero.bitmaps.length === 0,
   'Hero V4 profile drift fails closed before clip fetch/decode and retains the active frame set',
+);
+const approvedV4Hero = createHarness({
+  sourceFiles: approvedV4HeroRuntimeFiles,
+});
+const approvedV4HeroSetBytes = approvedV4HeroRuntimeFiles.get(
+  'assets/approved-v4/set.json',
+);
+await loadHeroV3('assets/approved-v4/', {
+  ...approvedV4Hero,
+  sourceFamily: 'authored-semantic-v4',
+  expectedSetSha256: sha256(approvedV4HeroSetBytes),
+  consumerScale: structuredClone(v4HeroConsumerScale),
+  selectedProfileSha256: v4HeroProfileSha256,
+});
+assert(
+  heroV3AuthorityStatus() === 'approved' &&
+    getV3Clip('run')?.frameSize?.width === 320 &&
+    approvedV4Hero.fetches.filter((url) => url.includes('sha256=')).length === 3,
+  'approved Hero V4 loads in normal production without preview authority',
 );
 await loadHeroV3('assets/preview-v3/', {
   ...preview,

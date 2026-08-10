@@ -153,6 +153,7 @@ export function validatePackManifest(pack, label = pack?.id || 'pack') {
           ...(pack.targets || []).map((target) => target?.id),
           pack.boss?.id,
         ]);
+        if (pack.id === 'valorant') characterIds.add('apn-hero');
         const seenPaths = new Set();
         for (const [assetId, record] of Object.entries(characters)) {
           const motionLabel = `${label}/motion/${assetId}`;
@@ -188,6 +189,15 @@ export function validatePackManifest(pack, label = pack?.id || 'pack') {
             );
             if (record.sourceFamily !== 'authored-semantic-v4') {
               errors.push(`${motionLabel}: sourceFamily must equal "authored-semantic-v4"`);
+            }
+            if (assetId === 'apn-hero' && record.role !== 'hero') {
+              errors.push(`${motionLabel}: APN Hero role must equal "hero"`);
+            }
+            if (
+              assetId === 'apn-hero' &&
+              record.consumerScale?.role !== 'hero'
+            ) {
+              errors.push(`${motionLabel}: APN Hero consumer scale role must equal "hero"`);
             }
             if (!/^[0-9a-f]{64}$/.test(record.setSha256 || '')) {
               errors.push(`${motionLabel}: setSha256 must be 64 lowercase hex characters`);

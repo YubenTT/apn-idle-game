@@ -33,6 +33,15 @@ const HAS_ACTUAL_V4_RELEASE = Boolean(
       ),
     ),
 );
+const HAS_ACTUAL_V4_HERO_RELEASE = Boolean(
+  ACTUAL_V4_PROJECT &&
+    fs.existsSync(
+      path.join(
+        ACTUAL_V4_PROJECT,
+        'assets/apn-hero/export/release/manifest.json',
+      ),
+    ),
+);
 const CLIPS = {
   idle: { playback: 'loop', fps: 8, count: 8 },
   advance: { playback: 'loop', fps: 10, count: 8 },
@@ -426,7 +435,11 @@ function buildOptions(fixture, outputParent, overrides = {}) {
   };
 }
 
-function createActualV4ExportFixture(root, assetId, { boss = false } = {}) {
+function createActualV4ExportFixture(
+  root,
+  assetId,
+  { boss = false, hero = false } = {},
+) {
   const fixture = fixturePaths(root, assetId);
   const sourceProject = ACTUAL_V4_PROJECT;
   assert(
@@ -471,7 +484,7 @@ function createActualV4ExportFixture(root, assetId, { boss = false } = {}) {
   writeFakeGaf2d(fixture);
   writeJson(fixture.packFile, {
     id: 'valorant',
-    targets: [{ id: boss ? 'entry-runner' : assetId }],
+    targets: [{ id: boss || hero ? 'entry-runner' : assetId }],
     boss: { id: boss ? assetId : 'site-warden' },
   });
   return fixture;
@@ -665,10 +678,88 @@ try {
     );
   }
 
+  if (HAS_ACTUAL_V4_HERO_RELEASE) {
+    const actualHero = createActualV4ExportFixture(
+      path.join(temporaryRoot, 'actual-v4-hero'),
+      'apn-hero',
+      { hero: true },
+    );
+    const actualHeroFirst = buildGaf2dMotion(
+      buildOptions(actualHero, path.join(temporaryRoot, 'actual-v4-hero-build-a'), {
+        cwebpPath: '/nonexistent-copy-only-cwebp',
+        magickPath: '/nonexistent-copy-only-magick',
+      }),
+    );
+    const actualHeroSecond = buildGaf2dMotion(
+      buildOptions(actualHero, path.join(temporaryRoot, 'actual-v4-hero-build-b'), {
+        cwebpPath: '/nonexistent-copy-only-cwebp',
+        magickPath: '/nonexistent-copy-only-magick',
+      }),
+    );
+    const heroSet = JSON.parse(
+      fs.readFileSync(path.join(actualHeroFirst.outputDir, 'set.json'), 'utf8'),
+    );
+    const expectedHeroMedia = manifestSubsetByPrefix(actualHero, [
+      'runtime/atlas/v4/clips/',
+    ]).filter(([relative]) => relative.endsWith('lossless.webp'));
+    check(
+      actualHeroFirst.role === 'hero' &&
+        heroSet.role === 'hero' &&
+        heroSet.consumerScale.role === 'hero' &&
+        validateMotionSetIndex(heroSet, 'apn-hero', {
+          role: 'hero',
+          consumerRole: 'hero',
+          selectedProfileSha256: heroSet.toolchain.profileSha256,
+        }).length === 0,
+      'real Hero V4 release is mapped to the trusted hero role, never an enemy role',
+    );
+    check(
+      actualHeroFirst.files['set.json'] === actualHeroSecond.files['set.json'] &&
+        Object.keys(actualHeroFirst.files).length === 17 &&
+        expectedHeroMedia.every(([relative, sha]) => {
+          const clipName = relative.split('/')[4];
+          return actualHeroFirst.files[`${clipName}.webp`] === sha;
+        }),
+      'real Hero V4 release projects deterministically by exact selected-WebP copy only',
+    );
+
+    const staleHeroRig = createActualV4ExportFixture(
+      path.join(temporaryRoot, 'actual-v4-hero-stale-rig'),
+      'apn-hero',
+      { hero: true },
+    );
+    editJson(staleHeroRig, 'runtime/lineage.json', (lineage) => {
+      for (const artifact of lineage.artifacts) {
+        artifact.approvals.rig.sha256 = '0'.repeat(64);
+      }
+    });
+    refreshExportManifest(staleHeroRig);
+    expectFailure(
+      'Hero V4 release with stale rig lineage fails closed before publication',
+      () =>
+        buildGaf2dMotion(
+          buildOptions(
+            staleHeroRig,
+            path.join(temporaryRoot, 'actual-v4-hero-stale-rig-out'),
+            {
+              cwebpPath: '/nonexistent-copy-only-cwebp',
+              magickPath: '/nonexistent-copy-only-magick',
+            },
+          ),
+        ),
+      'rig approval',
+    );
+  } else {
+    check(
+      true,
+      'actual Hero V4 release lane is optional without its approved export',
+    );
+  }
+
   const heroPackFile = path.join(temporaryRoot, 'hero-v4-pack.json');
   writeJson(heroPackFile, {
     id: 'valorant',
-    targets: [{ id: 'apn-hero' }],
+    targets: [{ id: 'entry-runner' }],
     boss: { id: 'site-warden' },
   });
   const missingHeroProject = path.join(

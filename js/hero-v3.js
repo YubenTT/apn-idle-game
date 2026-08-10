@@ -192,7 +192,7 @@ function atlasFacts(descriptor, status) {
 
 function runtimeClip(descriptor, image, status, options = {}) {
   if (status === 'historical') return { ...descriptor, image };
-  if (options.genericPreview) {
+  if (options.genericMotion) {
     const visualFidelity =
       options.set?.sourceFamily === VISUAL_FIDELITY_SOURCE_FAMILY;
     return {
@@ -261,9 +261,10 @@ async function loadClip({
   signal,
 }) {
   const record = set.clips[name];
-  const genericPreview =
-    allowUnapprovedPreview === true &&
-    GENERIC_PREVIEW_SOURCE_FAMILIES.has(sourceFamily);
+  const genericMotion =
+    sourceFamily === VISUAL_FIDELITY_SOURCE_FAMILY ||
+    (allowUnapprovedPreview === true &&
+      GENERIC_PREVIEW_SOURCE_FAMILIES.has(sourceFamily));
   const descriptorUrl = withHashToken(
     `${base}${record.descriptor}`,
     record.descriptorSha256,
@@ -285,7 +286,7 @@ async function loadClip({
     `${name} descriptor`,
     parseJsonImpl,
   );
-  const descriptorErrors = genericPreview
+  const descriptorErrors = genericMotion
     ? validateMotionClipDescriptor(descriptor, name, set, {
         role: 'hero',
         ...(sourceFamily === VISUAL_FIDELITY_SOURCE_FAMILY
@@ -300,6 +301,16 @@ async function loadClip({
     : validateHeroClipDescriptor(descriptor, name, set, {
         allowUnapprovedPreview,
       });
+  if (
+    sourceFamily === VISUAL_FIDELITY_SOURCE_FAMILY &&
+    !allowUnapprovedPreview &&
+    (descriptor.authority !== 'approved_release' ||
+      descriptor.status !== 'approved')
+  ) {
+    descriptorErrors.push(
+      'production V4 descriptor requires approved_release authority',
+    );
+  }
   if (descriptorErrors.length > 0) {
     throw new Error(
       `hero-v3: ${name} descriptor rejected: ${descriptorErrors.join('; ')}`,
@@ -323,7 +334,7 @@ async function loadClip({
     throw new Error(`hero-v3: ${name} image SHA-256 mismatch`);
   }
   const expected =
-    genericPreview
+    genericMotion
       ? {
           width: descriptor.atlas.width,
           height: descriptor.atlas.height,
@@ -353,7 +364,7 @@ async function loadClip({
       );
     }
     return runtimeClip(descriptor, image, set.status, {
-      genericPreview,
+      genericMotion,
       set,
     });
   } catch (error) {
@@ -406,10 +417,11 @@ export async function loadHeroV3(basePath, options = {}) {
       }
     }
     const set = parseJson(setBytes, 'set descriptor', parseJsonImpl);
-    const genericPreview =
-      allowUnapprovedPreview &&
-      GENERIC_PREVIEW_SOURCE_FAMILIES.has(sourceFamily);
-    const setErrors = genericPreview
+    const genericMotion =
+      sourceFamily === VISUAL_FIDELITY_SOURCE_FAMILY ||
+      (allowUnapprovedPreview &&
+        GENERIC_PREVIEW_SOURCE_FAMILIES.has(sourceFamily));
+    const setErrors = genericMotion
       ? validateMotionSetIndex(set, 'apn-hero', {
           role: 'hero',
           ...(sourceFamily === VISUAL_FIDELITY_SOURCE_FAMILY
@@ -423,7 +435,21 @@ export async function loadHeroV3(basePath, options = {}) {
           allowUnapprovedPreview,
         });
     if (
-      genericPreview &&
+      sourceFamily === VISUAL_FIDELITY_SOURCE_FAMILY &&
+      !allowUnapprovedPreview &&
+      !expectedSetSha256
+    ) {
+      setErrors.push('production V4 set requires an expected SHA-256');
+    }
+    if (
+      sourceFamily === VISUAL_FIDELITY_SOURCE_FAMILY &&
+      !allowUnapprovedPreview &&
+      (set.authority !== 'approved_release' || set.status !== 'approved')
+    ) {
+      setErrors.push('production V4 set requires approved_release authority');
+    }
+    if (
+      genericMotion &&
       sourceFamily === VISUAL_FIDELITY_SOURCE_FAMILY &&
       stableJson(set.consumerScale) !== stableJson(consumerScale)
     ) {

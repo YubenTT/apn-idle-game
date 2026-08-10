@@ -112,7 +112,7 @@ node qa/check-assets.mjs
 
 | Asset | Master | Runtime |
 |-------|--------|---------|
-| APN Hero | approved GAF2D identity + complete motion and rig lineage | `assets/mascot/v3/set.json` + eight WebP/JSON pairs |
+| APN Hero | approved GAF2D V4 identity + complete motion and rig lineage | `assets/game-packs/valorant/characters/apn-hero/set.json` + eight WebP/JSON pairs |
 | Items | 2048² PNG | 1024² + 2048² WebP LOD |
 | Legacy animated enemies | historical frame sets | cold compatibility clip WebP + JSON |
 | GAF2D pack characters | approved identity + named motion set | character-owned matrix WebP + closed-world JSON |
@@ -127,15 +127,17 @@ supported). Keep PNG/PSD/SVG masters for editing only. Current repo already ship
 
 ## Production handoff status
 
-The legacy flat PNGs and GLBs remain as cold historical references while the owner-approved APN
-Hero replacement and Game Pack motion atlases pass their exact gates. The pipeline and gates are
-active now:
+The legacy flat PNGs, Hero V3 clips, and GLBs remain cold historical references.
+The owner-approved APN Hero V4 release and Game Pack motion derivatives passed
+their exact gates and now back the production Valorant pack:
 
 - New sprites must enter through pivot-preserving atlas JSON.
-- The current Hero V3 files are `set.json`-labelled historical runtime bytes,
-  not evidence that the replacement identity is approved; the future approved
-  set manifest and all sixteen clip files move in one atomic directory
-  transaction only after the complete gate.
+- The historical `assets/mascot/v3/` files remain a failure-only compatibility
+  source. First playable loads the hash-locked V4 Hero `set.json`, `run.json`,
+  and `run.webp`; the other seven clips remain cold until requested.
+- The V4 Hero set, eight descriptors, and eight selected WebPs entered the
+  character-owned directory in one deterministic exact-copy transaction after
+  motion, rig, complete-QA, and release-manifest verification.
 - Every first-pack GAF2D motion derivative must match its identity, motion-set,
   source, descriptor, and atlas hashes before it can enter `ready`.
 - Runtime rasters are WebP; editable masters stay out of first-playable bytes.

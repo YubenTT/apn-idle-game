@@ -32,12 +32,23 @@ export function motionAssetIdsForPackWave(pack, packWave) {
  * Exact compressed asset request set before the initial simulation starts.
  */
 export function firstPlayableAssetPaths(packs) {
-  const paths = new Set([
-    ...BOOT_UI_ASSET_PATHS,
-    'assets/mascot/v3/set.json',
-    'assets/mascot/v3/run.webp',
-    'assets/mascot/v3/run.json',
-  ]);
+  const paths = new Set(BOOT_UI_ASSET_PATHS);
+  const productionHero = (Array.isArray(packs) ? packs : [])
+    .map((pack) => pack?.motion?.characters?.['apn-hero'])
+    .find((record) => record?.sourceFamily === 'authored-semantic-v4');
+  if (
+    typeof productionHero?.set === 'string' &&
+    typeof productionHero?.clips?.run?.image === 'string' &&
+    typeof productionHero?.clips?.run?.descriptor === 'string'
+  ) {
+    paths.add(productionHero.set);
+    paths.add(productionHero.clips.run.image);
+    paths.add(productionHero.clips.run.descriptor);
+  } else {
+    paths.add('assets/mascot/v3/set.json');
+    paths.add('assets/mascot/v3/run.webp');
+    paths.add('assets/mascot/v3/run.json');
+  }
 
   const orderedPacks = [...(Array.isArray(packs) ? packs : [])].sort(
     (left, right) =>
