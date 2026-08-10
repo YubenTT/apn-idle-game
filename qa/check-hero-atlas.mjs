@@ -1,5 +1,5 @@
 /**
- * Hero V3 compatibility atlas contract — current historical runtime clips.
+ * Hero V3 compatibility atlas contract — retained historical runtime clips.
  *
  * The V3 clip player (js/hero-v3.js) is the primary hero renderer; load or
  * decode failure uses only the explicit legless identity-safe Canvas fallback.
@@ -8,7 +8,8 @@
  *  - all 8 semantic clips exist as {clip}.json + {clip}.webp
  *  - every json carries frames[] + fps + anchor (+ sane trim/frameSize)
  *  - every webp stays within the 1.5MB per-clip budget
- *  - runtime wiring: hero-v2 prefers V3, main.js bootstraps loadHeroV3
+ *  - runtime wiring: hero-v2 prefers the clip loader, production binds V4, and
+ *    missing authority retains only the explicit safe fallback
  * Run: node qa/check-hero-atlas.mjs (also wired into qa/run-tests.mjs)
  */
 import fs from 'node:fs';
@@ -56,7 +57,10 @@ for (const name of CLIPS) {
 // Runtime wiring: hero-v2 prefers the V3 clip player. A decode/load failure
 // may only use the explicit legless identity-safe Canvas silhouette.
 const heroSrc = fs.readFileSync(path.join(root, 'js/hero-v2.js'), 'utf8');
-assert(heroSrc.includes('heroV3Ready'), 'hero-v2 references heroV3Ready (V3 preferred)');
+assert(
+  heroSrc.includes('heroV3Ready'),
+  'hero-v2 references the approved clip-loader readiness gate',
+);
 assert(heroSrc.includes('drawV3Frame'), 'hero-v2 draws V3 frames');
 assert(
   !heroSrc.includes('hero-rig.js') &&
@@ -85,10 +89,14 @@ const previewSrc = fs.readFileSync(
 );
 assert(mainSrc.includes('loadHeroV3'), 'main.js references loadHeroV3');
 assert(
-  mainSrc.includes('loadHeroV3(motionPreview.heroBasePath') &&
+  mainSrc.includes("?.motion?.characters?.['apn-hero'] ?? null") &&
+    mainSrc.includes('const heroRuntimeSource = motionPreview.active') &&
+    /loadHeroV3\(\s*heroRuntimeSource\?\.basePath\s*\?\?\s*motionPreview\.heroBasePath/.test(
+      mainSrc,
+    ) &&
     previewSrc.includes("const PRODUCTION_HERO_BASE = 'assets/mascot/v3/';") &&
     previewSrc.includes('heroBasePath: PRODUCTION_HERO_BASE'),
-  'normal mode points at the historical V3 atlas through the fail-closed preview boundary',
+  'normal mode binds the pack-owned V4 Hero while retaining the historical V3 compatibility boundary',
 );
 assert(
   !mainSrc.includes('setHeroRig') &&
@@ -103,8 +111,11 @@ const mascotCanon = fs.readFileSync(
 assert(
   mascotCanon.includes('ADR-0015') &&
     mascotCanon.includes('`apn-hero`') &&
+    mascotCanon.includes(
+      'assets/game-packs/valorant/characters/apn-hero/',
+    ) &&
     mascotCanon.includes('assets/mascot/v3/'),
-  'mascot canon names the current identity, decision, and runtime authorities',
+  'mascot canon separates current V4 authority from the historical V3 boundary',
 );
 assert(
   /no legs, feet, boots, or platform/i.test(mascotCanon),

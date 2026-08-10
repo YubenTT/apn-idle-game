@@ -366,8 +366,8 @@
     {
       "id": "game-packs/catalog.json",
       "path": "assets/game-packs/catalog.json",
-      "bytes": 56023,
-      "sha256": "2ff6a93bf74ce5731158f635d43c239d2b9c8bc769542216fcad080215fb9209",
+      "bytes": 60196,
+      "sha256": "715ec9fed08967df949fa4380dbe7b668f24a4500da6223e680ae808a87f215b",
       "firstPlayable": false
     },
     {
@@ -1161,6 +1161,125 @@
       "firstPlayable": true
     },
     {
+      "id": "game-packs/valorant/characters/apn-hero/attack.json",
+      "path": "assets/game-packs/valorant/characters/apn-hero/attack.json",
+      "bytes": 7317,
+      "sha256": "ae6abbdfcf7a7931fc96ccc21801a4fef2a9b213685fc784fa65ef27914ec79b",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/apn-hero/attack.webp",
+      "path": "assets/game-packs/valorant/characters/apn-hero/attack.webp",
+      "bytes": 366202,
+      "sha256": "98d50531b1a00a8fd7144069336085ba75da2025b1fa4d4a2e5d673709eadd8c",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/apn-hero/celebrate.json",
+      "path": "assets/game-packs/valorant/characters/apn-hero/celebrate.json",
+      "bytes": 7166,
+      "sha256": "1153832bf257a5a32bb2c856d953a3539f29cf23a932e271dce87626283f0461",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/apn-hero/celebrate.webp",
+      "path": "assets/game-packs/valorant/characters/apn-hero/celebrate.webp",
+      "bytes": 352594,
+      "sha256": "b7ddfee6d5aacfe21251905767a0c8b83059882b340eb9a512c3a68e53829203",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/apn-hero/crit.json",
+      "path": "assets/game-packs/valorant/characters/apn-hero/crit.json",
+      "bytes": 7313,
+      "sha256": "1558ff98916624e85975569021c080f7b8dcf16ed84cd3a9e7d9b18fcbff6242",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/apn-hero/crit.webp",
+      "path": "assets/game-packs/valorant/characters/apn-hero/crit.webp",
+      "bytes": 372100,
+      "sha256": "3f85045380ff8bd365f5b0fb95af243ea617bd6fd74500f899fa5247a1bfd34f",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/apn-hero/death.json",
+      "path": "assets/game-packs/valorant/characters/apn-hero/death.json",
+      "bytes": 7316,
+      "sha256": "9bd9a9886e7b0fec54293d15310819412d7f3733b09e6b062e2eff3b88c98514",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/apn-hero/death.webp",
+      "path": "assets/game-packs/valorant/characters/apn-hero/death.webp",
+      "bytes": 363000,
+      "sha256": "26f95fa4cb8a924e3becd9e6c05a50974f590c10f7fc7bba232e413fdcf95c4a",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/apn-hero/hit.json",
+      "path": "assets/game-packs/valorant/characters/apn-hero/hit.json",
+      "bytes": 5440,
+      "sha256": "b0842e94ca363757b8fcaf647a5245eca406dad2d13170febdb9205cf65e274b",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/apn-hero/hit.webp",
+      "path": "assets/game-packs/valorant/characters/apn-hero/hit.webp",
+      "bytes": 163980,
+      "sha256": "afffe3f174118078ca6f73c65bb413f86e526a7c8c7910e71c5eb9fa2deeab17",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/apn-hero/idle.json",
+      "path": "assets/game-packs/valorant/characters/apn-hero/idle.json",
+      "bytes": 8489,
+      "sha256": "af3ea79094851975539f82dc700db9b1c13736bfd834fb6bb380c5a9048b051b",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/apn-hero/idle.webp",
+      "path": "assets/game-packs/valorant/characters/apn-hero/idle.webp",
+      "bytes": 458334,
+      "sha256": "44c3a4c8d2a4f376511c6568b53ca89f11e47a867e673dac041f7bb25056d976",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/apn-hero/run.json",
+      "path": "assets/game-packs/valorant/characters/apn-hero/run.json",
+      "bytes": 8487,
+      "sha256": "d1a11032ba867f3cd1e59d4f37eb13a6f4c2c4c17deba047b0abbf938db725dd",
+      "firstPlayable": true
+    },
+    {
+      "id": "game-packs/valorant/characters/apn-hero/run.webp",
+      "path": "assets/game-packs/valorant/characters/apn-hero/run.webp",
+      "bytes": 506248,
+      "sha256": "03c9e2f83ba6ca8177d3d39f8d7a6b10bfe7f741096b4e2ff1d08f728bc750b0",
+      "firstPlayable": true
+    },
+    {
+      "id": "game-packs/valorant/characters/apn-hero/set.json",
+      "path": "assets/game-packs/valorant/characters/apn-hero/set.json",
+      "bytes": 5411,
+      "sha256": "8d61cd1c3e3d00c305ef964d95e4b3515ed9feabccfee52017d85001a3352704",
+      "firstPlayable": true
+    },
+    {
+      "id": "game-packs/valorant/characters/apn-hero/sprint.json",
+      "path": "assets/game-packs/valorant/characters/apn-hero/sprint.json",
+      "bytes": 7160,
+      "sha256": "df69572903a34105278ba88f2b0396a691e0868f8177ebcb142a3c0709d8cd23",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/valorant/characters/apn-hero/sprint.webp",
+      "path": "assets/game-packs/valorant/characters/apn-hero/sprint.webp",
+      "bytes": 379168,
+      "sha256": "2bcfdf2d96ef26a2a0dbacae64e19bacc04c396cd699866a35cc8eb33580d8ce",
+      "firstPlayable": false
+    },
+    {
       "id": "game-packs/valorant/characters/entry-runner/advance.json",
       "path": "assets/game-packs/valorant/characters/entry-runner/advance.json",
       "bytes": 9570,
@@ -1661,8 +1780,8 @@
     {
       "id": "game-packs/valorant/pack.json",
       "path": "assets/game-packs/valorant/pack.json",
-      "bytes": 19058,
-      "sha256": "8fc2466eb63dc6cdf55d07dfd3a71be5745963e31b68be2bd7045c64f87639cb",
+      "bytes": 23089,
+      "sha256": "60ca4e32c2dcf93c26298d195588368d3109da7a76f0e4d9a2915fc7dab0db5c",
       "firstPlayable": false
     },
     {
@@ -2007,21 +2126,21 @@
       "path": "assets/mascot/v3/run.json",
       "bytes": 1512,
       "sha256": "3a0e58f170a91af0abc3bb0195ac1e749029017371e6f2162178016b4407a533",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "mascot/v3/run.webp",
       "path": "assets/mascot/v3/run.webp",
       "bytes": 94480,
       "sha256": "0aef7d64e849b0ab61a1f646d7363757187ababce63c0d530b6fe2cb7a4df6ae",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "mascot/v3/set.json",
       "path": "assets/mascot/v3/set.json",
       "bytes": 2256,
       "sha256": "0104633f516496f7a49221df3f5362085ba9c7303de786696091c835cd58f1f4",
-      "firstPlayable": true
+      "firstPlayable": false
     },
     {
       "id": "mascot/v3/sprint.json",

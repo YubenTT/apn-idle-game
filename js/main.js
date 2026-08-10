@@ -51,6 +51,19 @@ const motionPreview = await loadMotionPreview({
   locationLike: location,
   packs: GAME_PACKS,
 });
+const productionHeroSource =
+  GAME_PACKS.find((pack) => pack.id === 'valorant')
+    ?.motion?.characters?.['apn-hero'] ?? null;
+const heroRuntimeSource = motionPreview.active
+  ? {
+      basePath: motionPreview.heroBasePath,
+      sourceFamily: motionPreview.manifest?.sourceFamily ?? null,
+      setSha256: motionPreview.manifest?.hero?.setSha256 ?? null,
+      consumerScale: motionPreview.manifest?.hero?.consumerScale ?? null,
+      selectedProfileSha256:
+        motionPreview.manifest?.toolchain?.profileSha256 ?? null,
+    }
+  : productionHeroSource;
 const runtimePacks = motionPreview.packs;
 const banner = document.getElementById('motion-preview-banner');
 const bannerTitle = document.getElementById('motion-preview-title');
@@ -447,16 +460,18 @@ if (qaEnabled) {
   window.advanceTime = advanceQaTime;
 }
 
-// Canon Host V3 is primary. A load failure stays on the explicit legless,
-// identity-safe Canvas silhouette owned by hero-v2.js.
-const heroV3Load = loadHeroV3(motionPreview.heroBasePath, {
-  allowUnapprovedPreview: motionPreview.active,
-  sourceFamily: motionPreview.manifest?.sourceFamily ?? null,
-  expectedSetSha256: motionPreview.manifest?.hero?.setSha256 ?? null,
-  consumerScale: motionPreview.manifest?.hero?.consumerScale ?? null,
-  selectedProfileSha256:
-    motionPreview.manifest?.toolchain?.profileSha256 ?? null,
-})
+// The current approved Hero clip set is primary. A load failure stays on the
+// explicit legless, identity-safe Canvas silhouette owned by hero-v2.js.
+const heroV3Load = loadHeroV3(
+  heroRuntimeSource?.basePath ?? motionPreview.heroBasePath,
+  {
+    allowUnapprovedPreview: motionPreview.active,
+    sourceFamily: heroRuntimeSource?.sourceFamily ?? null,
+    expectedSetSha256: heroRuntimeSource?.setSha256 ?? null,
+    consumerScale: heroRuntimeSource?.consumerScale ?? null,
+    selectedProfileSha256: heroRuntimeSource?.selectedProfileSha256 ?? null,
+  },
+)
   .catch(() => null); // identity-safe Canvas silhouette remains active
 
 function pos(ev) {

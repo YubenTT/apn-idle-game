@@ -10,13 +10,15 @@ The character is one identity across every screen:
 
 1. the owner-approved GAF2D `apn-hero` identity record owns anatomy and proportions;
 2. one complete, owner-approved GAF2D motion set owns acting and timing;
-3. hash-locked files in `assets/mascot/v3/` are the only approved raster body at runtime;
+3. the hash-locked V4 release under
+   `assets/game-packs/valorant/characters/apn-hero/` is the approved raster body
+   at runtime;
 4. `hero-v3.js` loads and blits those files, while `hero-v2.js` supplies presentation effects;
 5. load failure may draw only the explicit identity-safe Canvas silhouette.
 
-The current `assets/mascot/v3/` bytes are historical runtime art.
-They keep the game playable, but they do not prove that the owner-requested replacement identity
-or motion has passed its exact approval gates.
+The retained `assets/mascot/v3/` bytes are historical compatibility art. They
+cannot replace or authorize the current V4 release. Missing or stale current
+authority fails closed to the explicit identity-safe Canvas silhouette.
 
 ## Anatomy lock
 
@@ -57,7 +59,9 @@ The stable runtime interface is eight paired files:
 | `death` | defeat progression |
 | `celebrate` | level/loot celebration |
 
-Each clip has `assets/mascot/v3/<clip>.webp` and `<clip>.json`.
+Each production clip has
+`assets/game-packs/valorant/characters/apn-hero/<clip>.webp` and `<clip>.json`,
+bound by the sibling `set.json`.
 All clips must share the approved identity, canvas convention, anchor, and motion authority.
 Replacing only part of the set is forbidden; release swaps all eight clips as one hash-locked
 generation.

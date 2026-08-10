@@ -14,13 +14,13 @@ language. Original APN IP, Host mascot, crimson APN UI.
 
 ## Active phase
 
-**Phase: Visual Fidelity V4 approved production integration.** V3 remains the
-exact semantic acting/timing/root authority. The owner approved all seven V4
-motion sets; six baked creature sets passed complete QA, exported through
-hash-locked releases, and now back the production Valorant pack. APN Hero motion
-is approved but remains outside production at its separate rig-approval gate.
-The exact 7-asset / 39-clip / 795-frame review, same-scale V3↔V4 proof, and
-post-approval three-viewport production Chrome evidence are green.
+**Phase: Visual Fidelity V4 production release.** V3 remains the exact semantic
+acting/timing/root authority. The owner approved all seven V4 motion sets and
+the APN Hero rig; all seven assets passed complete QA and exported through
+hash-locked releases. The production Valorant pack now owns the six creature
+sets plus the Hero's eight-clip V4 release. The exact 7-asset / 39-clip /
+795-frame review, same-scale V3↔V4 proof, and production runtime gates are
+green.
 
 ## The stack, in one sentence
 

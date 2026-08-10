@@ -36,6 +36,16 @@ const COMMON_CLIPS = Object.freeze([
   'death',
 ]);
 const BOSS_CLIPS = Object.freeze([...COMMON_CLIPS, 'broken']);
+const HERO_CLIPS = Object.freeze([
+  'idle',
+  'run',
+  'attack',
+  'crit',
+  'sprint',
+  'hit',
+  'death',
+  'celebrate',
+]);
 const CLIP_COUNTS = Object.freeze({
   idle: 8,
   advance: 8,
@@ -64,6 +74,10 @@ const BOSS_CREATURE_CONTRACT = Object.freeze({
     broken: 'loop',
   }),
   requireRig: false,
+});
+const HERO_CONTRACT = Object.freeze({
+  clipNames: HERO_CLIPS,
+  requireRig: true,
 });
 
 const isObject = (value) =>
@@ -176,6 +190,7 @@ function writeCanonical(file, value) {
 }
 
 function v4ConsumerRoleFor(assetId, role) {
+  if (role === 'hero') return 'hero';
   if (assetId === 'site-sentinel') return 'elite';
   if (role === 'boss') return 'boss';
   return 'standard';
@@ -1641,7 +1656,13 @@ function validateVisualFidelityLineage(release, assetId, derivativeFacts, setFac
   };
 }
 
-function validateGenericRuntimeExportLineage(release, assetId, approvalSha256, copiedRuntimeFiles) {
+function validateGenericRuntimeExportLineage(
+  release,
+  assetId,
+  approvalSha256,
+  copiedRuntimeFiles,
+  contract,
+) {
   const relative = 'runtime/lineage.json';
   const record = release.byPath.get(relative);
   assert(record, 'runtime export lineage is missing');
@@ -1649,6 +1670,12 @@ function validateGenericRuntimeExportLineage(release, assetId, approvalSha256, c
   exactKeys(payload, ['schema_version', 'asset_id', 'artifacts'], 'runtime export lineage');
   assert(payload.schema_version === 1, 'runtime export lineage schema must be 1');
   assert(payload.asset_id === assetId, 'runtime export lineage asset drifted');
+  const rigRecord = contract.requireRig
+    ? release.byPath.get('rig/rig-manifest.json')
+    : null;
+  if (contract.requireRig) {
+    assert(rigRecord, 'Hero rig approval export is missing');
+  }
   const covered = [];
   for (const artifact of payload.artifacts || []) {
     exactKeys(artifact, ['artifact_path', 'artifact_sha256', 'approvals'], 'runtime export lineage artifact');
@@ -1673,10 +1700,21 @@ function validateGenericRuntimeExportLineage(release, assetId, approvalSha256, c
         SHA256.test(artifact.approvals.identity?.sha256 || ''),
       `runtime export lineage identity approval for "${relativePath}" is invalid`,
     );
+    if (contract.requireRig) {
+      assert(
+        artifact.approvals.rig?.approval_kind === 'rig' &&
+          artifact.approvals.rig?.sha256 === rigRecord.sha256,
+        `runtime export lineage rig approval for "${relativePath}" drifted`,
+      );
+    }
     covered.push(relativePath);
   }
+  const sortedCovered = covered.sort();
+  const sortedCopied = [...copiedRuntimeFiles].sort();
   assert(
-    arraysEqual(covered.sort(), [...copiedRuntimeFiles].sort()),
+    contract.requireRig
+      ? sortedCopied.every((relativePath) => sortedCovered.includes(relativePath))
+      : arraysEqual(sortedCovered, sortedCopied),
     'runtime export lineage does not cover the exact copied runtime files',
   );
   return { authority: { relative, record, payload } };
@@ -1714,6 +1752,7 @@ function loadValidatedVisualFidelityV4Source(release, assetId, contract) {
     assetId,
     derivativeFacts.approvalSha256,
     runtimeFiles,
+    contract,
   );
   const copiedFiles = [
     approvalRelative,
@@ -2140,11 +2179,15 @@ function trustedPackRole(packFile, assetId) {
   assert(ASSET_ID.test(pack?.boss?.id || ''), 'trusted APN pack boss ID is invalid');
   const isTarget = targetIds.includes(assetId);
   const isBoss = pack.boss.id === assetId;
+  const isHero = pack.id === 'valorant' && assetId === 'apn-hero';
   assert(
-    Number(isTarget) + Number(isBoss) === 1,
-    `asset "${assetId}" must have exactly one trusted target or boss role`,
+    Number(isTarget) + Number(isBoss) + Number(isHero) === 1,
+    `asset "${assetId}" must have exactly one trusted hero, target, or boss role`,
   );
-  return { role: isBoss ? 'boss' : 'character', packId: pack.id };
+  return {
+    role: isHero ? 'hero' : isBoss ? 'boss' : 'character',
+    packId: pack.id,
+  };
 }
 
 function toolOutput(command, arguments_, label) {
@@ -2480,9 +2523,11 @@ export function buildGaf2dMotion(options) {
   const roleFacts = trustedPackRole(options.packFile, assetId);
   const source = loadValidatedGaf2dMotionSource(
     options,
-    roleFacts.role === 'boss'
-      ? BOSS_CREATURE_CONTRACT
-      : COMMON_CREATURE_CONTRACT,
+    roleFacts.role === 'hero'
+      ? HERO_CONTRACT
+      : roleFacts.role === 'boss'
+        ? BOSS_CREATURE_CONTRACT
+        : COMMON_CREATURE_CONTRACT,
   );
   if (source.mode === 'visual-fidelity-v4-copy') {
     const parent = path.dirname(outputDir);

@@ -92,6 +92,9 @@ a browser; muted Chrome then verifies the real decode/composite path.
 - First-pack target atlas: 30,506 bytes (`896×128`, seven cells).
 - The exact first-playable hard cap is `< 5,242,879` bytes and is calculated from
   the canonical request set, not directory membership or stale manifest flags.
+- The production V4 Hero boot set measures `1,184,895` first-playable bytes in
+  total, including the selected `run` clip and the current/next pack request
+  set. Historical Hero V3 clips remain cold and do not inflate this figure.
 - New/replaced first-pack motion WebP + JSON is capped at `≤ 3.5 MiB`
   (`3,670,016` bytes); all Hero WebP clips remain `≤ 640 KB`.
 - The 2026-08-09 canonical 7-asset, 39-clip, 795-frame V3 build measured

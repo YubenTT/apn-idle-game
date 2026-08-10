@@ -1,5 +1,27 @@
 # APN Idle redesign V1 — QA report
 
+## 2026-08-10 APN Hero V4 production integration
+
+Status: the owner separately approved the APN Hero editable rig. The exact rig
+manifest SHA-256 is
+`3b563548a3640e4cc5aff159868cb2d87e1297fa7955194288bc71174f9384ae`;
+COMPLETE QA passed 17/17 across 123 frames, and the deterministic 49-file Hero
+release manifest SHA-256 is
+`94f678674b0d8ee7bb193a525adf0c8a572253088b22cf8300e5b5c8fff4aa9c`.
+Two unchanged exports produced the byte-identical release-tree SHA-256
+`f4814603600fdcf6da9322278e6398a9f2e386829a0d67919c8ebd8a610fcdef`.
+
+The production Valorant pack consumes that release through a copy-only V4
+projection: `apn-hero` has the dedicated `hero` role, cannot occupy a target or
+boss slot, and exposes exactly eight approved clips. Production loading requires
+the exact set SHA-256
+`8d61cd1c3e3d00c305ef964d95e4b3515ed9feabccfee52017d85001a3352704`,
+approved-release authority, selected profile, consumer scale, descriptor hashes,
+WebP hashes, and rig lineage. Missing or stale authority fails closed to the
+identity-safe Canvas silhouette. First playable now requests only the current
+V4 set and `run` clip; the historical V3 Hero stays cold. The measured boot set
+is `1,184,895 / 5,242,879` bytes and no budget was raised.
+
 ## 2026-08-09 Visual Fidelity V4 browser and approval-gate closure
 
 Status: the owner explicitly approved all seven V4 motion sets. The approval
