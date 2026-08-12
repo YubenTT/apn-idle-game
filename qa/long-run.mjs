@@ -6,6 +6,7 @@ import {
   offlineRouteBudget,
   scannerDamage,
   isBossZone,
+  typeHpMult,
 } from '../js/formulas.js';
 
 const assert = (condition, message) => {
@@ -70,20 +71,51 @@ assert(budget.boundary === 100, 'budget chooses next End Season');
 assert(budget.seconds === C.OFFLINE_CAP, 'budget respects offline cap');
 
 let bossCount = 0;
-for (let zone = 0; zone <= 1000; zone++) {
+let minimumOrdinaryHits = Number.POSITIVE_INFINITY;
+let maximumOrdinaryHits = 0;
+let maximumBossHits = 0;
+let maximumKills = 0;
+let maximumCombatSeconds = 0;
+let totalCombatSeconds = 0;
+for (let zone = 0; zone < 1000; zone++) {
   const paceScanner = Math.floor((zone % C.SEASON_ZONES) * C.ENEMY_PACE_SCANNER);
-  const hp = routeEnemyHp(zone, paceScanner, 1, Math.min(4, Math.floor(zone / 200)));
+  const boss = isBossZone(zone);
+  const hp = routeEnemyHp(
+    zone,
+    paceScanner,
+    1,
+    Math.min(4, Math.floor(zone / 200)),
+    typeHpMult(boss ? 'boss' : 'normal'),
+  );
   const hits = hp / scannerDamage(paceScanner);
+  const kills = routeKillsNeeded(zone);
+  const combatSeconds = hits * kills * C.ATTACK_INTERVAL;
   assert(Number.isFinite(hp) && hp > 0, `finite HP at Zone ${zone + 1}`);
-  assert(routeKillsNeeded(zone) >= 1, `finite kill count at Zone ${zone + 1}`);
-  assert(hits > 1, `on-curve target is not one-frame at Zone ${zone + 1}`);
-  if (isBossZone(zone)) bossCount += 1;
+  assert(kills >= 1, `positive kill count at Zone ${zone + 1}`);
+  if (boss) {
+    maximumBossHits = Math.max(maximumBossHits, hits);
+    bossCount += 1;
+  } else {
+    minimumOrdinaryHits = Math.min(minimumOrdinaryHits, hits);
+    maximumOrdinaryHits = Math.max(maximumOrdinaryHits, hits);
+  }
+  maximumKills = Math.max(maximumKills, kills);
+  maximumCombatSeconds = Math.max(maximumCombatSeconds, combatSeconds);
+  totalCombatSeconds += combatSeconds;
 }
+assert(minimumOrdinaryHits > 1, 'ordinary targets remain multi-frame through Zone 1000');
+assert(maximumOrdinaryHits <= 220, 'ordinary on-curve hits stay at or below 220');
+assert(maximumBossHits <= 2000, 'Gate on-curve hits stay at or below 2000');
+assert(maximumKills <= 20, 'per-zone kill count stays at or below 20');
+assert(maximumCombatSeconds / 60 <= 31, 'per-zone on-curve combat stays at or below 31 minutes');
+assert(totalCombatSeconds / 3600 <= 325, 'Zone-1000 on-curve combat budget stays at or below 325 hours');
 assert(bossCount === 100, 'boss cadence remains every ten zones through Zone 1000');
 
 console.log('OK offline two-Pack safety boundary');
 console.log('OK offline Echo and Pack history');
 console.log('OK deterministic offline recap');
 console.log('OK deterministic save-relevant state');
-console.log('OK finite Zone 1000 profile');
+console.log(
+  `OK bounded Zone 1000 work (${minimumOrdinaryHits.toFixed(2)} min ordinary hits · ${maximumOrdinaryHits.toFixed(2)} max ordinary · ${maximumBossHits.toFixed(2)} max Gate · ${(maximumCombatSeconds / 60).toFixed(2)} max minutes · ${(totalCombatSeconds / 3600).toFixed(2)} aggregate hours)`,
+);
 console.log('LONG RUN PASS');

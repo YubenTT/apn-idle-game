@@ -188,7 +188,8 @@ Targets become executable assertions before any tuning:
 - Verify produces at least 40% more Rep/cycle than Scan;
 - Relay produces at least 30% more offline yield than its active-offline
   comparison;
-- cycle N+1 reaches its first Gate at least 10% faster than cycle N;
+- after the deliberate Zone-120 maturity ceiling, each measured cycle N+1
+  reaches its first Gate at least 10% faster than cycle N;
 - Zone 200 and Zone 1000 remain finite and softlock-free;
 - ordinary targets take more than one simulation frame;
 - save, scheduler, active simulation, and offline simulation are deterministic.

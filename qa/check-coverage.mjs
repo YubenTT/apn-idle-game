@@ -193,7 +193,7 @@ export function checkCoverageContract() {
   assert(coverageOfflineEfficiency(nightmare, 'league', 0.88) === 0.88, 'Hardened stays inside S6');
   nightmare.route.zone = 199;
   assert(
-    offlineYieldEfficiency(nightmare) === 0.93,
+    offlineYieldEfficiency(nightmare) === C.IDLE_EFF + 0.05,
     'production offline boundary applies Hardened to the current S6 Pack',
   );
 
@@ -233,8 +233,10 @@ export function checkCoverageContract() {
   const hpBase = routeEnemyHp(209, 9, 4, 1, 1);
   const hpUnit = routeEnemyHp(209, 9, 1, 1, 1);
   assert(
-    hpBase / hpUnit > 1.8 && hpBase / hpUnit < 1.9,
-    'permanent-power HP budget uses the accepted 0.45 exponent',
+    C.PERMANENT_POWER_HP_EXPONENT === 0.4 &&
+      hpBase / hpUnit > 1.73 &&
+      hpBase / hpUnit < 1.75,
+    'permanent-power HP budget uses the accepted 0.4 exponent',
   );
   const bossWithoutCapstone = createState();
   bossWithoutCapstone.route.zone = 9;

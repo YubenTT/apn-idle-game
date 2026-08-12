@@ -1,5 +1,37 @@
 # APN Idle redesign V1 — QA report
 
+## 2026-08-12 assertion-first balance closure
+
+Status: all launch balance claims are executable outcomes. Active profiles use
+Hotfix, Priority Tag, and Overclock when available. The HP budget exponent is a
+named `0.4` constant; neutral offline overflow converts at 75%, and Relay
+restores two percentage points per Mastery without crossing active yield.
+
+Fresh focused evidence:
+
+- Scan / Verify / Relay first Go Live: 7.12m / 14.35m / 7.78m;
+- same-seed Scan throughput: 2.789× neutral zones/hour;
+- same-seed Verify value: 2.291× Scan Rep/cycle;
+- Relay overflow Signal and Notes: 1.333× neutral;
+- two independently passing settled successor-Gate ratios per Build: Scan
+  0.884× / 0.850×, Verify 0.853× / 0.371×, and Relay 0.506× / 0.627×; and
+- Zone 1000: 15.17 minimum ordinary hits, 217.71 maximum ordinary hits,
+  1978.01 maximum Gate hits, 20 kills, 30.48 maximum combat minutes, 319.55
+  aggregate combat hours, and exactly 100 Gates. This is a bounded-work gate,
+  not a finite-only assertion.
+
+The two same-seed active outcomes and offline save-relevant summaries are
+byte-identical. Live Mult intentionally affects Notes earning and Notes→Rep, so
+the single multiplier's Rep channel is documented as proportional to `live²`.
+No currency, paid power, second prestige, or additional global multiplier was
+introduced.
+
+The complete `npm test` suite exits 0. Chrome Route evidence also passes at
+375×812, 428×926, 844×390, and 1280×800 with a clean console, no horizontal
+overflow, a real Echo discovery, persisted Coverage/capstone actions, and the
+Zone-200→201 Drift transition. Evidence capture asserts a single logical
+viewport so DPR2 surfaces cannot silently produce tiled screenshots.
+
 ## 2026-08-12 rights and catalog closure
 
 Status: every authored Pack is now a closed versioned pointer to a contained

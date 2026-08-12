@@ -104,10 +104,37 @@ Original prompt: Complete the APN Idle redesign autonomously, including QA, revi
   that run was traced to the removed authored-list variable and fixed by using
   the rights-filtered active projection throughout the downstream V4 budget
   fixtures.
+- Rights/catalog shipped through ready PR #46. GitHub CI and GitGuardian passed;
+  squash merge `e5e3781` is on `origin/main`, issue #26 closed, and the old
+  local/remote branch was removed before balance work began.
+- Task D1 assertion-first RED was production-only: the first run exposed Relay
+  at 17.72m, only 1.136x neutral overflow yield, and sub-10% settled cycle
+  acceleration. Review then corrected two measurement flaws before tuning:
+  active profiles now use their actual Hotfix/Priority Tag/Overclock controls.
+  Successor-cycle evidence uses the fixed final post-ceiling window and requires
+  both ratios to pass independently; there is no median/outlier allowance.
+- Tuning round one is sufficient; no second round or firewall exception is
+  needed. The named permanent-power HP exponent is 0.4, neutral overflow is
+  75%, and Relay restores two points per Mastery up to active yield. Final
+  Scan/Verify/Relay first Go Live is 7.12m/14.35m/7.78m; Zone 200 is
+  3.92h/7.96h/3.84h; Scan is 2.789x neutral zones/hour; Verify is 2.291x Scan
+  Rep/cycle; Relay is 1.333x neutral overflow. Settled successor ratios are
+  Scan 0.884x/0.850x, Verify 0.853x/0.371x, and Relay 0.506x/0.627x. Zone-1000
+  bounded-work evidence remains 15.17 minimum
+  ordinary hits, 217.71 max ordinary, 1978.01 max Gate, 20 max kills, 30.48 max
+  combat minutes, 319.55 aggregate combat hours, and exactly 100 Gates.
 
-**Single next step:** perform final diff/self-review, commit and push the rights
-slice, open ready PR closing #26, wait for all required checks, then merge before
-starting the numeric balance branch.
+- Fresh final verification is green: the stricter balance target, pacing,
+  long-run, coverage, JavaScript syntax, `git diff --check`, and complete
+  `npm test` all exit 0. The Route Chrome matrix passed at 375×812, 428×926,
+  844×390, and 1280×800 with no console warning/error or horizontal overflow.
+  Visual inspection caught a DPR2 screenshot tiling defect in the evidence
+  harness; capture now emits and asserts exactly one logical viewport, and the
+  corrected landscape/mobile evidence was visually rechecked.
+
+**Single next step:** finish the final diff/self-review, commit and push the
+balance slice, open ready PR closing #29, wait for CI plus GitGuardian, merge,
+then freeze clean game `main` for the APN Web projection/deploy slice.
 
 ## 2026-08-09/10 V4 owner approval and production promotion
 

@@ -381,8 +381,28 @@ async function scenario(displayZone, viewport) {
     }
   }
   console.log(`INFO ${tag} viewport overflow ${result.overflow}px`);
-  const shot = await cdp.send('Page.captureScreenshot', { format: 'png', fromSurface: true });
-  fs.writeFileSync(path.join(output, `${viewport.label}-zone-${String(displayZone).padStart(3, '0')}.png`), Buffer.from(shot.data, 'base64'));
+  const shot = await cdp.send('Page.captureScreenshot', {
+    format: 'png',
+    fromSurface: true,
+    captureBeyondViewport: false,
+    clip: {
+      x: 0,
+      y: 0,
+      width: viewport.width,
+      height: viewport.height,
+      scale: 1 / viewport.scale,
+    },
+  });
+  const screenshot = Buffer.from(shot.data, 'base64');
+  assert(
+    screenshot.readUInt32BE(16) === viewport.width &&
+      screenshot.readUInt32BE(20) === viewport.height,
+    `${tag} evidence PNG is one logical viewport, not a DPR-tiled surface`,
+  );
+  fs.writeFileSync(
+    path.join(output, `${viewport.label}-zone-${String(displayZone).padStart(3, '0')}.png`),
+    screenshot,
+  );
   cdp.close();
   await fetch(`http://127.0.0.1:${port}/json/close/${page.id}`);
 }
