@@ -336,8 +336,8 @@
     {
       "id": "game-packs/apex-legends/pack.json",
       "path": "assets/game-packs/apex-legends/pack.json",
-      "bytes": 1751,
-      "sha256": "ce3bd0cd30f2085bd11986558ca2244ef1ee1fbc9f4b5202a2f09d92c94b0ad1",
+      "bytes": 2080,
+      "sha256": "437c5e623199606e0cbf900cc84c54b3db90389fac95ccbcb0fc3cb5ee747ea7",
       "firstPlayable": false
     },
     {
@@ -346,6 +346,13 @@
       "bytes": 5140,
       "sha256": "7bf66cc5baf02ac079dcba68c82eb90b9cf4e742e015b44c3a20b4aab3858b04",
       "kind": "propsAndMasks",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/apex-legends/rights.json",
+      "path": "assets/game-packs/apex-legends/rights.json",
+      "bytes": 529,
+      "sha256": "487315ffe354be34e3349ef2cff7f85bfb00b4da5bcda0e3023e93f95b6f0d81",
       "firstPlayable": false
     },
     {
@@ -364,10 +371,17 @@
       "firstPlayable": false
     },
     {
+      "id": "game-packs/catalog-policy.json",
+      "path": "assets/game-packs/catalog-policy.json",
+      "bytes": 1859,
+      "sha256": "7eb6fb03d49c7e5e22e5a5d7dbf058a7d4c59e0ac973614d0458192f2643f8f3",
+      "firstPlayable": false
+    },
+    {
       "id": "game-packs/catalog.json",
       "path": "assets/game-packs/catalog.json",
-      "bytes": 60196,
-      "sha256": "715ec9fed08967df949fa4380dbe7b668f24a4500da6223e680ae808a87f215b",
+      "bytes": 78141,
+      "sha256": "75546f41aa48f10d2b7708125ba550b157c9ffbf5f2fc1a9a19edd29c375bf13",
       "firstPlayable": false
     },
     {
@@ -389,8 +403,8 @@
     {
       "id": "game-packs/counter-strike-2/pack.json",
       "path": "assets/game-packs/counter-strike-2/pack.json",
-      "bytes": 1765,
-      "sha256": "6e5abec43762363bca02aa5ddfa65ab67be9270aed20db38994b37693fbb5e02",
+      "bytes": 2094,
+      "sha256": "b148eb0e95d5f5426304090de39a2e5dcfd945568af4796be32c59fa72fc18f1",
       "firstPlayable": false
     },
     {
@@ -399,6 +413,13 @@
       "bytes": 4994,
       "sha256": "d8dfc2f3669e4f1d71ce455474504295f7fdbd4c515c99a0aaf9e6d368d18235",
       "kind": "propsAndMasks",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/counter-strike-2/rights.json",
+      "path": "assets/game-packs/counter-strike-2/rights.json",
+      "bytes": 534,
+      "sha256": "4c8107a42edba35bd88e2c5b9bf5fe062d325ddf15bd4d7ee72a388e3ac3f5cc",
       "firstPlayable": false
     },
     {
@@ -435,8 +456,8 @@
     {
       "id": "game-packs/dead-by-daylight/pack.json",
       "path": "assets/game-packs/dead-by-daylight/pack.json",
-      "bytes": 1759,
-      "sha256": "4562bacfb59fab5f147a08949936b2861f28ccb2a9611d11c68a43e27232db09",
+      "bytes": 2084,
+      "sha256": "0a57a9ec6ceb5d05f9717a5e752f75e3d8d1d567c7dba154f1a452640c790dc4",
       "firstPlayable": false
     },
     {
@@ -445,6 +466,13 @@
       "bytes": 4334,
       "sha256": "4afe941af9e3eb26e45cfe7eec4c490378e1a4675e90ed533258fc0d3afecdda",
       "kind": "propsAndMasks",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/dead-by-daylight/rights.json",
+      "path": "assets/game-packs/dead-by-daylight/rights.json",
+      "bytes": 555,
+      "sha256": "3aa20c2f4b9a0e7306de5819ef8d43d6be764e4d6af996ecee32b259560fd7ed",
       "firstPlayable": false
     },
     {
@@ -481,8 +509,8 @@
     {
       "id": "game-packs/dota-2/pack.json",
       "path": "assets/game-packs/dota-2/pack.json",
-      "bytes": 1672,
-      "sha256": "06b9861a95187db0dc1c845175421a938e1aedac53b3410c5796d90ce8e06071",
+      "bytes": 1983,
+      "sha256": "3d900a25ebcb6445118d72543388a951f361370f2c7903314adb198a2fc10dd8",
       "firstPlayable": false
     },
     {
@@ -491,6 +519,13 @@
       "bytes": 4616,
       "sha256": "d62c3f2354ad090ce3a0f68b8f85375a010cc613ca60639ed5179c01cb9ceca8",
       "kind": "propsAndMasks",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/dota-2/rights.json",
+      "path": "assets/game-packs/dota-2/rights.json",
+      "bytes": 483,
+      "sha256": "dd45b9fabdd5f1e9c5f3350cdd4de1146b77dba1099fcbe8ea1219f88a4f72eb",
       "firstPlayable": false
     },
     {
@@ -527,8 +562,8 @@
     {
       "id": "game-packs/elden-ring/pack.json",
       "path": "assets/game-packs/elden-ring/pack.json",
-      "bytes": 1750,
-      "sha256": "111e06a1d6ae294dfb72631fb7d1a60446c1c798208e24d8e2a98588f0e1a986",
+      "bytes": 2062,
+      "sha256": "0053a0b06dc17f1a0a045cfd7b08493fd4084dae2a8476be8cc11f52d38effc3",
       "firstPlayable": false
     },
     {
@@ -537,6 +572,13 @@
       "bytes": 4608,
       "sha256": "668a6430ac7e231fda96b9d46da2e0ea1d50e3455753f6abf929dfecb022cce2",
       "kind": "propsAndMasks",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/elden-ring/rights.json",
+      "path": "assets/game-packs/elden-ring/rights.json",
+      "bytes": 553,
+      "sha256": "c1b32e56b7973830ab11165951c534250b9be462654879b6327e9bee43f420c3",
       "firstPlayable": false
     },
     {
@@ -573,8 +615,8 @@
     {
       "id": "game-packs/escape-from-tarkov/pack.json",
       "path": "assets/game-packs/escape-from-tarkov/pack.json",
-      "bytes": 1780,
-      "sha256": "e20942fab179cdb3e25f7117daa4b23b3b12df19a7c167605b0f249def4a8d5d",
+      "bytes": 2104,
+      "sha256": "d64d0f168553e5e62e7d2731830e531f7db431db3c199883b9044410fb89e168",
       "firstPlayable": false
     },
     {
@@ -583,6 +625,13 @@
       "bytes": 4376,
       "sha256": "791db844c7438fb4f5b4a9f9484ae3ae834fc0ed15d55e10421962c88cfb18d1",
       "kind": "propsAndMasks",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/escape-from-tarkov/rights.json",
+      "path": "assets/game-packs/escape-from-tarkov/rights.json",
+      "bytes": 576,
+      "sha256": "96c7731c36ded622f31729df4153645bd6adaf43aae8b4cf0b1d5cd8fba24873",
       "firstPlayable": false
     },
     {
@@ -619,8 +668,8 @@
     {
       "id": "game-packs/fc-26/pack.json",
       "path": "assets/game-packs/fc-26/pack.json",
-      "bytes": 1704,
-      "sha256": "b1fd70b75b0ca602eeb13a6a186273aeabc4263eb95841d134920360d1a73c9b",
+      "bytes": 2021,
+      "sha256": "7811a11990da37ff88dd2719ea3ba84a42938ac40954a33f56c082c31cc69487",
       "firstPlayable": false
     },
     {
@@ -629,6 +678,13 @@
       "bytes": 5012,
       "sha256": "b0b889cbd78099ef0dea0f9ce4ae34a749d4188eba7bd7fa170af0dc2a40f0b3",
       "kind": "propsAndMasks",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/fc-26/rights.json",
+      "path": "assets/game-packs/fc-26/rights.json",
+      "bytes": 534,
+      "sha256": "02f99ad45aeac48178bbc0adbb238bccb558160da0d76a51ecc0dce6a2a6b193",
       "firstPlayable": false
     },
     {
@@ -665,8 +721,8 @@
     {
       "id": "game-packs/fortnite/pack.json",
       "path": "assets/game-packs/fortnite/pack.json",
-      "bytes": 1698,
-      "sha256": "a4142c388fc3decfbbb0745486d1b4b85785cbebf0d62342a3f2894c0857a3a3",
+      "bytes": 2013,
+      "sha256": "d2c7013343ab6578e0ac24acb6d458e22c4e3d830217836c6d80ad5a9a78493e",
       "firstPlayable": false
     },
     {
@@ -675,6 +731,13 @@
       "bytes": 4878,
       "sha256": "e1132cb5bc5090380554c16795419ea379b76bfcc6d480c32d593397b4814aee",
       "kind": "propsAndMasks",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/fortnite/rights.json",
+      "path": "assets/game-packs/fortnite/rights.json",
+      "bytes": 493,
+      "sha256": "ac639b680fdc0ab28ba34dfbc85f5a389a6bf4cccb7c92e4c9cc4f2bc0155ea5",
       "firstPlayable": false
     },
     {
@@ -711,8 +774,8 @@
     {
       "id": "game-packs/grand-theft-auto-v/pack.json",
       "path": "assets/game-packs/grand-theft-auto-v/pack.json",
-      "bytes": 1815,
-      "sha256": "8249d82e9d9fe2fbb0003fa5db2cf4918c13c0f44849b23f73fd03b05c9838dc",
+      "bytes": 2144,
+      "sha256": "55b16397dee6b4d7565d1f53d676131d157de92dc571131db0348bc79ccadb13",
       "firstPlayable": false
     },
     {
@@ -721,6 +784,13 @@
       "bytes": 4734,
       "sha256": "a4280763dfde3eb943634361b3e46c0b7de5c0a6da9f030bcd6c3fa12bf8d4c2",
       "kind": "propsAndMasks",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/grand-theft-auto-v/rights.json",
+      "path": "assets/game-packs/grand-theft-auto-v/rights.json",
+      "bytes": 563,
+      "sha256": "b5f1f2631c79d3d3a9d3e3963fd2579011fac1b62c803a969d1bb0227185c039",
       "firstPlayable": false
     },
     {
@@ -757,8 +827,8 @@
     {
       "id": "game-packs/league/pack.json",
       "path": "assets/game-packs/league/pack.json",
-      "bytes": 1672,
-      "sha256": "39e185708a40f54b3a40a916a9a3b48fb190848ba56816e55dab9a785ddaeed8",
+      "bytes": 1988,
+      "sha256": "0688be0dd23645a5fe7f0b42aae946fd117b757dce4d26385852c1bcaf3f284e",
       "firstPlayable": false
     },
     {
@@ -768,6 +838,13 @@
       "sha256": "3f436ff2a1f5c6a20a4465d53caebac5ae154ceea41ad47028c991ccb0efce28",
       "kind": "propsAndMasks",
       "firstPlayable": true
+    },
+    {
+      "id": "game-packs/league/rights.json",
+      "path": "assets/game-packs/league/rights.json",
+      "bytes": 508,
+      "sha256": "b0de64f3e2a29f0c5ad2d29b39ec6cb486d281f599c24d7c773ff8347aa6909c",
+      "firstPlayable": false
     },
     {
       "id": "game-packs/league/targets.json",
@@ -803,8 +880,8 @@
     {
       "id": "game-packs/madden-nfl-26/pack.json",
       "path": "assets/game-packs/madden-nfl-26/pack.json",
-      "bytes": 1757,
-      "sha256": "49bde61346d843f3b36596c304859c5ca9b21937e287fe37de59c70e73629fe4",
+      "bytes": 2074,
+      "sha256": "ceea4720450e1d986b0421bc14b62f0cebc8b12a38a71d570fa7045869868edc",
       "firstPlayable": false
     },
     {
@@ -813,6 +890,13 @@
       "bytes": 4566,
       "sha256": "549bd7ebb71e79f141e186e04b67c361c769861e6df0c927ee075f2f17267273",
       "kind": "propsAndMasks",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/madden-nfl-26/rights.json",
+      "path": "assets/game-packs/madden-nfl-26/rights.json",
+      "bytes": 532,
+      "sha256": "1082d6f9205f236b1a0c3c9e9bc56fbe70fd9543994695dbabbe64fcc150da9f",
       "firstPlayable": false
     },
     {
@@ -849,8 +933,8 @@
     {
       "id": "game-packs/marvel-rivals/pack.json",
       "path": "assets/game-packs/marvel-rivals/pack.json",
-      "bytes": 1718,
-      "sha256": "2b33318c7b7f67b1ee029bd29b29d152874bdce43ddf8574a2a659cb6c8adae7",
+      "bytes": 2035,
+      "sha256": "fa40783949e065a4ba3a697e4df1847ea6c337f44271d7be4d984999f9506d9e",
       "firstPlayable": false
     },
     {
@@ -859,6 +943,13 @@
       "bytes": 5040,
       "sha256": "11f0c7bbadc87001743acb4689101484521147a017f464d86948e4356d43e2ed",
       "kind": "propsAndMasks",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/marvel-rivals/rights.json",
+      "path": "assets/game-packs/marvel-rivals/rights.json",
+      "bytes": 567,
+      "sha256": "71d67197beb31ebe9ba01a2ea5b6e095c982fc629fef6a405fd90886587003fa",
       "firstPlayable": false
     },
     {
@@ -895,8 +986,8 @@
     {
       "id": "game-packs/minecraft/pack.json",
       "path": "assets/game-packs/minecraft/pack.json",
-      "bytes": 1701,
-      "sha256": "1ae2874541c6cb4031a1d891ecb4d4e888293c568b030fad2c8c95a0373e1d8b",
+      "bytes": 2018,
+      "sha256": "826123f908b194be63e45d42476967f76b7ec786b1b460acd787f848db13d161",
       "firstPlayable": false
     },
     {
@@ -905,6 +996,13 @@
       "bytes": 4674,
       "sha256": "39f6ebf76bc226ed75d9544bfeeed4cf854bc381a9950b81e3dedf2769e5078a",
       "kind": "propsAndMasks",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/minecraft/rights.json",
+      "path": "assets/game-packs/minecraft/rights.json",
+      "bytes": 506,
+      "sha256": "3e9bfdebb362e5870ab32b257337a2645c9f420ce6ae7c418a235456d395ed23",
       "firstPlayable": false
     },
     {
@@ -941,8 +1039,8 @@
     {
       "id": "game-packs/nba-2k26/pack.json",
       "path": "assets/game-packs/nba-2k26/pack.json",
-      "bytes": 1708,
-      "sha256": "821632524e6a35381ef51a150142b558ca1047c7ae0f7c61d9fd06dc7e02dbe4",
+      "bytes": 2022,
+      "sha256": "1fb1a7743cb1f37dd94e5b04fccf7e7018981c242be81a7a332a8a85cdd3aee0",
       "firstPlayable": false
     },
     {
@@ -951,6 +1049,13 @@
       "bytes": 4830,
       "sha256": "30685031bd5ec0191c8c13fe27d4e15d0736f6954cbdd5a190116b0af2bec8ce",
       "kind": "propsAndMasks",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/nba-2k26/rights.json",
+      "path": "assets/game-packs/nba-2k26/rights.json",
+      "bytes": 507,
+      "sha256": "0398dae2a8e613528cd197a2ebda736fb51d70e6ba86af03b00542c6c987627c",
       "firstPlayable": false
     },
     {
@@ -987,8 +1092,8 @@
     {
       "id": "game-packs/old-school-runescape/pack.json",
       "path": "assets/game-packs/old-school-runescape/pack.json",
-      "bytes": 1775,
-      "sha256": "a496fa63e3d0bf821060e9fd136859576db1dc0b7959b90bcbfeed4372944681",
+      "bytes": 2103,
+      "sha256": "bff008960873e7cda27b8518085d0406cb73251c23637cabb1433365ff917fc4",
       "firstPlayable": false
     },
     {
@@ -997,6 +1102,13 @@
       "bytes": 4868,
       "sha256": "419129cdee84762ea4cf8dfdfa72841302e7aee45efe7cec316cd542c8fb59a8",
       "kind": "propsAndMasks",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/old-school-runescape/rights.json",
+      "path": "assets/game-packs/old-school-runescape/rights.json",
+      "bytes": 546,
+      "sha256": "f238b8214565c329385a319acc5eb1f88f4ece32c00d7eb2046de459b5c7d179",
       "firstPlayable": false
     },
     {
@@ -1033,8 +1145,8 @@
     {
       "id": "game-packs/overwatch/pack.json",
       "path": "assets/game-packs/overwatch/pack.json",
-      "bytes": 1710,
-      "sha256": "d701c8f1667bc440e3880217737f8f7b8d7b43d956a1a1cb6c260e1dad580a20",
+      "bytes": 2029,
+      "sha256": "a5dbc399ed2659e4cf387d49096c2ce19433573e567c6fcface3997b1bcace67",
       "firstPlayable": false
     },
     {
@@ -1043,6 +1155,13 @@
       "bytes": 5170,
       "sha256": "2c3c1b7dc2d7d36be86ae3ae97c89386aa646e860624039bb7bf6a5081fd4ab5",
       "kind": "propsAndMasks",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/overwatch/rights.json",
+      "path": "assets/game-packs/overwatch/rights.json",
+      "bytes": 510,
+      "sha256": "bfd7fec881acc79305adfe29f157284dbab4f61ddff908667f5c9851b36dbec2",
       "firstPlayable": false
     },
     {
@@ -1079,8 +1198,8 @@
     {
       "id": "game-packs/path-of-exile-2/pack.json",
       "path": "assets/game-packs/path-of-exile-2/pack.json",
-      "bytes": 1758,
-      "sha256": "7a9a604686f3d894c3c738230f465a18f894dd78d5c75082798f8352cbb04bca",
+      "bytes": 2088,
+      "sha256": "232a9850304e675a107e5fce69f5fff2b072c7dfe3c1188a75a7cf6e91e3487b",
       "firstPlayable": false
     },
     {
@@ -1089,6 +1208,13 @@
       "bytes": 4990,
       "sha256": "e70dbc0ae10f1cff04b12140c9f3ae39c45ae4f26ff671532523461bc4c8aa94",
       "kind": "propsAndMasks",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/path-of-exile-2/rights.json",
+      "path": "assets/game-packs/path-of-exile-2/rights.json",
+      "bytes": 559,
+      "sha256": "c6d6b956ff378fb3b00f5bf90fb5043f368d2a237be03169c04c79a6b0bf10b4",
       "firstPlayable": false
     },
     {
@@ -1125,8 +1251,8 @@
     {
       "id": "game-packs/rocket-league/pack.json",
       "path": "assets/game-packs/rocket-league/pack.json",
-      "bytes": 1734,
-      "sha256": "c998d342e4d6c5d7b6165203b79a4053efa6036ad88c69a4861fec3fc327ef59",
+      "bytes": 2056,
+      "sha256": "4130aaa35db092ca8cd6f2b739f608ca48d2c76e896c6cd8a3a5c18fef730ee4",
       "firstPlayable": false
     },
     {
@@ -1135,6 +1261,13 @@
       "bytes": 5164,
       "sha256": "3d31affdfbb64323a157330b0763f8dd77ed24e49174ba587570f0e9c7a9d18f",
       "kind": "propsAndMasks",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/rocket-league/rights.json",
+      "path": "assets/game-packs/rocket-league/rights.json",
+      "bytes": 539,
+      "sha256": "49d25f3ebe2dff75249b51aa0da8914698a388f31798bfd3f2301dbe58dc6fde",
       "firstPlayable": false
     },
     {
@@ -1780,8 +1913,8 @@
     {
       "id": "game-packs/valorant/pack.json",
       "path": "assets/game-packs/valorant/pack.json",
-      "bytes": 23089,
-      "sha256": "60ca4e32c2dcf93c26298d195588368d3109da7a76f0e4d9a2915fc7dab0db5c",
+      "bytes": 23405,
+      "sha256": "dc75408bf991087ee33386e41dd9847bfa56b5f67201457eb21056e2e0c88318",
       "firstPlayable": false
     },
     {
@@ -1791,6 +1924,13 @@
       "sha256": "c577c45d41b56b47a882fe1d84a7fd20177054965bf6ad844e01f7d4bfd4cf74",
       "kind": "propsAndMasks",
       "firstPlayable": true
+    },
+    {
+      "id": "game-packs/valorant/rights.json",
+      "path": "assets/game-packs/valorant/rights.json",
+      "bytes": 493,
+      "sha256": "5447151ffd59bda9c215c5e6e3e87e9b72ab6e2de9a91c878c2b567587540a14",
+      "firstPlayable": false
     },
     {
       "id": "game-packs/valorant/targets.json",
@@ -1826,8 +1966,8 @@
     {
       "id": "game-packs/world-of-warcraft/pack.json",
       "path": "assets/game-packs/world-of-warcraft/pack.json",
-      "bytes": 1761,
-      "sha256": "853bd9e824208642e39e7edc64bc9bbb1ed0499fe58fae583d664e2cf681c4cb",
+      "bytes": 2085,
+      "sha256": "cafaa04740d5d1c70c402921640af2f20ebdffdc679a386920ce24bcb0a10f44",
       "firstPlayable": false
     },
     {
@@ -1836,6 +1976,13 @@
       "bytes": 4594,
       "sha256": "05da270a2598d22357d53916745648e9ab28c0016bdf3c14933426c31fe442b7",
       "kind": "propsAndMasks",
+      "firstPlayable": false
+    },
+    {
+      "id": "game-packs/world-of-warcraft/rights.json",
+      "path": "assets/game-packs/world-of-warcraft/rights.json",
+      "bytes": 547,
+      "sha256": "59edb7e3420842433bbb41d6058fa449d0fff119178a73a388c4dff594908c24",
       "firstPlayable": false
     },
     {

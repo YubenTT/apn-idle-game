@@ -28,6 +28,77 @@ const TARGET_ROLES = Object.freeze([
   'elite',
   'event',
 ]);
+const TARGET_PROPERTIES = new Set(['id', 'role', 'label', 'frame', 'pivot']);
+const BOSS_PROPERTIES = new Set(['id', 'label', 'frame', 'breakFrame', 'pivot']);
+const ASSET_PROPERTIES = new Set([
+  'background',
+  'targets',
+  'targetData',
+  'props',
+  'corruptionMask',
+]);
+const PIVOT_PROPERTIES = new Set(['x', 'y']);
+const PACK_ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const SHA256_PATTERN = /^[0-9a-f]{64}$/;
+const RIGHTS_MODES = new Set([
+  'apn-original',
+  'homage-only',
+  'editorial-text-original-art',
+  'licensed-spotlight',
+  'blocked',
+  'pending-review',
+]);
+const REVIEW_STATUSES = new Set([
+  'needs-legal-review',
+  'approved-original-echo',
+  'licensed',
+  'rejected',
+]);
+const PACK_PROPERTIES = new Set([
+  'schemaVersion',
+  'catalogVersion',
+  'id',
+  'order',
+  'title',
+  'editorialReference',
+  'genre',
+  'zones',
+  'targets',
+  'boss',
+  'assets',
+  'motion',
+  'sourceBoard',
+  'corruptionMasks',
+  'rights',
+  'fallback',
+]);
+const RIGHTS_PROPERTIES = new Set([
+  'schemaVersion',
+  'mode',
+  'reviewStatus',
+  'reviewedAt',
+  'reviewedBy',
+  'editorialReference',
+  'killSwitch',
+  'licenseRecord',
+  'forbiddenMotifs',
+  'provenance',
+]);
+const LICENSE_PROPERTIES = new Set([
+  'recordId',
+  'territories',
+  'expiresAt',
+  'allowedUses',
+]);
+const POLICY_PROPERTIES = new Set([
+  'schemaVersion',
+  'pendingReview',
+  'pendingReviewWarnIds',
+  'disabledKillSwitches',
+  'deniedRuntimeMarks',
+  'deniedRuntimeTerms',
+  'nonAffiliationNotice',
+]);
 
 export const readJson = (file) => JSON.parse(fs.readFileSync(file, 'utf8'));
 export const stableJson = (value) => `${JSON.stringify(value, null, 2)}\n`;
@@ -37,11 +108,33 @@ export const sha256 = (file) =>
 const finite = (value) => Number.isFinite(value);
 const isObject = (value) =>
   value !== null && typeof value === 'object' && !Array.isArray(value);
+const isDateTime = (value) =>
+  typeof value === 'string' &&
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(value) &&
+  Number.isFinite(Date.parse(value));
 
 function rejectUnknownProperties(value, allowed, label, errors) {
   if (!isObject(value)) return;
   for (const key of Object.keys(value)) {
     if (!allowed.has(key)) errors.push(`${label}: unexpected property "${key}"`);
+  }
+}
+
+function validatePackPivot(pivot, label, errors) {
+  if (!isObject(pivot)) {
+    errors.push(`${label}: pivot is required`);
+    return;
+  }
+  rejectUnknownProperties(pivot, PIVOT_PROPERTIES, `${label}/pivot`, errors);
+  if (
+    !finite(pivot.x) ||
+    !finite(pivot.y) ||
+    pivot.x < 0 ||
+    pivot.x > 1 ||
+    pivot.y < 0 ||
+    pivot.y > 1
+  ) {
+    errors.push(`${label}: pivot must be normalized`);
   }
 }
 
@@ -83,10 +176,64 @@ export function validateAtlasData(data, label = 'atlas') {
 
 export function validatePackManifest(pack, label = pack?.id || 'pack') {
   const errors = [];
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(pack?.id || '')) errors.push(`${label}: invalid id`);
+  if (!isObject(pack)) return [`${label}: pack must be an object`];
+  rejectUnknownProperties(pack, PACK_PROPERTIES, label, errors);
+  if (pack.schemaVersion !== 1) errors.push(`${label}: schemaVersion must equal 1`);
+  if (!Number.isInteger(pack.catalogVersion) || pack.catalogVersion < 1) {
+    errors.push(`${label}: catalogVersion must be a positive integer`);
+  }
+  if (!PACK_ID_PATTERN.test(pack?.id || '')) errors.push(`${label}: invalid id`);
   if (!Number.isInteger(pack?.order) || pack.order < 1) errors.push(`${label}: invalid order`);
   if (pack?.zones !== 10) errors.push(`${label}: zones must equal 10`);
-  if (!pack?.genre || !pack?.title) errors.push(`${label}: missing title or genre`);
+  if (!pack?.genre || typeof pack?.title !== 'string' || pack.title.length < 2 || pack.title.length > 40) {
+    errors.push(`${label}: missing or invalid runtime title or genre`);
+  }
+  if (
+    typeof pack.editorialReference !== 'string' ||
+    pack.editorialReference.length < 1 ||
+    pack.editorialReference.length > 120
+  ) {
+    errors.push(`${label}: editorialReference is required`);
+  }
+  const expectedRights = `assets/game-packs/${pack.id}/rights.json`;
+  if (pack.rights !== expectedRights) {
+    errors.push(`${label}: rights pointer must equal the portable path ${expectedRights}`);
+  }
+  const expectedSourceBoard = `assets/game-packs/${pack.id}/source-board.md`;
+  if (pack.sourceBoard !== expectedSourceBoard) {
+    errors.push(`${label}: source board must equal ${expectedSourceBoard}`);
+  }
+  if (
+    !Array.isArray(pack.corruptionMasks) ||
+    pack.corruptionMasks.length !== 4 ||
+    new Set(pack.corruptionMasks).size !== 4 ||
+    pack.corruptionMasks.some((value) => !PACK_ID_PATTERN.test(value || ''))
+  ) {
+    errors.push(`${label}: corruptionMasks must contain four unique portable ids`);
+  }
+  if (!isObject(pack.fallback)) {
+    errors.push(`${label}: fallback is required`);
+  } else {
+    rejectUnknownProperties(
+      pack.fallback,
+      new Set(['mode', 'reasonCopy', 'preserveProgress']),
+      `${label}/fallback`,
+      errors,
+    );
+    if (pack.fallback.mode !== 'procedural-canvas') {
+      errors.push(`${label}: fallback mode must equal "procedural-canvas"`);
+    }
+    if (
+      typeof pack.fallback.reasonCopy !== 'string' ||
+      pack.fallback.reasonCopy.length < 10 ||
+      pack.fallback.reasonCopy.length > 160
+    ) {
+      errors.push(`${label}: fallback reasonCopy is invalid`);
+    }
+    if (pack.fallback.preserveProgress !== true) {
+      errors.push(`${label}: fallback must preserve progress`);
+    }
+  }
   if (!Array.isArray(pack?.targets) || pack.targets.length !== 5) errors.push(`${label}: requires five targets`);
   if (
     Array.isArray(pack?.targets) &&
@@ -100,28 +247,61 @@ export function validatePackManifest(pack, label = pack?.id || 'pack') {
       errors.push(`${label}: target roles must be exactly ${TARGET_ROLES.join(', ')}`);
     }
   }
-  if (!pack?.boss?.id || !pack?.boss?.frame || !pack?.boss?.breakFrame || !pack?.boss?.pivot) {
+  if (!isObject(pack.boss)) {
     errors.push(`${label}: incomplete boss`);
   } else {
+    rejectUnknownProperties(pack.boss, BOSS_PROPERTIES, `${label}/boss`, errors);
+    if (
+      !PACK_ID_PATTERN.test(pack.boss.id || '') ||
+      typeof pack.boss.label !== 'string' ||
+      pack.boss.label.length < 2 ||
+      pack.boss.label.length > 80
+    ) {
+      errors.push(`${label}: boss id or label is invalid`);
+    }
     if (pack.boss.frame !== 'boss') errors.push(`${label}: boss frame must equal "boss"`);
     if (pack.boss.breakFrame !== 'boss-break') {
       errors.push(`${label}: boss breakFrame must equal "boss-break"`);
     }
+    validatePackPivot(pack.boss.pivot, `${label}/boss`, errors);
   }
-  for (const target of pack?.targets || []) {
-    if (!target?.id || !target.role || !target.frame || !target.pivot) {
-      errors.push(`${label}/${target?.id || 'target'}: incomplete target`);
+  for (const [index, target] of (pack?.targets || []).entries()) {
+    const targetLabel = `${label}/targets[${index}]`;
+    if (!isObject(target)) {
+      errors.push(`${targetLabel}: incomplete target`);
       continue;
     }
+    rejectUnknownProperties(target, TARGET_PROPERTIES, targetLabel, errors);
+    if (
+      !PACK_ID_PATTERN.test(target.id || '') ||
+      typeof target.label !== 'string' ||
+      target.label.length < 2 ||
+      target.label.length > 80
+    ) {
+      errors.push(`${targetLabel}: target id or label is invalid`);
+    }
     if (target.frame !== target.role) {
-      errors.push(`${label}/${target.id}: frame must equal role`);
+      errors.push(`${targetLabel}: frame must equal role`);
+    }
+    validatePackPivot(target.pivot, targetLabel, errors);
+  }
+  if (!isObject(pack.assets)) {
+    errors.push(`${label}: assets must be an object`);
+  } else {
+    rejectUnknownProperties(pack.assets, ASSET_PROPERTIES, `${label}/assets`, errors);
+    const expectedAssets = {
+      background: `assets/game-packs/${pack.id}/background.webp`,
+      targets: `assets/game-packs/${pack.id}/targets.webp`,
+      targetData: `assets/game-packs/${pack.id}/targets.json`,
+      props: `assets/game-packs/${pack.id}/props.webp`,
+      corruptionMask: `assets/game-packs/${pack.id}/corruption-mask.webp`,
+    };
+    for (const [key, expected] of Object.entries(expectedAssets)) {
+      if (pack.assets[key] !== expected) {
+        errors.push(`${label}: ${key} must equal ${expected}`);
+      }
     }
   }
-  for (const key of ['background', 'targets', 'targetData', 'props', 'corruptionMask']) {
-    if (!pack?.assets?.[key]) errors.push(`${label}: missing asset ${key}`);
-  }
-  if (!pack?.sourceBoard) errors.push(`${label}: missing source board`);
-
   if (pack?.motion !== undefined) {
     if (
       !pack.motion ||
@@ -292,6 +472,208 @@ export function validatePackManifest(pack, label = pack?.id || 'pack') {
         }
       }
     }
+  }
+  return errors;
+}
+
+export function validateRightsDocument(rights, label = 'rights') {
+  const errors = [];
+  if (!isObject(rights)) return [`${label}: rights must be an object`];
+  rejectUnknownProperties(rights, RIGHTS_PROPERTIES, label, errors);
+  if (rights.schemaVersion !== 1) errors.push(`${label}: schemaVersion must equal 1`);
+  if (!RIGHTS_MODES.has(rights.mode)) errors.push(`${label}: invalid rights mode`);
+  if (!REVIEW_STATUSES.has(rights.reviewStatus)) {
+    errors.push(`${label}: invalid reviewStatus`);
+  }
+  if (
+    typeof rights.editorialReference !== 'string' ||
+    rights.editorialReference.length > 120
+  ) {
+    errors.push(`${label}: invalid editorialReference`);
+  }
+  if (!PACK_ID_PATTERN.test(rights.killSwitch || '')) {
+    errors.push(`${label}: invalid killSwitch`);
+  }
+  if (
+    rights.reviewedBy !== null &&
+    (typeof rights.reviewedBy !== 'string' || rights.reviewedBy.length < 1 || rights.reviewedBy.length > 120)
+  ) {
+    errors.push(`${label}: invalid reviewedBy`);
+  }
+  if (
+    rights.reviewedAt !== null &&
+    !isDateTime(rights.reviewedAt)
+  ) {
+    errors.push(`${label}: invalid reviewedAt`);
+  }
+  if (isObject(rights.licenseRecord)) {
+    const license = rights.licenseRecord;
+    const licenseLabel = `${label}/licenseRecord`;
+    rejectUnknownProperties(license, LICENSE_PROPERTIES, licenseLabel, errors);
+    if (
+      typeof license.recordId !== 'string' ||
+      license.recordId.length < 1 ||
+      license.recordId.length > 120
+    ) {
+      errors.push(`${licenseLabel}: invalid recordId`);
+    }
+    if (
+      !Array.isArray(license.territories) ||
+      license.territories.length < 1 ||
+      new Set(license.territories).size !== license.territories.length ||
+      license.territories.some(
+        (value) => typeof value !== 'string' || value.length < 2 || value.length > 64,
+      )
+    ) {
+      errors.push(`${licenseLabel}: territories must be a unique nonempty string list`);
+    }
+    if (license.expiresAt !== null && !isDateTime(license.expiresAt)) {
+      errors.push(`${licenseLabel}: invalid expiresAt`);
+    }
+    if (
+      !Array.isArray(license.allowedUses) ||
+      license.allowedUses.length < 1 ||
+      new Set(license.allowedUses).size !== license.allowedUses.length ||
+      license.allowedUses.some(
+        (value) => typeof value !== 'string' || value.length < 2 || value.length > 240,
+      )
+    ) {
+      errors.push(`${licenseLabel}: allowedUses must be a unique nonempty string list`);
+    }
+  }
+  if (
+    !Array.isArray(rights.forbiddenMotifs) ||
+    rights.forbiddenMotifs.length < 1 ||
+    rights.forbiddenMotifs.length > 40 ||
+    new Set(rights.forbiddenMotifs).size !== rights.forbiddenMotifs.length ||
+    rights.forbiddenMotifs.some(
+      (value) => typeof value !== 'string' || value.length < 2 || value.length > 120,
+    )
+  ) {
+    errors.push(`${label}: forbiddenMotifs must be a unique nonempty string list`);
+  }
+  if (!isObject(rights.provenance)) {
+    errors.push(`${label}: provenance is required`);
+  } else {
+    rejectUnknownProperties(
+      rights.provenance,
+      new Set(['sourceBoard', 'reviewEvidence']),
+      `${label}/provenance`,
+      errors,
+    );
+    if (
+      typeof rights.provenance.sourceBoard !== 'string' ||
+      !/^assets\/game-packs\/[a-z0-9-]+\/source-board\.md$/.test(
+        rights.provenance.sourceBoard,
+      )
+    ) {
+      errors.push(`${label}: provenance sourceBoard is invalid`);
+    }
+    if (!Array.isArray(rights.provenance.reviewEvidence)) {
+      errors.push(`${label}: reviewEvidence must be an array`);
+    } else {
+      for (const [index, record] of rights.provenance.reviewEvidence.entries()) {
+        const recordLabel = `${label}/provenance/reviewEvidence[${index}]`;
+        if (!isObject(record)) {
+          errors.push(`${recordLabel}: record must be an object`);
+          continue;
+        }
+        rejectUnknownProperties(
+          record,
+          new Set(['id', 'kind', 'sha256']),
+          recordLabel,
+          errors,
+        );
+        if (!PACK_ID_PATTERN.test(record.id || '')) errors.push(`${recordLabel}: invalid id`);
+        if (!['legal-review', 'license', 'originality-review'].includes(record.kind)) {
+          errors.push(`${recordLabel}: invalid kind`);
+        }
+        if (!SHA256_PATTERN.test(record.sha256 || '')) {
+          errors.push(`${recordLabel}: invalid sha256`);
+        }
+      }
+    }
+  }
+  if (rights.mode === 'pending-review') {
+    if (
+      rights.reviewStatus !== 'needs-legal-review' ||
+      rights.reviewedAt !== null ||
+      rights.reviewedBy !== null ||
+      rights.licenseRecord !== null
+    ) {
+      errors.push(
+        `${label}: pending-review must remain needs-legal-review with null reviewer, timestamp, and license`,
+      );
+    }
+  }
+  if (rights.mode === 'blocked' && rights.reviewStatus !== 'rejected') {
+    errors.push(`${label}: blocked mode must have rejected reviewStatus`);
+  }
+  if (rights.mode === 'apn-original' && rights.editorialReference !== '') {
+    errors.push(`${label}: apn-original must have an empty editorialReference`);
+  }
+  if (rights.mode === 'licensed-spotlight') {
+    if (
+      rights.reviewStatus !== 'licensed' ||
+      !isObject(rights.licenseRecord) ||
+      rights.reviewedAt === null ||
+      rights.reviewedBy === null ||
+      !Array.isArray(rights.provenance?.reviewEvidence) ||
+      !rights.provenance.reviewEvidence.some((record) => record?.kind === 'license')
+    ) {
+      errors.push(`${label}: licensed-spotlight requires licensed review and licenseRecord`);
+    }
+  } else if (rights.licenseRecord !== null) {
+    errors.push(`${label}: licenseRecord is allowed only for licensed-spotlight`);
+  }
+  if (
+    ['apn-original', 'homage-only', 'editorial-text-original-art'].includes(rights.mode)
+  ) {
+    if (
+      rights.reviewStatus !== 'approved-original-echo' ||
+      rights.reviewedAt === null ||
+      rights.reviewedBy === null ||
+      !Array.isArray(rights.provenance?.reviewEvidence) ||
+      rights.provenance.reviewEvidence.length === 0
+    ) {
+      errors.push(`${label}: resolved original-art mode requires human review evidence`);
+    }
+  }
+  if (/fan-policy-noncommercial/i.test(JSON.stringify(rights))) {
+    errors.push(`${label}: fan-policy-noncommercial framing is forbidden`);
+  }
+  return errors;
+}
+
+export function validateCatalogPolicy(policy, label = 'catalog-policy') {
+  const errors = [];
+  if (!isObject(policy)) return [`${label}: policy must be an object`];
+  rejectUnknownProperties(policy, POLICY_PROPERTIES, label, errors);
+  if (policy.schemaVersion !== 1) errors.push(`${label}: schemaVersion must equal 1`);
+  if (!['warn', 'block'].includes(policy.pendingReview)) {
+    errors.push(`${label}: pendingReview must equal warn or block`);
+  }
+  for (const [key, pattern] of [
+    ['pendingReviewWarnIds', PACK_ID_PATTERN],
+    ['disabledKillSwitches', PACK_ID_PATTERN],
+    ['deniedRuntimeMarks', /\S/],
+    ['deniedRuntimeTerms', /\S/],
+  ]) {
+    const values = policy[key];
+    if (
+      !Array.isArray(values) ||
+      new Set(values).size !== values.length ||
+      values.some((value) => typeof value !== 'string' || !pattern.test(value))
+    ) {
+      errors.push(`${label}: ${key} must be a unique string list`);
+    }
+  }
+  if (
+    typeof policy.nonAffiliationNotice !== 'string' ||
+    policy.nonAffiliationNotice.length < 20 ||
+    !/not affiliated/i.test(policy.nonAffiliationNotice)
+  ) {
+    errors.push(`${label}: nonAffiliationNotice must be explicit`);
   }
   return errors;
 }

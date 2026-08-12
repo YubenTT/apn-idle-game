@@ -1,7 +1,10 @@
 {
+  "schemaVersion": 1,
+  "catalogVersion": 1,
   "id": "fc-26",
   "order": 5,
-  "title": "EA Sports FC 26",
+  "title": "Ultimate Touchline",
+  "editorialReference": "EA Sports FC 26",
   "genre": "sports-football",
   "zones": 10,
   "targets": [
@@ -79,5 +82,11 @@
     "corrupted",
     "overrun",
     "zero-day"
-  ]
+  ],
+  "rights": "assets/game-packs/fc-26/rights.json",
+  "fallback": {
+    "mode": "procedural-canvas",
+    "reasonCopy": "Required Pack art is unavailable; APN Canvas preserves Route progress.",
+    "preserveProgress": true
+  }
 }

@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "mode": "pending-review",
+  "reviewStatus": "needs-legal-review",
+  "reviewedAt": null,
+  "reviewedBy": null,
+  "editorialReference": "Path of Exile 2",
+  "killSwitch": "disable-path-of-exile-2",
+  "licenseRecord": null,
+  "forbiddenMotifs": [
+    "Path of Exile or Grinding Gear Games wordmarks",
+    "recognizable named character or unique-item designs",
+    "official currency, gem, or passive-tree art"
+  ],
+  "provenance": {
+    "sourceBoard": "assets/game-packs/path-of-exile-2/source-board.md",
+    "reviewEvidence": []
+  }
+}

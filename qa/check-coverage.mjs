@@ -101,9 +101,16 @@ export function checkCoverageContract() {
   assert(COVERAGE_SETS.every((set) => set.members.length > 0), 'no empty Set is rendered');
   const allMembers = COVERAGE_SETS.flatMap((set) => set.members);
   assert(new Set(allMembers).size === allMembers.length, 'each current Pack belongs to one Set');
+  const activeCatalogIds = new Set(GAME_PACKS.map((pack) => pack.id));
+  const activeAssignedIds = allMembers.filter((packId) => activeCatalogIds.has(packId));
+  const unassignedActiveCount = GAME_PACKS.filter(
+    (pack) => !allMembers.includes(pack.id),
+  ).length;
+  const openSlotCount = COVERAGE_SETS.reduce((sum, set) => sum + set.openSlots, 0);
   assert(
-    [...allMembers].sort().join(',') === GAME_PACKS.map((pack) => pack.id).sort().join(','),
-    'Set membership covers the current catalog without a hardcoded count',
+    new Set(activeAssignedIds).size === activeAssignedIds.length &&
+      unassignedActiveCount <= openSlotCount,
+    'active catalog membership fits declared Sets or visible open slots without a hardcoded count',
   );
   assert(
     COVERAGE_SETS.find((set) => set.id === 'S4')?.openSlots === 1 &&
@@ -160,6 +167,12 @@ export function checkCoverageContract() {
   );
   const incomplete = coveredState(tactical.members[0]);
   assert(!claimCoverageSetCapstone(incomplete, 'S1'), 'incomplete Set cannot claim a capstone');
+  const activeWithoutValorant = new Set(tactical.members.slice(1));
+  const killSwitchSafe = coveredState(...tactical.members.slice(1));
+  assert(
+    claimCoverageSetCapstone(killSwitchSafe, 'S1', activeWithoutValorant),
+    'a disabled Pack does not strand an otherwise complete active Set',
+  );
 
   assert(coverageBossHpMultiplier(ready, 'valorant') === 0.95, 'Rapid Defuse pre-damages an S1 Gate by 5 percent');
   assert(coverageBossHpMultiplier(ready, 'league') === 1, 'Rapid Defuse stays inside S1');

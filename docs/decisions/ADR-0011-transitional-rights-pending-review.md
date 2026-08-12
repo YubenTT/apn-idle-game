@@ -51,3 +51,17 @@ packs until the waves land.
 
 All wave packs are reconciled to a real mode — at which point `pending-review`
 can be tightened to block repo-wide.
+
+## 2026-08-12 implementation clarification
+
+The closure implementation makes the safe direction explicit:
+
+- `pendingReview` defaults to `block` for every future Pack;
+- the existing twenty-Pack transition roster is enumerated in
+  `catalog-policy.json#pendingReviewWarnIds` and is the only warning exception;
+- the exception neither changes `needs-legal-review` nor fabricates reviewer,
+  timestamp, license, or evidence fields;
+- a resolved Pack must be removed from the transition roster, while a blocked
+  Pack remains excluded regardless of that historical entry.
+
+This narrows Option B. It does not declare the current roster legally approved.

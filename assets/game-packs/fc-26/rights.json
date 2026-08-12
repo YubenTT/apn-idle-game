@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "mode": "pending-review",
+  "reviewStatus": "needs-legal-review",
+  "reviewedAt": null,
+  "reviewedBy": null,
+  "editorialReference": "EA Sports FC 26",
+  "killSwitch": "disable-fc-26",
+  "licenseRecord": null,
+  "forbiddenMotifs": [
+    "EA Sports, FC, FIFA, club, or league marks",
+    "recognizable athlete likenesses",
+    "official kits, crests, broadcast graphics, or manga characters"
+  ],
+  "provenance": {
+    "sourceBoard": "assets/game-packs/fc-26/source-board.md",
+    "reviewEvidence": []
+  }
+}

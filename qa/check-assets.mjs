@@ -507,18 +507,19 @@ assert(oversized.errors.some((error) => error.includes('fixture-targets') && err
 assert(oversized.errors.some((error) => error.includes('hot packs: 3 exceeds 2')), 'third hot pack rejected');
 
 const manifests = validateAllManifests();
-assert(manifests.files.length === 20 && manifests.errors.length === 0, '20 pack manifests valid');
-const sourcePacks = manifests.files
-  .map((file) => readJson(file))
-  .sort((left, right) => left.order - right.order || left.id.localeCompare(right.id));
+assert(
+  manifests.files.length > 0 && manifests.errors.length === 0,
+  `${manifests.files.length} authored Pack manifests and rights pointers valid`,
+);
+const activePacks = manifests.packs;
 const catalogPacks = readJson(path.join(root, 'assets/game-packs/catalog.json'));
 assert(
-  JSON.stringify(catalogPacks) === JSON.stringify(sourcePacks),
-  'catalog.json is the canonical sorted projection of every pack manifest',
+  JSON.stringify(catalogPacks) === JSON.stringify(manifests.packs),
+  'catalog.json is the canonical rights-filtered projection of authored Pack manifests',
 );
 assert(
-  JSON.stringify(GAME_PACKS) === JSON.stringify(sourcePacks),
-  'generated game packs module matches canonical pack projection including motion metadata',
+  JSON.stringify(GAME_PACKS) === JSON.stringify(manifests.packs),
+  'generated game packs module matches the canonical active projection including rights and motion metadata',
 );
 
 const productionNames = ['background.webp', 'targets.webp', 'targets.json', 'props.webp', 'corruption-mask.webp', 'source-board.md'];
@@ -550,7 +551,10 @@ for (const manifestFile of manifests.files) {
   }
   productionPacks.push(packId);
 }
-assert([0, 5, 10, 15, 20].includes(productionPacks.length), `production lands in five-pack groups (${productionPacks.length})`);
+assert(
+  productionPacks.length > 0,
+  `production asset sets validate independently of catalog size (${productionPacks.length})`,
+);
 
 const itemAtlasFile = path.join(root, 'assets/items/item-atlas.json');
 assert(fs.existsSync(itemAtlasFile), 'item atlas metadata exists');
@@ -616,9 +620,9 @@ assert(
   sizes.hotTextures < MOTION_BUDGETS.hotTextures,
   'hot-texture accounting uses one real current/next route window below the frozen 64 MiB cap',
 );
-const v4PackLast = sourcePacks.map((pack, index) => ({
+const v4PackLast = activePacks.map((pack, index) => ({
   ...pack,
-  order: pack.id === 'valorant' ? sourcePacks.length + 1 : index + 1,
+  order: pack.id === 'valorant' ? activePacks.length + 1 : index + 1,
 }));
 const v4PackLastSizes = verifySizes(generatedManifestPath, {
   packs: v4PackLast,
@@ -641,7 +645,7 @@ staleCold.firstPlayable = true;
 const staleManifestPath = path.join(temp, 'manifest-stale.json');
 fs.writeFileSync(staleManifestPath, JSON.stringify(staleManifest));
 const staleResult = verifySizes(staleManifestPath, {
-  packs: sourcePacks,
+  packs: activePacks,
 });
 assert(
   staleResult.errors.some((error) =>

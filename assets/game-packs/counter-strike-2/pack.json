@@ -1,7 +1,10 @@
 {
+  "schemaVersion": 1,
+  "catalogVersion": 1,
   "id": "counter-strike-2",
   "order": 7,
-  "title": "Counter-Strike 2",
+  "title": "Smoke & Defuse",
+  "editorialReference": "Counter-Strike 2",
   "genre": "tactical-shooter",
   "zones": 10,
   "targets": [
@@ -28,7 +31,7 @@
     {
       "id": "awp-watcher",
       "role": "common-c",
-      "label": "AWP Watcher",
+      "label": "Longshot Watcher",
       "frame": "common-c",
       "pivot": {
         "x": 0.5,
@@ -79,5 +82,11 @@
     "corrupted",
     "overrun",
     "zero-day"
-  ]
+  ],
+  "rights": "assets/game-packs/counter-strike-2/rights.json",
+  "fallback": {
+    "mode": "procedural-canvas",
+    "reasonCopy": "Required Pack art is unavailable; APN Canvas preserves Route progress.",
+    "preserveProgress": true
+  }
 }

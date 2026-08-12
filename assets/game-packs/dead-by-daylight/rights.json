@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "mode": "pending-review",
+  "reviewStatus": "needs-legal-review",
+  "reviewedAt": null,
+  "reviewedBy": null,
+  "editorialReference": "Dead by Daylight",
+  "killSwitch": "disable-dead-by-daylight",
+  "licenseRecord": null,
+  "forbiddenMotifs": [
+    "Dead by Daylight or Behaviour wordmarks",
+    "recognizable named or licensed killer likenesses",
+    "official hook, generator, perk, or map designs"
+  ],
+  "provenance": {
+    "sourceBoard": "assets/game-packs/dead-by-daylight/source-board.md",
+    "reviewEvidence": []
+  }
+}

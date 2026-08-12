@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "mode": "pending-review",
+  "reviewStatus": "needs-legal-review",
+  "reviewedAt": null,
+  "reviewedBy": null,
+  "editorialReference": "Marvel Rivals",
+  "killSwitch": "disable-marvel-rivals",
+  "licenseRecord": null,
+  "forbiddenMotifs": [
+    "Marvel Rivals, Marvel, NetEase, or character wordmarks",
+    "any recognizable Marvel character likeness",
+    "official costumes, ability icons, comic panels, or map art"
+  ],
+  "provenance": {
+    "sourceBoard": "assets/game-packs/marvel-rivals/source-board.md",
+    "reviewEvidence": []
+  }
+}

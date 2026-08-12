@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "mode": "pending-review",
+  "reviewStatus": "needs-legal-review",
+  "reviewedAt": null,
+  "reviewedBy": null,
+  "editorialReference": "World of Warcraft",
+  "killSwitch": "disable-world-of-warcraft",
+  "licenseRecord": null,
+  "forbiddenMotifs": [
+    "World of Warcraft or Blizzard wordmarks",
+    "recognizable named character likenesses",
+    "official faction, class, or ability icon art"
+  ],
+  "provenance": {
+    "sourceBoard": "assets/game-packs/world-of-warcraft/source-board.md",
+    "reviewEvidence": []
+  }
+}

@@ -67,6 +67,7 @@ jobs:
           done
           node qa/browser/chrome-route-smoke.mjs "$RUNNER_TEMP/route-evidence"
           node qa/browser/chrome-go-live-smoke.mjs "$RUNNER_TEMP/go-live-evidence"
+          node qa/browser/chrome-catalog-rights-smoke.mjs "$RUNNER_TEMP/catalog-rights-evidence"
           node --check qa/browser/chrome-motion-continuity.mjs
           if [ -f .gaf2d-preview/manifest.json ]; then
             node qa/browser/chrome-motion-continuity.mjs "$RUNNER_TEMP/motion-continuity-evidence"
@@ -82,6 +83,7 @@ jobs:
           path: |
             ${{ runner.temp }}/route-evidence
             ${{ runner.temp }}/go-live-evidence
+            ${{ runner.temp }}/catalog-rights-evidence
             ${{ runner.temp }}/motion-continuity-evidence
           if-no-files-found: ignore
           retention-days: 7

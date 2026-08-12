@@ -1,7 +1,10 @@
 {
+  "schemaVersion": 1,
+  "catalogVersion": 1,
   "id": "grand-theft-auto-v",
   "order": 11,
-  "title": "Grand Theft Auto V",
+  "title": "Five Stars Wanted",
+  "editorialReference": "Grand Theft Auto V",
   "genre": "open-world-action",
   "zones": 10,
   "targets": [
@@ -79,5 +82,11 @@
     "corrupted",
     "overrun",
     "zero-day"
-  ]
+  ],
+  "rights": "assets/game-packs/grand-theft-auto-v/rights.json",
+  "fallback": {
+    "mode": "procedural-canvas",
+    "reasonCopy": "Required Pack art is unavailable; APN Canvas preserves Route progress.",
+    "preserveProgress": true
+  }
 }

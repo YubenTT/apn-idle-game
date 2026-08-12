@@ -24,7 +24,10 @@ import {
   packZoneDisplay,
   routeJourney,
 } from './route.js?v=gaf2d-motion-v1';
-import { GAME_PACKS } from './generated/game-packs.js?v=gaf2d-motion-v1';
+import {
+  CATALOG_NOTICE,
+  GAME_PACKS,
+} from './generated/game-packs.js?v=gaf2d-motion-v1';
 import {
   COVERAGE_MAX_LEVEL,
   COVERAGE_SETS,
@@ -107,6 +110,7 @@ const PANEL_TITLES = {
 
 let lastPanel = null;
 const QA_METRICS = typeof location !== 'undefined' && new URLSearchParams(location.search).has('qa_metrics');
+const ACTIVE_PACK_IDS = new Set(GAME_PACKS.map((pack) => pack.id));
 
 /* —— Animated resource counters (V2 Wave 2) ————————————————————————
    rAF count-up tween on the two run-resource values. The displayed number
@@ -529,7 +533,13 @@ export function bindUI(s, motionPreference = null) {
     }
     const capstone = e.target.closest('[data-coverage-claim]');
     if (capstone) {
-      if (claimCoverageSetCapstone(s, capstone.dataset.coverageClaim)) {
+      if (
+        claimCoverageSetCapstone(
+          s,
+          capstone.dataset.coverageClaim,
+          ACTIVE_PACK_IDS,
+        )
+      ) {
         save(s);
         renderHub(s);
       } else if (s.settings.sfx !== false) sfx('error');
@@ -938,8 +948,14 @@ function renderRouteJourney(s) {
     currentCovered && masteryCost != null && s.authority.amount >= masteryCost;
   const setRows = COVERAGE_SETS.map((set) => ({
     set,
-    status: coverageSetStatus(s, s.route, set.id),
-  }));
+    status: coverageSetStatus(
+      s,
+      s.route,
+      set.id,
+      COVERAGE_SETS,
+      ACTIVE_PACK_IDS,
+    ),
+  })).filter(({ status }) => status.total > 0 || status.state === 'claimed');
   const readySetCount = setRows.filter(({ status }) => status.state === 'ready').length;
   const claimedSetCount = setRows.filter(({ status }) => status.state === 'claimed').length;
   const driftLabel = journey.signalDrift.unlocked
@@ -1021,7 +1037,7 @@ function renderRouteJourney(s) {
     <details class="route-sets" ${readySetCount || claimedSetCount ? 'open' : ''}>
       <summary>
         <span><strong>Coverage Sets</strong><small>Capstones are earned by covering every current member</small></span>
-        <b>${claimedSetCount}/${COVERAGE_SETS.length}</b>
+        <b>${claimedSetCount}/${setRows.length}</b>
       </summary>
       <div class="route-set-grid">
         ${setRows.map(({ set, status }) => {
@@ -1033,7 +1049,7 @@ function renderRouteJourney(s) {
               <span><small>${set.id}</small><strong>${set.name}</strong></span>
               <b>${status.covered}/${status.total}</b>
             </div>
-            <p>${set.members.map(routePackTitle).join(' · ')}</p>
+            <p>${status.members.map(routePackTitle).join(' · ')}</p>
             ${status.openSlots ? `<span class="route-set-open">+${status.openSlots} future slot · not required</span>` : ''}
             <div class="route-capstone-copy">
               <strong>${set.capstone}</strong>
@@ -1315,8 +1331,11 @@ export function renderHUD(s) {
   const h = s.run.hero;
   const pack = packForRoute(s.route, GAME_PACKS);
   const packZone = packZoneDisplay(s.route);
-  set($('feed-game'), pack?.title || 'Patchline');
+  set($('feed-game'), pack?.editorialReference || 'APN Patchline');
   set($('feed-copy'), FEED_COPY[pack?.genre] || 'Update notes live');
+  const disclaimer = $('feed-disclaimer');
+  set(disclaimer, 'not affiliated');
+  if (disclaimer) disclaimer.title = CATALOG_NOTICE;
 
   tweenCounter(s, 'v-bytes', Math.floor(s.run.bytes));
   tweenCounter(s, 'v-patches', Math.floor(s.run.patches));

@@ -1,7 +1,10 @@
 {
+  "schemaVersion": 1,
+  "catalogVersion": 1,
   "id": "dota-2",
   "order": 14,
-  "title": "Dota 2",
+  "title": "Creep Score",
+  "editorialReference": "Dota 2",
   "genre": "moba",
   "zones": 10,
   "targets": [
@@ -58,7 +61,7 @@
   ],
   "boss": {
     "id": "roshan-protocol",
-    "label": "Roshan Protocol",
+    "label": "Cavern Sentinel",
     "frame": "boss",
     "breakFrame": "boss-break",
     "pivot": {
@@ -79,5 +82,11 @@
     "corrupted",
     "overrun",
     "zero-day"
-  ]
+  ],
+  "rights": "assets/game-packs/dota-2/rights.json",
+  "fallback": {
+    "mode": "procedural-canvas",
+    "reasonCopy": "Required Pack art is unavailable; APN Canvas preserves Route progress.",
+    "preserveProgress": true
+  }
 }

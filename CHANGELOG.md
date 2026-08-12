@@ -9,6 +9,20 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Added
 
+- **Versioned rights and runtime-safe catalog.** Every authored Pack now points
+  to a closed `rights.json` authority with provenance, explicit review posture,
+  forbidden motifs, fallback, and a per-Pack kill switch. Gameplay uses APN
+  titles and original archetype labels; factual game names appear only as
+  editorial references beside a visible non-affiliation notice. The existing
+  20-Pack unresolved roster remains truthfully `pending-review` under an
+  explicit transitional warning list; future unresolved Packs block by default
+  and no legal approval is fabricated. The import-safe builder excludes blocked
+  or disabled Packs, rejects escaping/symlink authorities, raw marks, named
+  third-party identities, malformed license scope, stale evidence, and unknown
+  properties, while a valid resolved 21st Pack passes without count-specific
+  code. Real Chrome proves kill-switch selection, required-asset fallback, and
+  a stable empty-catalog shell.
+
 - **Coverage Mastery and Sets.** Every covered Pack now owns a five-level,
   Rep-funded mastery track that adds 5% revisit yield per level, capped at 25%.
   The complete catalog maps exactly once into seven non-empty thematic Sets;

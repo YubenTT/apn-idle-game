@@ -105,7 +105,7 @@
 
 - Source: https://www.riotgames.com/en/legal
 - Relevant guidance: the policy primarily supports free/noncommercial community projects; it prohibits unauthorized games/apps using characters, abilities, maps, icons, items and marks without the applicable authorization.
-- APN decision: a Valorant editorial signal does not authorize Valorant gameplay art. Runtime becomes original **Tactical Echo** unless written rights exist.
+- APN decision: a Valorant editorial signal does not authorize Valorant gameplay art. Runtime uses the APN identity **Spike Protocol** unless written rights exist.
 
 ### Epic Games — Fan Content Policy
 
@@ -118,7 +118,7 @@
 - Source: https://www.ea.com/legal/user-agreement
 - Last updated on the source: 2026-05-14.
 - Relevant guidance: EA services/content are licensed for personal noncommercial use and may not be copied, modified or distributed unless authorized or permitted by law.
-- APN decision: `EA Sports FC 26` may be factual editorial context; gameplay uses original **Floodlight XI** assets unless licensed.
+- APN decision: `EA Sports FC 26` may be factual editorial context; gameplay uses original **Ultimate Touchline** assets unless licensed.
 
 ### Mattel — Terms and Conditions
 

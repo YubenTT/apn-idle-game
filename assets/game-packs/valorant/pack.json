@@ -1,7 +1,10 @@
 {
+  "schemaVersion": 1,
+  "catalogVersion": 1,
   "id": "valorant",
   "order": 1,
-  "title": "Valorant",
+  "title": "Spike Protocol",
+  "editorialReference": "Valorant",
   "genre": "tactical-shooter",
   "zones": 10,
   "targets": [
@@ -467,5 +470,11 @@
     "corrupted",
     "overrun",
     "zero-day"
-  ]
+  ],
+  "rights": "assets/game-packs/valorant/rights.json",
+  "fallback": {
+    "mode": "procedural-canvas",
+    "reasonCopy": "Required Pack art is unavailable; APN Canvas preserves Route progress.",
+    "preserveProgress": true
+  }
 }

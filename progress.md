@@ -9,10 +9,11 @@ Original prompt: Complete the APN Idle redesign autonomously, including QA, revi
 - Verified starting truth: `apn-idle-game`, `apn-web`, and canonical `gaf2d`
   mains were clean and upstream-aligned; no open game PR existed; live
   `https://allpatchnotes.com/idle/` returned HTTP 200 with the current V4 cache
-  family. The dirty historical `/Users/talatongu/Documents/gaf2d` checkout is
-  explicitly out of bounds.
-- Isolated worktree: `.worktrees/complete-game-closure` on
-  `codex/apn-idle-complete-game-closure`. Fresh baseline `npm test` = `ALL PASS`.
+  family. The dirty historical alternate GAF2D checkout is explicitly out of
+  bounds.
+- Isolated worktree: `.worktrees/complete-game-closure`; the active rights slice
+  is `codex/apn-idle-rights-catalog` based on merged `origin/main`. Fresh
+  baseline `npm test` = `ALL PASS`.
 - Accepted design:
   `docs/superpowers/specs/2026-08-12-apn-idle-complete-game-closure-design.md`.
 - Executable plan:
@@ -72,9 +73,41 @@ Original prompt: Complete the APN Idle redesign autonomously, including QA, revi
   7.7/10.0/17.7m; mature median 27.0/64.7/82.6m; Zone 200 4.2/9.5/12.1h.
   Relay's remaining >15m miss is explicitly reserved for the numeric balance
   slice. Zone 1000 remains deterministic and finite.
+- Coverage/Sets shipped through ready PR #45. GitHub CI and GitGuardian passed;
+  squash merge `b98b516` is on `origin/main`, issue #25 closed, and the old
+  local/remote branch was removed before rights/catalog work began.
+- Task C1 RED confirmed: `node qa/check-catalog-rights.mjs` exits 1 because the
+  production generator has no import-safe `buildCatalog` service. The new
+  contract already covers a closed versioned Pack pointer, raw-mark title
+  rejection, missing/escaping rights pointers, fake review evidence,
+  pending-review warnings, blocked/kill-switch exclusion, and a valid Pack 21.
+- Rights/catalog GREEN: all 20 Pack pointers and closed `rights.json` records
+  resolve through one import-safe builder. Raw game names remain editorial-only;
+  APN titles/target/boss labels are runtime identity, and the Asset Bible now
+  describes original archetypes rather than named athletes or characters.
+- No legal approval is invented. All current records remain
+  `pending-review`/`needs-legal-review` with null reviewer/time/evidence. Policy
+  defaults future unresolved Packs to blocked and enumerates the current twenty
+  as the only transitional warning roster. Resolved Pack 21 passes; unresolved
+  Pack 22 is excluded.
+- Closed gates now reject unknown keys, escaping or symlink authority, stale
+  provenance, incomplete license scope, fake review evidence, raw marks, named
+  third-party runtime terms, blocked records, and active per-Pack kill switches.
+  Catalog count is derived; generated catalog/module/asset manifest are current.
+- Real Chrome at 428×926 proves three independent states: disabling Valorant
+  selects League without save corruption; a required background failure keeps a
+  playable progress-safe Canvas fallback; zero eligible Packs keep a stable APN
+  shell with no invented Pack identity. All have zero overflow and zero
+  unexpected console findings; screenshots were inspected.
+- Fresh focused catalog/assets/Route/Coverage/copy/docs/manifest/syntax checks
+  are green. Full `npm test` ends `ALL PASS`. A test-harness regression found by
+  that run was traced to the removed authored-list variable and fixed by using
+  the rights-filtered active projection throughout the downstream V4 budget
+  fixtures.
 
-**Single next step:** commit, push, ready-PR, and merge the fully green #25
-Coverage slice, then realign from `main` before starting rights/catalog #26.
+**Single next step:** perform final diff/self-review, commit and push the rights
+slice, open ready PR closing #26, wait for all required checks, then merge before
+starting the numeric balance branch.
 
 ## 2026-08-09/10 V4 owner approval and production promotion
 

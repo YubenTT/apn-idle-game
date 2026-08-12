@@ -41,7 +41,7 @@ so the source stays faithful and the overrides stay in one place.
 | Prestige unit words | "Drop" / "Season" | **checkpoint / cycle**; "Route", "Pack" kept |
 | Rights modes | 3: `original-echo \| editorial-reference \| licensed-spotlight` | **6**: `apn-original \| homage-only \| editorial-text-original-art \| licensed-spotlight \| blocked` + transitional `pending-review` (ADR-0009/0011) |
 | Rights reviewer field | `reviewer` | **`reviewedBy`** (+ required `editorialReference`) |
-| Display names | "Tactical Echo / Floodlight XI / Fashion Dream" | **A′ parody**: Spike Protocol / Ultimate Touchline / Dreamline Detour (plan §Content Spine) |
+| Display names | "Tactical Echo / Floodlight XI / Fashion Dream" | **Current catalog:** APN runtime titles listed in `GAME-PACK-ROUTE.md`; `Spike Protocol` / `Ultimate Touchline` are live examples. Dreamline was not added. |
 | Offline at boundary | stops (zones) | stops for zones **and currency is capped at the boundary** (PR-1) |
 | Host identity / motion authority | canonical full-body GLB; foot-center biped derivatives | **ADR-0015**: owner-approved GAF2D `apn-hero` identity + one complete motion set; exact legless anatomy; historical GLBs are provenance only |
 
@@ -50,9 +50,9 @@ The imported doc bodies still use the left column; do **not** rewrite them — r
 ## Canonical schemas & the rights-drift resolution
 
 - **`schemas/rights.schema.json` is the canonical rights contract** (declared here per PR-0; enforced by the PR-7 validator + marks denylist). Modes = the 6 above; required = `mode`, `editorialReference`, `reviewedBy`.
-- **`schemas/echo-pack.schema.json` is the Pack contract.** Its `rights` sub-object was reconciled to the canonical taxonomy (3→6 mode enum, `reviewer`→`reviewedBy`, `+editorialReference`) so a pack's rights block validates against both schemas. Everything else is verbatim (pretty-printed for reviewable diffs).
+- **`schemas/echo-pack.schema.json` is the full Echo-package contract.** It now references `rights.schema.json` directly instead of copying a second rights enum, eliminating future drift.
 - The AUDIT's **6/6/3/3/5-mode drift** across five sources is resolved by declaring `rights.schema.json` canonical (6). The V3-original 3-mode enum, the `blocked-until-review` status (never in any enum → maps to `pending-review`), and the `reviewer`↔`reviewedBy` mismatch are **superseded** by the canonical contract above.
-- Full JSON-Schema *validation wiring* (`examples/validate-pack.mjs`, ajv in CI) is **not** in PR-0 — it lands in **PR-7** with `pack.schema.json` and the rights validator. PR-0 hand-verified `examples/pack.example.json` against the reconciled schema (every rights key defined, every required key present).
+- **PR-7 is implemented.** `pack.schema.json` exists; the import-safe catalog builder enforces the closed Pack/rights/policy contracts, contained non-symlink authority paths, review evidence, runtime-identity denylists, transition policy, kill switches, and generated-output determinism in CI. The disabled example remains documentation only and truthfully says `pending-review`.
 
 ## Deferred (named in v1 §2 but owned by a later PR)
 
@@ -60,7 +60,7 @@ The imported doc bodies still use the left column; do **not** rewrite them — r
 |---|---|---|
 | `schemas/go-live-receipt.schema.json` | not committed; receipt shape lives in PRODUCT-SYSTEM/IMPLEMENTATION | **PR-1** (receipt-schema fixes) |
 | `schemas/easter-eggs.schema.json` | exists only as the `easterEgg` `$def` inside echo-pack.schema.json | **PR-7** |
-| standalone `pack.schema.json` (pointer shape) | does not exist (dangling `$schema` ref per AUDIT) | **PR-7** |
+| standalone `pack.schema.json` (pointer shape) | implemented and enforced by the catalog builder | **landed** |
 | `GO-LIVE-SPEC.md` / `INFINITE-PACK-SYSTEM.md` / `ABILITIES-BUILD.md` / `NAMING-SYSTEMS.md` / `UX-UI-TARGET.md` / `RESEARCH-SOURCES.md` / `PRODUCT-PLAYBOOK.md` | aspirational re-decomposition; the real package is the 5 combined docs above | n/a (name-map is this table) |
 | `APN-IDLE-INFINITE-PLAYBOOK.html` | not committed | n/a |
 

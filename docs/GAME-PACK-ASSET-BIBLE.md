@@ -64,6 +64,12 @@ Official references own visual facts. The proposed target families below are the
 minimum proof set; the combined visual lock may replace a member without changing
 the five-target-plus-final contract.
 
+Section headings and “Official basis” links are editorial research references,
+not runtime identities or art licenses. Every Space/target/final row below is the
+APN-original runtime brief and must also obey that Pack's `rights.json` forbidden
+motifs. A reference can inform genre facts; it cannot authorize marks, trade
+dress, named-character likenesses, official props, or copied compositions.
+
 ### 01 · Valorant · Zones 1–10
 
 - Space: Bind-style tactical corridor, hard sightlines, site crates, teleporter
@@ -83,75 +89,84 @@ the five-target-plus-final contract.
 
 ### 02 · League of Legends · Zones 11–20
 
-- Space: Summoner's Rift river approaching the Baron pit; lane stone, brush, and
-  void contamination establish the arc.
-- Small targets: melee minion, caster minion, cannon minion, Blue Sentinel, Red
-  Brambleback.
-- Final: Baron Nashor; break state exposes void plates and the inner maw.
+- Space: an original split-lane river approaching a subterranean signal chamber;
+  abstract lane stone, brush, and violet contamination establish the arc.
+- Small targets: Lane Scout, Jungle Stalker, Siege Minion, River Support, and
+  Nexus Herald — original arena-combat archetypes.
+- Final: Tunnel Warden, an original plated tunnel guardian; the break state exposes
+  inner signal fissures without using official creature or map art.
 - Official basis: [How to Play](https://www.leagueoflegends.com/en-gb/how-to-play/),
   [Baron visual revamp](https://www.leagueoflegends.com/en-gb/news/dev/dev-cat-cults-rift-mechs-and-barons-revamp/),
   and [gameplay preview](https://www.leagueoflegends.com/en-gb/news/game-updates/2024-gameplay-preview/).
 
 ### 03 · Fortnite · Zones 21–30
 
-- Space: readable Island POI skyline, build pieces, supply-drop lane, and storm
-  edge; bright shape language flattened into APN night.
-- Small targets: henchman, cube fiend, loot llama, raptor, armored guard.
-- Final: Storm King; break state shatters horn armor and exposes storm energy.
+- Space: an original storm-ring construction district with modular ramps, a
+  supply lane, and a bright hazard edge flattened into APN night.
+- Small targets: Storm Runner, Build Raider, Supply Scout, Glider Hunter, and
+  Mythic Guard — original survival-arena archetypes.
+- Final: Stormcore Warden; its original armor breaks around a contained energy
+  core, with no official mascot, vehicle, or character silhouette.
 - Official basis: [Battle Royale](https://www.fortnite.com/@epic/battle-royale),
   [Storm King event](https://www.fortnite.com/news/fortnitemares-2019), and [Myths
   & Mortals](https://www.fortnite.com/news/make-history-in-fortnite-battle-royale-chapter-5-season-2-myths-mortals).
 
 ### 04 · World of Warcraft · Zones 31–40
 
-- Space: Icecrown ramparts leading toward the Frozen Throne; blue-black ice,
-  saronite spikes, chains, and citadel windows.
-- Small targets: ghoul, geist, vrykul, abomination, death knight.
-- Final: the Lich King; break state fractures the frozen throne aura and outer
-  shoulder armor.
+- Space: original frozen citadel ramparts in blue-black ice, with chains, angular
+  ironwork, and distant archive windows.
+- Small targets: Kobold Scout, Plague Caster, Iron Raider, Arcane Keeper, and Raid
+  Champion — original raid-role archetypes.
+- Final: Lich Gatekeeper; its original frozen armor fractures around an archive
+  core, without a named-character likeness or faction/class iconography.
 - Official basis: [Icecrown Citadel boss
   tour](https://worldofwarcraft.blizzard.com/news/24013834/wrath-of-the-lich-king-classic-the-way-into-the-icecrown-citadel-is-open)
   and [Wrath reveal recap](https://worldofwarcraft.blizzard.com/en-us/news/23783667/world-of-warcraft-reveal-news-round-up).
 
 ### 05 · EA Sports FC 26 · Zones 41–50
 
-- Space: floodlit Bernabéu-scale stadium tunnel opening onto the pitch; broadcast
-  boards and crowd tiers are props, not HUD.
+- Space: an original floodlit stadium tunnel opening onto a night pitch;
+  unbranded boards and crowd tiers are props, not HUD.
 - Small rivals: keeper, center-back, midfielder, winger, striker as distinctive
   player-card poses.
-- Final: Bellingham and Musiala cover-star captain showdown; break state becomes
-  an extra-time spotlight with fractured captain-card frame.
+- Final: Ultimate XI, an original veteran-captain showdown with no athlete
+  likeness; the break state becomes an extra-time spotlight and fractured
+  unbranded card frame.
 - Official basis: [FC 26](https://www.ea.com/games/ea-sports-fc/fc-26), [gameplay
   deep dive](https://www.ea.com/games/ea-sports-fc/fc-26/news/pitch-notes-fc26-gameplay-deep-dive),
   and [World's Game](https://www.ea.com/games/ea-sports-fc/fc-26/features/fc-26-the-worlds-game).
 
 ### 06 · Minecraft · Zones 51–60
 
-- Space: Overworld sunset transitions through stronghold portal into the End;
-  block scale remains recognizable inside the common outline system.
-- Small targets: zombie, skeleton, creeper, Enderman, iron golem.
-- Final: Ender Dragon with obsidian spires and end crystals; break state removes
-  crystal protection and exposes wing tears.
+- Space: an original modular wilderness transitions through a geometric archive
+  portal into a dark floating-island field; all materials use APN-authored forms.
+- Small targets: Block Scout, Blast Blocker, Skeleton Archer, End Walker, and
+  Circuit Golem — original voxel-adjacent archetypes without official textures.
+- Final: Voidwing Titan; its original wing armor breaks around signal pylons without
+  copying a named creature, face motif, block texture, or composition.
 - Official basis: [Ender Dragon](https://www.minecraft.net/en-us/article/ender-dragon)
   and [biome guide](https://help.minecraft.net/hc/en-us/articles/360046470431-All-Biomes-in-Minecraft).
 
 ### 07 · Counter-Strike 2 · Zones 61–70
 
-- Space: Dust-like sunlit defusal site translated into APN night, with crates,
-  archways, smoke line, bombsite stencil, and planted C4 light.
-- Small rivals: T entry, CT anchor, sniper, support, bomb carrier.
-- Final: armored Master Agent defending the planted site; break state removes
-  ballistic plates and opens the defuse window.
+- Space: an original APN-night tactical training courtyard with neutral crates,
+  arches, smoke lanes, and a generic signal beacon.
+- Small rivals: Entry Fragger, Smoke Anchor, Longshot Watcher, Eco Rusher, and Defuse
+  Specialist — original tactical roles with no official map or weapon skin.
+- Final: Global Sentinel; its original ballistic shell breaks to open a timed
+  signal-disarm window.
 - Official basis: [CS2 introduction](https://counter-strike.net/cs2), [agent
   collection](https://www.counter-strike.net/shatteredweb), and [workshop map
   resources](https://www.counter-strike.net/workshop/workshopresources).
 
 ### 08 · Old School RuneScape · Zones 71–80
 
-- Space: volcanic Fight Caves / Mor Ul Rek, lava seams, basalt stepping plates,
-  and intentionally low-poly silhouettes preserved as editorial facets.
-- Small targets: Tz-Kih, Tz-Kek, Tok-Xil, Yt-MejKot, Ket-Zek.
-- Final: TzTok-Jad; break state cracks the obsidian hide and exposes lava core.
+- Space: an original low-poly volcanic trial with lava seams and basalt stepping
+  plates, preserved as an editorial genre facet rather than copied map art.
+- Small targets: Goblin Scout, Rune Archer, Hill Giant, Abyssal Stalker, and
+  Barrows Guardian — original click-era fantasy archetypes.
+- Final: Magma Gate; an original obsidian guardian whose shell cracks to expose a
+  lava core, without a named-NPC likeness.
 - Official basis: [Inferno dev
   blog](https://secure.runescape.com/m=news/dev-blog-brimstone--the-inferno?oldschool=1)
   and [TzHaar challenge](https://secure.runescape.com/m=news/tzhaar-ket-raks-challenges?oldschool=1).
@@ -162,19 +177,20 @@ the five-target-plus-final contract.
   shot-clock glow, tunnel, and trophy plinth.
 - Small rivals: point guard, shooter, wing, power forward, center as player-card
   poses with distinct body language.
-- Final: Shai Gilgeous-Alexander, Angel Reese, and Carmelo Anthony cover trio;
-  break state is a fourth-quarter clutch spotlight and split card frame.
+- Final: Clutch Legend, an original all-star captain with no athlete likeness;
+  the break state is a fourth-quarter clutch spotlight and split unbranded card.
 - Official basis: [NBA 2K26](https://nba.2k.com/en-GB/2k26/), [MyTEAM Triple
   Threat](https://nba.2k.com/2k26/courtside-report/myteam/), and [player
   ratings](https://nba.2k.com/2k26/top-100-players/).
 
 ### 10 · Overwatch · Zones 91–100
 
-- Space: Toronto invasion street with clean hero-shooter architecture, payload
-  lane, Null Sector dropships, and readable cover blocks.
-- Small targets: Slicer, Trooper, Stalker, Artillery, Charger war-bot roles.
-- Final: Ramattra in Nemesis form; break state opens outer omnic armor and breaks
-  the annihilation ring.
+- Space: an original besieged transit street with clean hero-shooter architecture,
+  a cargo lane, abstract dropships, and readable cover blocks.
+- Small targets: Flank Runner, Shield Tank, Support Drone, Rail Sharpshooter, and
+  Payload Guard — original role silhouettes.
+- Final: Machine Colossus; its original machine armor opens around a broken energy
+  ring without using a recognizable hero likeness or ability icon.
 - Official basis: [Null Sector
   invasion](https://overwatch.blizzard.com/en-us/news/23989473/overwatch-2-invasion-is-here-with-new-adventures-a-new-hero-and-new-ways-to-play/),
   [enemy-design context](https://overwatch.blizzard.com/en-gb/news/23629160/behind-the-scenes-of-overwatch-2-s-development/),
@@ -182,10 +198,10 @@ the five-target-plus-final contract.
 
 ### 11 · Grand Theft Auto V · Zones 101–110
 
-- Space: Los Santos night heist route from street to casino vault; freeway
-  silhouette, armored van, security doors, and planning-board motifs.
-- Small targets: security guard, biker, gang enforcer, NOOSE officer, armored
-  driver.
+- Space: an original coastal-city night heist route from street to casino vault;
+  a freeway silhouette, generic armored van, security doors, and planning motifs.
+- Small targets: Street Runner, Heist Wheelman, Tactical Enforcer, Chop-Shop
+  Bruiser, and Skyline Pilot — original crime-action archetypes.
 - Final: casino juggernaut and sealed vault set piece; break state removes helmet
   plate and opens the vault ring.
 - Official basis: [GTA V](https://www.rockstargames.com/gta-v), [Diamond Casino
@@ -197,87 +213,93 @@ the five-target-plus-final contract.
 - Space: snow-capable NFL stadium under blackout lights, tunnel smoke, yard
   markers, sideline equipment, and end-zone spectacle.
 - Small rivals: cornerback, safety, linebacker, defensive end, nose tackle.
-- Final: Saquon Barkley cover-star breakaway encounter against a goal-line wall;
-  break state shatters the defense card and opens the end zone.
+- Final: Franchise Champion, an original breakaway captain with no athlete
+  likeness; the break state shatters an unbranded defense card and opens the end
+  zone.
 - Official basis: [Madden NFL 26](https://www.ea.com/games/madden-nfl/madden-nfl-26),
   [gameplay deep dive](https://www.ea.com/games/madden-nfl/madden-nfl-26/news/madden-26-gridiron-notes-gameplay-deep-dive),
   and [presentation](https://www.ea.com/games/madden-nfl/madden-nfl-26/news/madden-26-gridiron-notes-presentation-deep-dive).
 
 ### 13 · Apex Legends · Zones 121–130
 
-- Space: World's Edge industrial lane, ring wall, jump tower, supply bin, and
-  Hammond structures; terrain stays side-readable.
-- Small targets: loot tick, spider, prowler, Spectre, rival recon Legend.
-- Final: Revenant in a death-totem arena; break state fractures shadow armor and
-  collapses the totem field.
+- Space: an original volcanic industrial lane with hazard ring, jump tower,
+  neutral supply pod, and side-readable terrain.
+- Small targets: Phase Skirmisher, Tracker Scout, Shield Support, Zipline Hunter,
+  and Care-Package Guard — original squad-arena roles.
+- Final: Ringline Predator, an original plated hunter whose shadow shell fractures as
+  its signal field collapses.
 - Official basis: [maps](https://www.ea.com/games/apex-legends/maps), [current
   recon language](https://www.ea.com/games/apex-legends/apex-legends/news/shockwave-patch-notes),
   and [current event mechanics](https://www.ea.com/games/apex-legends/apex-legends/news/aftershock-event).
 
 ### 14 · Dota 2 · Zones 131–140
 
-- Space: river-to-Roshan-pit route with Radiant/Dire material split, watcher,
-  rune point, trees, and stone ramp.
-- Small targets: melee creep, ranged creep, siege creep, neutral satyr, Tormentor.
-- Final: Roshan; break state removes outer rock plates and exposes rage fissures.
+- Space: an original river-to-cavern route with opposing material palettes,
+  watcher post, signal point, trees, and a stone ramp.
+- Small targets: Lane Creep, Roaming Support, Jungle Beast, Core Duelist, and
+  Ancient Guard — original lane-battle archetypes.
+- Final: Cavern Sentinel, an original rock-plated cavern guardian; its shell
+  exposes signal fissures without using official creature, item, or map art.
 - Official basis: [Wandering Waters](https://www.dota2.com/wanderingwaters), [New
   Frontiers](https://www.dota2.com/newfrontiers), and [Roshan gameplay
   history](https://www.dota2.com/700/gameplay/).
 
 ### 15 · Dead by Daylight · Zones 141–150
 
-- Space: Entity-built fog realm with generator, sacrificial hook, shack, pallets,
-  and black root silhouettes; horror contrast without hiding targets.
-- Small targets: crow swarm, crawling Entity claw, damaged generator apparition,
-  masked trial shade, spectral survivor echo.
-- Final: The Trapper framed by the Entity; break state snaps mask/trap armor while
-  Entity claws remain environment framing.
+- Space: an original fog trial with a broken generator, abstract restraint post,
+  shack, barricades, and black root silhouettes; contrast never hides targets.
+- Small targets: Fog Runner, Hook Warden, Generator Shade, Totem Stalker, and
+  Trial Survivor — original asymmetrical-horror archetypes.
+- Final: Root Warden, an original masked trial warden framed by roots; the break
+  state snaps its original trap armor without a named or licensed killer likeness.
 - Official basis: [realms and maps](https://deadbydaylight.com/game/maps/), [The
   Entity](https://deadbydaylight.com/), and [Void Realm
   lore](https://deadbydaylight.com/news/void-realm-lore-explained/).
 
 ### 16 · Path of Exile 2 · Zones 151–160
 
-- Space: corrupted Wraeclast ruin progressing toward the Burning Monolith;
-  ossuary masonry, ritual pylons, ash, and restrained ember fields.
+- Space: an original corrupted ruin progressing toward a burning archive
+  monolith; ossuary masonry, ritual pylons, ash, and restrained ember fields.
 - Small targets: drowned undead, bone construct, corrupted beast, cultist, plated
   executioner.
-- Final: Arbiter of Ash / pinnacle-arbiter silhouette; break state removes flame
-  plates and opens the inner sigil.
+- Final: Atlas Devourer, an original pinnacle-arbiter silhouette; the break state
+  removes flame plates and opens an APN-authored inner sigil.
 - Official basis: [Path of Exile 2](https://www.pathofexile.com/poe2), [boss-design
   presentation](https://www.pathofexile.com/forum/view-thread/3434366), and [boss
   wallpaper set](https://www.pathofexile.com/forum/view-thread/3856010).
 
 ### 17 · Marvel Rivals · Zones 161–170
 
-- Space: fractured Chronoverse Times Square / museum battlefield with comic-panel
-  destruction, portals, and destructible cover silhouettes.
-- Small rivals: Spider-Man, Rocket Raccoon, Iron Man, Magik, Venom role reads,
-  redrawn in the common APN scale language.
-- Final: Doctor Doom chronal armor encounter; break state splits the time-shield
-  and exposes the armor core.
+- Space: an original fractured multiverse city/museum battlefield with graphic
+  destruction, portals, and readable breakable-cover silhouettes.
+- Small rivals: Vanguard, Duelist, Strategist, Portal Scout, and Cosmic Guard —
+  original team-role archetypes with no superhero or comic likeness.
+- Final: Multiverse Sentinel; its original chronal armor breaks across a time
+  shield and exposes the signal core.
 - Official basis: [game overview](https://www.marvelrivals.com/news/20241205/40185_1198409.html),
   [heroes](https://www.marvelrivals.com/heroes/), and [Museum of Contemplation
   map](https://www.marvelrivals.com/20260128/41525_1284020.html).
 
 ### 18 · Escape from Tarkov · Zones 171–180
 
-- Space: Interchange mall route under emergency lighting; shuttered storefronts,
+- Space: an original extraction-mall route under emergency lighting; shuttered storefronts,
   loading bay, extraction sign, crates, and hard cover.
-- Small targets: Scav, Raider, Rogue, PMC, Cultist.
-- Final: Killa; break state removes visor/plate protection and exposes damaged
-  track armor.
+- Small targets: Salvage Scout, Armored Raider, Marksman, Breach Operator, and
+  Extraction Guard — original tactical-survival roles.
+- Final: Labs Overseer; its original visor and plates break to expose damaged
+  track armor, without official faction or equipment trade dress.
 - Official basis: [boss spawn update](https://www.escapefromtarkov.com/news/id/336),
   [Reserve and Glukhar](https://www.escapefromtarkov.com/news/id/152), and [bot/boss
   behavior update](https://www.escapefromtarkov.com/news/id/343).
 
 ### 19 · Rocket League · Zones 181–190
 
-- Space: DFH Stadium at night, side-on soccar pitch, boost pads, goal frame,
+- Space: an original stadium at night, side-on vehicle-ball pitch, boost pads, goal frame,
   broadcast truss, and airborne ball routes.
-- Small rivals: Octane, Dominus, Breakout, Merc, and Fennec-like car silhouettes.
-- Final: tournament champion armored Octane defending a charged goal orb; break
-  state strips shield panels and triggers a readable demolition shell.
+- Small rivals: Boost Striker, Aerial Defender, Demo Chaser, Wall Rider, and
+  Goalkeeper — original unlicensed vehicle archetypes.
+- Final: Supersonic Titan, an original armored champion defending a charged goal
+  orb; the break state strips shield panels into a readable demolition shell.
 - Official basis: [10th anniversary DFH
   Stadium](https://www.rocketleague.com/news/celebrate-10-years-of-aerials-and-epic-saves-in-rocket-league-season-19),
   [arena/car foundation](https://www.rocketleague.com/news/rocket-league-coming-to-ps4--playstation-experience),
@@ -285,11 +307,12 @@ the five-target-plus-final contract.
 
 ### 20 · Elden Ring · Zones 191–200
 
-- Space: Limgrave approach into Stormveil Castle; windswept grass, ruined arches,
-  ballista lane, grafted banners, and the castle silhouette.
-- Small targets: wandering noble, imp, warhawk, Godrick soldier, troll.
-- Final: Godrick the Grafted; break state removes grafted outer arms and exposes
-  the dragon-arm phase silhouette.
+- Space: an original windswept approach into a ruined highland keep, with grass,
+  arches, a ballista lane, abstract banners, and a distant castle silhouette.
+- Small targets: Wandering Soldier, Signal Adept, Grafted Hound, Relic Guard, and
+  Night-Blade Shade — original dark-fantasy archetypes.
+- Final: Elden Gate Sovereign; its original outer arms break away to expose a
+  second-phase silhouette without copying a named boss, weapon, armor, or rune.
 - Official basis: [world and Stormveil
   overview](https://en.bandainamcoent.eu/elden-ring/news/what-elden-ring-about) and
   [official Elden Ring hub](https://en.bandainamcoent.eu/elden-ring/elden-ring).

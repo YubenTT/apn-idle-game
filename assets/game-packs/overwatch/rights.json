@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "mode": "pending-review",
+  "reviewStatus": "needs-legal-review",
+  "reviewedAt": null,
+  "reviewedBy": null,
+  "editorialReference": "Overwatch",
+  "killSwitch": "disable-overwatch",
+  "licenseRecord": null,
+  "forbiddenMotifs": [
+    "Overwatch or Blizzard wordmarks",
+    "recognizable hero likenesses",
+    "official ability icons, map art, or named callouts"
+  ],
+  "provenance": {
+    "sourceBoard": "assets/game-packs/overwatch/source-board.md",
+    "reviewEvidence": []
+  }
+}

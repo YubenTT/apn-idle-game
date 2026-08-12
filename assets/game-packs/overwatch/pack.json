@@ -1,7 +1,10 @@
 {
+  "schemaVersion": 1,
+  "catalogVersion": 1,
   "id": "overwatch",
   "order": 10,
-  "title": "Overwatch",
+  "title": "Payload Heroes",
+  "editorialReference": "Overwatch",
   "genre": "hero-shooter",
   "zones": 10,
   "targets": [
@@ -58,7 +61,7 @@
   ],
   "boss": {
     "id": "omnic-colossus",
-    "label": "Omnic Colossus",
+    "label": "Machine Colossus",
     "frame": "boss",
     "breakFrame": "boss-break",
     "pivot": {
@@ -79,5 +82,11 @@
     "corrupted",
     "overrun",
     "zero-day"
-  ]
+  ],
+  "rights": "assets/game-packs/overwatch/rights.json",
+  "fallback": {
+    "mode": "procedural-canvas",
+    "reasonCopy": "Required Pack art is unavailable; APN Canvas preserves Route progress.",
+    "preserveProgress": true
+  }
 }

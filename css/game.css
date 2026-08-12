@@ -5852,6 +5852,23 @@ button[hidden] {
   font-weight: 600;
 }
 
+.feed-context {
+  min-width: 0;
+  display: grid;
+  align-content: center;
+}
+
+.feed-disclaimer {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-low);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+  font-weight: 600;
+}
+
 .feed-live {
   display: inline-flex;
   align-items: center;

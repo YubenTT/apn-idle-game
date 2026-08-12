@@ -1,5 +1,32 @@
 # APN Idle redesign V1 — QA report
 
+## 2026-08-12 rights and catalog closure
+
+Status: every authored Pack is now a closed versioned pointer to a contained
+`rights.json` authority. Gameplay consumes an APN runtime title and original
+target/boss labels; factual third-party names are restricted to the editorial
+ticker beside a visible non-affiliation notice. The current twenty records
+remain truthfully `pending-review` with no reviewer, timestamp, license, or
+evidence claim. Future unresolved Packs block by default; the current twenty are
+the exact transitional warning roster.
+
+Fresh evidence:
+
+- `node qa/check-catalog-rights.mjs` passes closed Pack/rights/license shapes,
+  path containment and symlink rejection, provenance binding, raw-mark and
+  named-character denylists, fake-evidence rejection, blocked/kill-switch
+  filtering, resolved Pack 21 admission, and future pending Pack 22 exclusion;
+- `node qa/check-assets.mjs`, Route, Coverage, copy, docs, manifest, and syntax
+  checks pass against the rights-filtered generated projection;
+- `npm test` completes the entire current tree and ends `ALL PASS`; and
+- direct Chrome at 428×926 passes kill-switch rollover, required-asset failure,
+  and zero-eligible-Pack scenarios. Each remains stable and overflow-free with
+  no unexpected console finding; the three screenshots were visually inspected.
+
+No asset raster, GAF2D authority, approval, motion release, currency, global
+multiplier, or save identifier changed. `pending-review` remains an explicit
+unresolved legal state, not a launch approval.
+
 ## 2026-08-12 Coverage Mastery and Sets
 
 Status: Coverage is implemented as persistent Pack meta, not a global prestige

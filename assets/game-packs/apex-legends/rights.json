@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "mode": "pending-review",
+  "reviewStatus": "needs-legal-review",
+  "reviewedAt": null,
+  "reviewedBy": null,
+  "editorialReference": "Apex Legends",
+  "killSwitch": "disable-apex-legends",
+  "licenseRecord": null,
+  "forbiddenMotifs": [
+    "Apex Legends, Respawn, or EA wordmarks",
+    "recognizable Legend likenesses",
+    "official ability icons, named finishers, or map art"
+  ],
+  "provenance": {
+    "sourceBoard": "assets/game-packs/apex-legends/source-board.md",
+    "reviewEvidence": []
+  }
+}

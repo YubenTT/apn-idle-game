@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "mode": "pending-review",
+  "reviewStatus": "needs-legal-review",
+  "reviewedAt": null,
+  "reviewedBy": null,
+  "editorialReference": "NBA 2K26",
+  "killSwitch": "disable-nba-2k26",
+  "licenseRecord": null,
+  "forbiddenMotifs": [
+    "NBA, 2K, team, or league marks",
+    "recognizable athlete likenesses",
+    "official uniforms, courts, or broadcast graphics"
+  ],
+  "provenance": {
+    "sourceBoard": "assets/game-packs/nba-2k26/source-board.md",
+    "reviewEvidence": []
+  }
+}

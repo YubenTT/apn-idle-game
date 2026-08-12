@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "mode": "pending-review",
+  "reviewStatus": "needs-legal-review",
+  "reviewedAt": null,
+  "reviewedBy": null,
+  "editorialReference": "Rocket League",
+  "killSwitch": "disable-rocket-league",
+  "licenseRecord": null,
+  "forbiddenMotifs": [
+    "Rocket League, Psyonix, or Epic wordmarks",
+    "licensed vehicle bodies or brands",
+    "official arenas, ball, boost, or goal-effect designs"
+  ],
+  "provenance": {
+    "sourceBoard": "assets/game-packs/rocket-league/source-board.md",
+    "reviewEvidence": []
+  }
+}

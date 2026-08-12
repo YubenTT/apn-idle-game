@@ -221,14 +221,24 @@ async function writePack(pack) {
   console.log(`PACK ${String(pack.order).padStart(2, '0')} ${pack.id}`);
 }
 
-export async function produceRange(start = 1, end = 20) {
+export async function produceRange(start = 1, end = null) {
   const catalog = JSON.parse(fs.readFileSync(path.join(packsRoot, 'catalog.json'), 'utf8'));
-  for (const pack of catalog.filter((item) => item.order >= start && item.order <= end)) await writePack(pack);
+  const maximumOrder = Math.max(0, ...catalog.map((pack) => pack.order));
+  const finalOrder = end ?? maximumOrder;
+  if (
+    !Number.isInteger(start) ||
+    !Number.isInteger(finalOrder) ||
+    start < 1 ||
+    finalOrder > maximumOrder ||
+    start > finalOrder
+  ) {
+    throw new Error(`Pack range must stay within 1..${maximumOrder}`);
+  }
+  for (const pack of catalog.filter((item) => item.order >= start && item.order <= finalOrder)) await writePack(pack);
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const start = Number(process.argv[2] || 1);
   const end = Number(process.argv[3] || start);
-  if (!Number.isInteger(start) || !Number.isInteger(end) || start < 1 || end > 20 || start > end) throw new Error('Usage: produce-game-packs.mjs <start 1..20> <end 1..20>');
   await produceRange(start, end);
 }

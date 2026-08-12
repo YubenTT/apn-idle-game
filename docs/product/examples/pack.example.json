@@ -37,9 +37,12 @@
     "artBriefId": "fashion-dream-originality-v1"
   },
   "rights": {
-    "mode": "editorial-text-original-art",
+    "schemaVersion": 1,
+    "mode": "pending-review",
     "reviewStatus": "needs-legal-review",
     "reviewedAt": null,
+    "reviewedBy": null,
+    "editorialReference": "Barbie",
     "killSwitch": "disable-fashion-dream",
     "licenseRecord": null,
     "forbiddenMotifs": [
@@ -52,8 +55,10 @@
       "signature pink trade-dress composition",
       "official music, dialogue or interface elements"
     ],
-    "reviewedBy": null,
-    "editorialReference": "Barbie"
+    "provenance": {
+      "sourceBoard": "assets/echo-packs/fashion-dream/source-board.md",
+      "reviewEvidence": []
+    }
   },
   "route": {
     "zones": 10,

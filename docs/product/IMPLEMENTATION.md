@@ -166,7 +166,8 @@ Schema CI, two-layer identity, disabled-Pack filtering, fallback and boundary-on
 
 ### P6 — three-Pack factory proof
 
-Tactical Echo, Floodlight XI and Fashion Dream. No Pack-specific runtime code.
+Current proof surfaces are Spike Protocol, Ultimate Touchline and Storm Builders.
+No Pack-specific runtime code and no new art in catalog/rights closure.
 
 ### P7+ — Host motion, balance, return loop and controlled release
 
