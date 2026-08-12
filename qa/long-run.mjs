@@ -39,6 +39,12 @@ assert(stateA.route.zone === 100, `offline stops at Zone 100 season boundary (go
 assert(summaryA.zones === 7, 'offline reports seven bounded zones');
 assert(summaryA.overflowSeconds > 0, 'offline reports overflow time');
 assert(summaryA.stoppedAtSeasonBoundary === true, 'offline boundary flag');
+assert(stateA.route.echoProgressByPack.overwatch?.found === 3, 'offline Pack progress records all three Echoes');
+assert(
+  stateA.route.history[0]?.packId === 'overwatch' &&
+    stateA.route.history[0]?.completedAtZone === 100,
+  'offline Gate clear records exact Pack history',
+);
 
 installSeed();
 const stateB = seededProgressState();
@@ -75,7 +81,8 @@ for (let zone = 0; zone <= 1000; zone++) {
 }
 assert(bossCount === 100, 'boss cadence remains every ten zones through Zone 1000');
 
-console.log('OK offline season boundary');
+console.log('OK offline two-Pack safety boundary');
+console.log('OK offline Echo and Pack history');
 console.log('OK deterministic offline recap');
 console.log('OK deterministic save-relevant state');
 console.log('OK finite Zone 1000 profile');

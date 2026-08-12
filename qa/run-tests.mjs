@@ -95,6 +95,7 @@ import { checkCssTokenContract } from './check-css-tokens.mjs';
 import { checkEconomyColorContract } from './check-economy-colors.mjs';
 import { checkMobileGestureContract } from './check-mobile-gestures.mjs';
 import { checkRouteContract } from './check-route.mjs';
+import { checkRouteJourneyContract } from './check-route-journey.mjs';
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -267,6 +268,7 @@ for (const check of checkMobileGestureContract()) {
   ok(check.pass, `${check.message} (${check.detail})`);
 }
 for (const message of checkRouteContract()) ok(true, `route ${message}`);
+for (const message of checkRouteJourneyContract()) ok(true, `route journey ${message}`);
 
 // —— PR-5 single Host contract ——
 ok(Object.isFrozen(HOST_CLIPS), 'Host clip contract is immutable');
@@ -355,7 +357,17 @@ ok(
 );
 ok(shellMarkup.includes('id="patch-echo-chip"') && shellMarkup.includes('id="v-echo-progress"'), 'Run reserves one data-bound Patch Echo chip');
 ok(uiSource.includes("skillLv(s, 'hotfix') > 0 || skillLv(s, 'summary_burst') > 0"), 'Focus appears only after a Focus-spending skill is learned');
-ok(uiSource.includes("echoProgressByPack?.[pack?.id]"), 'Patch Echo chip reads optional Route domain state without inventing progress');
+ok(uiSource.includes('echoProgressFor(s.route, pack?.id)'), 'Patch Echo chip reads normalized Route domain state without inventing progress');
+ok(
+  uiSource.includes('data-route-journey') &&
+    uiSource.indexOf('${renderRouteJourney(s)}') < uiSource.indexOf('hub-objectives-head'),
+  'Route journey renders before optional objectives',
+);
+ok(
+  ['data-route-current', 'data-route-next', 'data-route-clean', 'data-route-echo', 'data-route-drift']
+    .every((marker) => uiSource.includes(marker)),
+  'Route surface exposes current, next, Clean Era, Echo, and Signal Drift state',
+);
 ok(uiSource.includes("spBtn.disabled = h.energy < 1"), 'Sprint empty state uses native disabled semantics');
 ok(/\.btn-chip\s*\{[^}]*min-height:\s*calc\(var\(--touch-min\) \+ var\(--sp-1\)\)/s.test(cssSource), 'Run skills preserve touch targets');
 ok((shellMarkup.match(/class="nav-btn"/g) || []).length === 5, 'Navigation keeps exactly five tabs');

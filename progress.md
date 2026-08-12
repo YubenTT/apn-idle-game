@@ -1,5 +1,58 @@
 Original prompt: Complete the APN Idle redesign autonomously, including QA, review, and a muted localhost build for the final integrated user gate.
 
+## 2026-08-12 · Complete-game closure goal
+
+- Owner-authorized outcome: make APN Idle a complete free small web idle game,
+  then merge and deploy it through APN Web. Approved GAF2D V4 authority stays
+  sealed; no new art, framework, backend, currency, second prestige, paid power,
+  or Pack-specific engine is in scope.
+- Verified starting truth: `apn-idle-game`, `apn-web`, and canonical `gaf2d`
+  mains were clean and upstream-aligned; no open game PR existed; live
+  `https://allpatchnotes.com/idle/` returned HTTP 200 with the current V4 cache
+  family. The dirty historical `/Users/talatongu/Documents/gaf2d` checkout is
+  explicitly out of bounds.
+- Isolated worktree: `.worktrees/complete-game-closure` on
+  `codex/apn-idle-complete-game-closure`. Fresh baseline `npm test` = `ALL PASS`.
+- Accepted design:
+  `docs/superpowers/specs/2026-08-12-apn-idle-complete-game-closure-design.md`.
+- Executable plan:
+  `docs/superpowers/plans/2026-08-12-apn-idle-complete-game-closure.md`.
+- Rights decision: use truthful `pending-review` records and an explicit runtime
+  policy; never invent legal approval. Gameplay uses APN display titles, raw
+  names stay editorial-only, and blocked/kill-switched Packs are excluded.
+- Delivery order: Route/Echo (#24) → Coverage/Sets (#25) → rights/catalog (#26)
+  → numeric balance (#29) → APN Web projection/deploy (#30/#31). Each slice must
+  be green, reviewed, and merged before the next.
+
+- Task A1 RED confirmed: `node qa/check-route-journey.mjs` exited 1 at module
+  instantiation because `js/route.js` does not export `ECHO_TOTAL`. This is the
+  intended production gap; no fixture or environment failure occurred.
+- Task A4 browser RED confirmed: `node qa/browser/chrome-route-smoke.mjs`
+  reached a playable, console-clean Zone 1 at 428×926, then failed because the
+  HUD still hid the new data-bound Echo `0/3`. The new Route-first DOM did not
+  exist yet; production UI is the isolated gap.
+- Route/Echo GREEN evidence: focused domain `ROUTE JOURNEY PASS`; offline
+  `LONG RUN PASS`; full `npm test` = `ALL PASS`; direct Chrome covers 375×812,
+  428×926, 844×390, and 1280×800, including real combat Echo `1/3`, current/next,
+  Clean Era Complete, Signal Drift 1, history, `render_game_to_text`, zero
+  horizontal overflow, and zero console warnings/errors. Four representative
+  screenshots were visually inspected.
+- Review found and fixed four pre-merge edge cases with new regressions:
+  monotonic Clean Era migration for a genuine pre-Echo Zone-200 save;
+  reconstruction of Pack progress earned while an old v3 rollback was active;
+  an incorrect promised-next Pack at the second postgame pair boundary; and
+  unsafe Pack IDs from tampered localStorage reaching Route history markup.
+  Route normalization now accepts only canonical kebab-case Pack IDs and the
+  UI never renders an unknown ID as a title.
+- Save rollback safety is explicit: current v3 persists `apn.route-journey@1`
+  under opaque meta state; an old v3 client preserves it while still earning
+  legacy Pack completion, and the current client merges both histories on
+  return. Approved V4/GAF2D asset and authority paths are untouched.
+
+**Single next step:** commit the fully green isolated #24 slice, push a ready
+PR, merge it after checks, then realign on `main` before starting Coverage/Sets
+#25.
+
 ## 2026-08-09/10 V4 owner approval and production promotion
 
 - The owner explicitly approved all seven `MotionSetCandidateV4` records. Seven

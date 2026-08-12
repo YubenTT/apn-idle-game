@@ -31,6 +31,7 @@ import {
   routeWaveWindow,
 } from './wave-roster.js?v=gaf2d-motion-v1';
 import { GAME_PACKS } from './generated/game-packs.js?v=gaf2d-motion-v1';
+import { routeJourney } from './route.js?v=gaf2d-motion-v1';
 import {
   createCreatureStore,
   releaseColdCreatureKinds,
@@ -309,11 +310,23 @@ function renderGameToText() {
       })
     : null;
   const heroMotion = inspectHeroMotion(s, s.world.time);
+  const journey = routeJourney(s.route, runtimePacks);
   return JSON.stringify({
     coordinateSystem: 'Canvas origin top-left; +x right; +y down; enemy x is its foot-center.',
     routeZone: (s.route.zone | 0) + 1,
     packWave: ((s.route.zone | 0) % 10) + 1,
     packId,
+    routeJourney: {
+      currentPackId: journey.current?.id || null,
+      currentPackTitle: journey.current?.title || null,
+      nextPackId: journey.next?.id || null,
+      nextPackTitle: journey.next?.title || null,
+      packWave: journey.packWave,
+      echo: journey.echo,
+      cleanEra: journey.cleanEra,
+      signalDrift: journey.signalDrift,
+      historyCount: journey.history.length,
+    },
     pack: {
       ready: packAssets?.ready === true,
       atlas: {

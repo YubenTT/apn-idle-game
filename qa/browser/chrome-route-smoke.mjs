@@ -25,6 +25,7 @@ const VIEWPORTS = [
   { label: 'mobile-428', width: 428, height: 926, mobile: true, scale: 2 },
   { label: 'mobile-375', width: 375, height: 812, mobile: true, scale: 2 },
   { label: 'landscape-844', width: 844, height: 390, mobile: true, scale: 2 },
+  { label: 'desktop-1280', width: 1280, height: 800, mobile: false, scale: 1 },
 ];
 const port = 9387;
 const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'apn-chrome-'));
@@ -125,6 +126,25 @@ async function scenario(displayZone, viewport) {
     await delay(100);
   }
   await delay(500);
+  if (displayZone === 201) {
+    await cdp.send('Runtime.evaluate', {
+      expression: `(() => {
+        const q = window.__APN_QA__;
+        const ids = q.assets.catalog.map((pack) => pack.id);
+        q.state.route.seenPackIds = [...ids];
+        q.state.route.cleanCompletedPackIds = [...ids];
+        q.state.route.packVisitCountById = Object.fromEntries(ids.map((id) => [id, 1]));
+        q.state.route.echoProgressByPack = Object.fromEntries(ids.map((id) => [id, { found: 3, total: 3 }]));
+        q.state.route.cleanEraCompleted = true;
+        q.state.route.cleanEraCompletedAtZone = 200;
+        q.state.route.history = [{ packId: 'elden-ring', visit: 1, tier: 0, completedAtZone: 200, clean: true }];
+        q.state.ui.panelDirty = true;
+        return true;
+      })()`,
+      returnByValue: true,
+    });
+    await delay(200);
+  }
   const evaluation = await cdp.send('Runtime.evaluate', {
     expression: `JSON.stringify({
       zone: document.querySelector('#v-zone')?.textContent,
@@ -132,6 +152,7 @@ async function scenario(displayZone, viewport) {
       stageLabels: [...document.querySelectorAll('.stage-stat-lab')].map((node) => node.childNodes[0]?.textContent.trim()),
       focusHidden: document.querySelector('#bar-focus-wrap')?.hidden,
       echoHidden: document.querySelector('#patch-echo-chip')?.hidden,
+      echoText: document.querySelector('#v-echo-progress')?.textContent,
       toast: (() => {
         const toast = document.querySelector('#toast');
         const hud = document.querySelector('.stage-hud');
@@ -146,6 +167,8 @@ async function scenario(displayZone, viewport) {
       visible: !document.hidden,
       currentPack: window.__APN_QA__?.assets.currentId,
       nextPack: window.__APN_QA__?.assets.nextId,
+      catalogCount: window.__APN_QA__?.assets.catalog.length,
+      textJourney: window.render_game_to_text ? JSON.parse(window.render_game_to_text()).routeJourney : null,
       decodedPacks: window.__APN_QA__ ? [...window.__APN_QA__.assets.packs.keys()] : [],
       heroX: window.__APN_QA__?.state.world.heroDisplayX,
       targetX: window.__APN_QA__?.state.world.enemies.find((enemy) => enemy.hp > 0)?.displayX
@@ -161,7 +184,8 @@ async function scenario(displayZone, viewport) {
   assert(result.packProgress === `${((displayZone - 1) % 10) + 1}/10`, `${tag} HUD matches Pack progress`);
   assert(result.stageLabels.join('|') === 'CLEAR|RANK|LIVE', `${tag} keeps Clear / Rank / Live hierarchy uncluttered`);
   assert(result.focusHidden === true, `${tag} hides Focus before a Focus skill is learned`);
-  assert(result.echoHidden === true, `${tag} never invents Patch Echo progress before its domain exists`);
+  assert(result.echoHidden === false, `${tag} exposes data-bound Patch Echo progress`);
+  assert(result.echoText === (displayZone === 201 ? '3/3' : '0/3'), `${tag} Echo text comes from Route state (${result.echoText})`);
   if (result.toast?.visible) {
     assert(
       result.toast.top >= result.toast.hudBottom + 8,
@@ -178,6 +202,65 @@ async function scenario(displayZone, viewport) {
   assert(result.currentPack && result.decodedPacks.includes(result.currentPack), `${tag} current pack is decoded (${result.currentPack})`);
   assert(result.decodedPacks.length > 0 && result.decodedPacks.length <= 2, `${tag} retains at most current + next packs (${result.decodedPacks.join(',')})`);
   assert(result.targetX == null || result.targetX > result.heroX, `${tag} target approaches from the right`);
+  assert(
+    result.textJourney?.currentPackId && result.textJourney?.echo?.total === 3,
+    `${tag} render_game_to_text exposes Route/Echo truth`,
+  );
+  if (displayZone === 1 && viewport.label === 'mobile-428') {
+    await cdp.send('Runtime.evaluate', {
+      expression: `(() => {
+        const q = window.__APN_QA__;
+        window.__apnRouteSmokeSnapshot = {
+          route: structuredClone(q.state.route),
+          scanner: q.state.run.hero.scanner,
+        };
+        q.state.route.zone = 2;
+        q.state.route.killsInZone = 999;
+        q.state.run.hero.scanner = 40;
+        q.state.world.enemies = [];
+        q.state.world.bossActive = false;
+        q.state.world.spawnCd = 0;
+        return true;
+      })()`,
+      returnByValue: true,
+    });
+    for (let index = 0; index < 120; index += 1) {
+      const tick = await cdp.send('Runtime.evaluate', {
+        expression: `window.advanceTime(100); window.__APN_QA__.state.route.zone`,
+        returnByValue: true,
+      });
+      if (tick.result.value > 2) break;
+      await delay(20);
+    }
+    const discoveryEvaluation = await cdp.send('Runtime.evaluate', {
+      expression: `JSON.stringify((() => {
+        const q = window.__APN_QA__;
+        const proof = {
+          zone: q.state.route.zone,
+          found: q.state.route.echoProgressByPack?.valorant?.found,
+          hud: document.querySelector('#v-echo-progress')?.textContent,
+          text: JSON.parse(window.render_game_to_text()).routeJourney.echo.found,
+        };
+        q.state.route = window.__apnRouteSmokeSnapshot.route;
+        q.state.run.hero.scanner = window.__apnRouteSmokeSnapshot.scanner;
+        q.state.world.enemies = [];
+        q.state.world.bossActive = false;
+        q.state.world.spawnCd = 0;
+        delete window.__apnRouteSmokeSnapshot;
+        window.advanceTime(0);
+        return proof;
+      })())`,
+      returnByValue: true,
+    });
+    const discovery = JSON.parse(discoveryEvaluation.result.value);
+    assert(
+      discovery.zone === 3 &&
+        discovery.found === 1 &&
+        discovery.hud === '1/3' &&
+        discovery.text === 1,
+      `${tag} real combat discovers and renders Echo 1/3 (${JSON.stringify(discovery)})`,
+    );
+  }
   if (displayZone === 1) {
     await cdp.send('Runtime.evaluate', {
       expression: `window.__APN_QA__.state.run.hero.skills.hotfix = 1`,
@@ -194,6 +277,48 @@ async function scenario(displayZone, viewport) {
       returnByValue: true,
     });
     await delay(150);
+  }
+  if (displayZone === 1 || (displayZone === 201 && viewport.label === 'mobile-428')) {
+    await cdp.send('Runtime.evaluate', {
+      expression: `document.querySelector('.nav-btn[data-panel="hub"]')?.click()`,
+      returnByValue: true,
+    });
+    await delay(200);
+    const routeEvaluation = await cdp.send('Runtime.evaluate', {
+      expression: `JSON.stringify((() => {
+        const journey = document.querySelector('[data-route-journey]');
+        const season = document.querySelector('#hub-body .hub-season');
+        const sheet = document.querySelector('.sheet');
+        const sr = sheet?.getBoundingClientRect();
+        return {
+          visible: Boolean(journey && !document.querySelector('#panel-hub')?.hidden),
+          beforeObjectives: Boolean(journey && season && (journey.compareDocumentPosition(season) & Node.DOCUMENT_POSITION_FOLLOWING)),
+          current: journey?.querySelector('[data-route-current]')?.textContent.trim(),
+          next: journey?.querySelector('[data-route-next]')?.textContent.trim(),
+          clean: journey?.querySelector('[data-route-clean]')?.textContent.trim(),
+          echo: journey?.querySelector('[data-route-echo]')?.textContent.trim(),
+          drift: journey?.querySelector('[data-route-drift]')?.textContent.trim(),
+          archiveCount: journey?.querySelectorAll('[data-echo-pack]').length || 0,
+          historyCount: journey?.querySelectorAll('[data-route-history-entry]').length || 0,
+          sheetInsideViewport: Boolean(sr && sr.left >= 0 && sr.right <= innerWidth && sr.top >= 0 && sr.bottom <= innerHeight),
+          overflow: document.documentElement.scrollWidth - innerWidth,
+        };
+      })())`,
+      returnByValue: true,
+    });
+    const route = JSON.parse(routeEvaluation.result.value);
+    assert(route.visible, `${tag} Route journey is visible`);
+    assert(route.beforeObjectives, `${tag} Route journey precedes objectives`);
+    assert(Boolean(route.current) && Boolean(route.next), `${tag} Route reveals current and next Pack`);
+    assert(route.archiveCount === result.catalogCount, `${tag} Echo archive covers the active catalog`);
+    assert(route.sheetInsideViewport && route.overflow === 0, `${tag} Route sheet stays inside the viewport`);
+    if (displayZone === 1) {
+      assert(route.clean.includes(`0/${result.catalogCount}`) && route.echo.includes('0/3'), `${tag} fresh Route shows honest Clean/Echo progress`);
+    } else {
+      assert(route.clean.includes('Clean Era Complete'), `${tag} renders the earned Clean Era result`);
+      assert(route.drift.includes('Signal Drift 1'), `${tag} renders postgame Signal Drift tier`);
+      assert(route.historyCount === 1, `${tag} renders exact persisted Pack history`);
+    }
   }
   console.log(`INFO ${tag} viewport overflow ${result.overflow}px`);
   const shot = await cdp.send('Page.captureScreenshot', { format: 'png', fromSurface: true });

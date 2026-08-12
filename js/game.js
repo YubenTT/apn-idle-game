@@ -66,7 +66,12 @@ import {
   SLOTS,
   BAG_CAP,
 } from './loot.js?v=gaf2d-motion-v1';
-import { createRouteState, nextSeasonBoundary, packForRoute } from './route.js?v=gaf2d-motion-v1';
+import {
+  createRouteState,
+  nextSeasonBoundary,
+  packForRoute,
+  recordRouteZoneClear,
+} from './route.js?v=gaf2d-motion-v1';
 import { GAME_PACKS } from './generated/game-packs.js?v=gaf2d-motion-v1';
 
 const HERO_ATTACK_SECONDS = 8 / 16;
@@ -985,20 +990,11 @@ function onKill(s, e) {
   // zone progress — endless; checkpoints every SEASON.zones for prestige
   const need = killsNeeded(zone);
   if (s.route.killsInZone >= need) {
-    const completedPack = packForRoute(s.route, GAME_PACKS);
-    s.route.zone += 1;
-    s.route.killsInZone = 0;
+    const routeTransition = recordRouteZoneClear(s.route, GAME_PACKS, zone);
+    s.route = routeTransition.route;
     s.world.enemies = [];
     s.world.bossActive = false;
     s.world.spawnCd = 0.35;
-    const nextPack = packForRoute(s.route, GAME_PACKS);
-    if (completedPack && nextPack && completedPack.id !== nextPack.id) {
-      const alreadySeen = s.route.seenPackIds.includes(completedPack.id);
-      if (!alreadySeen) s.route.seenPackIds.push(completedPack.id);
-      else s.route.corruptionByPack[completedPack.id] = Math.min(4, (s.route.corruptionByPack[completedPack.id] || 0) + 1);
-      s.route.lastSeenByPack[completedPack.id] = s.route.zone;
-      s.route.currentPackId = nextPack.id;
-    }
     if (s.settings.sfx !== false) sfx('zone');
     hubOnZone(s);
     // Zone clear celebration: full-width light sweep + small confetti (cosmetic).
@@ -1016,7 +1012,17 @@ function onKill(s, e) {
       toast(s, `Zone ${s.route.zone} checkpoint! Go Live to bank Notes and grow your Live Mult.`, 2.6, 'live');
       tip(s, 'season');
     } else {
-      toast(s, `Zone ${s.route.zone} cleared — on to Zone ${s.route.zone + 1}`, 1.8, 'zone');
+      const routeResult = routeTransition.echo
+        ? ` · Echo ${routeTransition.echo.slot}/${routeTransition.echo.total} found`
+        : routeTransition.completion
+          ? ` · ${routeTransition.completion.clean ? 'Pack archived' : `Drift ${routeTransition.completion.tier} cleared`}`
+          : '';
+      toast(
+        s,
+        `Zone ${s.route.zone} cleared — on to Zone ${s.route.zone + 1}${routeResult}`,
+        routeTransition.echo || routeTransition.completion ? 2.4 : 1.8,
+        'zone',
+      );
     }
     if (isBossZone(s.route.zone)) tip(s, 'boss');
   }

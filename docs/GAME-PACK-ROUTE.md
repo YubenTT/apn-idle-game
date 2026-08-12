@@ -1,5 +1,11 @@
-<!-- go-live-v2-superseded -->
-> **⚠ Superseded on the prestige model (go-live v2).** This document still describes the retired **Ship Notes + End Season** model. The current design is **Go Live** — a single atomic prestige checkpoint (first at zone 10, then every 20; see [ADR-0008](decisions/ADR-0008-go-live-sole-checkpoint.md)). Read it through **plan v2** (`docs/superpowers/plans/2026-07-16-infinite-patchline-go-live-v2.md`) and **`docs/product/RECONCILIATION.md`**; where they disagree, they win. Non-prestige content here may still be accurate.
+<!-- complete-game-closure-current -->
+> **Current Route authority (2026-08-12).** Prestige is **Go Live** — one
+> atomic checkpoint first at Zone 10 and then every 20 Zones; see
+> [ADR-0008](decisions/ADR-0008-go-live-sole-checkpoint.md). The implemented
+> Route/Echo contract below and the
+> [complete-game closure design](superpowers/specs/2026-08-12-apn-idle-complete-game-closure-design.md)
+> supersede older `Ship Notes`, `End Season`, and aspirational event language in
+> the historical sections of this file.
 
 # Game Pack Route
 
@@ -10,9 +16,30 @@
 
 ## The derived Zone 200 rule
 
-**Full Corruption unlocks after 20 distinct clean Game Packs.** Each pack is 10
-zones, so the current unlock is Zone 200. If pack length changes, the completed
-pack rule wins; `200` is not independently sacred.
+**Signal Drift is anchored at Route Zone 200.** The launch catalog has 20 clean
+Packs × 10 Zones, so Zone 200 is also the first completed Clean Era. Future
+catalog additions do not move the already-shipped Drift threshold or revoke an
+earned Clean Era; an unseen added Pack still debuts Clean.
+
+## Implemented Route and Echo contract
+
+- Every Pack contains three deterministic Echo discoveries, earned on its first
+  clears of waves 3, 6, and 9. Echoes are Archive discoveries, not currency.
+- Wave 10 records the Pack visit, exact boundary, clean/revisit state, and a
+  newest-first history entry. Visible history is capped at 60; exact visit
+  counters remain unbounded integers.
+- The Route sheet leads with current Pack, next Pack, Pack wave, Echo `n/3`,
+  Clean Era progress/result, Echo Archive, and Pack history. Daily/weekly/Season
+  Track objectives remain below the journey as optional rewards.
+- `Clean Era Complete` is monotonic. Catalog growth can add uncovered Packs but
+  cannot take the achievement away.
+- Postgame scheduling is deterministic, unseen-first, genre-separated, and
+  stable across the promised current/next pair. Drift tiers are bounded 1–4.
+- Go Live and offline progress preserve the complete Route. Offline simulation
+  may clear Echoes and a Gate, but still stops at its existing two-Pack safety
+  boundary.
+- The HUD always shows the current Pack's real Echo state (`0/3` on a fresh
+  Pack); it never hides missing domain data or manufactures progress.
 
 Why 20 clean packs:
 
@@ -124,8 +151,8 @@ Rules:
 
 ## Scheduler after the Clean Era
 
-Scheduling happens at End Season boundaries so content updates never split a
-two-pack season.
+Scheduling happens at stable two-Pack boundaries so content updates never split
+an already promised current/next pair.
 
 1. If unseen packs exist, schedule a **Clean Season** with two non-adjacent-genre
    unseen packs.
@@ -155,17 +182,28 @@ Example after Zone 200:
 
 Save state uses stable string IDs, never catalog array indexes:
 
-- `routeZone`
+- `zone`
+- `killsInZone`
 - `currentPackId`
 - `seenPackIds`
 - `corruptionByPack`
 - `lastSeenByPack`
-- `routeDeck`
+- `deck`
+- `echoProgressByPack`
+- `cleanCompletedPackIds`
+- `packVisitCountById`
+- `history` (newest 60)
+- `cleanEraCompleted`
+- `cleanEraCompletedAtZone`
 - `catalogVersion`
-- `routeSeed`
+- `seed`
 
 A missing pack falls back to the next valid ID without erasing its history. New
-catalog versions are adopted only at the next End Season boundary.
+catalog versions are adopted only at a stable Pack boundary. A versioned Route
+journey capsule is also stored under `meta` so an older v3 production rollback,
+whose Route normalizer does not know the new fields, preserves them opaquely.
+Progress earned while rolled back is folded back from the legacy `seenPackIds`
+and corruption counters when the current client returns.
 
 ## Pacing targets
 

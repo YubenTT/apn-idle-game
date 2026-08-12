@@ -7,6 +7,43 @@ export const SAVE_KEY_V1 = 'apn_idle_save_v1';
 export const SAVE_KEY_V2 = 'apn_idle_save_v2';
 /** Current persisted save-schema version (Go Live checkpoint model, ADR-0008). */
 export const SAVE_VERSION = 3;
+const ROUTE_JOURNEY_SCHEMA = 'apn.route-journey';
+const ROUTE_JOURNEY_VERSION = 1;
+const ROUTE_JOURNEY_FIELDS = Object.freeze([
+  'echoProgressByPack',
+  'cleanCompletedPackIds',
+  'packVisitCountById',
+  'history',
+  'cleanEraCompleted',
+  'cleanEraCompletedAtZone',
+]);
+
+function routeJourneyCapsule(route) {
+  return Object.fromEntries([
+    ['schema', ROUTE_JOURNEY_SCHEMA],
+    ['version', ROUTE_JOURNEY_VERSION],
+    ...ROUTE_JOURNEY_FIELDS.map((key) => [key, route[key]]),
+  ]);
+}
+
+function routeJourneyFromMeta(meta) {
+  const capsule = meta?.routeJourney;
+  if (
+    !capsule ||
+    typeof capsule !== 'object' ||
+    Array.isArray(capsule) ||
+    capsule.schema !== ROUTE_JOURNEY_SCHEMA ||
+    capsule.version !== ROUTE_JOURNEY_VERSION
+  ) {
+    return {};
+  }
+  return Object.fromEntries(
+    ROUTE_JOURNEY_FIELDS.filter((key) => key in capsule).map((key) => [
+      key,
+      capsule[key],
+    ]),
+  );
+}
 
 function migrateBuildV2(hero, sourceBuildVersion) {
   if (!hero || sourceBuildVersion === 2) return 0;
@@ -38,11 +75,17 @@ function migrateBuildV2(hero, sourceBuildVersion) {
 }
 
 export function save(s) {
+  const normalizedRoute = normalizeRoute(s.route);
   const data = {
     v: SAVE_VERSION,
     ts: Date.now(),
     meta: {
       ...s.meta,
+      // Old v3 clients preserve unknown meta keys even though their Route
+      // normalizer drops new fields. This capsule makes a production rollback
+      // data-safe without changing the storage key or pretending the old UI can
+      // render new journey features.
+      routeJourney: routeJourneyCapsule(normalizedRoute),
       gear: normalizeGear(s.meta.gear),
       premium: s.meta.premium || {
         pro: false,
@@ -57,7 +100,7 @@ export function save(s) {
       lastGoLive: undefined,
     },
     authority: s.authority,
-    route: normalizeRoute(s.route),
+    route: normalizedRoute,
     run: {
       bytes: s.run.bytes,
       patches: s.run.patches,
@@ -125,8 +168,13 @@ export function load() {
 export function apply(s, d) {
   if (!d) return 0;
   s.v = SAVE_VERSION;
-  s.route = normalizeRoute(d.v === 2 || d.v === 3 ? d.route : null, d.v === 1 ? d.run : null);
+  const routeSource =
+    d.v === 2 || d.v === 3
+      ? { ...routeJourneyFromMeta(d.meta), ...(d.route || {}) }
+      : null;
+  s.route = normalizeRoute(routeSource, d.v === 1 ? d.run : null);
   Object.assign(s.meta, d.meta || {});
+  delete s.meta.routeJourney;
   // Migrate gear and preserve the retired demo-store bucket as inert data.
   s.meta.gear = normalizeGear(d.meta?.gear || s.meta.gear || emptyGear());
   if (!s.meta.premium) {

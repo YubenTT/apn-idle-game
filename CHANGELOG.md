@@ -9,6 +9,17 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Added
 
+- **Route journey and Echo archive.** Every Pack now has three deterministic
+  Echo discoveries at waves 3/6/9; Gates persist clean/revisit completions,
+  exact visit counts, and a bounded newest-first history. Route leads with the
+  current/next Pack, Clean Era progress/result, Echo Archive, and Zone-200
+  Signal Drift before optional objectives. v1–v3 saves migrate additively, Go
+  Live and offline progress preserve the journey, and a v3-opaque capsule keeps
+  new progress safe through an older production rollback. Deterministic Node
+  tests plus real Chrome at 375×812, 428×926, 844×390, and 1280×800 cover real
+  combat discovery, postgame scheduling, text QA, zero overflow, and console-
+  clean rendering.
+
 - **Character-owned authored-motion foundation.** APN Idle now has one closed,
   hash-locked `gaf2d-motion-bundle-v1` contract, a deterministic approved-export
   builder, pack-owned current/next-wave warming, bounded decode and release,
