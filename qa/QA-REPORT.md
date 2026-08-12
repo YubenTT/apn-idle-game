@@ -1,5 +1,42 @@
 # APN Idle redesign V1 — QA report
 
+## 2026-08-12 ALL-257 enemy-visibility production repair
+
+Status: the production symptom is reproduced and repaired at its renderer
+ownership boundary. On Fortnite Route 24, `Storm Runner` had correct combat,
+HP, label, 72×72 geometry, an `unmapped` motion state, and a decoded 896×128
+Pack atlas, but zero target-colored body pixels. `draw()` created a new
+interpolation copy every frame while static and legacy spawn clocks keyed their
+first-seen state to that copy, permanently holding body scale at zero. The
+render copy still owns interpolated coordinates; the persistent domain enemy
+now owns only the presentation clock.
+
+Fresh evidence:
+
+- the focused regression first failed exactly at the second-frame static Pack
+  scale, then passed for both the static target and warmed legacy creature;
+- `npm test` completes the entire current tree and ends `ALL PASS`;
+- the existing catalog/rights Chrome process now proves visible body pixels for
+  all 20 runtime-safe Packs, including approved Valorant V4 motion, plus a
+  warmed single-owner legacy creature and a deliberately failed required-asset
+  path rendered through procedural Canvas;
+- Fortnite passes at 428×926 and 844×390. The measured strong-difference body
+  pixels are 1,926 mobile and 134 landscape, compared with zero on the live
+  broken build; and
+- the complete Route matrix and Go Live smoke pass at their existing mobile,
+  landscape, and desktop viewports with zero unexpected console findings and
+  zero horizontal overflow. Representative captures were visually inspected;
+  and
+- independent review found no P0/P1/P2 defect. Its two P3 test-strength
+  findings are resolved: the subtraction probe proves exact domain/text/identity
+  restoration, and legacy media must resolve to one owner with exactly the five
+  expected clips.
+
+No art/media byte, balance formula, state transition, save schema, Pack
+manifest, rights record, GAF2D approval, V4 motion lineage, or public QA surface
+changed. CI gained no job, install, matrix, or duplicate command; the new pixel
+gate runs inside the already-owned catalog/rights Chrome smoke.
+
 ## 2026-08-12 assertion-first balance closure
 
 Status: all launch balance claims are executable outcomes. Active profiles use

@@ -7,6 +7,18 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Non-motion enemy visibility.** Static Pack targets and legacy creature
+  atlases now keep one persistent presentation owner while render interpolation
+  continues to use per-frame coordinate copies. This lets their spawn animation
+  advance past its first zero-scale frame without changing combat, save, Pack,
+  rights, or approved V4 motion state. The existing catalog/rights Chrome smoke
+  now measures actual actor-body pixels for every runtime-safe Pack, Fortnite at
+  mobile and short-landscape sizes, the approved Valorant V4 path, one warmed
+  legacy owner, and the procedural required-asset fallback—all inside the
+  existing CI job and Chrome process.
+
 ### Added
 
 - **Assertion-first balance closure.** Seeded active profiles now exercise each

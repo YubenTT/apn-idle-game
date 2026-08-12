@@ -253,6 +253,131 @@ assert(
     stagedCreatureDraw?.[8] === 72,
   'legacy creature atlas consumes the standard 72 px geometry without auto-assigning elite scale',
 );
+
+function secondFrameBodyScale({ enemy, packAssets, store }) {
+  const scales = [];
+  const context = new Proxy(
+    {},
+    {
+      get(_target, key) {
+        if (key === 'scale') {
+          return (x, y) => scales.push([x, y]);
+        }
+        if (
+          key === 'createLinearGradient' ||
+          key === 'createRadialGradient'
+        ) {
+          return () => ({ addColorStop() {} });
+        }
+        return () => {};
+      },
+      set() {
+        return true;
+      },
+    },
+  );
+  const env = {
+    zone: 23,
+    meleeStop: 170,
+    engagedId: null,
+    retentionOwner: enemy,
+  };
+  for (const time of [2, 2.5]) {
+    renderRuntime.drawEnemy(
+      context,
+      { ...enemy },
+      300,
+      time,
+      packAssets,
+      store,
+      true,
+      1,
+      env,
+    );
+  }
+  return scales.at(-1);
+}
+
+const persistentStaticEnemy = {
+  id: 'storm-runner-visibility-regression',
+  type: 'stale',
+  packId: 'fortnite',
+  label: 'Storm Runner',
+  frame: 'common-a',
+  x: 220,
+  displayX: 220,
+  hp: 10,
+  hpMax: 10,
+  deathT: 0,
+  hurt: 0,
+  killed: false,
+  priorityTagRank: 0,
+};
+const staticPackAssets = {
+  ready: true,
+  pack: {
+    id: 'fortnite',
+    targets: [
+      {
+        id: 'storm-runner',
+        role: 'common-a',
+        label: 'Storm Runner',
+        frame: 'common-a',
+      },
+    ],
+    boss: { id: 'stormcore-warden', frame: 'boss' },
+  },
+  targets: {
+    _ready: true,
+    complete: true,
+    naturalWidth: 896,
+    naturalHeight: 128,
+  },
+  targetData: {
+    frames: {
+      'common-a': { rect: { x: 0, y: 0, w: 128, h: 128 } },
+    },
+  },
+};
+const visibilityMotionStore = {
+  motionStore: { entries: new Map(), diagnostics: new Map() },
+};
+const staticSecondFrameScale = secondFrameBodyScale({
+  enemy: persistentStaticEnemy,
+  packAssets: staticPackAssets,
+  store: visibilityMotionStore,
+});
+assert(
+  staticSecondFrameScale?.[0] > 0.99 &&
+    staticSecondFrameScale?.[1] > 0.99,
+  'interpolated static Pack target completes spawn scale for one persistent actor',
+);
+
+const persistentLegacyEnemy = {
+  ...persistentStaticEnemy,
+  id: reconEnemyId,
+  type: 'lag',
+  packId: 'league',
+  label: 'Lane Scout',
+  frame: 'common-c',
+};
+const legacySecondFrameScale = secondFrameBodyScale({
+  enemy: persistentLegacyEnemy,
+  packAssets: {
+    ready: true,
+    pack: {
+      id: 'league',
+      targets: [{ id: 'lane-scout', role: 'common-c' }],
+      boss: { id: 'lane-boss' },
+    },
+  },
+  store: { ...visibilityMotionStore, creatureStore },
+});
+assert(
+  legacySecondFrameScale?.[0] > 0.99 &&
+    legacySecondFrameScale?.[1] > 0.99,
+  'interpolated legacy creature completes spawn scale for one persistent actor',
+);
 releaseColdCreatureKinds(creatureStore, new Set(['hotshot']));
 assert(
   creatureStoreDecodedBytes(creatureStore) === 0 &&

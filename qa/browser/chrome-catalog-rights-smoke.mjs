@@ -25,6 +25,16 @@ const assert = (condition, message) => {
 const delay = (milliseconds) =>
   new Promise((resolve) => setTimeout(resolve, milliseconds));
 
+function isCanvasReadbackInstrumentationWarning(event) {
+  return (
+    event.method === 'Log.entryAdded' &&
+    event.params?.entry?.source === 'rendering' &&
+    /Multiple readback operations using getImageData/.test(
+      event.params?.entry?.text || '',
+    )
+  );
+}
+
 function resolveChrome() {
   if (process.env.CHROME_BIN && fs.existsSync(process.env.CHROME_BIN)) {
     return process.env.CHROME_BIN;
@@ -117,6 +127,125 @@ async function createPage() {
   return response.json();
 }
 
+async function evaluate(cdp, expression) {
+  const result = await cdp.send('Runtime.evaluate', {
+    expression,
+    awaitPromise: true,
+    returnByValue: true,
+  });
+  if (result.exceptionDetails) {
+    throw new Error(
+      result.exceptionDetails.exception?.description ||
+        result.exceptionDetails.text ||
+        'Chrome evaluation failed',
+    );
+  }
+  return result.result.value;
+}
+
+async function waitForExpression(cdp, expression, label) {
+  for (let attempt = 0; attempt < 120; attempt += 1) {
+    if (await evaluate(cdp, `Boolean(${expression})`)) return;
+    await delay(25);
+  }
+  throw new Error(`${label} did not settle`);
+}
+
+async function measureActorVisibility(cdp) {
+  const value = await evaluate(cdp, `JSON.stringify((() => {
+    const q = window.__APN_QA__;
+    const enemy = q?.state?.world?.enemies?.find((candidate) => candidate.hp > 0);
+    const actor = q?.presentation?.()?.actors?.find((entry) => entry.id === enemy?.id);
+    const canvas = document.querySelector('#game');
+    if (!enemy || !actor?.geometry?.body || !canvas) {
+      return { error: 'missing live enemy geometry' };
+    }
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    const canvasRect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / canvasRect.width;
+    const scaleY = canvas.height / canvasRect.height;
+    const body = actor.geometry.body;
+    const left = Math.max(0, Math.floor(body.left * scaleX));
+    const top = Math.max(0, Math.floor(body.top * scaleY));
+    const right = Math.min(canvas.width, Math.ceil(body.right * scaleX));
+    const bottom = Math.min(canvas.height, Math.ceil(body.bottom * scaleY));
+    const width = right - left;
+    const height = bottom - top;
+    const stateBefore = JSON.stringify(q.state);
+    const textBefore = window.render_game_to_text();
+    const withActor = context.getImageData(left, top, width, height).data.slice();
+    const savedEnemies = q.state.world.enemies;
+    let withoutActor;
+    try {
+      q.state.world.enemies = [];
+      window.advanceTime(0);
+      withoutActor = context.getImageData(left, top, width, height).data.slice();
+    } finally {
+      q.state.world.enemies = savedEnemies;
+      window.advanceTime(0);
+    }
+    const stateAfter = JSON.stringify(q.state);
+    const textAfter = window.render_game_to_text();
+    let changed = 0;
+    let strong = 0;
+    let maximum = 0;
+    for (let index = 0; index < withActor.length; index += 4) {
+      const difference =
+        Math.abs(withActor[index] - withoutActor[index]) +
+        Math.abs(withActor[index + 1] - withoutActor[index + 1]) +
+        Math.abs(withActor[index + 2] - withoutActor[index + 2]);
+      if (difference > 18) changed += 1;
+      if (difference > 90) strong += 1;
+      maximum = Math.max(maximum, difference);
+    }
+    const text = JSON.parse(window.render_game_to_text());
+    return {
+      packId: text.packId,
+      enemy: text.enemy,
+      motion: text.motion,
+      body,
+      pixels: withActor.length / 4,
+      changed,
+      strong,
+      maximum,
+      stateStable: stateAfter === stateBefore,
+      textStable: textAfter === textBefore,
+      enemyIdentityStable:
+        q.state.world.enemies === savedEnemies && savedEnemies.includes(enemy),
+    };
+  })())`);
+  return JSON.parse(value);
+}
+
+function assertActorVisible(visibility, label) {
+  assert(!visibility.error, `${label} exposes a live actor body envelope`);
+  assert(
+    visibility.stateStable &&
+      visibility.textStable &&
+      visibility.enemyIdentityStable,
+    `${label} visibility measurement preserves exact domain state, text projection, and enemy identity`,
+  );
+  const minimumStrongPixels = Math.max(
+    40,
+    Math.min(100, Math.ceil(visibility.pixels * 0.005)),
+  );
+  assert(
+    visibility.strong >= minimumStrongPixels && visibility.maximum > 90,
+    `${label} paints a material body (${visibility.strong}/${visibility.pixels} strong-difference pixels, minimum ${minimumStrongPixels}, max ${visibility.maximum})`,
+  );
+}
+
+async function capture(cdp, name) {
+  const screenshot = await cdp.send('Page.captureScreenshot', {
+    format: 'png',
+    fromSurface: true,
+  });
+  fs.writeFileSync(
+    path.join(output, `${name}.png`),
+    Buffer.from(screenshot.data, 'base64'),
+  );
+}
+
 async function scenario({ label, packs, policy, expectedId, fallback = false }) {
   writeCatalog(packs, policy);
   const page = await createPage();
@@ -134,7 +263,7 @@ async function scenario({ label, packs, policy, expectedId, fallback = false }) 
   });
   await cdp.send('Page.navigate', {
     url:
-      `http://127.0.0.1:${appPort}/?autostart=1&mute=1&chrome-smoke=1&rights-fixture=${label}`,
+      `http://127.0.0.1:${appPort}/?autostart=1&mute=1&chrome-smoke=1&qa-manual=1&rights-fixture=${label}`,
   });
   for (let attempt = 0; attempt < 80; attempt += 1) {
     const ready = await cdp.send('Runtime.evaluate', {
@@ -148,7 +277,26 @@ async function scenario({ label, packs, policy, expectedId, fallback = false }) 
     if (ready.result.value) break;
     await delay(100);
   }
-  await delay(500);
+  await waitForExpression(
+    cdp,
+    `document.documentElement.dataset.firstPlayable === 'ready'`,
+    `${label} first playable`,
+  );
+  await evaluate(cdp, `(() => {
+    Math.random = () => 0.9;
+    window.__APN_QA__.state.world.spawnCd = 0;
+    window.advanceTime(17);
+    window.advanceTime(400);
+    return true;
+  })()`);
+  await waitForExpression(
+    cdp,
+    `window.__APN_QA__.state.world.enemies.some((enemy) => enemy.hp > 0)`,
+    `${label} enemy spawn`,
+  );
+  const visibility = await measureActorVisibility(cdp);
+  await capture(cdp, `${label}-combat`);
+  assertActorVisible(visibility, `${label} body path`);
   await cdp.send('Runtime.evaluate', {
     expression: `document.querySelector('.nav-btn[data-panel="hub"]')?.click()`,
     returnByValue: true,
@@ -186,6 +334,7 @@ async function scenario({ label, packs, policy, expectedId, fallback = false }) 
         ['error', 'warning'].includes(event.params?.entry?.level)),
   );
   const unexpected = findings.filter((event) => {
+    if (isCanvasReadbackInstrumentationWarning(event)) return false;
     const text = JSON.stringify(event.params || {});
     return !(
       fallback &&
@@ -217,7 +366,12 @@ async function scenario({ label, packs, policy, expectedId, fallback = false }) 
     `${label} remains a playable Canvas route`,
   );
   assert(state.overflow === 0, `${label} has zero horizontal overflow`);
-  assert(unexpected.length === 0, `${label} has no unexpected console finding`);
+  assert(
+    unexpected.length === 0,
+    `${label} has no unexpected console finding (${JSON.stringify(
+      unexpected.map((event) => event.params),
+    )})`,
+  );
   if (fallback) {
     assert(!state.ready && state.failed, `${label} records the required-asset failure`);
     assert(
@@ -228,13 +382,196 @@ async function scenario({ label, packs, policy, expectedId, fallback = false }) 
   } else {
     assert(state.ready, `${label} loads the next active Pack assets`);
   }
-  const screenshot = await cdp.send('Page.captureScreenshot', {
-    format: 'png',
-    fromSurface: true,
+  await capture(cdp, label);
+  cdp.close();
+  await fetch(`http://127.0.0.1:${chromePort}/json/close/${page.id}`);
+}
+
+async function productionVisibilityScenario(packs, policy) {
+  const label = 'runtime-pack-visibility';
+  writeCatalog(packs, policy);
+  const page = await createPage();
+  const cdp = connect(page.webSocketDebuggerUrl);
+  await cdp.opened;
+  await cdp.send('Page.enable');
+  await cdp.send('Runtime.enable');
+  await cdp.send('Log.enable');
+  await cdp.send('Network.enable');
+  await cdp.send('Emulation.setDeviceMetricsOverride', {
+    width: 428,
+    height: 926,
+    deviceScaleFactor: 2,
+    mobile: true,
   });
+  await cdp.send('Page.navigate', {
+    url:
+      `http://127.0.0.1:${appPort}/?autostart=1&mute=1&chrome-smoke=1&qa-manual=1&rights-fixture=${label}`,
+  });
+  await waitForExpression(
+    cdp,
+    `window.__APN_QA__ &&
+      window.advanceTime &&
+      document.documentElement.dataset.firstPlayable === 'ready'`,
+    `${label} QA surface`,
+  );
+  await evaluate(
+    cdp,
+    `window.__APN_QA__.actions.setReducedMotion(true); true`,
+  );
+
+  async function selectPackAndSpawn(pack, packIndex, randomSetup) {
+    await evaluate(cdp, `(() => {
+      const q = window.__APN_QA__;
+      const state = q.state;
+      state.route.zone = ${packIndex * 10};
+      state.route.currentPackId = ${JSON.stringify(pack.id)};
+      state.route.killsInZone = 0;
+      state.world.enemies = [];
+      state.world.spawnCd = 999;
+      state.world.bossActive = false;
+      state.world.bossTimer = 0;
+      state.world.hitStopT = 0;
+      state.world.slowMoT = 0;
+      window.advanceTime(17);
+      return true;
+    })()`);
+    await waitForExpression(
+      cdp,
+      `window.__APN_QA__.assets.currentId === ${JSON.stringify(pack.id)} &&
+        window.__APN_QA__.assets.packs.get(${JSON.stringify(pack.id)})?.ready === true`,
+      `${pack.id} Pack assets`,
+    );
+    await evaluate(cdp, `(() => {
+      ${randomSetup}
+      return true;
+    })()`);
+    let spawned = false;
+    for (let attempt = 0; attempt < 120; attempt += 1) {
+      spawned = await evaluate(cdp, `(() => {
+        const state = window.__APN_QA__.state;
+        state.world.spawnCd = 0;
+        window.advanceTime(17);
+        return state.world.enemies.some((enemy) => enemy.hp > 0);
+      })()`);
+      if (spawned) break;
+      await delay(25);
+    }
+    assert(spawned, `${pack.id} spawns one live runtime enemy`);
+    await evaluate(cdp, `window.advanceTime(400); true`);
+  }
+
+  const visibilityResults = [];
+  for (const [packIndex, pack] of packs.entries()) {
+    await selectPackAndSpawn(pack, packIndex, `Math.random = () => 0.9;`);
+    const visibility = await measureActorVisibility(cdp);
+    assert(
+      visibility.packId === pack.id,
+      `${pack.id} visibility evidence is Pack-qualified`,
+    );
+    if (pack.id === 'valorant') {
+      assert(
+        visibility.motion?.status === 'ready' &&
+          visibility.motion?.sourceFamily === 'authored-semantic-v4',
+        'valorant keeps the approved V4 motion body path',
+      );
+    } else {
+      assert(
+        visibility.motion?.status === 'unmapped',
+        `${pack.id} keeps the non-motion body path`,
+      );
+    }
+    assertActorVisible(visibility, pack.id);
+    visibilityResults.push(visibility);
+    if (['valorant', 'fortnite', 'elden-ring'].includes(pack.id)) {
+      await capture(cdp, `${label}-${pack.id}-mobile`);
+    }
+    if (pack.id === 'fortnite') {
+      await cdp.send('Emulation.setDeviceMetricsOverride', {
+        width: 844,
+        height: 390,
+        deviceScaleFactor: 1,
+        mobile: false,
+      });
+      await delay(100);
+      await evaluate(cdp, `window.advanceTime(0); true`);
+      const landscapeVisibility = await measureActorVisibility(cdp);
+      assertActorVisible(landscapeVisibility, 'fortnite landscape');
+      await capture(cdp, `${label}-fortnite-landscape`);
+      await cdp.send('Emulation.setDeviceMetricsOverride', {
+        width: 428,
+        height: 926,
+        deviceScaleFactor: 2,
+        mobile: true,
+      });
+      await delay(100);
+      await evaluate(cdp, `window.advanceTime(0); true`);
+    }
+  }
+
+  const leagueIndex = packs.findIndex((pack) => pack.id === 'league');
+  assert(leagueIndex >= 0, 'runtime catalog contains the legacy-creature Pack');
+  await selectPackAndSpawn(
+    packs[leagueIndex],
+    leagueIndex,
+    `{
+      const rolls = [0.18, 0.1, 0.5, 0.5];
+      Math.random = () => rolls.length ? rolls.shift() : 0.5;
+    }`,
+  );
+  await waitForExpression(
+    cdp,
+    `window.__APN_QA__.assets.creatureStore.pending.size === 0 &&
+      window.__APN_QA__.assets.creatureStore.entries.size === 5`,
+    'legacy creature media',
+  );
+  await evaluate(
+    cdp,
+    `window.advanceTime(17); window.advanceTime(400); true`,
+  );
+  const legacyVisibility = await measureActorVisibility(cdp);
+  const legacyState = await evaluate(cdp, `(() => {
+    const keys = [...window.__APN_QA__.assets.creatureStore.entries.keys()].sort();
+    const pairs = keys.map((key) => key.split('/'));
+    return {
+      type: window.__APN_QA__.state.world.enemies.find((enemy) => enemy.hp > 0)?.type,
+      keys,
+      owners: [...new Set(pairs.map(([owner]) => owner))].sort(),
+      clips: [...new Set(pairs.map(([, clip]) => clip))].sort(),
+    };
+  })()`);
+  assert(
+    legacyState.type === 'lag' &&
+      legacyState.keys.length === 5 &&
+      legacyState.owners.length === 1 &&
+      ['hotshot', 'recon'].includes(legacyState.owners[0]) &&
+      JSON.stringify(legacyState.clips) ===
+        JSON.stringify(['advance', 'attack', 'death', 'hit', 'idle']),
+    'league warms exactly one actual legacy creature owner',
+  );
+  await capture(cdp, `${label}-league-legacy-creature`);
+  assertActorVisible(legacyVisibility, 'league legacy creature');
+
+  const findings = cdp.events.filter(
+    (event) =>
+      !isCanvasReadbackInstrumentationWarning(event) &&
+      (event.method === 'Runtime.exceptionThrown' ||
+        (event.method === 'Log.entryAdded' &&
+          ['error', 'warning'].includes(event.params?.entry?.level))),
+  );
+  const overflow = await evaluate(
+    cdp,
+    `Math.max(0, document.documentElement.scrollWidth - innerWidth)`,
+  );
+  assert(
+    visibilityResults.length === packs.length &&
+      new Set(visibilityResults.map((entry) => entry.packId)).size === packs.length,
+    `${label} covers every runtime-safe Pack exactly once (${packs.length}/${packs.length})`,
+  );
+  assert(overflow === 0, `${label} has zero horizontal overflow`);
+  assert(findings.length === 0, `${label} has no Chrome console finding`);
   fs.writeFileSync(
-    path.join(output, `${label}.png`),
-    Buffer.from(screenshot.data, 'base64'),
+    path.join(output, `${label}.json`),
+    `${JSON.stringify({ visibilityResults, legacyVisibility }, null, 2)}\n`,
   );
   cdp.close();
   await fetch(`http://127.0.0.1:${chromePort}/json/close/${page.id}`);
@@ -345,9 +682,12 @@ try {
     policy: production.policy,
     expectedId: killed[0].id,
   });
-  const fallback = structuredClone(production.packs);
+  await productionVisibilityScenario(production.packs, production.policy);
+  const fallback = structuredClone(
+    production.packs.filter((pack) => pack.id !== 'valorant'),
+  );
   fallback[0].assets.background =
-    'assets/game-packs/valorant/fixture-unavailable.webp';
+    'assets/game-packs/league/fixture-unavailable.webp';
   await scenario({
     label: 'required-asset-fallback',
     packs: fallback,

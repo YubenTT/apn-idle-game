@@ -1343,6 +1343,7 @@ export function drawEnemy(ctx, e, gy, t, packAssets = null, assetStore = null, r
         engagedId: env.engagedId,
         creatureStore: assetStore?.creatureStore,
         geometry,
+        presentationOwner: env?.retentionOwner || e,
       })
     );
   }
@@ -1355,6 +1356,7 @@ export function drawEnemy(ctx, e, gy, t, packAssets = null, assetStore = null, r
       frame: atlas && frame?.rect ? frame : null,
       reducedMotion,
       geometry,
+      presentationOwner: env?.retentionOwner || e,
     });
   }
 
@@ -1504,6 +1506,7 @@ function drawCreatureTarget(ctx, e, kind, o) {
     engagedId,
     creatureStore,
     geometry,
+    presentationOwner,
   } = o;
   const x = e.displayX;
   const dying = e.deathT > 0 && e.killed;
@@ -1569,7 +1572,7 @@ function drawCreatureTarget(ctx, e, kind, o) {
     }
   } else {
     // spawn pop + idle bob + hit squash (living targets only)
-    const pop = creatureSpawnScale(e, t);
+    const pop = creatureSpawnScale(presentationOwner || e, t);
     sx *= pop * (1 + flashU * 0.16);
     sy *= pop * (1 - flashU * 0.12);
     if (!reducedMotion) dy += Math.sin(t * 2.2 + phase) * 2;

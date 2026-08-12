@@ -55,7 +55,14 @@ function spawnScale(e, t) {
  * opts: { t, gy, atlas (Image|null), frame (atlas frame|null), reducedMotion }
  */
 export function drawTarget(ctx, e, opts) {
-  const { t, atlas, frame, reducedMotion, geometry } = opts;
+  const {
+    t,
+    atlas,
+    frame,
+    reducedMotion,
+    geometry,
+    presentationOwner,
+  } = opts;
   const x = e.displayX;
   const dying = e.deathT > 0 && e.killed;
   const deathU = dying ? 1 - clamp(e.deathT / (e.deathMax || 0.5), 0, 1) : 0;
@@ -95,7 +102,7 @@ export function drawTarget(ctx, e, opts) {
     }
   } else {
     // spawn pop + idle bob + hit squash (living targets only)
-    const pop = spawnScale(e, t);
+    const pop = spawnScale(presentationOwner || e, t);
     sx *= pop * (1 + flashU * 0.16);
     sy *= pop * (1 - flashU * 0.12);
     if (!reducedMotion) dy += Math.sin(t * 2.2 + phaseOf(e.id)) * 2;
