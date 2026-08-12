@@ -4,9 +4,10 @@
 > **Current Gate-M authority (2026-08-12).** Coverage Mastery is a five-level
 > Pack-scoped Rep sink with costs `25 / 60 / 120 / 220 / 360` and at most 25%
 > revisit yield. Set capstones are earned, scoped, and bounded; Live Mult stays
-> the only global multiplier. The permanent-power HP budget exponent is `0.45`,
-> replacing the retired `0.9` anti-trivialization curve. Final first-session and
-> cycle targets remain owned by the assertion-first balance slice.
+> the only global multiplier. The permanent-power HP budget exponent is `0.4`,
+> replacing the retired `0.9` anti-trivialization curve. Assertion-first
+> first-session, Build-divergence, offline, cycle, and Zone-1000 gates are now
+> executable in `qa/check-balance-targets.mjs`.
 
 # Balance
 
@@ -56,8 +57,9 @@ Hold Sprint (button / stage / Space):
 - **Mastery** is the exact SP already spent in a branch; it is derived from skill
   ranks with `skillSpCost`, not stored as a second upgrade currency.
 
-PR-4a establishes distinct, finite axes only. The comparative targets and final
-curve tuning remain deliberately deferred to PR-9.
+The three axes are exercised as actual play profiles: Hotfix, Priority Tag, and
+Overclock are used when available instead of measuring passive skill ranks that
+the player would never activate.
 
 ## Coverage Mastery and Set capstones
 
@@ -84,7 +86,7 @@ second global economy term.
 ```text
 scannerDamage(localSeasonPace)
   × readableHits(localZone + boundedMaturity)
-  × permanentPowerBudget^0.45
+  × permanentPowerBudget^0.4
   × corruptionTier
   × targetType
 ```
@@ -104,24 +106,36 @@ Run `node qa/pacing-profiles.mjs` for the deterministic evidence. The locked see
 currently measures:
 
 | Profile | First Gate | Mature median | Zone 200 |
-|---|---:|---:|---:|---:|
-| Scan (seed `SCAN`) | 7.7 min | 27.0 min | 4.2 h |
-| Verify (seed `VERI`) | 10.0 min | 64.7 min | 9.5 h |
-| Relay (seed `RELA`) | 17.7 min | 82.6 min | 12.1 h |
+|---|---:|---:|---:|
+| Scan (seed `SCAN`) | 7.1 min | 25.6 min | 3.9 h |
+| Verify (seed `VERI`) | 14.4 min | 52.0 min | 8.0 h |
+| Relay (seed `RELA`) | 7.8 min | 27.8 min | 3.8 h |
 
-These figures prove the Gate-M curve change is finite and does not collapse the
-Route. They are not the final acceptance gate: Relay still misses the ≤15-minute
-first-Go-Live target and is deliberately left for the assertion-first balance
-slice rather than hidden by this feature PR.
+The acceptance test additionally measures Scan at `2.789×` the same-seed
+neutral zones/hour, Verify at `2.291×` Scan Rep/cycle, and Relay overflow Signal
+and Notes at `1.333×` neutral. The authored maturity budget stops growing at
+Zone 120. In the fixed final post-ceiling window, both successive first-Gate
+ratios pass independently—Scan `0.884× / 0.850×`, Verify `0.853× / 0.371×`, and
+Relay `0.506× / 0.627×`. No median or outlier allowance is used.
+
+Live Mult intentionally affects both Notes earned and Notes→Rep conversion, so
+the economy's Rep channel is proportional to `live²`. This is one multiplier
+applied at two explicit stages, not a hidden second multiplier. The `0.4` HP
+budget share, multi-hit floor, free-MVP firewall, and bounded seeded tests are
+the corresponding anti-collapse gates.
 
 Offline combat simulates at most three real hours per return, never plays SFX,
 stops at the next Go Live boundary, and converts remaining capped time into
-bounded Signal/Notes at the measured pre-boundary rate using Relay efficiency.
+bounded Signal/Notes at the measured pre-boundary rate. Neutral conversion is
+75%; each point of Relay Mastery restores two percentage points toward the
+100% active-yield ceiling. Hardened may add five Pack-scoped points but never
+crosses that ceiling.
 
 ## Tuning checklist
 
 ```bash
 node qa/run-tests.mjs
+node qa/check-balance-targets.mjs
 node qa/pacing-profiles.mjs
 node qa/long-run.mjs
 ```

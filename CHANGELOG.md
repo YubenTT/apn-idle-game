@@ -9,6 +9,15 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Added
 
+- **Assertion-first balance closure.** Seeded active profiles now exercise each
+  Build's real controls and enforce first Go Live ≤15 minutes, Scan ≥20% neutral
+  zones/hour, Verify ≥40% Scan Rep/cycle, Relay ≥30% neutral offline overflow,
+  and ≥10% acceleration in each of two settled successor Gates. Neutral overflow
+  is 75%; Relay restores two percentage points per Mastery toward the unchanged
+  100% active-yield ceiling. Zone-1000 QA now owns explicit hit, kill, per-zone,
+  aggregate-work, Gate-count, multi-frame, and deterministic bounds instead of
+  treating finite numbers alone as a pass.
+
 - **Versioned rights and runtime-safe catalog.** Every authored Pack now points
   to a closed `rights.json` authority with provenance, explicit review posture,
   forbidden motifs, fallback, and a per-Pack kill switch. Gameplay uses APN
@@ -31,7 +40,7 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
   a machine firewall keeps all of them away from Live Mult and paid paths. New
   state survives save reload, Go Live, offline progress, catalog extension, and
   an older v3 rollback. The permanent-power HP budget exponent is softened from
-  0.9 to 0.45 to remove the mature-cycle flatline without one-frame targets.
+  0.9 to 0.4 to remove the mature-cycle flatline without one-frame targets.
   Chrome verifies real Rep spend, claim, save, text projection, touch controls,
   and zero overflow across mobile, landscape, and desktop.
 

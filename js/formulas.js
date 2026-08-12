@@ -42,6 +42,8 @@ export const C = {
   ENEMY_POWER_BUDGET: 1.45,
   ENEMY_HP_STEP_EVERY: 5,
   ENEMY_HP_STEP_BONUS: 0.035,
+  /** HP absorbs only a bounded share of permanent power so later cycles settle faster. */
+  PERMANENT_POWER_HP_EXPONENT: 0.4,
 
   ZONE_KILLS: 10,
   ZONE_KILLS_PER5: 5,
@@ -53,10 +55,11 @@ export const C = {
   PATCH_FROM_BOSS: 4,
   SHIP_RATE: 1,
   OFFLINE_CAP: 8 * 3600,
-  IDLE_EFF: 0.88,
+  /** Neutral overflow conversion; Relay can recover the remaining 25%, capped at active yield. */
+  IDLE_EFF: 0.75,
   VERIFY_YIELD_PER_MASTERY: 0.012,
   VERIFY_YIELD_CAP: 0.3,
-  RELAY_OFFLINE_PER_MASTERY: 0.01,
+  RELAY_OFFLINE_PER_MASTERY: 0.02,
   ALERT_INTERVAL: 3.2,
   SP_PER_LEVEL: 3,
   SEASON_ZONES: 20,
@@ -89,7 +92,7 @@ export function spentSkillPoints(rank) {
   return 5 * completeBands * (completeBands + 1) / 2 + remainder * (completeBands + 1);
 }
 
-/** Verify is the cycle-value axis. Numeric target tuning remains in PR-9. */
+/** Verify is the cycle-value axis; outcome ratios are locked by balance QA. */
 export function verifyYieldMultiplier(mastery) {
   const spent = Math.max(0, Number(mastery) || 0);
   return 1 + Math.min(C.VERIFY_YIELD_CAP, spent * C.VERIFY_YIELD_PER_MASTERY);
@@ -148,7 +151,10 @@ export function routeEnemyHp(
     1 + C.ENEMY_HP_STEP_BONUS * Math.floor(localZone / C.ENEMY_HP_STEP_EVERY);
   const raw = scannerDamage(pace) * C.ENEMY_POWER_BUDGET * hits * step;
   const catchUp = 1 - Math.min(0.25, Math.max(0, pace - Math.max(0, runPower)) * 0.01);
-  const permanentBudget = Math.min(14, Math.max(1, permanentMultiplier) ** 0.45);
+  const permanentBudget = Math.min(
+    14,
+    Math.max(1, permanentMultiplier) ** C.PERMANENT_POWER_HP_EXPONENT,
+  );
   const corruptionBudget = 1 + 0.18 * Math.min(4, Math.max(0, corruptionTier | 0));
   return Math.floor(
     Math.max(C.ENEMY_HP_BASE, raw) * catchUp * permanentBudget * corruptionBudget * typeMult
