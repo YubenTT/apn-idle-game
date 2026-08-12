@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "mode": "pending-review",
+  "reviewStatus": "needs-legal-review",
+  "reviewedAt": null,
+  "reviewedBy": null,
+  "editorialReference": "Valorant",
+  "killSwitch": "disable-valorant",
+  "licenseRecord": null,
+  "forbiddenMotifs": [
+    "Valorant or Riot wordmarks",
+    "recognizable agent likenesses",
+    "official weapon skins or map trade dress"
+  ],
+  "provenance": {
+    "sourceBoard": "assets/game-packs/valorant/source-board.md",
+    "reviewEvidence": []
+  }
+}

@@ -162,10 +162,13 @@ Each approved asset records asset ID/SHA-256, tool/model, prompt hashes, timesta
 
 ## Factory proof
 
-Do not regenerate the entire catalog first. Prove the same system on:
+For a future art iteration, prove the same system on current catalog identities
+before expanding it:
 
-1. Tactical Echo — hard-surface/tactical;
-2. Floodlight XI — sports/timing;
-3. Fashion Dream — bright fashion/style-chain.
+1. Spike Protocol — hard-surface/tactical;
+2. Ultimate Touchline — sports/timing;
+3. Storm Builders — bright survival/storm.
 
-If all three pass one schema, mechanic library, art grammar, memory budget and runtime without Pack-specific code, the factory is truly scalable.
+No new art is required by rights closure. If a future replacement passes one
+schema, mechanic library, art grammar, memory budget and runtime without
+Pack-specific code, the factory remains scalable.

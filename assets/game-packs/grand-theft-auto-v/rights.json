@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "mode": "pending-review",
+  "reviewStatus": "needs-legal-review",
+  "reviewedAt": null,
+  "reviewedBy": null,
+  "editorialReference": "Grand Theft Auto V",
+  "killSwitch": "disable-grand-theft-auto-v",
+  "licenseRecord": null,
+  "forbiddenMotifs": [
+    "Grand Theft Auto or Rockstar wordmarks",
+    "recognizable named character likenesses",
+    "official Los Santos map, interface, or vehicle trade dress"
+  ],
+  "provenance": {
+    "sourceBoard": "assets/game-packs/grand-theft-auto-v/source-board.md",
+    "reviewEvidence": []
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "mode": "pending-review",
+  "reviewStatus": "needs-legal-review",
+  "reviewedAt": null,
+  "reviewedBy": null,
+  "editorialReference": "Minecraft",
+  "killSwitch": "disable-minecraft",
+  "licenseRecord": null,
+  "forbiddenMotifs": [
+    "Minecraft or Mojang wordmarks",
+    "recognizable Steve or Alex likenesses",
+    "official Creeper face or block textures"
+  ],
+  "provenance": {
+    "sourceBoard": "assets/game-packs/minecraft/source-board.md",
+    "reviewEvidence": []
+  }
+}

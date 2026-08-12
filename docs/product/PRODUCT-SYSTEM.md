@@ -182,9 +182,12 @@ Direct branded assets only when a written license covers the intended commercial
 
 Rights modes:
 
-- `original-echo`
-- `editorial-reference`
+- `apn-original`
+- `homage-only`
+- `editorial-text-original-art`
 - `licensed-spotlight`
+- `blocked`
+- transitional `pending-review` (never an approval; future Packs block by default)
 
 Default is original Echo or factual editorial reference. A fan-content policy is not assumed to authorize a commercial minigame.
 
@@ -226,11 +229,11 @@ Maximum three per Pack. Every egg has an originality note, trigger and independe
 
 | Editorial reference | Original Runtime Echo | Mechanic |
 |---|---|---|
-| Valorant | Tactical Echo | ordered_targets |
-| EA Sports FC 26 | Floodlight XI | timing_window |
-| Barbie | Fashion Dream | style_chain |
-| Minecraft | Block Signal | resource_choice |
-| GTA V | Night Heist | pickup_path |
-| Elden Ring | Ashen Gate | armor_break |
+| Valorant | Spike Protocol | ordered_targets |
+| EA Sports FC 26 | Ultimate Touchline | timing_window |
+| Fortnite | Storm Builders | lane_shift |
+| Minecraft | Punch-a-Tree | resource_choice |
+| Grand Theft Auto V | Five Stars Wanted | pickup_path |
+| Elden Ring | Git Gud Kingdom | armor_break |
 
 The scheduler keeps stable Pack IDs, unseen-first progression, genre separation and revisits. It adds disabled-Pack filtering, fallback substitution, boundary-only catalog adoption and minimum mechanic/palette distance.

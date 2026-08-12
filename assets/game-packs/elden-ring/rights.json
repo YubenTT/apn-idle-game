@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "mode": "pending-review",
+  "reviewStatus": "needs-legal-review",
+  "reviewedAt": null,
+  "reviewedBy": null,
+  "editorialReference": "Elden Ring",
+  "killSwitch": "disable-elden-ring",
+  "licenseRecord": null,
+  "forbiddenMotifs": [
+    "Elden Ring, FromSoftware, or Bandai Namco wordmarks",
+    "recognizable named boss or character likenesses",
+    "official rune, grace, map, armor, or weapon designs"
+  ],
+  "provenance": {
+    "sourceBoard": "assets/game-packs/elden-ring/source-board.md",
+    "reviewEvidence": []
+  }
+}

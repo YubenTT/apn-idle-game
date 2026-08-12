@@ -1,7 +1,10 @@
 {
+  "schemaVersion": 1,
+  "catalogVersion": 1,
   "id": "rocket-league",
   "order": 19,
-  "title": "Rocket League",
+  "title": "Boosted Ballers",
+  "editorialReference": "Rocket League",
   "genre": "sports-driving",
   "zones": 10,
   "targets": [
@@ -79,5 +82,11 @@
     "corrupted",
     "overrun",
     "zero-day"
-  ]
+  ],
+  "rights": "assets/game-packs/rocket-league/rights.json",
+  "fallback": {
+    "mode": "procedural-canvas",
+    "reasonCopy": "Required Pack art is unavailable; APN Canvas preserves Route progress.",
+    "preserveProgress": true
+  }
 }

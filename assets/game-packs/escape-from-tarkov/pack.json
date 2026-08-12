@@ -1,14 +1,17 @@
 {
+  "schemaVersion": 1,
+  "catalogVersion": 1,
   "id": "escape-from-tarkov",
   "order": 18,
-  "title": "Escape from Tarkov",
+  "title": "Gear Fear",
+  "editorialReference": "Escape from Tarkov",
   "genre": "extraction-shooter",
   "zones": 10,
   "targets": [
     {
       "id": "scav-scout",
       "role": "common-a",
-      "label": "Scav Scout",
+      "label": "Salvage Scout",
       "frame": "common-a",
       "pivot": {
         "x": 0.5,
@@ -79,5 +82,11 @@
     "corrupted",
     "overrun",
     "zero-day"
-  ]
+  ],
+  "rights": "assets/game-packs/escape-from-tarkov/rights.json",
+  "fallback": {
+    "mode": "procedural-canvas",
+    "reasonCopy": "Required Pack art is unavailable; APN Canvas preserves Route progress.",
+    "preserveProgress": true
+  }
 }

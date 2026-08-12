@@ -1,7 +1,10 @@
 {
+  "schemaVersion": 1,
+  "catalogVersion": 1,
   "id": "path-of-exile-2",
   "order": 16,
-  "title": "Path of Exile 2",
+  "title": "Loot Filter Purgatory",
+  "editorialReference": "Path of Exile 2",
   "genre": "action-rpg",
   "zones": 10,
   "targets": [
@@ -28,7 +31,7 @@
     {
       "id": "vaal-construct",
       "role": "common-c",
-      "label": "Vaal Construct",
+      "label": "Ruin Construct",
       "frame": "common-c",
       "pivot": {
         "x": 0.5,
@@ -79,5 +82,11 @@
     "corrupted",
     "overrun",
     "zero-day"
-  ]
+  ],
+  "rights": "assets/game-packs/path-of-exile-2/rights.json",
+  "fallback": {
+    "mode": "procedural-canvas",
+    "reasonCopy": "Required Pack art is unavailable; APN Canvas preserves Route progress.",
+    "preserveProgress": true
+  }
 }

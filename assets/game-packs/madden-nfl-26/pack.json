@@ -1,7 +1,10 @@
 {
+  "schemaVersion": 1,
+  "catalogVersion": 1,
   "id": "madden-nfl-26",
   "order": 12,
-  "title": "Madden NFL 26",
+  "title": "4th & Goal",
+  "editorialReference": "Madden NFL 26",
   "genre": "sports-football",
   "zones": 10,
   "targets": [
@@ -79,5 +82,11 @@
     "corrupted",
     "overrun",
     "zero-day"
-  ]
+  ],
+  "rights": "assets/game-packs/madden-nfl-26/rights.json",
+  "fallback": {
+    "mode": "procedural-canvas",
+    "reasonCopy": "Required Pack art is unavailable; APN Canvas preserves Route progress.",
+    "preserveProgress": true
+  }
 }

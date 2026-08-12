@@ -1,7 +1,10 @@
 {
+  "schemaVersion": 1,
+  "catalogVersion": 1,
   "id": "nba-2k26",
   "order": 9,
-  "title": "NBA 2K26",
+  "title": "Buzzer Beaters",
+  "editorialReference": "NBA 2K26",
   "genre": "sports-basketball",
   "zones": 10,
   "targets": [
@@ -58,7 +61,7 @@
   ],
   "boss": {
     "id": "mycareer-legend",
-    "label": "MyCareer Legend",
+    "label": "Clutch Legend",
     "frame": "boss",
     "breakFrame": "boss-break",
     "pivot": {
@@ -79,5 +82,11 @@
     "corrupted",
     "overrun",
     "zero-day"
-  ]
+  ],
+  "rights": "assets/game-packs/nba-2k26/rights.json",
+  "fallback": {
+    "mode": "procedural-canvas",
+    "reasonCopy": "Required Pack art is unavailable; APN Canvas preserves Route progress.",
+    "preserveProgress": true
+  }
 }

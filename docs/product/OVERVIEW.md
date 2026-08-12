@@ -48,8 +48,11 @@ The remaining blockers are contradictions rather than missing feature volume:
 - `ASSET-FACTORY.md` — canonical Host and AI-assisted original Pack production.
 - `IMPLEMENTATION.md` — state/API migration, dependency roadmap and release gates.
 - `RESEARCH.md` — authoritative sources and design implications.
-- `schema/echo-pack.schema.json` — Draft 2020-12 Pack contract.
-- `examples/fashion-dream.echo-pack.json` — disabled, review-required Fashion Dream example.
+- `schemas/echo-pack.schema.json` — Draft 2020-12 full Echo Pack contract.
+- `schemas/pack.schema.json` + `schemas/rights.schema.json` — current runtime
+  pointer and canonical rights authorities.
+- `examples/pack.example.json` — disabled, `pending-review` documentation example;
+  it is not current catalog content.
 
 ## Non-goals
 
@@ -57,5 +60,7 @@ The remaining blockers are contradictions rather than missing feature volume:
 - Reset the global Route.
 - Copy third-party characters, logos, maps, outfits, items, UI, audio or signature trade dress.
 - Treat a fan-content policy as a commercial game license.
-- Produce all Packs before the factory passes Tactical Echo, Floodlight XI and Fashion Dream.
+- Produce new art or a new Pack as part of catalog/rights closure. Existing
+  runtime Packs remain the test surface; every future Pack must pass the default
+  rights block before catalog admission.
 - Add multiplayer before the single-player return/Drop loop is proven.

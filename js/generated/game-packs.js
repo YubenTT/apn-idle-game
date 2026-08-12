@@ -7,11 +7,16 @@ const deepFreeze = (value) => {
   return value;
 };
 
+export const CATALOG_NOTICE = "Independent editorial reference. APN is not affiliated with or endorsed by the referenced publisher.";
+
 export const GAME_PACKS = deepFreeze([
   {
+    "schemaVersion": 1,
+    "catalogVersion": 1,
     "id": "valorant",
     "order": 1,
-    "title": "Valorant",
+    "title": "Spike Protocol",
+    "editorialReference": "Valorant",
     "genre": "tactical-shooter",
     "zones": 10,
     "targets": [
@@ -477,12 +482,39 @@ export const GAME_PACKS = deepFreeze([
       "corrupted",
       "overrun",
       "zero-day"
-    ]
+    ],
+    "rights": {
+      "schemaVersion": 1,
+      "mode": "pending-review",
+      "reviewStatus": "needs-legal-review",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "editorialReference": "Valorant",
+      "killSwitch": "disable-valorant",
+      "licenseRecord": null,
+      "forbiddenMotifs": [
+        "Valorant or Riot wordmarks",
+        "recognizable agent likenesses",
+        "official weapon skins or map trade dress"
+      ],
+      "provenance": {
+        "sourceBoard": "assets/game-packs/valorant/source-board.md",
+        "reviewEvidence": []
+      }
+    },
+    "fallback": {
+      "mode": "procedural-canvas",
+      "reasonCopy": "Required Pack art is unavailable; APN Canvas preserves Route progress.",
+      "preserveProgress": true
+    }
   },
   {
+    "schemaVersion": 1,
+    "catalogVersion": 1,
     "id": "league",
     "order": 2,
-    "title": "League of Legends",
+    "title": "Nexus Brawlers",
+    "editorialReference": "League of Legends",
     "genre": "moba",
     "zones": 10,
     "targets": [
@@ -539,7 +571,7 @@ export const GAME_PACKS = deepFreeze([
     ],
     "boss": {
       "id": "baron-patch",
-      "label": "Baron Patch",
+      "label": "Tunnel Warden",
       "frame": "boss",
       "breakFrame": "boss-break",
       "pivot": {
@@ -560,12 +592,39 @@ export const GAME_PACKS = deepFreeze([
       "corrupted",
       "overrun",
       "zero-day"
-    ]
+    ],
+    "rights": {
+      "schemaVersion": 1,
+      "mode": "pending-review",
+      "reviewStatus": "needs-legal-review",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "editorialReference": "League of Legends",
+      "killSwitch": "disable-league",
+      "licenseRecord": null,
+      "forbiddenMotifs": [
+        "League of Legends or Riot wordmarks",
+        "recognizable champion likenesses",
+        "official Rift, Nexus, or item icon art"
+      ],
+      "provenance": {
+        "sourceBoard": "assets/game-packs/league/source-board.md",
+        "reviewEvidence": []
+      }
+    },
+    "fallback": {
+      "mode": "procedural-canvas",
+      "reasonCopy": "Required Pack art is unavailable; APN Canvas preserves Route progress.",
+      "preserveProgress": true
+    }
   },
   {
+    "schemaVersion": 1,
+    "catalogVersion": 1,
     "id": "fortnite",
     "order": 3,
-    "title": "Fortnite",
+    "title": "Storm Builders",
+    "editorialReference": "Fortnite",
     "genre": "battle-royale",
     "zones": 10,
     "targets": [
@@ -622,7 +681,7 @@ export const GAME_PACKS = deepFreeze([
     ],
     "boss": {
       "id": "zero-point-warden",
-      "label": "Zero-Point Warden",
+      "label": "Stormcore Warden",
       "frame": "boss",
       "breakFrame": "boss-break",
       "pivot": {
@@ -643,12 +702,39 @@ export const GAME_PACKS = deepFreeze([
       "corrupted",
       "overrun",
       "zero-day"
-    ]
+    ],
+    "rights": {
+      "schemaVersion": 1,
+      "mode": "pending-review",
+      "reviewStatus": "needs-legal-review",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "editorialReference": "Fortnite",
+      "killSwitch": "disable-fortnite",
+      "licenseRecord": null,
+      "forbiddenMotifs": [
+        "Fortnite or Epic wordmarks",
+        "recognizable named skin likenesses",
+        "official Battle Bus or llama shapes"
+      ],
+      "provenance": {
+        "sourceBoard": "assets/game-packs/fortnite/source-board.md",
+        "reviewEvidence": []
+      }
+    },
+    "fallback": {
+      "mode": "procedural-canvas",
+      "reasonCopy": "Required Pack art is unavailable; APN Canvas preserves Route progress.",
+      "preserveProgress": true
+    }
   },
   {
+    "schemaVersion": 1,
+    "catalogVersion": 1,
     "id": "world-of-warcraft",
     "order": 4,
-    "title": "World of Warcraft",
+    "title": "Guild & Glory",
+    "editorialReference": "World of Warcraft",
     "genre": "mmorpg",
     "zones": 10,
     "targets": [
@@ -726,12 +812,39 @@ export const GAME_PACKS = deepFreeze([
       "corrupted",
       "overrun",
       "zero-day"
-    ]
+    ],
+    "rights": {
+      "schemaVersion": 1,
+      "mode": "pending-review",
+      "reviewStatus": "needs-legal-review",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "editorialReference": "World of Warcraft",
+      "killSwitch": "disable-world-of-warcraft",
+      "licenseRecord": null,
+      "forbiddenMotifs": [
+        "World of Warcraft or Blizzard wordmarks",
+        "recognizable named character likenesses",
+        "official faction, class, or ability icon art"
+      ],
+      "provenance": {
+        "sourceBoard": "assets/game-packs/world-of-warcraft/source-board.md",
+        "reviewEvidence": []
+      }
+    },
+    "fallback": {
+      "mode": "procedural-canvas",
+      "reasonCopy": "Required Pack art is unavailable; APN Canvas preserves Route progress.",
+      "preserveProgress": true
+    }
   },
   {
+    "schemaVersion": 1,
+    "catalogVersion": 1,
     "id": "fc-26",
     "order": 5,
-    "title": "EA Sports FC 26",
+    "title": "Ultimate Touchline",
+    "editorialReference": "EA Sports FC 26",
     "genre": "sports-football",
     "zones": 10,
     "targets": [
@@ -809,12 +922,39 @@ export const GAME_PACKS = deepFreeze([
       "corrupted",
       "overrun",
       "zero-day"
-    ]
+    ],
+    "rights": {
+      "schemaVersion": 1,
+      "mode": "pending-review",
+      "reviewStatus": "needs-legal-review",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "editorialReference": "EA Sports FC 26",
+      "killSwitch": "disable-fc-26",
+      "licenseRecord": null,
+      "forbiddenMotifs": [
+        "EA Sports, FC, FIFA, club, or league marks",
+        "recognizable athlete likenesses",
+        "official kits, crests, broadcast graphics, or manga characters"
+      ],
+      "provenance": {
+        "sourceBoard": "assets/game-packs/fc-26/source-board.md",
+        "reviewEvidence": []
+      }
+    },
+    "fallback": {
+      "mode": "procedural-canvas",
+      "reasonCopy": "Required Pack art is unavailable; APN Canvas preserves Route progress.",
+      "preserveProgress": true
+    }
   },
   {
+    "schemaVersion": 1,
+    "catalogVersion": 1,
     "id": "minecraft",
     "order": 6,
-    "title": "Minecraft",
+    "title": "Punch-a-Tree",
+    "editorialReference": "Minecraft",
     "genre": "sandbox-survival",
     "zones": 10,
     "targets": [
@@ -861,7 +1001,7 @@ export const GAME_PACKS = deepFreeze([
       {
         "id": "redstone-golem",
         "role": "event",
-        "label": "Redstone Golem",
+        "label": "Circuit Golem",
         "frame": "event",
         "pivot": {
           "x": 0.5,
@@ -871,7 +1011,7 @@ export const GAME_PACKS = deepFreeze([
     ],
     "boss": {
       "id": "ender-titan",
-      "label": "Ender Titan",
+      "label": "Voidwing Titan",
       "frame": "boss",
       "breakFrame": "boss-break",
       "pivot": {
@@ -892,12 +1032,39 @@ export const GAME_PACKS = deepFreeze([
       "corrupted",
       "overrun",
       "zero-day"
-    ]
+    ],
+    "rights": {
+      "schemaVersion": 1,
+      "mode": "pending-review",
+      "reviewStatus": "needs-legal-review",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "editorialReference": "Minecraft",
+      "killSwitch": "disable-minecraft",
+      "licenseRecord": null,
+      "forbiddenMotifs": [
+        "Minecraft or Mojang wordmarks",
+        "recognizable Steve or Alex likenesses",
+        "official Creeper face or block textures"
+      ],
+      "provenance": {
+        "sourceBoard": "assets/game-packs/minecraft/source-board.md",
+        "reviewEvidence": []
+      }
+    },
+    "fallback": {
+      "mode": "procedural-canvas",
+      "reasonCopy": "Required Pack art is unavailable; APN Canvas preserves Route progress.",
+      "preserveProgress": true
+    }
   },
   {
+    "schemaVersion": 1,
+    "catalogVersion": 1,
     "id": "counter-strike-2",
     "order": 7,
-    "title": "Counter-Strike 2",
+    "title": "Smoke & Defuse",
+    "editorialReference": "Counter-Strike 2",
     "genre": "tactical-shooter",
     "zones": 10,
     "targets": [
@@ -924,7 +1091,7 @@ export const GAME_PACKS = deepFreeze([
       {
         "id": "awp-watcher",
         "role": "common-c",
-        "label": "AWP Watcher",
+        "label": "Longshot Watcher",
         "frame": "common-c",
         "pivot": {
           "x": 0.5,
@@ -975,12 +1142,39 @@ export const GAME_PACKS = deepFreeze([
       "corrupted",
       "overrun",
       "zero-day"
-    ]
+    ],
+    "rights": {
+      "schemaVersion": 1,
+      "mode": "pending-review",
+      "reviewStatus": "needs-legal-review",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "editorialReference": "Counter-Strike 2",
+      "killSwitch": "disable-counter-strike-2",
+      "licenseRecord": null,
+      "forbiddenMotifs": [
+        "Counter-Strike or Valve wordmarks",
+        "official map layouts or trade dress",
+        "real firearm brands or official skin designs"
+      ],
+      "provenance": {
+        "sourceBoard": "assets/game-packs/counter-strike-2/source-board.md",
+        "reviewEvidence": []
+      }
+    },
+    "fallback": {
+      "mode": "procedural-canvas",
+      "reasonCopy": "Required Pack art is unavailable; APN Canvas preserves Route progress.",
+      "preserveProgress": true
+    }
   },
   {
+    "schemaVersion": 1,
+    "catalogVersion": 1,
     "id": "old-school-runescape",
     "order": 8,
-    "title": "Old School RuneScape",
+    "title": "Click & Chop",
+    "editorialReference": "Old School RuneScape",
     "genre": "mmorpg",
     "zones": 10,
     "targets": [
@@ -1037,7 +1231,7 @@ export const GAME_PACKS = deepFreeze([
     ],
     "boss": {
       "id": "jad-gate",
-      "label": "Jad Gate",
+      "label": "Magma Gate",
       "frame": "boss",
       "breakFrame": "boss-break",
       "pivot": {
@@ -1058,12 +1252,39 @@ export const GAME_PACKS = deepFreeze([
       "corrupted",
       "overrun",
       "zero-day"
-    ]
+    ],
+    "rights": {
+      "schemaVersion": 1,
+      "mode": "pending-review",
+      "reviewStatus": "needs-legal-review",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "editorialReference": "Old School RuneScape",
+      "killSwitch": "disable-old-school-runescape",
+      "licenseRecord": null,
+      "forbiddenMotifs": [
+        "RuneScape or Jagex wordmarks",
+        "recognizable named NPC likenesses",
+        "official inventory, skill, or chat interface chrome"
+      ],
+      "provenance": {
+        "sourceBoard": "assets/game-packs/old-school-runescape/source-board.md",
+        "reviewEvidence": []
+      }
+    },
+    "fallback": {
+      "mode": "procedural-canvas",
+      "reasonCopy": "Required Pack art is unavailable; APN Canvas preserves Route progress.",
+      "preserveProgress": true
+    }
   },
   {
+    "schemaVersion": 1,
+    "catalogVersion": 1,
     "id": "nba-2k26",
     "order": 9,
-    "title": "NBA 2K26",
+    "title": "Buzzer Beaters",
+    "editorialReference": "NBA 2K26",
     "genre": "sports-basketball",
     "zones": 10,
     "targets": [
@@ -1120,7 +1341,7 @@ export const GAME_PACKS = deepFreeze([
     ],
     "boss": {
       "id": "mycareer-legend",
-      "label": "MyCareer Legend",
+      "label": "Clutch Legend",
       "frame": "boss",
       "breakFrame": "boss-break",
       "pivot": {
@@ -1141,12 +1362,39 @@ export const GAME_PACKS = deepFreeze([
       "corrupted",
       "overrun",
       "zero-day"
-    ]
+    ],
+    "rights": {
+      "schemaVersion": 1,
+      "mode": "pending-review",
+      "reviewStatus": "needs-legal-review",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "editorialReference": "NBA 2K26",
+      "killSwitch": "disable-nba-2k26",
+      "licenseRecord": null,
+      "forbiddenMotifs": [
+        "NBA, 2K, team, or league marks",
+        "recognizable athlete likenesses",
+        "official uniforms, courts, or broadcast graphics"
+      ],
+      "provenance": {
+        "sourceBoard": "assets/game-packs/nba-2k26/source-board.md",
+        "reviewEvidence": []
+      }
+    },
+    "fallback": {
+      "mode": "procedural-canvas",
+      "reasonCopy": "Required Pack art is unavailable; APN Canvas preserves Route progress.",
+      "preserveProgress": true
+    }
   },
   {
+    "schemaVersion": 1,
+    "catalogVersion": 1,
     "id": "overwatch",
     "order": 10,
-    "title": "Overwatch",
+    "title": "Payload Heroes",
+    "editorialReference": "Overwatch",
     "genre": "hero-shooter",
     "zones": 10,
     "targets": [
@@ -1203,7 +1451,7 @@ export const GAME_PACKS = deepFreeze([
     ],
     "boss": {
       "id": "omnic-colossus",
-      "label": "Omnic Colossus",
+      "label": "Machine Colossus",
       "frame": "boss",
       "breakFrame": "boss-break",
       "pivot": {
@@ -1224,12 +1472,39 @@ export const GAME_PACKS = deepFreeze([
       "corrupted",
       "overrun",
       "zero-day"
-    ]
+    ],
+    "rights": {
+      "schemaVersion": 1,
+      "mode": "pending-review",
+      "reviewStatus": "needs-legal-review",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "editorialReference": "Overwatch",
+      "killSwitch": "disable-overwatch",
+      "licenseRecord": null,
+      "forbiddenMotifs": [
+        "Overwatch or Blizzard wordmarks",
+        "recognizable hero likenesses",
+        "official ability icons, map art, or named callouts"
+      ],
+      "provenance": {
+        "sourceBoard": "assets/game-packs/overwatch/source-board.md",
+        "reviewEvidence": []
+      }
+    },
+    "fallback": {
+      "mode": "procedural-canvas",
+      "reasonCopy": "Required Pack art is unavailable; APN Canvas preserves Route progress.",
+      "preserveProgress": true
+    }
   },
   {
+    "schemaVersion": 1,
+    "catalogVersion": 1,
     "id": "grand-theft-auto-v",
     "order": 11,
-    "title": "Grand Theft Auto V",
+    "title": "Five Stars Wanted",
+    "editorialReference": "Grand Theft Auto V",
     "genre": "open-world-action",
     "zones": 10,
     "targets": [
@@ -1307,12 +1582,39 @@ export const GAME_PACKS = deepFreeze([
       "corrupted",
       "overrun",
       "zero-day"
-    ]
+    ],
+    "rights": {
+      "schemaVersion": 1,
+      "mode": "pending-review",
+      "reviewStatus": "needs-legal-review",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "editorialReference": "Grand Theft Auto V",
+      "killSwitch": "disable-grand-theft-auto-v",
+      "licenseRecord": null,
+      "forbiddenMotifs": [
+        "Grand Theft Auto or Rockstar wordmarks",
+        "recognizable named character likenesses",
+        "official Los Santos map, interface, or vehicle trade dress"
+      ],
+      "provenance": {
+        "sourceBoard": "assets/game-packs/grand-theft-auto-v/source-board.md",
+        "reviewEvidence": []
+      }
+    },
+    "fallback": {
+      "mode": "procedural-canvas",
+      "reasonCopy": "Required Pack art is unavailable; APN Canvas preserves Route progress.",
+      "preserveProgress": true
+    }
   },
   {
+    "schemaVersion": 1,
+    "catalogVersion": 1,
     "id": "madden-nfl-26",
     "order": 12,
-    "title": "Madden NFL 26",
+    "title": "4th & Goal",
+    "editorialReference": "Madden NFL 26",
     "genre": "sports-football",
     "zones": 10,
     "targets": [
@@ -1390,12 +1692,39 @@ export const GAME_PACKS = deepFreeze([
       "corrupted",
       "overrun",
       "zero-day"
-    ]
+    ],
+    "rights": {
+      "schemaVersion": 1,
+      "mode": "pending-review",
+      "reviewStatus": "needs-legal-review",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "editorialReference": "Madden NFL 26",
+      "killSwitch": "disable-madden-nfl-26",
+      "licenseRecord": null,
+      "forbiddenMotifs": [
+        "Madden, NFL, EA, team, or league marks",
+        "recognizable athlete likenesses",
+        "official uniforms, stadiums, or broadcast graphics"
+      ],
+      "provenance": {
+        "sourceBoard": "assets/game-packs/madden-nfl-26/source-board.md",
+        "reviewEvidence": []
+      }
+    },
+    "fallback": {
+      "mode": "procedural-canvas",
+      "reasonCopy": "Required Pack art is unavailable; APN Canvas preserves Route progress.",
+      "preserveProgress": true
+    }
   },
   {
+    "schemaVersion": 1,
+    "catalogVersion": 1,
     "id": "apex-legends",
     "order": 13,
-    "title": "Apex Legends",
+    "title": "Third Party Legends",
+    "editorialReference": "Apex Legends",
     "genre": "battle-royale",
     "zones": 10,
     "targets": [
@@ -1452,7 +1781,7 @@ export const GAME_PACKS = deepFreeze([
     ],
     "boss": {
       "id": "apex-predator",
-      "label": "Apex Predator",
+      "label": "Ringline Predator",
       "frame": "boss",
       "breakFrame": "boss-break",
       "pivot": {
@@ -1473,12 +1802,39 @@ export const GAME_PACKS = deepFreeze([
       "corrupted",
       "overrun",
       "zero-day"
-    ]
+    ],
+    "rights": {
+      "schemaVersion": 1,
+      "mode": "pending-review",
+      "reviewStatus": "needs-legal-review",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "editorialReference": "Apex Legends",
+      "killSwitch": "disable-apex-legends",
+      "licenseRecord": null,
+      "forbiddenMotifs": [
+        "Apex Legends, Respawn, or EA wordmarks",
+        "recognizable Legend likenesses",
+        "official ability icons, named finishers, or map art"
+      ],
+      "provenance": {
+        "sourceBoard": "assets/game-packs/apex-legends/source-board.md",
+        "reviewEvidence": []
+      }
+    },
+    "fallback": {
+      "mode": "procedural-canvas",
+      "reasonCopy": "Required Pack art is unavailable; APN Canvas preserves Route progress.",
+      "preserveProgress": true
+    }
   },
   {
+    "schemaVersion": 1,
+    "catalogVersion": 1,
     "id": "dota-2",
     "order": 14,
-    "title": "Dota 2",
+    "title": "Creep Score",
+    "editorialReference": "Dota 2",
     "genre": "moba",
     "zones": 10,
     "targets": [
@@ -1535,7 +1891,7 @@ export const GAME_PACKS = deepFreeze([
     ],
     "boss": {
       "id": "roshan-protocol",
-      "label": "Roshan Protocol",
+      "label": "Cavern Sentinel",
       "frame": "boss",
       "breakFrame": "boss-break",
       "pivot": {
@@ -1556,12 +1912,39 @@ export const GAME_PACKS = deepFreeze([
       "corrupted",
       "overrun",
       "zero-day"
-    ]
+    ],
+    "rights": {
+      "schemaVersion": 1,
+      "mode": "pending-review",
+      "reviewStatus": "needs-legal-review",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "editorialReference": "Dota 2",
+      "killSwitch": "disable-dota-2",
+      "licenseRecord": null,
+      "forbiddenMotifs": [
+        "Dota or Valve wordmarks",
+        "recognizable hero likenesses",
+        "official Aegis, Roshan, item, or map art"
+      ],
+      "provenance": {
+        "sourceBoard": "assets/game-packs/dota-2/source-board.md",
+        "reviewEvidence": []
+      }
+    },
+    "fallback": {
+      "mode": "procedural-canvas",
+      "reasonCopy": "Required Pack art is unavailable; APN Canvas preserves Route progress.",
+      "preserveProgress": true
+    }
   },
   {
+    "schemaVersion": 1,
+    "catalogVersion": 1,
     "id": "dead-by-daylight",
     "order": 15,
-    "title": "Dead by Daylight",
+    "title": "Hooked & Hunted",
+    "editorialReference": "Dead by Daylight",
     "genre": "asymmetric-horror",
     "zones": 10,
     "targets": [
@@ -1618,7 +2001,7 @@ export const GAME_PACKS = deepFreeze([
     ],
     "boss": {
       "id": "entity-hand",
-      "label": "Entity Hand",
+      "label": "Root Warden",
       "frame": "boss",
       "breakFrame": "boss-break",
       "pivot": {
@@ -1639,12 +2022,39 @@ export const GAME_PACKS = deepFreeze([
       "corrupted",
       "overrun",
       "zero-day"
-    ]
+    ],
+    "rights": {
+      "schemaVersion": 1,
+      "mode": "pending-review",
+      "reviewStatus": "needs-legal-review",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "editorialReference": "Dead by Daylight",
+      "killSwitch": "disable-dead-by-daylight",
+      "licenseRecord": null,
+      "forbiddenMotifs": [
+        "Dead by Daylight or Behaviour wordmarks",
+        "recognizable named or licensed killer likenesses",
+        "official hook, generator, perk, or map designs"
+      ],
+      "provenance": {
+        "sourceBoard": "assets/game-packs/dead-by-daylight/source-board.md",
+        "reviewEvidence": []
+      }
+    },
+    "fallback": {
+      "mode": "procedural-canvas",
+      "reasonCopy": "Required Pack art is unavailable; APN Canvas preserves Route progress.",
+      "preserveProgress": true
+    }
   },
   {
+    "schemaVersion": 1,
+    "catalogVersion": 1,
     "id": "path-of-exile-2",
     "order": 16,
-    "title": "Path of Exile 2",
+    "title": "Loot Filter Purgatory",
+    "editorialReference": "Path of Exile 2",
     "genre": "action-rpg",
     "zones": 10,
     "targets": [
@@ -1671,7 +2081,7 @@ export const GAME_PACKS = deepFreeze([
       {
         "id": "vaal-construct",
         "role": "common-c",
-        "label": "Vaal Construct",
+        "label": "Ruin Construct",
         "frame": "common-c",
         "pivot": {
           "x": 0.5,
@@ -1722,12 +2132,39 @@ export const GAME_PACKS = deepFreeze([
       "corrupted",
       "overrun",
       "zero-day"
-    ]
+    ],
+    "rights": {
+      "schemaVersion": 1,
+      "mode": "pending-review",
+      "reviewStatus": "needs-legal-review",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "editorialReference": "Path of Exile 2",
+      "killSwitch": "disable-path-of-exile-2",
+      "licenseRecord": null,
+      "forbiddenMotifs": [
+        "Path of Exile or Grinding Gear Games wordmarks",
+        "recognizable named character or unique-item designs",
+        "official currency, gem, or passive-tree art"
+      ],
+      "provenance": {
+        "sourceBoard": "assets/game-packs/path-of-exile-2/source-board.md",
+        "reviewEvidence": []
+      }
+    },
+    "fallback": {
+      "mode": "procedural-canvas",
+      "reasonCopy": "Required Pack art is unavailable; APN Canvas preserves Route progress.",
+      "preserveProgress": true
+    }
   },
   {
+    "schemaVersion": 1,
+    "catalogVersion": 1,
     "id": "marvel-rivals",
     "order": 17,
-    "title": "Marvel Rivals",
+    "title": "Cape Clash",
+    "editorialReference": "Marvel Rivals",
     "genre": "hero-shooter",
     "zones": 10,
     "targets": [
@@ -1805,19 +2242,46 @@ export const GAME_PACKS = deepFreeze([
       "corrupted",
       "overrun",
       "zero-day"
-    ]
+    ],
+    "rights": {
+      "schemaVersion": 1,
+      "mode": "pending-review",
+      "reviewStatus": "needs-legal-review",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "editorialReference": "Marvel Rivals",
+      "killSwitch": "disable-marvel-rivals",
+      "licenseRecord": null,
+      "forbiddenMotifs": [
+        "Marvel Rivals, Marvel, NetEase, or character wordmarks",
+        "any recognizable Marvel character likeness",
+        "official costumes, ability icons, comic panels, or map art"
+      ],
+      "provenance": {
+        "sourceBoard": "assets/game-packs/marvel-rivals/source-board.md",
+        "reviewEvidence": []
+      }
+    },
+    "fallback": {
+      "mode": "procedural-canvas",
+      "reasonCopy": "Required Pack art is unavailable; APN Canvas preserves Route progress.",
+      "preserveProgress": true
+    }
   },
   {
+    "schemaVersion": 1,
+    "catalogVersion": 1,
     "id": "escape-from-tarkov",
     "order": 18,
-    "title": "Escape from Tarkov",
+    "title": "Gear Fear",
+    "editorialReference": "Escape from Tarkov",
     "genre": "extraction-shooter",
     "zones": 10,
     "targets": [
       {
         "id": "scav-scout",
         "role": "common-a",
-        "label": "Scav Scout",
+        "label": "Salvage Scout",
         "frame": "common-a",
         "pivot": {
           "x": 0.5,
@@ -1888,12 +2352,39 @@ export const GAME_PACKS = deepFreeze([
       "corrupted",
       "overrun",
       "zero-day"
-    ]
+    ],
+    "rights": {
+      "schemaVersion": 1,
+      "mode": "pending-review",
+      "reviewStatus": "needs-legal-review",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "editorialReference": "Escape from Tarkov",
+      "killSwitch": "disable-escape-from-tarkov",
+      "licenseRecord": null,
+      "forbiddenMotifs": [
+        "Escape from Tarkov or Battlestate Games wordmarks",
+        "official named raid maps or faction trade dress",
+        "real firearm brands or exact inventory interface art"
+      ],
+      "provenance": {
+        "sourceBoard": "assets/game-packs/escape-from-tarkov/source-board.md",
+        "reviewEvidence": []
+      }
+    },
+    "fallback": {
+      "mode": "procedural-canvas",
+      "reasonCopy": "Required Pack art is unavailable; APN Canvas preserves Route progress.",
+      "preserveProgress": true
+    }
   },
   {
+    "schemaVersion": 1,
+    "catalogVersion": 1,
     "id": "rocket-league",
     "order": 19,
-    "title": "Rocket League",
+    "title": "Boosted Ballers",
+    "editorialReference": "Rocket League",
     "genre": "sports-driving",
     "zones": 10,
     "targets": [
@@ -1971,12 +2462,39 @@ export const GAME_PACKS = deepFreeze([
       "corrupted",
       "overrun",
       "zero-day"
-    ]
+    ],
+    "rights": {
+      "schemaVersion": 1,
+      "mode": "pending-review",
+      "reviewStatus": "needs-legal-review",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "editorialReference": "Rocket League",
+      "killSwitch": "disable-rocket-league",
+      "licenseRecord": null,
+      "forbiddenMotifs": [
+        "Rocket League, Psyonix, or Epic wordmarks",
+        "licensed vehicle bodies or brands",
+        "official arenas, ball, boost, or goal-effect designs"
+      ],
+      "provenance": {
+        "sourceBoard": "assets/game-packs/rocket-league/source-board.md",
+        "reviewEvidence": []
+      }
+    },
+    "fallback": {
+      "mode": "procedural-canvas",
+      "reasonCopy": "Required Pack art is unavailable; APN Canvas preserves Route progress.",
+      "preserveProgress": true
+    }
   },
   {
+    "schemaVersion": 1,
+    "catalogVersion": 1,
     "id": "elden-ring",
     "order": 20,
-    "title": "Elden Ring",
+    "title": "Git Gud Kingdom",
+    "editorialReference": "Elden Ring",
     "genre": "action-rpg",
     "zones": 10,
     "targets": [
@@ -1993,7 +2511,7 @@ export const GAME_PACKS = deepFreeze([
       {
         "id": "glintstone-adept",
         "role": "common-b",
-        "label": "Glintstone Adept",
+        "label": "Signal Adept",
         "frame": "common-b",
         "pivot": {
           "x": 0.5,
@@ -2013,7 +2531,7 @@ export const GAME_PACKS = deepFreeze([
       {
         "id": "crucible-guard",
         "role": "elite",
-        "label": "Crucible Guard",
+        "label": "Relic Guard",
         "frame": "elite",
         "pivot": {
           "x": 0.5,
@@ -2023,7 +2541,7 @@ export const GAME_PACKS = deepFreeze([
       {
         "id": "black-knife-shade",
         "role": "event",
-        "label": "Black-Knife Shade",
+        "label": "Night-Blade Shade",
         "frame": "event",
         "pivot": {
           "x": 0.5,
@@ -2054,7 +2572,31 @@ export const GAME_PACKS = deepFreeze([
       "corrupted",
       "overrun",
       "zero-day"
-    ]
+    ],
+    "rights": {
+      "schemaVersion": 1,
+      "mode": "pending-review",
+      "reviewStatus": "needs-legal-review",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "editorialReference": "Elden Ring",
+      "killSwitch": "disable-elden-ring",
+      "licenseRecord": null,
+      "forbiddenMotifs": [
+        "Elden Ring, FromSoftware, or Bandai Namco wordmarks",
+        "recognizable named boss or character likenesses",
+        "official rune, grace, map, armor, or weapon designs"
+      ],
+      "provenance": {
+        "sourceBoard": "assets/game-packs/elden-ring/source-board.md",
+        "reviewEvidence": []
+      }
+    },
+    "fallback": {
+      "mode": "procedural-canvas",
+      "reasonCopy": "Required Pack art is unavailable; APN Canvas preserves Route progress.",
+      "preserveProgress": true
+    }
   }
 ]);
 

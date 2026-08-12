@@ -17,9 +17,11 @@ const assert = (condition, message) => {
 };
 
 export function checkRouteContract() {
-  assert(GAME_PACKS.length === 20, 'exactly 20 Clean Era packs');
-  assert(new Set(GAME_PACKS.map((pack) => pack.id)).size === 20, 'unique pack IDs');
-  assert(new Set(GAME_PACKS.map((pack) => pack.order)).size === 20, 'unique pack order');
+  const catalogCount = GAME_PACKS.length;
+  const cleanBoundary = catalogCount * 10;
+  assert(catalogCount > 0, 'active Clean Era catalog is nonempty');
+  assert(new Set(GAME_PACKS.map((pack) => pack.id)).size === catalogCount, 'unique pack IDs');
+  assert(new Set(GAME_PACKS.map((pack) => pack.order)).size === catalogCount, 'unique pack order');
   assert(PACK_BY_ID.valorant === GAME_PACKS[0], 'stable ID lookup');
   assert(Object.isFrozen(GAME_PACKS) && Object.isFrozen(GAME_PACKS[0]), 'generated catalog frozen');
   assert(GAME_PACKS.every((pack) => pack.zones === 10), 'ten zones per pack');
@@ -33,10 +35,13 @@ export function checkRouteContract() {
   assert(first.every((pack) => pack.tier === 0), 'new packs debut Clean');
   assert(JSON.stringify(fresh) === freshBefore, 'scheduler is pure');
   assert(packForRoute({ ...fresh, zone: 0 }, GAME_PACKS).id === 'valorant', 'Zone 1 pack');
-  assert(packForRoute({ ...fresh, zone: 199 }, GAME_PACKS).id === 'elden-ring', 'Zone 200 pack');
+  assert(
+    packForRoute({ ...fresh, zone: cleanBoundary - 1 }, GAME_PACKS).id === GAME_PACKS.at(-1).id,
+    'final Clean Era zone resolves from the active catalog',
+  );
 
   const mature = createRouteState(0x41504e);
-  mature.zone = 200;
+  mature.zone = cleanBoundary;
   mature.seenPackIds = GAME_PACKS.map((pack) => pack.id);
   mature.lastSeenByPack = Object.fromEntries(GAME_PACKS.map((pack, index) => [pack.id, index * 10]));
   const revisitA = scheduleNextSeason(mature, GAME_PACKS);
@@ -78,7 +83,7 @@ export function checkRouteContract() {
 
   const scheduledBoundary = {
     ...createRouteState(),
-    zone: 209,
+    zone: cleanBoundary + 9,
     deck: ['valorant', 'fortnite'],
     seenPackIds: ['valorant', 'fortnite'],
   };
@@ -96,7 +101,7 @@ export function checkRouteContract() {
 
   const revisitBoundary = {
     ...scheduledBoundary,
-    zone: 219,
+    zone: cleanBoundary + 19,
   };
   assert(
     routeWaveIdentityUnion(revisitBoundary, motionPacks)[0]?.packId ===
@@ -139,7 +144,7 @@ export function checkRouteContract() {
   );
 
   return [
-    '20 Clean Era packs',
+    `${catalogCount} active Clean Era Packs`,
     'stable IDs and order',
     'five targets + boss',
     'pure deterministic scheduler',

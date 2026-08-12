@@ -1,7 +1,10 @@
 {
+  "schemaVersion": 1,
+  "catalogVersion": 1,
   "id": "dead-by-daylight",
   "order": 15,
-  "title": "Dead by Daylight",
+  "title": "Hooked & Hunted",
+  "editorialReference": "Dead by Daylight",
   "genre": "asymmetric-horror",
   "zones": 10,
   "targets": [
@@ -58,7 +61,7 @@
   ],
   "boss": {
     "id": "entity-hand",
-    "label": "Entity Hand",
+    "label": "Root Warden",
     "frame": "boss",
     "breakFrame": "boss-break",
     "pivot": {
@@ -79,5 +82,11 @@
     "corrupted",
     "overrun",
     "zero-day"
-  ]
+  ],
+  "rights": "assets/game-packs/dead-by-daylight/rights.json",
+  "fallback": {
+    "mode": "procedural-canvas",
+    "reasonCopy": "Required Pack art is unavailable; APN Canvas preserves Route progress.",
+    "preserveProgress": true
+  }
 }

@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "mode": "pending-review",
+  "reviewStatus": "needs-legal-review",
+  "reviewedAt": null,
+  "reviewedBy": null,
+  "editorialReference": "Old School RuneScape",
+  "killSwitch": "disable-old-school-runescape",
+  "licenseRecord": null,
+  "forbiddenMotifs": [
+    "RuneScape or Jagex wordmarks",
+    "recognizable named NPC likenesses",
+    "official inventory, skill, or chat interface chrome"
+  ],
+  "provenance": {
+    "sourceBoard": "assets/game-packs/old-school-runescape/source-board.md",
+    "reviewEvidence": []
+  }
+}

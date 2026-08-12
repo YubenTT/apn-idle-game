@@ -1,7 +1,10 @@
 {
+  "schemaVersion": 1,
+  "catalogVersion": 1,
   "id": "league",
   "order": 2,
-  "title": "League of Legends",
+  "title": "Nexus Brawlers",
+  "editorialReference": "League of Legends",
   "genre": "moba",
   "zones": 10,
   "targets": [
@@ -58,7 +61,7 @@
   ],
   "boss": {
     "id": "baron-patch",
-    "label": "Baron Patch",
+    "label": "Tunnel Warden",
     "frame": "boss",
     "breakFrame": "boss-break",
     "pivot": {
@@ -79,5 +82,11 @@
     "corrupted",
     "overrun",
     "zero-day"
-  ]
+  ],
+  "rights": "assets/game-packs/league/rights.json",
+  "fallback": {
+    "mode": "procedural-canvas",
+    "reasonCopy": "Required Pack art is unavailable; APN Canvas preserves Route progress.",
+    "preserveProgress": true
+  }
 }

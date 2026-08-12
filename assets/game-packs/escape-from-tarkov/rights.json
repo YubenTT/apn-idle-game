@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "mode": "pending-review",
+  "reviewStatus": "needs-legal-review",
+  "reviewedAt": null,
+  "reviewedBy": null,
+  "editorialReference": "Escape from Tarkov",
+  "killSwitch": "disable-escape-from-tarkov",
+  "licenseRecord": null,
+  "forbiddenMotifs": [
+    "Escape from Tarkov or Battlestate Games wordmarks",
+    "official named raid maps or faction trade dress",
+    "real firearm brands or exact inventory interface art"
+  ],
+  "provenance": {
+    "sourceBoard": "assets/game-packs/escape-from-tarkov/source-board.md",
+    "reviewEvidence": []
+  }
+}

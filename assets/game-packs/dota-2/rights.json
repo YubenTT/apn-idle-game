@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "mode": "pending-review",
+  "reviewStatus": "needs-legal-review",
+  "reviewedAt": null,
+  "reviewedBy": null,
+  "editorialReference": "Dota 2",
+  "killSwitch": "disable-dota-2",
+  "licenseRecord": null,
+  "forbiddenMotifs": [
+    "Dota or Valve wordmarks",
+    "recognizable hero likenesses",
+    "official Aegis, Roshan, item, or map art"
+  ],
+  "provenance": {
+    "sourceBoard": "assets/game-packs/dota-2/source-board.md",
+    "reviewEvidence": []
+  }
+}

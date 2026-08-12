@@ -106,30 +106,32 @@ growth may reset, but player-facing world progress must not jump back to Zone 1.
 ## Clean Era roster · Zones 1–200
 
 The order alternates visual genres and includes the requested sports games as
-independent packs.
+independent Packs. Runtime uses only the APN title. The real title is retained
+here and in the feed as an editorial reference; it is not the gameplay identity
+or an art license.
 
-| Route Zones | Game Pack |
-|---:|---|
-| 1–10 | Valorant |
-| 11–20 | League of Legends |
-| 21–30 | Fortnite |
-| 31–40 | World of Warcraft |
-| 41–50 | EA Sports FC 26 |
-| 51–60 | Minecraft |
-| 61–70 | Counter-Strike 2 |
-| 71–80 | Old School RuneScape |
-| 81–90 | NBA 2K26 |
-| 91–100 | Overwatch |
-| 101–110 | Grand Theft Auto V |
-| 111–120 | Madden NFL 26 |
-| 121–130 | Apex Legends |
-| 131–140 | Dota 2 |
-| 141–150 | Dead by Daylight |
-| 151–160 | Path of Exile 2 |
-| 161–170 | Marvel Rivals |
-| 171–180 | Escape from Tarkov |
-| 181–190 | Rocket League |
-| 191–200 | Elden Ring |
+| Route Zones | APN runtime Pack | Editorial reference only |
+|---:|---|---|
+| 1–10 | Spike Protocol | Valorant |
+| 11–20 | Nexus Brawlers | League of Legends |
+| 21–30 | Storm Builders | Fortnite |
+| 31–40 | Guild & Glory | World of Warcraft |
+| 41–50 | Ultimate Touchline | EA Sports FC 26 |
+| 51–60 | Punch-a-Tree | Minecraft |
+| 61–70 | Smoke & Defuse | Counter-Strike 2 |
+| 71–80 | Click & Chop | Old School RuneScape |
+| 81–90 | Buzzer Beaters | NBA 2K26 |
+| 91–100 | Payload Heroes | Overwatch |
+| 101–110 | Five Stars Wanted | Grand Theft Auto V |
+| 111–120 | 4th & Goal | Madden NFL 26 |
+| 121–130 | Third Party Legends | Apex Legends |
+| 131–140 | Creep Score | Dota 2 |
+| 141–150 | Hooked & Hunted | Dead by Daylight |
+| 151–160 | Loot Filter Purgatory | Path of Exile 2 |
+| 161–170 | Cape Clash | Marvel Rivals |
+| 171–180 | Gear Fear | Escape from Tarkov |
+| 181–190 | Boosted Ballers | Rocket League |
+| 191–200 | Git Gud Kingdom | Elden Ring |
 
 This is a curated launch route, not a permanent popularity ranking. Twitch data
 chooses the candidate roster; visual variety and pack quality choose the order.
@@ -186,18 +188,19 @@ an already promised current/next pair.
 6. If only one unseen pack exists, it debuts Clean beside the least-recent
    different-genre revisit; the new pack is never held back waiting for another install.
 
-Example after Zone 200:
+Example after Zone 200 (new IDs are abstract because an unreviewed future Pack
+must not enter the catalog; known rows use APN runtime titles):
 
 | Route Zones | Scheduled pack |
 |---:|---|
-| 201–210 | Call of Duty: Warzone · Clean |
-| 211–220 | Rainbow Six Siege · Clean |
-| 221–230 | Valorant · Signal Drift |
-| 231–240 | League of Legends · Signal Drift |
-| 241–250 | Final Fantasy XIV · Clean |
-| 251–260 | Diablo IV · Clean |
-| 261–270 | Fortnite · Signal Drift |
-| 271–280 | World of Warcraft · Signal Drift |
+| 201–210 | Future Pack A · Clean (only after rights gate) |
+| 211–220 | Future Pack B · Clean (only after rights gate) |
+| 221–230 | Spike Protocol · Signal Drift |
+| 231–240 | Nexus Brawlers · Signal Drift |
+| 241–250 | Future Pack C · Clean (only after rights gate) |
+| 251–260 | Future Pack D · Clean (only after rights gate) |
+| 261–270 | Storm Builders · Signal Drift |
+| 271–280 | Guild & Glory · Signal Drift |
 
 ## Save-stable route state
 

@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "mode": "pending-review",
+  "reviewStatus": "needs-legal-review",
+  "reviewedAt": null,
+  "reviewedBy": null,
+  "editorialReference": "Fortnite",
+  "killSwitch": "disable-fortnite",
+  "licenseRecord": null,
+  "forbiddenMotifs": [
+    "Fortnite or Epic wordmarks",
+    "recognizable named skin likenesses",
+    "official Battle Bus or llama shapes"
+  ],
+  "provenance": {
+    "sourceBoard": "assets/game-packs/fortnite/source-board.md",
+    "reviewEvidence": []
+  }
+}

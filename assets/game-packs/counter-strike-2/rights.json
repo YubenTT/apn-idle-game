@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "mode": "pending-review",
+  "reviewStatus": "needs-legal-review",
+  "reviewedAt": null,
+  "reviewedBy": null,
+  "editorialReference": "Counter-Strike 2",
+  "killSwitch": "disable-counter-strike-2",
+  "licenseRecord": null,
+  "forbiddenMotifs": [
+    "Counter-Strike or Valve wordmarks",
+    "official map layouts or trade dress",
+    "real firearm brands or official skin designs"
+  ],
+  "provenance": {
+    "sourceBoard": "assets/game-packs/counter-strike-2/source-board.md",
+    "reviewEvidence": []
+  }
+}

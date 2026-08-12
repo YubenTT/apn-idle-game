@@ -73,6 +73,7 @@ const heroRuntimeSource = motionPreview.active
     }
   : productionHeroSource;
 const runtimePacks = motionPreview.packs;
+const activePackIds = new Set(runtimePacks.map((pack) => pack.id));
 const banner = document.getElementById('motion-preview-banner');
 const bannerTitle = document.getElementById('motion-preview-title');
 const bannerDetail = document.getElementById('motion-preview-detail');
@@ -347,7 +348,13 @@ function renderGameToText() {
       },
       sets: COVERAGE_SETS.map((set) => ({
         id: set.id,
-        ...coverageSetStatus(s, s.route, set.id),
+        ...coverageSetStatus(
+          s,
+          s.route,
+          set.id,
+          COVERAGE_SETS,
+          activePackIds,
+        ),
       })),
     },
     pack: {

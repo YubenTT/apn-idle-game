@@ -36,5 +36,22 @@ for (const relative of files) {
   }
 }
 
+const index = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+const ui = fs.readFileSync(path.join(root, 'js/ui.js'), 'utf8');
+if (
+  !index.includes('>not affiliated</small>') ||
+  !index.includes('APN is not affiliated with or endorsed by the referenced publisher')
+) {
+  console.error('FAIL index.html: missing visible non-affiliation notice');
+  failures += 1;
+}
+if (
+  !ui.includes("pack?.editorialReference || 'APN Patchline'") ||
+  !ui.includes("current?.title || 'APN Patchline'")
+) {
+  console.error('FAIL js/ui.js: runtime and editorial Pack names are not separated');
+  failures += 1;
+}
+
 if (failures) process.exit(1);
 console.log(`COPY PASS ${files.length} player-facing sources`);

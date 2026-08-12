@@ -162,26 +162,51 @@ export function buyCoverageMastery(state, packId) {
 const setDefinition = (setId, definitions = COVERAGE_SETS) =>
   definitions.find((set) => set?.id === setId) || null;
 
-export function coverageSetStatus(state, route, setId, definitions = COVERAGE_SETS) {
+export function coverageSetStatus(
+  state,
+  route,
+  setId,
+  definitions = COVERAGE_SETS,
+  activePackIds = null,
+) {
   const set = setDefinition(setId, definitions);
   if (!set || !Array.isArray(set.members) || set.members.length === 0) return null;
-  const coveredMembers = set.members.filter((packId) => isPackCovered(route, packId));
+  const active =
+    activePackIds instanceof Set
+      ? activePackIds
+      : Array.isArray(activePackIds)
+        ? new Set(activePackIds)
+        : null;
+  const members = active ? set.members.filter((packId) => active.has(packId)) : set.members;
+  const coveredMembers = members.filter((packId) => isPackCovered(route, packId));
   const claimed = state?.meta?.claimedCoverageSetIds?.includes(setId) === true;
   return {
     id: set.id,
-    state: claimed ? 'claimed' : coveredMembers.length === set.members.length ? 'ready' : 'progress',
+    state: claimed
+      ? 'claimed'
+      : members.length === 0
+        ? 'inactive'
+        : coveredMembers.length === members.length
+          ? 'ready'
+          : 'progress',
     covered: coveredMembers.length,
-    total: set.members.length,
+    total: members.length,
     openSlots: Math.max(0, Math.floor(Number(set.openSlots) || 0)),
-    members: [...set.members],
+    members: [...members],
   };
 }
 
-export function claimCoverageSetCapstone(state, setId) {
+export function claimCoverageSetCapstone(state, setId, activePackIds = null) {
   if (!KNOWN_SET_IDS.has(setId)) return false;
   const normalized = ensureCoverageMeta(state);
   if (normalized.claimedCoverageSetIds.includes(setId)) return false;
-  const status = coverageSetStatus(state, state.route, setId);
+  const status = coverageSetStatus(
+    state,
+    state.route,
+    setId,
+    COVERAGE_SETS,
+    activePackIds,
+  );
   if (status?.state !== 'ready') return false;
   state.meta.claimedCoverageSetIds.push(setId);
   return true;

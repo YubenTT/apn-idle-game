@@ -1,7 +1,10 @@
 {
+  "schemaVersion": 1,
+  "catalogVersion": 1,
   "id": "marvel-rivals",
   "order": 17,
-  "title": "Marvel Rivals",
+  "title": "Cape Clash",
+  "editorialReference": "Marvel Rivals",
   "genre": "hero-shooter",
   "zones": 10,
   "targets": [
@@ -79,5 +82,11 @@
     "corrupted",
     "overrun",
     "zero-day"
-  ]
+  ],
+  "rights": "assets/game-packs/marvel-rivals/rights.json",
+  "fallback": {
+    "mode": "procedural-canvas",
+    "reasonCopy": "Required Pack art is unavailable; APN Canvas preserves Route progress.",
+    "preserveProgress": true
+  }
 }

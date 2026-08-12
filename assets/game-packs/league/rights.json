@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "mode": "pending-review",
+  "reviewStatus": "needs-legal-review",
+  "reviewedAt": null,
+  "reviewedBy": null,
+  "editorialReference": "League of Legends",
+  "killSwitch": "disable-league",
+  "licenseRecord": null,
+  "forbiddenMotifs": [
+    "League of Legends or Riot wordmarks",
+    "recognizable champion likenesses",
+    "official Rift, Nexus, or item icon art"
+  ],
+  "provenance": {
+    "sourceBoard": "assets/game-packs/league/source-board.md",
+    "reviewEvidence": []
+  }
+}

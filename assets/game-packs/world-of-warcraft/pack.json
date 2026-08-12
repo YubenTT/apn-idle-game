@@ -1,7 +1,10 @@
 {
+  "schemaVersion": 1,
+  "catalogVersion": 1,
   "id": "world-of-warcraft",
   "order": 4,
-  "title": "World of Warcraft",
+  "title": "Guild & Glory",
+  "editorialReference": "World of Warcraft",
   "genre": "mmorpg",
   "zones": 10,
   "targets": [
@@ -79,5 +82,11 @@
     "corrupted",
     "overrun",
     "zero-day"
-  ]
+  ],
+  "rights": "assets/game-packs/world-of-warcraft/rights.json",
+  "fallback": {
+    "mode": "procedural-canvas",
+    "reasonCopy": "Required Pack art is unavailable; APN Canvas preserves Route progress.",
+    "preserveProgress": true
+  }
 }

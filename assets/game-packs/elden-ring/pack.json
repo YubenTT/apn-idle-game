@@ -1,7 +1,10 @@
 {
+  "schemaVersion": 1,
+  "catalogVersion": 1,
   "id": "elden-ring",
   "order": 20,
-  "title": "Elden Ring",
+  "title": "Git Gud Kingdom",
+  "editorialReference": "Elden Ring",
   "genre": "action-rpg",
   "zones": 10,
   "targets": [
@@ -18,7 +21,7 @@
     {
       "id": "glintstone-adept",
       "role": "common-b",
-      "label": "Glintstone Adept",
+      "label": "Signal Adept",
       "frame": "common-b",
       "pivot": {
         "x": 0.5,
@@ -38,7 +41,7 @@
     {
       "id": "crucible-guard",
       "role": "elite",
-      "label": "Crucible Guard",
+      "label": "Relic Guard",
       "frame": "elite",
       "pivot": {
         "x": 0.5,
@@ -48,7 +51,7 @@
     {
       "id": "black-knife-shade",
       "role": "event",
-      "label": "Black-Knife Shade",
+      "label": "Night-Blade Shade",
       "frame": "event",
       "pivot": {
         "x": 0.5,
@@ -79,5 +82,11 @@
     "corrupted",
     "overrun",
     "zero-day"
-  ]
+  ],
+  "rights": "assets/game-packs/elden-ring/rights.json",
+  "fallback": {
+    "mode": "procedural-canvas",
+    "reasonCopy": "Required Pack art is unavailable; APN Canvas preserves Route progress.",
+    "preserveProgress": true
+  }
 }
