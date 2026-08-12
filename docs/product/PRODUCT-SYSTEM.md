@@ -1,7 +1,9 @@
 > **Current closure authority (2026-08-12).** The implemented player action is
 > `Go Live`, not `Ship This Drop`. Route now visibly owns current/next Pack,
 > three Echoes per Pack, monotonic Clean Era completion, bounded Pack history,
-> and Zone-200 Signal Drift; objectives are secondary. See the
+> Zone-200 Signal Drift, Pack-scoped Coverage Mastery, seven claimable Sets,
+> and permanent bounded capstones; objectives are secondary. Live Mult remains
+> the only global multiplier. See the
 > [complete-game closure design](../superpowers/specs/2026-08-12-apn-idle-complete-game-closure-design.md)
 > and [Game Pack Route](../GAME-PACK-ROUTE.md). The imported V3 body below is
 > retained as historical design input where it does not conflict.

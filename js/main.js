@@ -33,6 +33,13 @@ import {
 import { GAME_PACKS } from './generated/game-packs.js?v=gaf2d-motion-v1';
 import { routeJourney } from './route.js?v=gaf2d-motion-v1';
 import {
+  COVERAGE_MAX_LEVEL,
+  COVERAGE_SETS,
+  coverageMasteryLevel,
+  coverageSetStatus,
+  coverageYieldMultiplier,
+} from './coverage.js?v=gaf2d-motion-v1';
+import {
   createCreatureStore,
   releaseColdCreatureKinds,
   warmCreatureKind,
@@ -326,6 +333,22 @@ function renderGameToText() {
       cleanEra: journey.cleanEra,
       signalDrift: journey.signalDrift,
       historyCount: journey.history.length,
+    },
+    coverage: {
+      currentMastery: {
+        packId: journey.current?.id || null,
+        level: coverageMasteryLevel(s, journey.current?.id),
+        maxLevel: COVERAGE_MAX_LEVEL,
+        yieldMultiplier: coverageYieldMultiplier(
+          s,
+          journey.current?.id,
+          journey.current?.tier || 0,
+        ),
+      },
+      sets: COVERAGE_SETS.map((set) => ({
+        id: set.id,
+        ...coverageSetStatus(s, s.route, set.id),
+      })),
     },
     pack: {
       ready: packAssets?.ready === true,

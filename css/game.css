@@ -4711,8 +4711,10 @@ button[hidden] {
 }
 
 .route-current-card,
+.route-mastery-card,
 .route-clean-card,
 .route-archive,
+.route-sets,
 .route-history {
   border: var(--border-1);
   border-radius: var(--r-card);
@@ -4735,8 +4737,10 @@ button[hidden] {
 .route-card-kicker,
 .route-pack-pair,
 .route-echo-now,
+.route-mastery-card,
 .route-clean-card,
 .route-archive summary,
+.route-sets summary,
 .route-archive-row,
 .route-history-row {
   display: flex;
@@ -4864,6 +4868,54 @@ button[hidden] {
   box-shadow: 0 0 var(--sp-2) color-mix(in srgb, var(--c-positive) 45%, transparent);
 }
 
+.route-mastery-card {
+  padding: var(--sp-3);
+  border-color: color-mix(in srgb, var(--c-rep) 42%, var(--border-700));
+}
+
+.route-mastery-copy {
+  min-width: 0;
+  display: grid;
+  gap: var(--sp-1);
+}
+
+.route-mastery-copy small,
+.route-mastery-copy span {
+  color: var(--text-low);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+}
+
+.route-mastery-copy strong {
+  color: var(--text-high);
+  font-size: var(--fs-label-m);
+  line-height: var(--lh-label-m);
+}
+
+.route-mastery-card button,
+.route-set-card button {
+  flex: 0 0 auto;
+  min-height: var(--touch-min);
+  padding: var(--sp-2) var(--sp-3);
+  border: var(--border-1);
+  border-color: var(--c-rep);
+  border-radius: var(--r-cta);
+  background: color-mix(in srgb, var(--c-rep) 16%, var(--surface-800));
+  color: var(--c-rep);
+  font: inherit;
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.route-mastery-card button:disabled {
+  border-color: var(--border-700);
+  background: var(--surface-800);
+  color: var(--text-low);
+  cursor: not-allowed;
+}
+
 .route-clean-card {
   position: relative;
   flex-wrap: wrap;
@@ -4909,18 +4961,25 @@ button[hidden] {
   overflow: clip;
 }
 
-.route-archive summary {
+.route-sets {
+  overflow: clip;
+}
+
+.route-archive summary,
+.route-sets summary {
   min-height: var(--touch-min);
   padding: var(--sp-3);
   cursor: pointer;
   list-style: none;
 }
 
-.route-archive summary::-webkit-details-marker {
+.route-archive summary::-webkit-details-marker,
+.route-sets summary::-webkit-details-marker {
   display: none;
 }
 
 .route-archive summary > span,
+.route-sets summary > span,
 .route-archive-row > span,
 .route-history-row > span {
   min-width: 0;
@@ -4929,11 +4988,13 @@ button[hidden] {
 }
 
 .route-archive summary strong,
+.route-sets summary strong,
 .route-history .hub-section-head strong {
   color: var(--text-high);
 }
 
-.route-archive summary > b {
+.route-archive summary > b,
+.route-sets summary > b {
   color: var(--c-sp);
 }
 
@@ -4973,6 +5034,109 @@ button[hidden] {
   color: var(--text-mid);
   font-size: var(--fs-label-m);
   line-height: var(--lh-label-m);
+}
+
+.route-set-grid {
+  display: grid;
+  gap: var(--sp-2);
+  padding: var(--sp-2);
+  border-top: var(--border-1);
+}
+
+.route-set-card {
+  display: grid;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  border: var(--border-1);
+  border-radius: var(--r-slot);
+  background: var(--surface-800);
+}
+
+.route-set-card.state-ready {
+  border-color: var(--c-rep);
+}
+
+.route-set-card.state-claimed {
+  border-color: var(--c-positive);
+  box-shadow: inset var(--border-accent) 0 0 var(--c-positive);
+}
+
+.route-set-card.state-claimed.effect-cosmetic {
+  box-shadow: inset var(--border-accent) 0 0 var(--c-sp);
+}
+
+.route-set-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+
+.route-set-head > span {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+}
+
+.route-set-head small,
+.route-set-open {
+  color: var(--text-low);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+}
+
+.route-set-head strong,
+.route-capstone-copy strong {
+  color: var(--text-high);
+  font-size: var(--fs-label-m);
+  line-height: var(--lh-label-m);
+}
+
+.route-set-head > b {
+  color: var(--c-sp);
+  font-size: var(--fs-label-m);
+  font-variant-numeric: tabular-nums;
+}
+
+.route-set-card > p {
+  margin: 0;
+  color: var(--text-mid);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-m);
+}
+
+.route-capstone-copy {
+  display: grid;
+  gap: var(--sp-1);
+  padding-top: var(--sp-2);
+  border-top: var(--border-1);
+}
+
+.route-capstone-copy span,
+.route-capstone-status {
+  color: var(--text-mid);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-m);
+}
+
+.route-capstone-status {
+  min-height: var(--touch-min);
+  display: flex;
+  align-items: center;
+  color: var(--text-low);
+  font-weight: 700;
+}
+
+.route-set-card.state-claimed .route-capstone-status {
+  color: var(--c-positive);
+}
+
+.route-set-card button {
+  justify-self: stretch;
+  border-color: var(--c-positive);
+  background: color-mix(in srgb, var(--c-positive) 14%, var(--surface-900));
+  color: var(--c-positive);
 }
 
 .route-history {

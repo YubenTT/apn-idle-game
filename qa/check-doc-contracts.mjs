@@ -304,7 +304,9 @@ const failures = [];
 if (
   !route.includes('Signal Drift is anchored at Route Zone 200') ||
   !route.includes('three deterministic Echo discoveries') ||
-  !route.includes('journey capsule')
+  !route.includes('journey capsule') ||
+  !route.includes('Coverage Mastery is a five-level, Pack-scoped Rep sink') ||
+  !route.includes('Live Mult remains the only')
 ) {
   failures.push('route milestone');
 }

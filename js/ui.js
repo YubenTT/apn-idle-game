@@ -26,6 +26,16 @@ import {
 } from './route.js?v=gaf2d-motion-v1';
 import { GAME_PACKS } from './generated/game-packs.js?v=gaf2d-motion-v1';
 import {
+  COVERAGE_MAX_LEVEL,
+  COVERAGE_SETS,
+  buyCoverageMastery,
+  claimCoverageSetCapstone,
+  coverageMasteryCost,
+  coverageMasteryLevel,
+  coverageSetStatus,
+  isPackCovered,
+} from './coverage.js?v=gaf2d-motion-v1';
+import {
   combatStats,
   allocSkill,
   canLearn,
@@ -508,6 +518,23 @@ export function bindUI(s, motionPreference = null) {
   });
 
   $('panel-hub')?.addEventListener('click', (e) => {
+    const mastery = e.target.closest('[data-coverage-buy]');
+    if (mastery) {
+      if (buyCoverageMastery(s, mastery.dataset.coverageBuy)) {
+        save(s);
+        popSpend(mastery);
+        renderHub(s);
+      } else if (s.settings.sfx !== false) sfx('error');
+      return;
+    }
+    const capstone = e.target.closest('[data-coverage-claim]');
+    if (capstone) {
+      if (claimCoverageSetCapstone(s, capstone.dataset.coverageClaim)) {
+        save(s);
+        renderHub(s);
+      } else if (s.settings.sfx !== false) sfx('error');
+      return;
+    }
     const claim = e.target.closest('[data-claim]');
     if (claim) {
       const [period, id] = claim.dataset.claim.split(':');
@@ -904,6 +931,17 @@ function renderRouteJourney(s) {
     `<i class="${index < journey.echo.found ? 'found' : ''}" aria-hidden="true"></i>`,
   ).join('');
   const history = journey.history.slice(0, 6);
+  const masteryLevel = coverageMasteryLevel(s, current?.id);
+  const masteryCost = coverageMasteryCost(masteryLevel);
+  const currentCovered = isPackCovered(s.route, current?.id);
+  const masteryAffordable =
+    currentCovered && masteryCost != null && s.authority.amount >= masteryCost;
+  const setRows = COVERAGE_SETS.map((set) => ({
+    set,
+    status: coverageSetStatus(s, s.route, set.id),
+  }));
+  const readySetCount = setRows.filter(({ status }) => status.state === 'ready').length;
+  const claimedSetCount = setRows.filter(({ status }) => status.state === 'claimed').length;
   const driftLabel = journey.signalDrift.unlocked
     ? journey.signalDrift.label
     : 'Clean signal';
@@ -938,6 +976,25 @@ function renderRouteJourney(s) {
       </div>
     </div>
 
+    <div class="route-mastery-card" data-coverage-mastery>
+      <div class="route-mastery-copy">
+        <small>Current Pack · Rep sink</small>
+        <strong>Coverage Mastery ${masteryLevel}/${COVERAGE_MAX_LEVEL}</strong>
+        <span>${masteryLevel >= COVERAGE_MAX_LEVEL
+          ? 'Maxed · +25% revisit yield in this Pack'
+          : currentCovered
+            ? `+${masteryLevel * 5}% revisit yield · next +5%`
+            : 'Find all 3 Echoes and clear this Pack Gate first'}</span>
+      </div>
+      <button type="button" data-coverage-buy="${current?.id || ''}"
+        ${masteryAffordable ? '' : 'disabled'}
+        aria-label="${masteryLevel >= COVERAGE_MAX_LEVEL
+          ? 'Coverage Mastery maxed'
+          : `Raise ${current?.title || 'current Pack'} Coverage Mastery for ${masteryCost ?? 0} Rep`}">
+        ${masteryLevel >= COVERAGE_MAX_LEVEL ? 'Maxed' : masteryCost == null ? 'Unavailable' : `${formatNum(masteryCost)} Rep`}
+      </button>
+    </div>
+
     <div class="route-clean-card ${clean.completed ? 'is-complete' : ''}" data-route-clean>
       <div>
         <small>First journey</small>
@@ -958,6 +1015,37 @@ function renderRouteJourney(s) {
             <span><strong>${pack.title}</strong><small>${complete ? 'Gate cleared' : 'Gate open'}</small></span>
             <b>${echo.found}/${echo.total}</b>
           </div>`).join('')}
+      </div>
+    </details>
+
+    <details class="route-sets" ${readySetCount || claimedSetCount ? 'open' : ''}>
+      <summary>
+        <span><strong>Coverage Sets</strong><small>Capstones are earned by covering every current member</small></span>
+        <b>${claimedSetCount}/${COVERAGE_SETS.length}</b>
+      </summary>
+      <div class="route-set-grid">
+        ${setRows.map(({ set, status }) => {
+          const remaining = Math.max(0, status.total - status.covered);
+          return `
+          <article class="route-set-card state-${status.state} effect-${set.effect}"
+            data-coverage-set="${set.id}" data-coverage-state="${status.state}">
+            <div class="route-set-head">
+              <span><small>${set.id}</small><strong>${set.name}</strong></span>
+              <b>${status.covered}/${status.total}</b>
+            </div>
+            <p>${set.members.map(routePackTitle).join(' · ')}</p>
+            ${status.openSlots ? `<span class="route-set-open">+${status.openSlots} future slot · not required</span>` : ''}
+            <div class="route-capstone-copy">
+              <strong>${set.capstone}</strong>
+              <span>${set.benefit}</span>
+            </div>
+            ${status.state === 'claimed'
+              ? '<span class="route-capstone-status">Claimed</span>'
+              : status.state === 'ready'
+                ? `<button type="button" data-coverage-claim="${set.id}">Claim capstone</button>`
+                : `<span class="route-capstone-status">Cover ${remaining} more ${remaining === 1 ? 'Pack' : 'Packs'}</span>`}
+          </article>`;
+        }).join('')}
       </div>
     </details>
 

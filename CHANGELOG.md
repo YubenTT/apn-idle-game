@@ -9,6 +9,18 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 
 ### Added
 
+- **Coverage Mastery and Sets.** Every covered Pack now owns a five-level,
+  Rep-funded mastery track that adds 5% revisit yield per level, capped at 25%.
+  The complete catalog maps exactly once into seven non-empty thematic Sets;
+  covering every current member exposes an explicit, permanent capstone claim.
+  Four numeric capstones are small and Pack/Set-scoped, three are cosmetic, and
+  a machine firewall keeps all of them away from Live Mult and paid paths. New
+  state survives save reload, Go Live, offline progress, catalog extension, and
+  an older v3 rollback. The permanent-power HP budget exponent is softened from
+  0.9 to 0.45 to remove the mature-cycle flatline without one-frame targets.
+  Chrome verifies real Rep spend, claim, save, text projection, touch controls,
+  and zero overflow across mobile, landscape, and desktop.
+
 - **Route journey and Echo archive.** Every Pack now has three deterministic
   Echo discoveries at waves 3/6/9; Gates persist clean/revisit completions,
   exact visit counts, and a bounded newest-first history. Route leads with the

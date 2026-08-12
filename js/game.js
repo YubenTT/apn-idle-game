@@ -73,6 +73,13 @@ import {
   recordRouteZoneClear,
 } from './route.js?v=gaf2d-motion-v1';
 import { GAME_PACKS } from './generated/game-packs.js?v=gaf2d-motion-v1';
+import {
+  coverageBossHpMultiplier,
+  coverageFinalTargetSignalMultiplier,
+  coverageGateNotesMultiplier,
+  coverageOfflineEfficiency,
+  coverageYieldMultiplier,
+} from './coverage.js?v=gaf2d-motion-v1';
 
 const HERO_ATTACK_SECONDS = 8 / 16;
 const HERO_HIT_SECONDS = 4 / 16;
@@ -98,6 +105,8 @@ export function createState() {
       ships: 0,
       bosses: 0,
       postsShippedTotal: 0,
+      coverageMasteryByPack: {},
+      claimedCoverageSetIds: [],
       /** Permanent loadout — survives Go Live */
       gear: emptyGear(),
       /** Legacy demo-store data survives save round trips but is inert in the free MVP. */
@@ -223,6 +232,12 @@ export function buildYieldMultiplier(s) {
 
 export function relayOfflineEfficiency(s) {
   return relayIdleEfficiency(branchMastery(s, 'relay'));
+}
+
+/** Current-Pack offline yield after the bounded Relay and Set rules. */
+export function offlineYieldEfficiency(s) {
+  const pack = packForRoute(s.route, GAME_PACKS);
+  return coverageOfflineEfficiency(s, pack?.id, relayOfflineEfficiency(s));
 }
 
 function syncLegacyMasteryFields(s) {
@@ -702,7 +717,16 @@ export function spawnEnemy(s) {
     (1 + Math.max(0, gear.crit_pct || 0) / 100) *
     Math.max(1, s.meta.live || 1);
   const corruptionTier = Math.max(0, pack?.tier || s.route.corruptionByPack?.[s.route.currentPackId] || 0);
-  const hp = routeEnemyHp(zone, s.run.hero.scanner, permanentPower, corruptionTier, typeHpMult(type));
+  const baseHp = routeEnemyHp(
+    zone,
+    s.run.hero.scanner,
+    permanentPower,
+    corruptionTier,
+    typeHpMult(type),
+  );
+  const hp = Math.floor(
+    baseHp * (type === 'boss' ? coverageBossHpMultiplier(s, pack?.id) : 1),
+  );
   const alive = s.world.enemies.filter((e) => e.hp > 0);
   // Spawn ahead of melee stop so approach is clear (enemy not glued to mascot)
   const x = s.world.heroX + 150 + Math.random() * 28;
@@ -721,7 +745,7 @@ export function spawnEnemy(s) {
     previousDisplayX: x,
     y: 0,
     hp,
-    hpMax: hp,
+    hpMax: baseHp,
     hitFlash: 0,
     hurt: 0,
     w: type === 'boss' ? 52 : type === 'patch' ? 34 : 28,
@@ -804,6 +828,11 @@ function onKill(s, e) {
   const maturityReward = Math.min(0.5, Math.floor(zone / C.SEASON_ZONES) * 0.05);
   const gb = gearBonuses(s.meta.gear);
   const eco = economyMult(s);
+  const rewardPack = packForRoute(s.route, GAME_PACKS);
+  const packId = rewardPack?.id || e.packId || s.route.currentPackId;
+  const masteryYield = coverageYieldMultiplier(s, packId, rewardPack?.tier || 0);
+  const finalNormalTarget =
+    e.type !== 'boss' && s.route.killsInZone >= killsNeeded(zone);
   const priorityReward = priorityTagRewardMultiplier(e);
   const floaterOrigin = enemyEffectAnchor(e, 'floater');
   const hitOrigin = enemyEffectAnchor(e, 'hit');
@@ -812,6 +841,8 @@ function onKill(s, e) {
     (1 + (gb.signal_pct || 0) / 100) *
     eco *
     buildYieldMultiplier(s) *
+    masteryYield *
+    coverageFinalTargetSignalMultiplier(s, packId, finalNormalTarget) *
     priorityReward;
   let typeByte = 1;
   let typeXp = 1;
@@ -871,6 +902,8 @@ function onKill(s, e) {
     (1 + (gb.notes_pct || 0) / 100) *
     eco *
     buildYieldMultiplier(s) *
+    masteryYield *
+    coverageGateNotesMultiplier(s, packId, e.type === 'boss') *
     priorityReward;
   if (e.type === 'patch') {
     const p = C.PATCH_FROM_CHAMP * patchM;
@@ -1542,7 +1575,7 @@ export function buyMeta(s, id) {
 
 export const END_SEASON_CONTRACT = Object.freeze({
   resets: Object.freeze(['Scanner level', 'Rank and SP', 'Build skills', 'Notes', '85% of Signal']),
-  keeps: Object.freeze(['Route Zone', 'Rep and Boosts', 'Gear', 'Live Mult']),
+  keeps: Object.freeze(['Route Zone', 'Rep and Boosts', 'Gear', 'Live Mult', 'Coverage and Sets']),
 });
 
 /** Legacy prestige path, superseded by goLive(). Retained for save back-compat + tests. */
@@ -1592,7 +1625,7 @@ export function leaveSeason(s) {
 /** What a Go Live keeps vs. resets — UI reads this before the mutation. */
 export const GO_LIVE_CONTRACT = Object.freeze({
   banks: Object.freeze(['Unshipped Notes → Rep', 'Cycle Rep → Live Mult']),
-  keeps: Object.freeze(['Route Zone', 'Rep and Boosts', 'Gear', 'Live Mult']),
+  keeps: Object.freeze(['Route Zone', 'Rep and Boosts', 'Gear', 'Live Mult', 'Coverage and Sets']),
   resets: Object.freeze(['Scanner level', 'Rank and SP', 'Build skills', '85% of Signal']),
 });
 
@@ -1867,7 +1900,7 @@ export function simulateOffline(s, seconds) {
   // overflow is banked — otherwise 8h AFK past a boundary would farm prestige fuel.
   const reachedBoundary = s.route.zone >= budget.boundary;
   if (overflowSeconds > 0 && !reachedBoundary) {
-    const idle = relayOfflineEfficiency(s);
+    const idle = offlineYieldEfficiency(s);
     const db = Math.max(0, s.run.bytes - before.bytes);
     const dp = Math.max(0, s.run.patches - before.patches);
     const signalRate = db > 0 ? db / Math.max(sim, 1) : C.BYTE_BASE / 10;
