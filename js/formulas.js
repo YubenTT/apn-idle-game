@@ -148,7 +148,7 @@ export function routeEnemyHp(
     1 + C.ENEMY_HP_STEP_BONUS * Math.floor(localZone / C.ENEMY_HP_STEP_EVERY);
   const raw = scannerDamage(pace) * C.ENEMY_POWER_BUDGET * hits * step;
   const catchUp = 1 - Math.min(0.25, Math.max(0, pace - Math.max(0, runPower)) * 0.01);
-  const permanentBudget = Math.min(14, Math.max(1, permanentMultiplier) ** 0.9);
+  const permanentBudget = Math.min(14, Math.max(1, permanentMultiplier) ** 0.45);
   const corruptionBudget = 1 + 0.18 * Math.min(4, Math.max(0, corruptionTier | 0));
   return Math.floor(
     Math.max(C.ENEMY_HP_BASE, raw) * catchUp * permanentBudget * corruptionBudget * typeMult

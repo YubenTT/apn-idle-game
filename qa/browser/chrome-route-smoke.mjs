@@ -138,6 +138,9 @@ async function scenario(displayZone, viewport) {
         q.state.route.cleanEraCompleted = true;
         q.state.route.cleanEraCompletedAtZone = 200;
         q.state.route.history = [{ packId: 'elden-ring', visit: 1, tier: 0, completedAtZone: 200, clean: true }];
+        q.state.authority.amount = 500;
+        q.state.meta.coverageMasteryByPack = {};
+        q.state.meta.claimedCoverageSetIds = [];
         q.state.ui.panelDirty = true;
         return true;
       })()`,
@@ -169,6 +172,7 @@ async function scenario(displayZone, viewport) {
       nextPack: window.__APN_QA__?.assets.nextId,
       catalogCount: window.__APN_QA__?.assets.catalog.length,
       textJourney: window.render_game_to_text ? JSON.parse(window.render_game_to_text()).routeJourney : null,
+      textCoverage: window.render_game_to_text ? JSON.parse(window.render_game_to_text()).coverage : null,
       decodedPacks: window.__APN_QA__ ? [...window.__APN_QA__.assets.packs.keys()] : [],
       heroX: window.__APN_QA__?.state.world.heroDisplayX,
       targetX: window.__APN_QA__?.state.world.enemies.find((enemy) => enemy.hp > 0)?.displayX
@@ -205,6 +209,10 @@ async function scenario(displayZone, viewport) {
   assert(
     result.textJourney?.currentPackId && result.textJourney?.echo?.total === 3,
     `${tag} render_game_to_text exposes Route/Echo truth`,
+  );
+  assert(
+    result.textCoverage?.currentMastery?.level === 0 && result.textCoverage?.sets?.length === 7,
+    `${tag} render_game_to_text exposes Coverage/Set truth`,
   );
   if (displayZone === 1 && viewport.label === 'mobile-428') {
     await cdp.send('Runtime.evaluate', {
@@ -300,6 +308,10 @@ async function scenario(displayZone, viewport) {
           drift: journey?.querySelector('[data-route-drift]')?.textContent.trim(),
           archiveCount: journey?.querySelectorAll('[data-echo-pack]').length || 0,
           historyCount: journey?.querySelectorAll('[data-route-history-entry]').length || 0,
+          mastery: journey?.querySelector('[data-coverage-mastery]')?.textContent.trim(),
+          masteryDisabled: journey?.querySelector('[data-coverage-buy]')?.disabled,
+          setCount: journey?.querySelectorAll('[data-coverage-set]').length || 0,
+          readySetCount: journey?.querySelectorAll('[data-coverage-state="ready"]').length || 0,
           sheetInsideViewport: Boolean(sr && sr.left >= 0 && sr.right <= innerWidth && sr.top >= 0 && sr.bottom <= innerHeight),
           overflow: document.documentElement.scrollWidth - innerWidth,
         };
@@ -311,13 +323,61 @@ async function scenario(displayZone, viewport) {
     assert(route.beforeObjectives, `${tag} Route journey precedes objectives`);
     assert(Boolean(route.current) && Boolean(route.next), `${tag} Route reveals current and next Pack`);
     assert(route.archiveCount === result.catalogCount, `${tag} Echo archive covers the active catalog`);
+    assert(route.setCount === 7, `${tag} renders seven non-empty Coverage Sets`);
     assert(route.sheetInsideViewport && route.overflow === 0, `${tag} Route sheet stays inside the viewport`);
     if (displayZone === 1) {
       assert(route.clean.includes(`0/${result.catalogCount}`) && route.echo.includes('0/3'), `${tag} fresh Route shows honest Clean/Echo progress`);
+      assert(route.mastery.includes('Mastery 0/5') && route.masteryDisabled, `${tag} first visit cannot buy Coverage before covering the Pack`);
     } else {
       assert(route.clean.includes('Clean Era Complete'), `${tag} renders the earned Clean Era result`);
       assert(route.drift.includes('Signal Drift 1'), `${tag} renders postgame Signal Drift tier`);
       assert(route.historyCount === 1, `${tag} renders exact persisted Pack history`);
+      assert(route.readySetCount === 7, `${tag} covered catalog makes all seven capstones explicitly claimable`);
+      await cdp.send('Runtime.evaluate', {
+        expression: `document.querySelector('[data-coverage-buy]')?.click()`,
+        returnByValue: true,
+      });
+      await delay(120);
+      await cdp.send('Runtime.evaluate', {
+        expression: `document.querySelector('[data-coverage-claim="S1"]')?.click()`,
+        returnByValue: true,
+      });
+      await delay(120);
+      const coverageEvaluation = await cdp.send('Runtime.evaluate', {
+        expression: `JSON.stringify((() => {
+          const q = window.__APN_QA__;
+          const packId = JSON.parse(window.render_game_to_text()).routeJourney.currentPackId;
+          const saved = JSON.parse(localStorage.getItem('apn_idle_save_v2'));
+          return {
+            packId,
+            mastery: q.state.meta.coverageMasteryByPack?.[packId],
+            rep: q.state.authority.amount,
+            claimed: q.state.meta.claimedCoverageSetIds,
+            savedMastery: saved?.meta?.coverageMasteryByPack?.[packId],
+            savedClaimed: saved?.meta?.claimedCoverageSetIds,
+            masteryText: document.querySelector('[data-coverage-mastery]')?.textContent.trim(),
+            capstoneText: document.querySelector('[data-coverage-set="S1"]')?.textContent.trim(),
+          };
+        })())`,
+        returnByValue: true,
+      });
+      const coverage = JSON.parse(coverageEvaluation.result.value);
+      assert(
+        coverage.mastery === 1 && coverage.rep === 475 && coverage.masteryText.includes('Mastery 1/5'),
+        `${tag} buys current-Pack mastery through the real Route control (${JSON.stringify(coverage)})`,
+      );
+      assert(
+        coverage.claimed.join(',') === 'S1' && coverage.capstoneText.includes('Claimed'),
+        `${tag} explicitly claims the earned S1 capstone`,
+      );
+      assert(
+        coverage.savedMastery === 1 && coverage.savedClaimed.join(',') === 'S1',
+        `${tag} saves mastery and capstone state immediately`,
+      );
+      await cdp.send('Runtime.evaluate', {
+        expression: `localStorage.removeItem('apn_idle_save_v2')`,
+        returnByValue: true,
+      });
     }
   }
   console.log(`INFO ${tag} viewport overflow ${result.overflow}px`);

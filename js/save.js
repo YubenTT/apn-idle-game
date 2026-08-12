@@ -2,6 +2,7 @@ import { normalizeGear, emptyGear, GEAR_SORTS, GEAR_FILTERS } from './loot.js?v=
 import { normalizeRoute } from './route.js?v=gaf2d-motion-v1';
 import { C, spentSkillPoints } from './formulas.js?v=gaf2d-motion-v1';
 import { SKILLS } from './content.js?v=gaf2d-motion-v1';
+import { normalizeCoverageMeta } from './coverage.js?v=gaf2d-motion-v1';
 
 export const SAVE_KEY_V1 = 'apn_idle_save_v1';
 export const SAVE_KEY_V2 = 'apn_idle_save_v2';
@@ -76,11 +77,13 @@ function migrateBuildV2(hero, sourceBuildVersion) {
 
 export function save(s) {
   const normalizedRoute = normalizeRoute(s.route);
+  const normalizedCoverage = normalizeCoverageMeta(s.meta);
   const data = {
     v: SAVE_VERSION,
     ts: Date.now(),
     meta: {
       ...s.meta,
+      ...normalizedCoverage,
       // Old v3 clients preserve unknown meta keys even though their Route
       // normalizer drops new fields. This capsule makes a production rollback
       // data-safe without changing the storage key or pretending the old UI can
@@ -175,6 +178,7 @@ export function apply(s, d) {
   s.route = normalizeRoute(routeSource, d.v === 1 ? d.run : null);
   Object.assign(s.meta, d.meta || {});
   delete s.meta.routeJourney;
+  Object.assign(s.meta, normalizeCoverageMeta(s.meta));
   // Migrate gear and preserve the retired demo-store bucket as inert data.
   s.meta.gear = normalizeGear(d.meta?.gear || s.meta.gear || emptyGear());
   if (!s.meta.premium) {

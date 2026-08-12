@@ -41,6 +41,27 @@ earned Clean Era; an unseen added Pack still debuts Clean.
 - The HUD always shows the current Pack's real Echo state (`0/3` on a fresh
   Pack); it never hides missing domain data or manufactures progress.
 
+## Implemented Coverage Mastery and Sets
+
+- A Pack becomes `covered` only after its Gate and all three Echoes are earned.
+  Coverage is permanent and does not require a Rep spend.
+- Coverage Mastery is a five-level, Pack-scoped Rep sink. Next-level costs are
+  `25 / 60 / 120 / 220 / 360` Rep. Each level adds 5% yield only when that Pack
+  revisits, capped at 25%; the first clean visit receives no mastery bonus.
+- All current catalog Packs belong exactly once to one of seven non-empty Sets:
+  Tactical Feed, Hero Roster, Prime Time, Lane Wars, Open Sandbox, Nightmare
+  Shift, and Long Grind. Lane Wars and Long Grind each display one future slot;
+  open slots never block today's completion.
+- Covering every current member makes a Set capstone claimable. The claim is a
+  separate player action, costs nothing, and never reverts when a future member
+  is added. Claimed IDs, not a recalculated transient flag, are the authority.
+- Numeric capstones remain small and local: Tactical Feed Gates start at 95%
+  HP, Prime Time Gates award 10% more Notes, Lane Wars' final normal target
+  awards 5% more Signal, and Nightmare Shift adds five offline-efficiency
+  points up to 100%. The other three capstones are presentation-only.
+- No mastery or capstone reads or writes Live Mult. Live Mult remains the only
+  global multiplier; there is no new currency or second prestige layer.
+
 Why 20 clean packs:
 
 - 20 bosses teach the clean silhouettes before remixing them.
@@ -204,6 +225,11 @@ journey capsule is also stored under `meta` so an older v3 production rollback,
 whose Route normalizer does not know the new fields, preserves them opaquely.
 Progress earned while rolled back is folded back from the legacy `seenPackIds`
 and corruption counters when the current client returns.
+
+Pack meta is stored under the existing v3 `meta` boundary as
+`coverageMasteryByPack` and `claimedCoverageSetIds`. Both fields are sanitized,
+idempotent, preserved by Go Live/offline/save reload, and opaque to an older v3
+rollback so that client can round-trip them without understanding them.
 
 ## Pacing targets
 

@@ -48,10 +48,33 @@ Original prompt: Complete the APN Idle redesign autonomously, including QA, revi
   under opaque meta state; an old v3 client preserves it while still earning
   legacy Pack completion, and the current client merges both histories on
   return. Approved V4/GAF2D asset and authority paths are untouched.
+- Route/Echo shipped through ready PR #44. GitHub CI and GitGuardian passed;
+  squash merge `817b7c8` is on `origin/main`, issue #24 closed, and the old local
+  and remote branch were removed before Coverage work began.
+- Task B1 RED confirmed: `node qa/check-coverage.mjs` exited 1 with
+  `ERR_MODULE_NOT_FOUND` for the absent `js/coverage.js`; no fixture or
+  environment failure was involved. Browser RED reached playable/console-clean
+  Zone 1 and failed because the Route had zero Coverage Set cards.
+- Coverage GREEN: five exact mastery levels/costs, revisit-only +5% to +25%,
+  exact 20-Pack/7-Set partition, explicit permanent claims, four bounded scoped
+  effects, v3 save/Go-Live preservation, and no-Live-Mult/no-paid-path firewall
+  all pass `qa/check-coverage.mjs`. Review corrected Rapid Defuse to preserve
+  Gate max HP while starting at 95% current HP.
+- Direct Chrome at 375×812, 428×926, 844×390, and 1280×800 buys mastery through
+  the actual Route control, claims S1, reads the immediate save and text QA,
+  and stays overflow/console clean. The saved test state is removed between
+  scenarios. Representative fresh and postgame captures were inspected.
+- Final self-review restored every test-owned global, bound the current
+  Coverage rules into the doc contract, and found no production scope leak.
+  The fresh full tree ends `ALL PASS`; final focused Coverage/docs, syntax,
+  diff, pacing, long-run, and Chrome checks are all green.
+- Gate-M pacing is measured, not guessed: Scan/Verify/Relay first Gate
+  7.7/10.0/17.7m; mature median 27.0/64.7/82.6m; Zone 200 4.2/9.5/12.1h.
+  Relay's remaining >15m miss is explicitly reserved for the numeric balance
+  slice. Zone 1000 remains deterministic and finite.
 
-**Single next step:** commit the fully green isolated #24 slice, push a ready
-PR, merge it after checks, then realign on `main` before starting Coverage/Sets
-#25.
+**Single next step:** commit, push, ready-PR, and merge the fully green #25
+Coverage slice, then realign from `main` before starting rights/catalog #26.
 
 ## 2026-08-09/10 V4 owner approval and production promotion
 

@@ -96,6 +96,7 @@ import { checkEconomyColorContract } from './check-economy-colors.mjs';
 import { checkMobileGestureContract } from './check-mobile-gestures.mjs';
 import { checkRouteContract } from './check-route.mjs';
 import { checkRouteJourneyContract } from './check-route-journey.mjs';
+import { checkCoverageContract } from './check-coverage.mjs';
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -269,6 +270,7 @@ for (const check of checkMobileGestureContract()) {
 }
 for (const message of checkRouteContract()) ok(true, `route ${message}`);
 for (const message of checkRouteJourneyContract()) ok(true, `route journey ${message}`);
+for (const message of checkCoverageContract()) ok(true, `coverage ${message}`);
 
 // —— PR-5 single Host contract ——
 ok(Object.isFrozen(HOST_CLIPS), 'Host clip contract is immutable');

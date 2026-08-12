@@ -1,5 +1,36 @@
 # APN Idle redesign V1 — QA report
 
+## 2026-08-12 Coverage Mastery and Sets
+
+Status: Coverage is implemented as persistent Pack meta, not a global prestige
+layer. A Pack is covered by its Gate plus all three Echoes. Five mastery levels
+cost `25 / 60 / 120 / 220 / 360` Rep and grant exactly 5% revisit yield each,
+capped at 25%. Twenty current Packs map exactly once into seven non-empty Sets;
+S4/S7 open slots are visible but do not block completion. Explicit capstone
+claims are permanent under catalog extension and cost no currency.
+
+Fresh focused evidence:
+
+- `npm test` passes the complete current tree and ends `ALL PASS`;
+- `node qa/check-coverage.mjs` passes the exact Rep curve, first-visit firewall,
+  scoped production rewards, Gate pre-damage/max-HP semantics, offline cap,
+  state sanitization/idempotency, save/Go-Live preservation, catalog extension,
+  no-purchase rule, and single-global-multiplier negative contract;
+- `node qa/pacing-profiles.mjs` passes all three deterministic builds at Zone
+  200. Scan/Verify/Relay first Gates are 7.7/10.0/17.7 minutes, mature medians
+  are 27.0/64.7/82.6 minutes, and totals are 4.2/9.5/12.1 hours. The remaining
+  Relay ≤15-minute miss is recorded honestly for the dedicated balance slice;
+- `node qa/long-run.mjs` remains deterministic, bounded offline, multi-hit, and
+  finite through Zone 1000; and
+- direct Chrome passes 375×812, 428×926, 844×390, and 1280×800. The production
+  Route control spends 25 Rep for current-Pack mastery, explicitly claims S1,
+  persists both values immediately, exposes them through `render_game_to_text`,
+  and remains console-clean and overflow-free. Fresh/postgame/mobile/landscape/
+  desktop captures were visually inspected.
+
+Live Mult remains the sole global multiplier. No new currency, store path,
+second prestige, asset byte, or GAF2D authority changed.
+
 ## 2026-08-12 Route journey and Echo archive
 
 Status: Route/Echo is implemented as durable game state rather than HUD
