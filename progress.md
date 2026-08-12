@@ -1,5 +1,18 @@
 Original prompt: Complete the APN Idle redesign autonomously, including QA, review, and a muted localhost build for the final integrated user gate.
 
+## 2026-08-12 — ALL-257 production enemy-visibility incident started
+
+- New owner request: live `https://allpatchnotes.com/idle/` shows combat/HP/name but no creature body; diagnose broadly, fix without overengineering, then PR/merge/deploy and leave both repositories clean.
+- Production reproduction: Fortnite Route 24 / Pack wave 4, `Storm Runner`, decoded Pack atlas `896×128`, `motion.status=unmapped`, correct 72×72 stage geometry, but zero target-colored pixels inside the body envelope. Required requests and state are healthy.
+- Root cause: `draw()` creates a new interpolation copy per frame while static and legacy spawn clocks use object identity. Their `WeakMap` restarts every frame and pins body scale to zero. Mapped V4 motion bypasses that path, matching the visible Hero/V4 versus invisible non-motion cast symptom.
+- Tracking: Linear `ALL-257`; isolated branch `codex/ALL-257-enemy-visibility`; plan `docs/superpowers/plans/2026-08-12-enemy-visibility-production-fix.md`.
+- Guardrails: no art, balance, save, catalog, rights, or public QA changes; regression-first, one efficient browser CI addition inside the existing job, exact game→Web projection, exact production readback, rollback on any mismatch.
+- RED confirmed after correcting one test-fixture ordering mistake: `node qa/check-creatures.mjs` exits 1 at `interpolated static Pack target completes spawn scale for one persistent actor`. The atlas/store fixture is valid; the second interpolation copy still receives a zero body scale, matching production.
+- Minimal GREEN: static and legacy painters now receive the existing persistent `retentionOwner` only for their first-seen clock; interpolated coordinates still come from the render copy. `check-creatures`, `check-motion-bundle`, and `check-motion-store` pass.
+- Efficient browser gate: the existing catalog/rights Chrome process now checks material actor-body pixel differences for the complete runtime-safe catalog (20/20), Fortnite mobile/short landscape, Valorant V4 motion, one warmed legacy creature owner, and the procedural required-asset fallback. It adds no CI job, install, matrix, server, or duplicate invocation and runs in about 12 seconds locally.
+- Fresh integrated verification: `npm test` ends `ALL PASS`; Chrome Route and Go Live matrices pass; catalog/rights/visibility passes with no unexpected console finding or horizontal overflow. Representative Fortnite, Valorant, legacy, and procedural-fallback captures were visually inspected. No additional product defect surfaced in the exercised game/runtime scope.
+- Independent review found no P0/P1/P2 defect and two P3 test-strength gaps. Both are closed: every pixel subtraction now proves byte-identical domain state, identical text projection, and preserved enemy identity after measurement; the legacy branch requires exactly one owner and the exact five-clip set. The complete 20-Pack Chrome gate remains green after those changes.
+
 ## 2026-08-12 · Complete-game closure goal
 
 - Owner-authorized outcome: make APN Idle a complete free small web idle game,
