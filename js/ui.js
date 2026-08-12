@@ -18,7 +18,12 @@ import {
   FEED_COPY,
   skillSpCost,
 } from './content.js?v=gaf2d-motion-v1';
-import { packForRoute, packZoneDisplay } from './route.js?v=gaf2d-motion-v1';
+import {
+  echoProgressFor,
+  packForRoute,
+  packZoneDisplay,
+  routeJourney,
+} from './route.js?v=gaf2d-motion-v1';
 import { GAME_PACKS } from './generated/game-packs.js?v=gaf2d-motion-v1';
 import {
   combatStats,
@@ -877,6 +882,98 @@ function questRow(s, def, period) {
   </div>`;
 }
 
+const routePackTitle = (packId) =>
+  GAME_PACKS.find((pack) => pack.id === packId)?.title || 'Unknown Pack';
+
+function renderRouteJourney(s) {
+  const journey = routeJourney(s.route, GAME_PACKS);
+  const current = journey.current;
+  const next = journey.next;
+  const clean = journey.cleanEra;
+  const cleanPct = clean.total
+    ? Math.min(100, Math.round((clean.completedCount / clean.total) * 100))
+    : 0;
+  const archive = GAME_PACKS.map((pack) => ({
+    pack,
+    echo: echoProgressFor(s.route, pack.id),
+    complete: s.route.cleanCompletedPackIds?.includes(pack.id) === true,
+  }));
+  const echoesFound = archive.reduce((sum, item) => sum + item.echo.found, 0);
+  const echoesTotal = archive.length * 3;
+  const echoDots = Array.from({ length: journey.echo.total }, (_, index) =>
+    `<i class="${index < journey.echo.found ? 'found' : ''}" aria-hidden="true"></i>`,
+  ).join('');
+  const history = journey.history.slice(0, 6);
+  const driftLabel = journey.signalDrift.unlocked
+    ? journey.signalDrift.label
+    : 'Clean signal';
+  const cleanLabel = clean.completed
+    ? `Clean Era Complete · ${clean.completedCount}/${clean.total}`
+    : `Clean Era · ${clean.completedCount}/${clean.total}`;
+
+  return `
+  <section class="route-journey" data-route-journey aria-label="Route journey">
+    <div class="route-current-card ${journey.signalDrift.tier > 0 ? 'is-drift' : ''}">
+      <div class="route-card-kicker">
+        <span data-route-drift>${driftLabel}</span>
+        <b>Wave ${journey.packWave}/10</b>
+      </div>
+      <div class="route-pack-pair">
+        <div class="route-pack-now">
+          <small>Current Pack</small>
+          <strong data-route-current>${current?.title || 'APN Patchline'}</strong>
+        </div>
+        <span class="route-arrow" aria-hidden="true">→</span>
+        <div class="route-pack-next">
+          <small>Next Pack</small>
+          <strong data-route-next>${next?.title || 'Route recalculating'}</strong>
+        </div>
+      </div>
+      <div class="route-wave-track" aria-label="Pack wave ${journey.packWave} of 10">
+        <i style="width:${journey.packWave * 10}%"></i>
+      </div>
+      <div class="route-echo-now" data-route-echo>
+        <span><small>Patch Echo</small><strong>${journey.echo.found}/${journey.echo.total}</strong></span>
+        <span class="route-echo-dots">${echoDots}</span>
+      </div>
+    </div>
+
+    <div class="route-clean-card ${clean.completed ? 'is-complete' : ''}" data-route-clean>
+      <div>
+        <small>First journey</small>
+        <strong>${cleanLabel}</strong>
+      </div>
+      <span>${clean.completed ? `Finished at Zone ${clean.completedAtZone || clean.total * 10}` : `${clean.total - clean.completedCount} Packs ahead`}</span>
+      <div class="route-clean-track"><i style="width:${cleanPct}%"></i></div>
+    </div>
+
+    <details class="route-archive">
+      <summary>
+        <span><strong>Echo Archive</strong><small>Discoveries stay across Go Live</small></span>
+        <b>${echoesFound}/${echoesTotal}</b>
+      </summary>
+      <div class="route-archive-grid">
+        ${archive.map(({ pack, echo, complete }) => `
+          <div class="route-archive-row ${complete ? 'is-complete' : ''}" data-echo-pack="${pack.id}">
+            <span><strong>${pack.title}</strong><small>${complete ? 'Gate cleared' : 'Gate open'}</small></span>
+            <b>${echo.found}/${echo.total}</b>
+          </div>`).join('')}
+      </div>
+    </details>
+
+    <div class="route-history">
+      <div class="hub-section-head"><strong>Pack History</strong><span>${s.route.packVisitCountById?.[current?.id] || 0} current visits</span></div>
+      ${history.length
+        ? history.map((entry) => `
+          <div class="route-history-row" data-route-history-entry="${entry.packId}">
+            <span><strong>${routePackTitle(entry.packId)}</strong><small>${entry.clean ? 'Clean clear' : `Signal Drift ${entry.tier}`}</small></span>
+            <b>Zone ${entry.completedAtZone}</b>
+          </div>`).join('')
+        : '<p class="route-history-empty">Clear a Pack Gate to begin the archive.</p>'}
+    </div>
+  </section>`;
+}
+
 function renderHub(s) {
   const root = document.getElementById('hub-body');
   if (!root) return;
@@ -887,7 +984,8 @@ function renderHub(s) {
   const dailyReady = DAILY_DEFS.filter((def) => hubObjectiveState(hub, def, 'daily') === 'claimable').length;
   const weeklyReady = WEEKLY_DEFS.filter((def) => hubObjectiveState(hub, def, 'weekly') === 'claimable').length;
 
-  let html = `
+  let html = `${renderRouteJourney(s)}
+  <div class="hub-section-head hub-objectives-head"><strong>Objectives</strong><span>Optional rewards</span></div>
   <div class="hub-season">
     <div class="hub-season-top">
       <span class="hub-season-lab">Season</span>
@@ -1171,12 +1269,12 @@ export function renderHUD(s) {
   set($('v-kills'), `${s.route.killsInZone}/${need}`);
   set($('v-xp-lab'), `${formatNum(h.xp | 0)}/${formatNum(needXp)}`);
 
-  const echoState = s.route.echoProgressByPack?.[pack?.id];
-  const echoFound = Math.max(0, Number(echoState?.found) || 0);
-  const echoTotal = Math.max(0, Number(echoState?.total) || 0);
+  const echoState = echoProgressFor(s.route, pack?.id);
+  const echoFound = echoState.found;
+  const echoTotal = echoState.total;
   const echoChip = $('patch-echo-chip');
   if (echoChip) {
-    echoChip.hidden = echoTotal === 0;
+    echoChip.hidden = !pack;
     set($('v-echo-progress'), `${Math.min(echoFound, echoTotal)}/${echoTotal}`);
   }
 

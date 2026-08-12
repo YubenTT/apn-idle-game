@@ -4703,7 +4703,302 @@ button[hidden] {
   font-weight: 800;
 }
 
-/* I-023 · Hub reads as a live-ops claim board. */
+/* Route is the durable journey; live-ops objectives stay secondary. */
+.route-journey {
+  display: grid;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-6);
+}
+
+.route-current-card,
+.route-clean-card,
+.route-archive,
+.route-history {
+  border: var(--border-1);
+  border-radius: var(--r-card);
+  background: var(--surface-900);
+}
+
+.route-current-card {
+  display: grid;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  border-color: color-mix(in srgb, var(--apn-primary) 58%, var(--border-700));
+  box-shadow: inset 0 var(--border-accent) 0 var(--apn-primary);
+}
+
+.route-current-card.is-drift {
+  border-color: color-mix(in srgb, var(--c-sp) 58%, var(--border-700));
+  box-shadow: inset 0 var(--border-accent) 0 var(--c-sp);
+}
+
+.route-card-kicker,
+.route-pack-pair,
+.route-echo-now,
+.route-clean-card,
+.route-archive summary,
+.route-archive-row,
+.route-history-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+
+.route-card-kicker {
+  color: var(--apn-primary-hi);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.route-current-card.is-drift .route-card-kicker {
+  color: var(--c-sp);
+}
+
+.route-card-kicker b,
+.route-echo-now strong,
+.route-archive summary > b,
+.route-archive-row > b,
+.route-history-row > b {
+  font-variant-numeric: tabular-nums;
+}
+
+.route-pack-pair {
+  align-items: stretch;
+}
+
+.route-pack-now,
+.route-pack-next {
+  min-width: 0;
+  flex: 1 1 0;
+  display: grid;
+  align-content: start;
+  gap: var(--sp-1);
+}
+
+.route-pack-next {
+  text-align: right;
+}
+
+.route-pack-now small,
+.route-pack-next small,
+.route-echo-now small,
+.route-clean-card small,
+.route-archive summary small,
+.route-archive-row small,
+.route-history-row small {
+  color: var(--text-low);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+  font-weight: 700;
+}
+
+.route-pack-now strong,
+.route-pack-next strong {
+  overflow-wrap: anywhere;
+  color: var(--text-high);
+  font-size: var(--fs-body-l);
+  line-height: var(--lh-body-l);
+}
+
+.route-pack-next strong {
+  color: var(--text-mid);
+  font-size: var(--fs-body-m);
+  line-height: var(--lh-body-m);
+}
+
+.route-arrow {
+  align-self: center;
+  flex: 0 0 auto;
+  color: var(--text-low);
+  font-size: var(--fs-body-l);
+}
+
+.route-wave-track,
+.route-clean-track {
+  height: var(--sp-2);
+  overflow: hidden;
+  border-radius: var(--r-pill);
+  background: var(--surface-800);
+}
+
+.route-wave-track i,
+.route-clean-track i {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--apn-primary);
+}
+
+.route-echo-now > span:first-child {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+}
+
+.route-echo-now strong {
+  color: var(--text-high);
+}
+
+.route-echo-dots {
+  display: flex;
+  gap: var(--sp-1);
+}
+
+.route-echo-dots i {
+  width: var(--sp-3);
+  height: var(--sp-3);
+  border: var(--border-1);
+  border-radius: 50%;
+  border-color: var(--border-700);
+  background: var(--surface-800);
+}
+
+.route-echo-dots i.found {
+  border-color: var(--c-positive);
+  background: var(--c-positive);
+  box-shadow: 0 0 var(--sp-2) color-mix(in srgb, var(--c-positive) 45%, transparent);
+}
+
+.route-clean-card {
+  position: relative;
+  flex-wrap: wrap;
+  padding: var(--sp-3);
+}
+
+.route-clean-card > div:first-child {
+  min-width: 0;
+  display: grid;
+  gap: var(--sp-1);
+}
+
+.route-clean-card strong {
+  color: var(--text-high);
+  font-size: var(--fs-body-m);
+  line-height: var(--lh-body-m);
+}
+
+.route-clean-card > span {
+  color: var(--text-mid);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+  font-weight: 700;
+}
+
+.route-clean-card.is-complete {
+  border-color: var(--c-positive);
+}
+
+.route-clean-card.is-complete strong {
+  color: var(--c-positive);
+}
+
+.route-clean-track {
+  flex: 1 0 100%;
+}
+
+.route-clean-track i {
+  background: var(--c-positive);
+}
+
+.route-archive {
+  overflow: clip;
+}
+
+.route-archive summary {
+  min-height: var(--touch-min);
+  padding: var(--sp-3);
+  cursor: pointer;
+  list-style: none;
+}
+
+.route-archive summary::-webkit-details-marker {
+  display: none;
+}
+
+.route-archive summary > span,
+.route-archive-row > span,
+.route-history-row > span {
+  min-width: 0;
+  display: grid;
+  gap: var(--sp-1);
+}
+
+.route-archive summary strong,
+.route-history .hub-section-head strong {
+  color: var(--text-high);
+}
+
+.route-archive summary > b {
+  color: var(--c-sp);
+}
+
+.route-archive-grid {
+  display: grid;
+  border-top: var(--border-1);
+}
+
+.route-archive-row,
+.route-history-row {
+  min-height: var(--touch-min);
+  padding: var(--sp-2) var(--sp-3);
+  border-bottom: var(--border-1);
+}
+
+.route-archive-row:last-child,
+.route-history-row:last-child {
+  border-bottom: 0;
+}
+
+.route-archive-row strong,
+.route-history-row strong {
+  overflow-wrap: anywhere;
+  color: var(--text-mid);
+  font-size: var(--fs-label-m);
+  line-height: var(--lh-label-m);
+}
+
+.route-archive-row.is-complete strong,
+.route-archive-row.is-complete > b {
+  color: var(--c-positive);
+}
+
+.route-archive-row > b,
+.route-history-row > b {
+  flex: 0 0 auto;
+  color: var(--text-mid);
+  font-size: var(--fs-label-m);
+  line-height: var(--lh-label-m);
+}
+
+.route-history {
+  overflow: hidden;
+}
+
+.route-history > .hub-section-head {
+  margin: 0;
+  padding: 0 var(--sp-3);
+  border-bottom: var(--border-1);
+}
+
+.route-history-empty {
+  margin: 0;
+  padding: var(--sp-4) var(--sp-3);
+  color: var(--text-mid);
+  font-size: var(--fs-label-m);
+  line-height: var(--lh-label-m);
+}
+
+.hub-objectives-head {
+  margin-top: 0;
+  border-top: var(--border-1);
+}
+
+/* I-023 · Hub reads as a live-ops claim board below the Route journey. */
 #panel-hub .hub-season {
   display: grid;
   gap: var(--sp-3);

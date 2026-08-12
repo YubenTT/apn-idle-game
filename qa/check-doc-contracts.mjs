@@ -301,7 +301,11 @@ const stageDocumentObligations = [
 ];
 const failures = [];
 
-if (!route.includes('20 distinct clean Game Packs')) {
+if (
+  !route.includes('Signal Drift is anchored at Route Zone 200') ||
+  !route.includes('three deterministic Echo discoveries') ||
+  !route.includes('journey capsule')
+) {
   failures.push('route milestone');
 }
 if (!adr.includes('- Status: Accepted')) {

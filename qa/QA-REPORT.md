@@ -1,5 +1,32 @@
 # APN Idle redesign V1 — QA report
 
+## 2026-08-12 Route journey and Echo archive
+
+Status: Route/Echo is implemented as durable game state rather than HUD
+placeholder copy. A pure one-zone transition discovers Echoes at Pack waves
+3/6/9, records every Gate completion, preserves exact per-Pack visit counts,
+caps recent history at 60 entries, marks Clean Era completion monotonically,
+and keeps deterministic current/next scheduling through Signal Drift.
+
+Fresh verification on the candidate tree:
+
+- `node qa/check-route-journey.mjs` passes domain purity, migration,
+  extensibility, bounded state, postgame promise, real combat, Go Live, and
+  old-client rollback-capsule cases;
+- `node qa/long-run.mjs` passes deterministic offline Echo/history progression,
+  the two-Pack safety boundary, and finite multi-hit Zone 1000;
+- `npm test` ends in `ALL PASS`, including every existing V4/GAF2D authority and
+  asset gate;
+- direct Chrome passes current/next, real combat Echo `1/3`, Clean Era Complete,
+  Signal Drift 1, exact history, and `render_game_to_text` at 375×812, 428×926,
+  844×390, and 1280×800 with zero horizontal overflow and no console warning or
+  error; and
+- the fresh mobile, postgame, landscape, and desktop screenshots were visually
+  inspected. Route is the first sheet hierarchy, objectives remain below it,
+  long titles wrap safely, and the compact Run HUD remains readable.
+
+No GAF2D asset, V4 manifest, approval, release, or runtime media byte changed.
+
 ## 2026-08-10 APN Hero V4 production integration
 
 Status: the owner separately approved the APN Hero editable rig. The exact rig

@@ -1,3 +1,11 @@
+> **Current closure authority (2026-08-12).** The implemented player action is
+> `Go Live`, not `Ship This Drop`. Route now visibly owns current/next Pack,
+> three Echoes per Pack, monotonic Clean Era completion, bounded Pack history,
+> and Zone-200 Signal Drift; objectives are secondary. See the
+> [complete-game closure design](../superpowers/specs/2026-08-12-apn-idle-complete-game-closure-design.md)
+> and [Game Pack Route](../GAME-PACK-ROUTE.md). The imported V3 body below is
+> retained as historical design input where it does not conflict.
+
 > **Imported V3 design authority** — reviewed baseline `efc5f22`, subordinate to plan v2 per the law stack (owner answers → AUDIT → plan v2 → *these V3 docs, as reconciled* → code). Terminology, rights-taxonomy, prestige-model and display-name deltas are recorded in [RECONCILIATION.md](./RECONCILIATION.md); where this document and plan v2 disagree, **plan v2 wins**. Imported verbatim in PR-0 (issue #17) — the body is *not* rewritten to match plan v2; the reconciliation layer carries the overrides.
 
 ---
