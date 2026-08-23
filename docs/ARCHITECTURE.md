@@ -185,6 +185,10 @@ flowchart TB
 - `wave-roster.js` is the shared spawn/warm/budget identity authority. It uses
   declared target roles and the real current/next Route window, never target
   array position or catalog adjacency.
+- It also owns the authored per-pack wave composition: creature pools where a
+  pack's cast is authored as pools, weighted composition rhythms elsewhere, and
+  the probability table as the fallback for an unauthored pack ID. See
+  [Game Pack Route](./GAME-PACK-ROUTE.md).
 - Initial simulation waits for current-wave motion. Later pending motion can
   hold only the spawn boundary; UI and rendering continue.
 

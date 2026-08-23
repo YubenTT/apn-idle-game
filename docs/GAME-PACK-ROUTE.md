@@ -151,6 +151,33 @@ Every pack exports five small targets/rivals and one boss. A sports pack may use
 cover stars, player-card rivals, or game-specific roles instead of monsters; it
 still obeys the same runtime scale and pivot contract.
 
+## Authored wave composition
+
+The table above is the default shape. Each pack then owns an authored composition
+rhythm in `js/wave-roster.js`: waves 1–9 carry per-wave enemy-type weights, and
+wave 10 stays the Gate. Three authorities resolve it, and they never overlap:
+
+| Authority | Owns | Applies to |
+|---|---|---|
+| Creature pools | exact per-wave type list | packs whose cast is authored as pools |
+| Composition rhythms | per-wave type weights | every other pack |
+| Probability table | `CHAMPION_CHANCE` / `ELITE_CHANCE` | unauthored or tampered pack IDs |
+
+Rhythms are drawn from the pack's genre — tactical packs go elite-forward through
+the mid waves, sports packs beat on event surges, horror packs stay near-silent
+and then collapse late, sandbox packs alternate calm and spike, and open-world
+packs escalate every wave.
+
+The balance-neutrality invariant is what keeps the locked gates green: across
+waves 1–9 every authored pack sums to the same expected champion frequency
+(`C.CHAMPION_CHANCE`) and elite-family frequency (`C.ELITE_CHANCE`) as the
+probability table, so its mean expected HP budget is identical. Packs differ in
+**where** those beats land and which elite/common flavor carries them — never in
+the totals.
+`qa/check-wave-roster.mjs` asserts the shape, the envelope, deterministic
+selection, pool-authoritative packs, the fallback path, and that no two packs
+share a table.
+
 ## Corruption epochs
 
 | Route Zone | Maximum revisit tier | Art delta |

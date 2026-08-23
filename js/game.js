@@ -86,7 +86,9 @@ const HERO_HIT_SECONDS = 4 / 16;
 const HERO_DEATH_SECONDS = 8 / 16;
 import {
   enemyTypesForPackWave as authoredEnemyTypesForPackWave,
+  rollWaveEnemyType,
   targetForEnemyType,
+  waveBeatForPack,
 } from './wave-roster.js?v=gaf2d-motion-v1';
 import { motionReduced } from './motion-preference.js?v=gaf2d-motion-v1';
 
@@ -682,14 +684,10 @@ export function pickEnemyTypeForPackWave(packId, packWave, random = Math.random)
 
 function pickEnemyType(zone, forceBoss, packId) {
   if (forceBoss) return 'boss';
-  const authored = pickEnemyTypeForPackWave(packId, (zone % 10) + 1);
+  const packWave = (zone % 10) + 1;
+  const authored = pickEnemyTypeForPackWave(packId, packWave);
   if (authored) return authored;
-  const r = Math.random();
-  if (r < C.CHAMPION_CHANCE) return 'patch';
-  if (r < C.CHAMPION_CHANCE + C.ELITE_CHANCE) {
-    return Math.random() < 0.5 ? 'lag' : Math.random() < 0.5 ? 'spoiler' : 'event';
-  }
-  return Math.random() < 0.5 ? 'stale' : 'rumor';
+  return rollWaveEnemyType(waveBeatForPack(packId, packWave));
 }
 
 export function spawnEnemy(s) {
