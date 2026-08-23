@@ -6,6 +6,11 @@
  * decoded, procedural mid/near layers on top so every scene stays alive.
  * Static strips are cached offscreen per biome (the paintedMid pattern);
  * animated elements are cheap sin-based shapes. Reduced-motion gates drift.
+ *
+ * The active Pack also dresses the place: its authored props sheet becomes a
+ * sparse near-ground set-dressing band, and the accent pair read out of that
+ * same sheet tints the billboard glow and the signal rail. Both are optional —
+ * a Pack without decoded props renders exactly the procedural scene.
  */
 
 const TAU = Math.PI * 2;
@@ -294,6 +299,182 @@ function starField(bio, w, h) {
   return c;
 }
 
+/* —— pack set dressing (the authored props sheet) ————————————— */
+
+/** `props.webp` ships one 512×128 strip: 4 authored 128×128 motifs, each
+ *  planted on its own contact shadow at 87.5% of the cell height. Cell size is
+ *  derived from the decoded image so the layout stays data-driven. */
+const PROP_CELLS = 4;
+const PROP_CONTACT = 0.875;
+
+const packToneCache = new Map();
+const glowCache = new Map();
+const dressCache = new Map();
+let dressPackId = null;
+
+/** Knuth-multiply integer hash — the draw path stays free of Math.random. */
+function mix32(a, b) {
+  let h = Math.imul((a | 0) ^ 0x9e3779b9, 2654435761);
+  h = Math.imul(h ^ (b | 0), 2246822519);
+  h ^= h >>> 13;
+  return (h ^ (h >>> 7)) >>> 0;
+}
+
+function textSeed(text) {
+  let h = 2166136261;
+  for (let i = 0; i < text.length; i += 1) h = Math.imul(h ^ text.charCodeAt(i), 16777619);
+  return h >>> 0;
+}
+
+function glowChannels(bio) {
+  if (!glowCache.has(bio.id)) {
+    glowCache.set(bio.id, bio.glow.split(',').map((channel) => Number(channel)));
+  }
+  return glowCache.get(bio.id);
+}
+
+/** Biome mood stays dominant; the Pack tone only tints it. */
+function blendGlow(base, tint, amount) {
+  return base
+    .map((channel, index) => Math.round(channel + (tint[index] - channel) * amount))
+    .join(',');
+}
+
+/**
+ * Read the Pack's own accent pair out of its authored props sheet: one
+ * offscreen readback per Pack, then cached. Flat vector fills dominate the
+ * sheet, so the two heaviest saturated buckets are the authored palette roles.
+ * Returns null when the sheet cannot be sampled — callers fall back to biome.
+ */
+function packTone(packId, props) {
+  if (packToneCache.has(packId)) return packToneCache.get(packId);
+  let tone = null;
+  try {
+    const plate = makeCanvas(props.naturalWidth, props.naturalHeight);
+    if (plate) {
+      const g = plate.getContext('2d', { willReadFrequently: true });
+      g.drawImage(props, 0, 0);
+      const { data } = g.getImageData(0, 0, plate.width, plate.height);
+      const buckets = new Map();
+      for (let i = 0; i < data.length; i += 4) {
+        if (data[i + 3] < 220) continue;
+        const r = data[i];
+        const gr = data[i + 1];
+        const b = data[i + 2];
+        const peak = Math.max(r, gr, b);
+        // drop the authored ink outline, the contact shadow, and near-greys
+        if (peak < 70 || peak - Math.min(r, gr, b) < 42) continue;
+        const key = ((r >> 4) << 8) | ((gr >> 4) << 4) | (b >> 4);
+        const bucket = buckets.get(key) || { n: 0, r: 0, g: 0, b: 0 };
+        bucket.n += 1;
+        bucket.r += r;
+        bucket.g += gr;
+        bucket.b += b;
+        buckets.set(key, bucket);
+      }
+      const ranked = [...buckets.values()].sort((x, y) => y.n - x.n);
+      if (ranked.length) {
+        const average = (bucket) => [
+          Math.round(bucket.r / bucket.n),
+          Math.round(bucket.g / bucket.n),
+          Math.round(bucket.b / bucket.n),
+        ];
+        const accent = average(ranked[0]);
+        const floor = ranked[0].n * 0.12;
+        let second = accent;
+        for (let i = 1; i < ranked.length && ranked[i].n >= floor; i += 1) {
+          const candidate = average(ranked[i]);
+          const gap =
+            Math.abs(candidate[0] - accent[0]) +
+            Math.abs(candidate[1] - accent[1]) +
+            Math.abs(candidate[2] - accent[2]);
+          if (gap > 90) {
+            second = candidate;
+            break;
+          }
+        }
+        tone = { accent, second };
+      }
+    }
+  } catch {
+    tone = null;
+  }
+  packToneCache.set(packId, tone);
+  return tone;
+}
+
+/** One authored prop cell sunk into the zone's night: enough of the Pack's own
+ *  colour survives to read as its art, far too little to rival an actor. */
+function dressCell(bio, props, cell, cw, ch) {
+  const key = `${bio.id}:${cell}`;
+  if (dressCache.has(key)) return dressCache.get(key);
+  let plate = null;
+  try {
+    const c = makeCanvas(cw, ch);
+    if (c) {
+      const g = c.getContext('2d');
+      g.drawImage(props, cell * cw, 0, cw, ch, 0, 0, cw, ch);
+      g.globalCompositeOperation = 'source-atop';
+      g.globalAlpha = 0.66;
+      g.fillStyle = bio.ground;
+      g.fillRect(0, 0, cw, ch);
+      // sky-lit top edge keeps the shape legible against the pack plate
+      g.globalAlpha = 1;
+      const rim = g.createLinearGradient(0, 0, 0, ch * 0.72);
+      rim.addColorStop(0, `rgba(${bio.glow},0.24)`);
+      rim.addColorStop(1, `rgba(${bio.glow},0)`);
+      g.fillStyle = rim;
+      g.fillRect(0, 0, cw, ch);
+      g.globalCompositeOperation = 'source-over';
+      plate = c;
+    }
+  } catch {
+    plate = null;
+  }
+  dressCache.set(key, plate);
+  return plate;
+}
+
+/** Sparse near-ground dressing band: deterministic per (Pack, zone, slot),
+ *  planted on the ground line, parallaxed with the near layer, no time term —
+ *  so reduced motion changes nothing about it. */
+function drawPackDressing(ctx, w, gy, scroll, zone, packId, props, bio) {
+  const cw = Math.floor(props.naturalWidth / PROP_CELLS);
+  const ch = props.naturalHeight;
+  if (cw < 8 || ch < 8) return;
+  if (dressPackId !== packId) {
+    dressPackId = packId;
+    dressCache.clear();
+  }
+  const base = textSeed(packId) ^ Math.imul(zone + 1, 2654435761);
+  const slots = 4;
+  const span = w + 240;
+  const step = span / slots;
+  for (let slot = 0; slot < slots; slot += 1) {
+    const raw = slot * step - scroll * 0.85;
+    const lap = Math.floor(raw / span);
+    const cx = raw - lap * span - 120;
+    const seed = mix32(base + slot * 977, lap);
+    if (seed % 6 === 0) continue; // keeps the band at 2–3 props per screen
+    // one rotation per lap, then step by slot: neighbouring dressing never
+    // repeats a motif, and the rotation itself moves with zone and lap
+    const cell = (mix32(base, lap) + slot) % PROP_CELLS;
+    const plate = dressCell(bio, props, cell, cw, ch);
+    if (!plate) continue;
+    const dh = 64 + ((seed >>> 9) % 32);
+    const dw = dh * (cw / ch);
+    ctx.globalAlpha = 0.9;
+    ctx.drawImage(
+      plate,
+      Math.round(cx - dw / 2),
+      Math.round(gy + 2 - dh * PROP_CONTACT),
+      Math.round(dw),
+      Math.round(dh),
+    );
+    ctx.globalAlpha = 1;
+  }
+}
+
 function drawCover(ctx, image, x, y, width, height) {
   const scale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
   const sourceWidth = width / scale;
@@ -317,7 +498,8 @@ function tile(ctx, strip, y, hgt, w, scrollPx) {
 
 /**
  * Draw the full scene behind actors. o = { zone, gy, scroll, t,
- * reducedMotion, packBg (decoded Image|null) }.
+ * reducedMotion, packBg (decoded Image|null), packProps (decoded Image|null),
+ * packId (string|null) }.
  */
 export function drawScenery(ctx, w, h, o) {
   const bio = biomeForZone(o.zone);
@@ -325,6 +507,14 @@ export function drawScenery(ctx, w, h, o) {
   const scroll = o.scroll;
   const t = o.t;
   const still = !!o.reducedMotion;
+  const props = o.packId && o.packProps ? o.packProps : null;
+  const tone = props ? packTone(o.packId, props) : null;
+  const glow = glowChannels(bio);
+  // Pack identity threads into exactly two procedural accents; every other
+  // glow on the scene stays pure biome so the zone mood still leads.
+  const billboardGlow = tone ? blendGlow(glow, tone.accent, 0.4) : bio.glow;
+  const railGlow = tone ? blendGlow(glow, tone.second, 0.4) : bio.glow;
+  const railStroke = tone ? `rgba(${railGlow},0.5)` : bio.rail;
 
   // 1 · sky
   const sky = ctx.createLinearGradient(0, 0, 0, h);
@@ -372,11 +562,11 @@ export function drawScenery(ctx, w, h, o) {
   if (o.packBg) {
     // 2 · pack plate as the FAR layer, dimmed, procedural life continues on top
     ctx.save();
-    ctx.globalAlpha = 0.6;
+    ctx.globalAlpha = 0.68;
     drawCover(ctx, o.packBg, 0, 0, w, h);
     ctx.restore();
-    // biome wash ties the plate into the zone mood
-    ctx.fillStyle = `rgba(${bio.glow},0.05)`;
+    // biome wash ties the plate into the zone mood without veiling the motif
+    ctx.fillStyle = `rgba(${bio.glow},0.035)`;
     ctx.fillRect(0, 0, w, gy);
   } else {
     // 2 · far skyline silhouette
@@ -387,7 +577,7 @@ export function drawScenery(ctx, w, h, o) {
 
   // 3 · mid towers with lit windows
   const midH = Math.min(250, gy * 0.72);
-  ctx.globalAlpha = o.packBg ? 0.66 : 0.95;
+  ctx.globalAlpha = o.packBg ? 0.6 : 0.95;
   tile(ctx, midStrip(bio), gy - midH - 6, midH, w, scroll * 0.28);
   ctx.globalAlpha = 1;
 
@@ -406,14 +596,14 @@ export function drawScenery(ctx, w, h, o) {
       ctx.fillStyle = i === 0 ? 'rgba(252,18,67,0.75)' : `${bio.win}0.7)`;
       ctx.fillRect(bx + 12 + crawl * 108, by + 36, 22, 10);
       const blink = still ? 1 : (Math.sin(t * 2.4 + i * 2) > 0 ? 1 : 0.35);
-      ctx.fillStyle = `rgba(${bio.glow},${0.7 * blink})`;
+      ctx.fillStyle = `rgba(${billboardGlow},${0.7 * blink})`;
       ctx.fillRect(bx + 12, by + 58, 30 + ((i * 37) % 40), 6);
     }
   }
 
   // 5 · signal rails with moving pulse dots
   const railY = gy - 108;
-  ctx.strokeStyle = bio.rail;
+  ctx.strokeStyle = railStroke;
   ctx.lineWidth = 1.5;
   ctx.globalAlpha = 0.6;
   ctx.beginPath();
@@ -422,7 +612,7 @@ export function drawScenery(ctx, w, h, o) {
   ctx.stroke();
   ctx.globalAlpha = 1;
   if (!still) {
-    ctx.fillStyle = `rgba(${bio.glow},0.85)`;
+    ctx.fillStyle = `rgba(${railGlow},0.85)`;
     for (let i = 0; i < 6; i++) {
       const px = ((i * 170 + t * 46 - scroll * 0.55) % (w + 60) + (w + 60)) % (w + 60) - 30;
       const py = railY + (px / w) * 6;
@@ -460,6 +650,10 @@ export function drawScenery(ctx, w, h, o) {
   ctx.globalAlpha = 0.95;
   tile(ctx, nearStrip(bio), gy - 148, 148, w, scroll * 0.85);
   ctx.globalAlpha = 1;
+
+  // 7b · pack set dressing — shares the near plane, still behind every actor
+  // and behind the ground plate, so the props plant on the horizon line
+  if (props) drawPackDressing(ctx, w, gy, scroll, o.zone, o.packId, props, bio);
 
   // 8 · ground plane + sheen + reflection
   const gg = ctx.createLinearGradient(0, gy, 0, h);

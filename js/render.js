@@ -611,6 +611,8 @@ export function draw(
     t,
     reducedMotion: motionReduced(s),
     packBg: packAssets?.ready && ready(packAssets.background) ? packAssets.background : null,
+    packProps: packAssets?.ready && ready(packAssets.props) ? packAssets.props : null,
+    packId: packAssets?.ready ? packAssets.id || null : null,
   });
 
   // alerts
