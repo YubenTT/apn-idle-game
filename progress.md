@@ -52,6 +52,27 @@ Original prompt: Complete the APN Idle redesign autonomously, including QA, revi
   have surfaced as a 404.
 - No commit, merge, or deploy ran in this slice; `git diff --check` is clean.
 
+- Shipped and deployed on 2026-08-24. Game PR #49 squash-merged to `main`
+  (`9da468b`) after CI `Tests + browser smoke` and GitGuardian passed.
+  `apn-web` PR #279 (`57b8ddc`) published the projection: 363 files, tree
+  `5a93f36186cebda610fae974b2f9e2c0f695edcc0c3a632b1179246c585a8b86`, rollback
+  pinned at apn-web `98c0168` / game `c1298dc`. Cloudflare Workers deploy
+  version `5563b446-18fd-4b0f-8097-647399587ffc`.
+- Live readback is green: `npm run smoke:idle-game` with the expected
+  source/tree ends `APN IDLE COMPLETE-GAME SMOKE PASS` across all four
+  viewports with zero console findings and zero horizontal overflow, and
+  `https://allpatchnotes.com/idle/` serves `enhanced-v1`.
+- Two defects were found by driving the real browser rather than the suite,
+  and both carry permanent regressions: a zero-width load (hidden embed)
+  threw `InvalidStateError` on every cached-strip `drawImage` and killed the
+  boot draw; and a once-ever tip fired while a sheet was open was spent behind
+  it, because the sheet stacks above the toast.
+- One cross-repo contract broke as expected and was repaired in lockstep:
+  the apn-web idle smoke asserted on `#offline-body`, the `<pre>` this release
+  replaced with a structured receipt (apn-web PR #280, `8798608`). The
+  assertion now also requires real currency rows, so it proves more than the
+  old string match.
+
 ## 2026-08-12 — ALL-257 production enemy-visibility incident started
 
 - New owner request: live `https://allpatchnotes.com/idle/` shows combat/HP/name but no creature body; diagnose broadly, fix without overengineering, then PR/merge/deploy and leave both repositories clean.
