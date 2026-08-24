@@ -4713,6 +4713,8 @@ button[hidden] {
 .route-current-card,
 .route-mastery-card,
 .route-clean-card,
+.route-goal-card,
+.route-trophy-card,
 .route-archive,
 .route-sets,
 .route-history {
@@ -4955,6 +4957,30 @@ button[hidden] {
 
 .route-clean-track i {
   background: var(--c-positive);
+}
+
+/* Named era + stated terminal goal — same card shell, different accent role.
+   The era name itself lives in the card kicker; this line carries only its
+   editorial read, so the name is never printed twice in one card. */
+.route-era-line {
+  margin: 0;
+  color: var(--text-mid);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+}
+
+.route-goal-card .route-clean-track i {
+  background: var(--c-zone);
+}
+
+.route-goal-card.is-complete,
+.route-trophy-card {
+  border-color: var(--c-notes);
+}
+
+.route-goal-card.is-complete strong,
+.route-trophy-card strong {
+  color: var(--c-notes);
 }
 
 .route-archive {

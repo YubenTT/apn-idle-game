@@ -419,11 +419,11 @@ async function productionVisibilityScenario(packs, policy) {
     `window.__APN_QA__.actions.setReducedMotion(true); true`,
   );
 
-  async function selectPackAndSpawn(pack, packIndex, randomSetup) {
+  async function selectPackAndSpawn(pack, packIndex, randomSetup, packWave = 1) {
     await evaluate(cdp, `(() => {
       const q = window.__APN_QA__;
       const state = q.state;
-      state.route.zone = ${packIndex * 10};
+      state.route.zone = ${packIndex * 10 + (packWave - 1)};
       state.route.currentPackId = ${JSON.stringify(pack.id)};
       state.route.killsInZone = 0;
       state.world.enemies = [];
@@ -510,13 +510,18 @@ async function productionVisibilityScenario(packs, policy) {
 
   const leagueIndex = packs.findIndex((pack) => pack.id === 'league');
   assert(leagueIndex >= 0, 'runtime catalog contains the legacy-creature Pack');
+  // The legacy creature rotation only mounts on an elite target, so this probe
+  // must land on a wave whose authored composition rhythm actually carries
+  // elite weight. League waves 1–4 are pure lane phase (zero elite), so the
+  // probe sits on wave 7 and rolls into that wave's elite → lag branch.
   await selectPackAndSpawn(
     packs[leagueIndex],
     leagueIndex,
     `{
-      const rolls = [0.18, 0.1, 0.5, 0.5];
+      const rolls = [0.35, 0.1, 0.5, 0.5];
       Math.random = () => rolls.length ? rolls.shift() : 0.5;
     }`,
+    7,
   );
   await waitForExpression(
     cdp,

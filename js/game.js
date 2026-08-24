@@ -67,9 +67,11 @@ import {
   BAG_CAP,
 } from './loot.js?v=gaf2d-motion-v1';
 import {
+  PATCHLINE_COMPLETE_ZONE,
   createRouteState,
   nextSeasonBoundary,
   packForRoute,
+  patchlineRecord,
   recordRouteZoneClear,
 } from './route.js?v=gaf2d-motion-v1';
 import { GAME_PACKS } from './generated/game-packs.js?v=gaf2d-motion-v1';
@@ -1056,6 +1058,34 @@ function onKill(s, e) {
       );
     }
     if (isBossZone(s.route.zone)) tip(s, 'boss');
+
+    // —— Narrated arc beats ————————————————————————————————————
+    // Both are deterministic facts of the Route transition (no RNG draw, no new
+    // particle spawn), so the seeded pacing profiles stay bit-identical. They
+    // run last so the era/finale line owns the toast channel for this clear.
+    if (routeTransition.eraShift) {
+      const era = routeTransition.eraShift;
+      toast(s, `Era shift · ${era.name} — ${era.blurb}`, 3.4, 'live');
+      if (!motionReduced(s)) s.ui.fx = { kind: 'sweep', t: 0.9, life: 0.9 };
+    }
+    if (routeTransition.patchline && !s.meta.patchline) {
+      s.meta.patchline = patchlineRecord(
+        routeTransition.patchline.atZone,
+        Date.now(),
+      );
+      toast(
+        s,
+        `Patchline Complete — Zone ${PATCHLINE_COMPLETE_ZONE} cleared. Endless Rating begins.`,
+        4,
+        'live',
+      );
+      s.ui.fx = {
+        kind: 'patchline',
+        t: 2.4,
+        life: 2.4,
+        zone: routeTransition.patchline.atZone,
+      };
+    }
   }
 }
 

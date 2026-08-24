@@ -333,6 +333,8 @@ function renderGameToText() {
       echo: journey.echo,
       cleanEra: journey.cleanEra,
       signalDrift: journey.signalDrift,
+      era: journey.era,
+      patchline: journey.patchline,
       historyCount: journey.history.length,
     },
     coverage: {

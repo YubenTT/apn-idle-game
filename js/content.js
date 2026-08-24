@@ -205,6 +205,76 @@ export const SKILL_TREES = [
   { id: 'amplify', mastery: 'relay', label: 'Relay', promise: 'Stronger skills and longer idle continuity' },
 ];
 
+/**
+ * Named Corruption eras — the editorial voice of the 200→1000 stretch.
+ *
+ * Tier is the Corruption epoch (`floor(zone / 200)`, capped at 4), so the era
+ * is a property of the Route, not of one Pack: a freshly debuted clean Pack in
+ * a late epoch still plays inside that era's world. Tier 0 keeps the shipped
+ * Clean-signal language untouched, so every Zone 1–200 surface is unchanged.
+ *
+ * Names are APN-original broadcast vocabulary. They carry no third-party mark
+ * and no banned display form, and `qa/check-route-journey.mjs` asserts they
+ * stay present, distinct, and mark-free.
+ */
+export const ERAS = Object.freeze([
+  Object.freeze({
+    tier: 0,
+    name: 'Clean Signal',
+    blurb: 'Canonical Packs. Nothing is bleeding into the feed yet.',
+  }),
+  Object.freeze({
+    tier: 1,
+    name: 'Static Hour',
+    blurb: 'The first noise creeps in behind the broadcast.',
+  }),
+  Object.freeze({
+    tier: 2,
+    name: 'Dead Air',
+    blurb: 'The feed still runs. Nothing answers on the other end.',
+  }),
+  Object.freeze({
+    tier: 3,
+    name: 'Feed Collapse',
+    blurb: 'Patchlines fold into each other and stop agreeing.',
+  }),
+  Object.freeze({
+    tier: 4,
+    name: 'Total Blackout',
+    blurb: 'Maximum readable mutation. The signal is all yours to hold.',
+  }),
+]);
+
+/** Post-completion continuation label promised by GAME-PACK-ROUTE. */
+export const ENDLESS_ERA_NAME = 'Endless Rating';
+
+export const ERA_MAX_TIER = ERAS.length - 1;
+
+/** Era record for a Corruption epoch tier; always resolves (clamped 0–4). */
+export function eraForTier(tier) {
+  const index = Number.isFinite(tier) ? Math.min(ERA_MAX_TIER, Math.max(0, Math.floor(tier))) : 0;
+  return ERAS[index];
+}
+
+export function eraNameForTier(tier) {
+  return eraForTier(tier).name;
+}
+
+/**
+ * Display Zones whose Gate closes one era and opens the next. This is a label
+ * table only — the epoch anchor itself stays the deliberate `SIGNAL_DRIFT_ZONE`
+ * literal in `js/route.js`, and nothing here touches HP, timers, or geometry.
+ */
+export const MILESTONE_GATE_ZONES = Object.freeze([200, 400, 600, 800, 1000]);
+
+/** Era a milestone Gate hands the Route over to, or null for an ordinary Gate. */
+export function milestoneGateEraName(displayZone) {
+  const zone = Number.isFinite(displayZone) ? Math.floor(displayZone) : 0;
+  if (!MILESTONE_GATE_ZONES.includes(zone)) return null;
+  const tier = MILESTONE_GATE_ZONES.indexOf(zone) + 1;
+  return tier > ERA_MAX_TIER ? ENDLESS_ERA_NAME : ERAS[tier].name;
+}
+
 export const ENEMY_FLAVOR = {
   stale: { label: 'Broken Link', color: '#697384', kind: 'normal' },
   rumor: { label: 'Fake Leak', color: '#A7AFBC', kind: 'normal' },

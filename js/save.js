@@ -1,5 +1,9 @@
 import { normalizeGear, emptyGear, GEAR_SORTS, GEAR_FILTERS } from './loot.js?v=gaf2d-motion-v1';
-import { normalizeRoute } from './route.js?v=gaf2d-motion-v1';
+import {
+  normalizePatchlineRecord,
+  normalizeRoute,
+  patchlineRecord,
+} from './route.js?v=gaf2d-motion-v1';
 import { C, spentSkillPoints } from './formulas.js?v=gaf2d-motion-v1';
 import { SKILLS } from './content.js?v=gaf2d-motion-v1';
 import { normalizeCoverageMeta } from './coverage.js?v=gaf2d-motion-v1';
@@ -9,6 +13,11 @@ export const SAVE_KEY_V2 = 'apn_idle_save_v2';
 /** Current persisted save-schema version (Go Live checkpoint model, ADR-0008). */
 export const SAVE_VERSION = 3;
 const ROUTE_JOURNEY_SCHEMA = 'apn.route-journey';
+// The capsule version stays 1 while fields are added: `routeJourneyFromMeta`
+// restores per key (`key in capsule`), so an older capsule simply carries fewer
+// fields and the Route normalizer reconstructs the rest. Bumping the version
+// would instead reject older capsules wholesale — losing journey state in
+// exactly the rollback case this capsule exists to protect.
 const ROUTE_JOURNEY_VERSION = 1;
 const ROUTE_JOURNEY_FIELDS = Object.freeze([
   'echoProgressByPack',
@@ -17,6 +26,9 @@ const ROUTE_JOURNEY_FIELDS = Object.freeze([
   'history',
   'cleanEraCompleted',
   'cleanEraCompletedAtZone',
+  'eraTiersSeen',
+  'patchlineCompleted',
+  'patchlineCompletedAtZone',
 ]);
 
 function routeJourneyCapsule(route) {
@@ -89,6 +101,11 @@ export function save(s) {
       // data-safe without changing the storage key or pretending the old UI can
       // render new journey features.
       routeJourney: routeJourneyCapsule(normalizedRoute),
+      // Patchline Complete is stored beside the capsule rather than inside it.
+      // An old v3 client re-mints `meta.routeJourney` from its own Route shape,
+      // but leaves every other meta key untouched — so the trophy survives a
+      // production rollback round trip exactly like the coverage meta does.
+      patchline: normalizePatchlineRecord(s.meta.patchline) || undefined,
       gear: normalizeGear(s.meta.gear),
       premium: s.meta.premium || {
         pro: false,
@@ -179,6 +196,16 @@ export function apply(s, d) {
   Object.assign(s.meta, d.meta || {});
   delete s.meta.routeJourney;
   Object.assign(s.meta, normalizeCoverageMeta(s.meta));
+  // Monotonic Patchline trophy: keep a well-formed record, drop a malformed
+  // one, and reconstruct a missing one whenever the Route itself proves the
+  // 100th Gate was cleared (legacy deep saves, or a rollback that dropped it).
+  const restoredPatchline =
+    normalizePatchlineRecord(s.meta.patchline) ||
+    (s.route.patchlineCompleted
+      ? patchlineRecord(s.route.patchlineCompletedAtZone)
+      : null);
+  if (restoredPatchline) s.meta.patchline = restoredPatchline;
+  else delete s.meta.patchline;
   // Migrate gear and preserve the retired demo-store bucket as inert data.
   s.meta.gear = normalizeGear(d.meta?.gear || s.meta.gear || emptyGear());
   if (!s.meta.premium) {

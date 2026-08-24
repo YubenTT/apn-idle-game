@@ -11,6 +11,11 @@
  * sparse near-ground set-dressing band, and the accent pair read out of that
  * same sheet tints the billboard glow and the signal rail. Both are optional —
  * a Pack without decoded props renders exactly the procedural scene.
+ *
+ * From Corruption epoch 1 on, the Pack's authored `corruption-mask.webp`
+ * fissures crack the sky behind the world and a tier-stepped contamination
+ * wash, rim, and glow shift carry the drift scene-wide. Tier 0 draws none of
+ * it, so every Zone 1–200 scene is byte-identical to the clean build.
  */
 
 const TAU = Math.PI * 2;
@@ -475,6 +480,96 @@ function drawPackDressing(ctx, w, gy, scroll, zone, packId, props, bio) {
   }
 }
 
+/* —— corruption drift (the authored corruption mask) ————————— */
+
+/** `corruption-mask.webp` ships the same 512×128 strip shape as the props
+ *  sheet: 4 authored 128×128 fissure cells on transparent ground, drawn as
+ *  emitted light so a crack never muddies the plate underneath it. */
+const DRIFT_CELLS = 4;
+const DRIFT_ASPECT = 0.6;
+
+/**
+ * Tier-stepped drift treatment. `ink` is the fissure alpha, `wash` the flat
+ * scene tint, `rim` the contamination vignette at the frame edge, `glowMix`
+ * how far the biome glow bends toward the drift hue. Every value is bounded
+ * well under the existing black vignette, and the whole layer sits behind
+ * actors and behind the DOM HUD, so readability cannot regress with tier.
+ */
+const DRIFT_TIERS = Object.freeze([
+  null,
+  Object.freeze({ fissures: 3, ink: 0.28, hue: [176, 124, 255], wash: 0.042, rim: 0.14, glowMix: 0.14 }),
+  Object.freeze({ fissures: 4, ink: 0.34, hue: [196, 100, 238], wash: 0.06, rim: 0.18, glowMix: 0.19 }),
+  Object.freeze({ fissures: 5, ink: 0.4, hue: [214, 80, 190], wash: 0.076, rim: 0.22, glowMix: 0.24 }),
+  Object.freeze({ fissures: 6, ink: 0.46, hue: [232, 64, 140], wash: 0.092, rim: 0.26, glowMix: 0.3 }),
+]);
+
+/** Resolve a Corruption tier to its treatment, or null for a clean scene. */
+export function driftTreatmentForTier(tier) {
+  const index = Number.isFinite(tier) ? Math.floor(tier) : 0;
+  if (index <= 0) return null;
+  return DRIFT_TIERS[Math.min(DRIFT_TIERS.length - 1, index)];
+}
+
+/**
+ * Sky fissures: deterministic per (Pack, zone, slot, lap) through the same
+ * integer hash the set dressing uses, parallaxed on the far plane, and with no
+ * time term at all — the crack pattern is identical on every frame, so reduced
+ * motion has nothing to gate and screenshot evidence stays stable.
+ */
+function drawDriftFissures(ctx, w, gy, scroll, zone, packId, mask, drift) {
+  const cw = Math.floor(mask.naturalWidth / DRIFT_CELLS);
+  const ch = mask.naturalHeight;
+  if (cw < 8 || ch < 8) return;
+  const base = textSeed(`${packId || 'route'}:drift`) ^ Math.imul(zone + 1, 2246822519);
+  const span = w + 320;
+  const step = span / drift.fissures;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  for (let slot = 0; slot < drift.fissures; slot += 1) {
+    const raw = slot * step - scroll * 0.2;
+    const lap = Math.floor(raw / span);
+    const cx = raw - lap * span - 160;
+    const seed = mix32(base + slot * 6151, lap);
+    const cell = (mix32(base, lap) + slot) % DRIFT_CELLS;
+    const fh = gy * (0.52 + ((seed >>> 7) % 40) / 100);
+    const fw = fh * (cw / ch) * DRIFT_ASPECT;
+    const fy = gy - fh + ((seed >>> 17) % 18) - 10;
+    ctx.globalAlpha = drift.ink * (0.72 + ((seed >>> 11) % 40) / 100);
+    ctx.drawImage(
+      mask,
+      cell * cw,
+      0,
+      cw,
+      ch,
+      Math.round(cx - fw / 2),
+      Math.round(fy),
+      Math.round(fw),
+      Math.round(fh),
+    );
+  }
+  ctx.restore();
+}
+
+/** Scene-wide contamination: flat wash plus a hue vignette at the edges. */
+function drawDriftWash(ctx, w, h, gy, drift) {
+  const hue = drift.hue.join(',');
+  ctx.fillStyle = `rgba(${hue},${drift.wash})`;
+  ctx.fillRect(0, 0, w, h);
+  const edge = ctx.createRadialGradient(
+    w / 2,
+    gy * 0.62,
+    Math.min(w, h) * 0.28,
+    w / 2,
+    gy * 0.62,
+    Math.max(w, h) * 0.78,
+  );
+  edge.addColorStop(0, `rgba(${hue},0)`);
+  edge.addColorStop(0.55, `rgba(${hue},${drift.rim * 0.35})`);
+  edge.addColorStop(1, `rgba(${hue},${drift.rim})`);
+  ctx.fillStyle = edge;
+  ctx.fillRect(0, 0, w, h);
+}
+
 function drawCover(ctx, image, x, y, width, height) {
   const scale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
   const sourceWidth = width / scale;
@@ -499,7 +594,8 @@ function tile(ctx, strip, y, hgt, w, scrollPx) {
 /**
  * Draw the full scene behind actors. o = { zone, gy, scroll, t,
  * reducedMotion, packBg (decoded Image|null), packProps (decoded Image|null),
- * packId (string|null) }.
+ * packCorruption (decoded Image|null), packId (string|null),
+ * driftTier (0–4) }.
  */
 export function drawScenery(ctx, w, h, o) {
   const bio = biomeForZone(o.zone);
@@ -510,11 +606,16 @@ export function drawScenery(ctx, w, h, o) {
   const props = o.packId && o.packProps ? o.packProps : null;
   const tone = props ? packTone(o.packId, props) : null;
   const glow = glowChannels(bio);
+  const drift = driftTreatmentForTier(o.driftTier);
+  const driftMask = drift && o.packCorruption ? o.packCorruption : null;
   // Pack identity threads into exactly two procedural accents; every other
   // glow on the scene stays pure biome so the zone mood still leads.
   const billboardGlow = tone ? blendGlow(glow, tone.accent, 0.4) : bio.glow;
   const railGlow = tone ? blendGlow(glow, tone.second, 0.4) : bio.glow;
   const railStroke = tone ? `rgba(${railGlow},0.5)` : bio.rail;
+  // Drift bends the scene's own light toward the era hue. Tier 0 keeps the
+  // exact biome string, so a clean scene emits identical paint.
+  const sceneGlow = drift ? blendGlow(glow, drift.hue, drift.glowMix) : bio.glow;
 
   // 1 · sky
   const sky = ctx.createLinearGradient(0, 0, 0, h);
@@ -553,9 +654,9 @@ export function drawScenery(ctx, w, h, o) {
 
   // horizon bloom
   const bloom = ctx.createRadialGradient(w * 0.68, gy * 0.5, 8, w * 0.68, gy * 0.5, w * 0.65);
-  bloom.addColorStop(0, `rgba(${bio.glow},0.16)`);
-  bloom.addColorStop(0.5, `rgba(${bio.glow},0.05)`);
-  bloom.addColorStop(1, `rgba(${bio.glow},0)`);
+  bloom.addColorStop(0, `rgba(${sceneGlow},0.16)`);
+  bloom.addColorStop(0.5, `rgba(${sceneGlow},0.05)`);
+  bloom.addColorStop(1, `rgba(${sceneGlow},0)`);
   ctx.fillStyle = bloom;
   ctx.fillRect(0, 0, w, h);
 
@@ -566,7 +667,7 @@ export function drawScenery(ctx, w, h, o) {
     drawCover(ctx, o.packBg, 0, 0, w, h);
     ctx.restore();
     // biome wash ties the plate into the zone mood without veiling the motif
-    ctx.fillStyle = `rgba(${bio.glow},0.035)`;
+    ctx.fillStyle = `rgba(${sceneGlow},0.035)`;
     ctx.fillRect(0, 0, w, gy);
   } else {
     // 2 · far skyline silhouette
@@ -580,6 +681,12 @@ export function drawScenery(ctx, w, h, o) {
   ctx.globalAlpha = o.packBg ? 0.6 : 0.95;
   tile(ctx, midStrip(bio), gy - midH - 6, midH, w, scroll * 0.28);
   ctx.globalAlpha = 1;
+
+  // 3b · drift fissures crack the sky and the towers, still behind the near
+  // plane and every actor, so depth reads and readability never regresses
+  if (driftMask) {
+    drawDriftFissures(ctx, w, gy, scroll, o.zone, o.packId, driftMask, drift);
+  }
 
   // 4 · animated billboards (fake APN headline bars — no real logos)
   const bb = billboardBase(bio);
@@ -665,17 +772,17 @@ export function drawScenery(ctx, w, h, o) {
   ctx.fillRect(0, gy, w, 26);
   // fake reflection streaks below the horizon glow
   const refl = ctx.createLinearGradient(0, gy, 0, gy + 54);
-  refl.addColorStop(0, `rgba(${bio.glow},0.12)`);
-  refl.addColorStop(1, `rgba(${bio.glow},0)`);
+  refl.addColorStop(0, `rgba(${sceneGlow},0.12)`);
+  refl.addColorStop(1, `rgba(${sceneGlow},0)`);
   ctx.fillStyle = refl;
   ctx.fillRect(w * 0.42, gy, w * 0.52, 54);
 
   // horizon line
   const line = ctx.createLinearGradient(0, gy, w, gy);
-  line.addColorStop(0, `rgba(${bio.glow},0)`);
-  line.addColorStop(0.2, `rgba(${bio.glow},0.55)`);
-  line.addColorStop(0.8, `rgba(${bio.glow},0.55)`);
-  line.addColorStop(1, `rgba(${bio.glow},0)`);
+  line.addColorStop(0, `rgba(${sceneGlow},0)`);
+  line.addColorStop(0.2, `rgba(${sceneGlow},0.55)`);
+  line.addColorStop(0.8, `rgba(${sceneGlow},0.55)`);
+  line.addColorStop(1, `rgba(${sceneGlow},0)`);
   ctx.strokeStyle = line;
   ctx.lineWidth = 2.5;
   ctx.beginPath();
@@ -706,6 +813,10 @@ export function drawScenery(ctx, w, h, o) {
     }
     ctx.globalAlpha = 1;
   }
+
+  // 10 · scene-wide contamination — last scenery pass, so the whole world sits
+  // inside the era. Actors, overlays, and the DOM HUD all paint above it.
+  if (drift) drawDriftWash(ctx, w, h, gy, drift);
 
   return bio;
 }

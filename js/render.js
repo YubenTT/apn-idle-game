@@ -33,7 +33,12 @@ import {
 } from './motion-store.js?v=gaf2d-motion-v1';
 import { drawTarget } from './enemies-v2.js?v=gaf2d-motion-v1';
 import { drawScenery } from './scenery-v2.js?v=gaf2d-motion-v1';
-import { CREATURES, creatureKindFor } from './content.js?v=gaf2d-motion-v1';
+import {
+  CREATURES,
+  creatureKindFor,
+  milestoneGateEraName,
+} from './content.js?v=gaf2d-motion-v1';
+import { corruptionTierFor } from './route.js?v=gaf2d-motion-v1';
 import { creatureClipReady, drawCreature } from './creatures.js?v=gaf2d-motion-v1';
 import {
   packWaveIdentityIds,
@@ -238,7 +243,13 @@ export function enemyLabelForDisplay(labelSource, isBoss = false) {
   return label.length > limit ? `${label.slice(0, limit - 1)}…` : label;
 }
 
-/** Name approved Valorant identities and V3 variants without changing legacy packs. */
+/**
+ * Name approved Valorant identities and V3 variants without changing legacy
+ * packs. A milestone Gate (display Zone 200/400/600/800/1000) additionally
+ * carries the era it hands the Route over to. This is label text only — the
+ * boss HP budget, the timer, and every plate/timer rectangle are untouched, and
+ * ordinary Gates (every tier-0 Valorant zone included) render byte-identically.
+ */
 export function bossBannerFor(activeBoss, zone = 0) {
   if (!activeBoss) return 'VERSION GATE';
   const kind = creatureKindFor(activeBoss, zone);
@@ -247,7 +258,11 @@ export function bossBannerFor(activeBoss, zone = 0) {
     : activeBoss.packId === 'valorant'
       ? activeBoss.label
       : 'Version Gate';
-  return String(label || 'Version Gate').toUpperCase();
+  const milestoneEra = milestoneGateEraName((zone | 0) + 1);
+  const banner = milestoneEra
+    ? `${label || 'Version Gate'} · ${milestoneEra}`
+    : label || 'Version Gate';
+  return String(banner).toUpperCase();
 }
 
 /** Dock the timer below the fixed two-row DOM stage HUD. */
@@ -604,6 +619,13 @@ export function draw(
   ctx.translate(shakeX, shakeY);
 
   // --- layered editorial world (per-zone seeded mood, pack plate far layer) ---
+  // Drift tier is the Pack's own Corruption tier, read from the same pure Route
+  // helper the scheduler uses. A Pack that failed to decode reports tier 0, so a
+  // procedural fallback scene renders exactly as it does today.
+  const driftTier =
+    packAssets?.ready && packAssets.id
+      ? corruptionTierFor(s.route, packAssets.id)
+      : 0;
   drawScenery(ctx, w, h, {
     zone: s.route?.zone ?? 0,
     gy,
@@ -612,7 +634,12 @@ export function draw(
     reducedMotion: motionReduced(s),
     packBg: packAssets?.ready && ready(packAssets.background) ? packAssets.background : null,
     packProps: packAssets?.ready && ready(packAssets.props) ? packAssets.props : null,
+    packCorruption:
+      packAssets?.ready && ready(packAssets.corruptionMask)
+        ? packAssets.corruptionMask
+        : null,
     packId: packAssets?.ready ? packAssets.id || null : null,
+    driftTier,
   });
 
   // alerts
@@ -742,6 +769,8 @@ export function draw(
       drawZoneSweep(ctx, w, h, fx);
     } else if (fx.kind === 'golive') {
       drawGoLiveFx(ctx, w, h, fx, motionReduced(s));
+    } else if (fx.kind === 'patchline') {
+      drawPatchlineFx(ctx, w, h, fx, motionReduced(s));
     }
   }
 
@@ -1774,6 +1803,47 @@ function drawGoLiveFx(ctx, w, h, fx, reduced) {
   ctx.strokeText(label, 0, 0);
   ctx.fillStyle = '#e6b84d';
   ctx.fillText(label, 0, 0);
+  ctx.restore();
+}
+
+/**
+ * Patchline Complete — the Go-Live-class finale beat, fired once ever when the
+ * 100th Gate falls. Same structure as the Go Live cinematic (flash → centered
+ * title card) with its own copy, and the same reduced-motion contract: no flash,
+ * no pop, static final card.
+ */
+function drawPatchlineFx(ctx, w, h, fx, reduced) {
+  const life = fx.life || 2.4;
+  const u = 1 - clamp(fx.t / life, 0, 1);
+  if (!reduced && u < 0.2) {
+    ctx.fillStyle = `rgba(255,244,220,${0.5 * (1 - u / 0.2)})`;
+    ctx.fillRect(0, 0, w, h);
+  }
+  const a = Math.min(clamp(u / 0.1, 0, 1), clamp(fx.t / 0.45, 0, 1));
+  const pop = reduced ? 1 : 1 + Math.max(0, 1 - u / 0.28) * 0.45;
+  ctx.save();
+  ctx.globalAlpha = a;
+  ctx.translate(w / 2, h * 0.34);
+  ctx.scale(pop, pop);
+  ctx.textAlign = 'center';
+  ctx.lineJoin = 'round';
+  ctx.font = '800 13px system-ui, -apple-system, sans-serif';
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = 'rgba(6,8,10,0.9)';
+  ctx.strokeText('PATCHLINE COMPLETE', 0, -34);
+  ctx.fillStyle = '#FC1243';
+  ctx.fillText('PATCHLINE COMPLETE', 0, -34);
+  ctx.font = '900 30px system-ui, -apple-system, sans-serif';
+  ctx.lineWidth = 5;
+  const label = `ZONE ${fx.zone || 1000}`;
+  ctx.strokeText(label, 0, 0);
+  ctx.fillStyle = '#e6b84d';
+  ctx.fillText(label, 0, 0);
+  ctx.font = '800 12px system-ui, -apple-system, sans-serif';
+  ctx.lineWidth = 3.5;
+  ctx.strokeText('ENDLESS RATING BEGINS', 0, 26);
+  ctx.fillStyle = '#3ecf8e';
+  ctx.fillText('ENDLESS RATING BEGINS', 0, 26);
   ctx.restore();
 }
 

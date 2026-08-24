@@ -964,9 +964,37 @@ function renderRouteJourney(s) {
   const cleanLabel = clean.completed
     ? `Clean Era Complete · ${clean.completedCount}/${clean.total}`
     : `Clean Era · ${clean.completedCount}/${clean.total}`;
+  const patchline = journey.patchline;
+  const routeZone = Math.min(patchline.goalZone, s.route.zone + 1);
+  const goalPct = Math.min(
+    100,
+    Math.round((patchline.zone / patchline.goalZone) * 100),
+  );
+  const goalCard = `
+    <div class="route-clean-card route-goal-card ${patchline.completed ? 'is-complete' : ''}" data-route-goal>
+      <div>
+        <small>Terminal goal</small>
+        <strong>Route Goal · Zone ${patchline.goalZone}</strong>
+      </div>
+      <span>${patchline.completed
+        ? `${journey.era.endlessName} · past Zone ${patchline.goalZone}`
+        : `Zone ${routeZone} · ${patchline.remaining} to go`}</span>
+      <div class="route-clean-track"><i style="width:${goalPct}%"></i></div>
+    </div>`;
+  const trophyCard = patchline.completed
+    ? `
+    <div class="route-clean-card route-trophy-card" data-route-trophy>
+      <div>
+        <small>Patchline Complete</small>
+        <strong>The 100th Gate is closed</strong>
+      </div>
+      <span>Zone ${patchline.completedAtZone || patchline.goalZone} · ${journey.era.endlessName}</span>
+    </div>`
+    : '';
 
   return `
   <section class="route-journey" data-route-journey aria-label="Route journey">
+    ${trophyCard}
     <div class="route-current-card ${journey.signalDrift.tier > 0 ? 'is-drift' : ''}">
       <div class="route-card-kicker">
         <span data-route-drift>${driftLabel}</span>
@@ -990,7 +1018,10 @@ function renderRouteJourney(s) {
         <span><small>Patch Echo</small><strong>${journey.echo.found}/${journey.echo.total}</strong></span>
         <span class="route-echo-dots">${echoDots}</span>
       </div>
+      <p class="route-era-line" data-route-era>${journey.era.blurb}</p>
     </div>
+
+    ${goalCard}
 
     <div class="route-mastery-card" data-coverage-mastery>
       <div class="route-mastery-copy">

@@ -8,6 +8,13 @@ import {
   isBossZone,
   typeHpMult,
 } from '../js/formulas.js';
+import { GAME_PACKS } from '../js/generated/game-packs.js';
+import {
+  PATCHLINE_COMPLETE_ZONE,
+  createRouteState,
+  normalizeRoute,
+  recordRouteZoneClear,
+} from '../js/route.js';
 
 const assert = (condition, message) => {
   if (!condition) throw new Error(`Long run: ${message}`);
@@ -111,6 +118,27 @@ assert(maximumCombatSeconds / 60 <= 31, 'per-zone on-curve combat stays at or be
 assert(totalCombatSeconds / 3600 <= 325, 'Zone-1000 on-curve combat budget stays at or below 325 hours');
 assert(bossCount === 100, 'boss cadence remains every ten zones through Zone 1000');
 
+// The stated ending is pinned to the same Gate the cadence above counts: the
+// 100th Gate is cleared at route zone 999, and clearing it is what mints the
+// one-time Patchline Complete record.
+const finalGateZone = PATCHLINE_COMPLETE_ZONE - 1;
+assert(isBossZone(finalGateZone), 'Zone 1000 is a Gate zone');
+const beforeFinalGate = normalizeRoute({ ...createRouteState(), zone: finalGateZone });
+assert(
+  beforeFinalGate.patchlineCompleted === false,
+  'Patchline Complete is unearned while the 100th Gate stands',
+);
+const finalGate = recordRouteZoneClear(beforeFinalGate, GAME_PACKS, finalGateZone);
+assert(
+  finalGate.patchline?.atZone === PATCHLINE_COMPLETE_ZONE &&
+    finalGate.route.patchlineCompleted === true,
+  'clearing the 100th Gate mints Patchline Complete exactly at Zone 1000',
+);
+assert(
+  recordRouteZoneClear(finalGate.route, GAME_PACKS, finalGate.route.zone).patchline === null,
+  'Endless Rating play never re-mints the completion record',
+);
+
 console.log('OK offline two-Pack safety boundary');
 console.log('OK offline Echo and Pack history');
 console.log('OK deterministic offline recap');
@@ -118,4 +146,5 @@ console.log('OK deterministic save-relevant state');
 console.log(
   `OK bounded Zone 1000 work (${minimumOrdinaryHits.toFixed(2)} min ordinary hits · ${maximumOrdinaryHits.toFixed(2)} max ordinary · ${maximumBossHits.toFixed(2)} max Gate · ${(maximumCombatSeconds / 60).toFixed(2)} max minutes · ${(totalCombatSeconds / 3600).toFixed(2)} aggregate hours)`,
 );
+console.log('OK Patchline Complete pinned to the 100th Gate');
 console.log('LONG RUN PASS');

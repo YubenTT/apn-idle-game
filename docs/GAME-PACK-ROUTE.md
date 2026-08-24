@@ -180,14 +180,20 @@ share a table.
 
 ## Corruption epochs
 
-| Route Zone | Maximum revisit tier | Art delta |
-|---:|---|---|
-| 1–200 | Clean Build | canonical pack only |
-| 201–400 | Signal Drift | light fissures / signal contamination |
-| 401–600 | Corrupted Build | corruption mask + boss armor segments |
-| 601–800 | Overrun | environment infestation + stronger break state |
-| 801–1000 | Zero-Day | maximum readable mutation |
-| 1001+ | Endless Rating | Zero-Day art remains; numbers/rewards continue |
+| Route Zone | Maximum revisit tier | Era name | Art delta |
+|---:|---|---|---|
+| 1–200 | Clean Build | Clean Signal | canonical pack only |
+| 201–400 | Signal Drift | Static Hour | light fissures / signal contamination |
+| 401–600 | Corrupted Build | Dead Air | corruption mask + boss armor segments |
+| 601–800 | Overrun | Feed Collapse | environment infestation + stronger break state |
+| 801–1000 | Zero-Day | Total Blackout | maximum readable mutation |
+| 1001+ | Endless Rating | Total Blackout art | numbers/rewards continue |
+
+The era is a property of the Route epoch, not of one Pack: a Pack that debuts
+clean inside a late epoch still plays inside that era's world. Era records live
+in `js/content.js`, the epoch derives from `epochTierForZone` in `js/route.js`,
+and the Route sheet kicker reads `Signal Drift <tier> · <era>` so the exact Pack
+tier and the world era never impersonate each other.
 
 Rules:
 
@@ -198,6 +204,51 @@ Rules:
 - Corruption rewards use existing Notes, Gear, and Rep. No new currency is added.
 - Armor segments are milestone feedback inside the existing boss HP budget, not
   a second unrelated combat system.
+
+### Implemented Corruption visuals
+
+The promise above is drawn, not just scheduled. From tier 1 on, `js/render.js`
+reads the Pack's tier from `corruptionTierFor` and hands `js/scenery-v2.js` both
+the decoded `corruption-mask.webp` and that tier:
+
+- **Fissures.** The mask's four authored 128×128 cells are drawn as emitted
+  light (`lighter`) across the sky and mid towers — 3 cracks at tier 1 rising to
+  6 at tier 4, alpha `0.28 / 0.34 / 0.40 / 0.46`. Placement is deterministic per
+  `(Pack, zone, slot, lap)` through the scenery integer hash, with no time term
+  at all, so the pattern is identical on every frame and reduced motion has
+  nothing to gate.
+- **Scene-wide drift.** A flat contamination wash (`0.042 → 0.092`), a hue
+  vignette at the frame edge (`0.14 → 0.26`), and a tier-stepped shift of the
+  scene's own glow (`0.14 → 0.30` toward the era hue) carry the era across the
+  bloom, horizon, reflection, and plate wash. The hue ramps violet → magenta by
+  tier and never impersonates the APN primary crimson.
+- **Bounds.** Everything is drawn behind the actors and behind the DOM HUD, so
+  readability cannot regress with tier; tier 4 remains the visual cap. Tier 0
+  emits the exact clean paint, so every Zone 1–200 scene is byte-identical. A
+  Pack whose mask or plate failed to decode drops the fissures and renders the
+  procedural scene.
+
+### Milestone Gates and Patchline Complete
+
+- The Gate at display Zone 200/400/600/800/1000 carries the era it hands the
+  Route over to in its banner (`VERSION GATE · DEAD AIR`). This is label text
+  only — HP, timer, plate, and every stage rectangle are untouched, and ordinary
+  Gates render byte-identically.
+- Crossing an epoch boundary fires the era-shift beat once per save: one toast
+  on the existing channel plus the existing zone-clear sweep. Seen tiers are
+  persisted in `route.eraTiersSeen` and reconstructed from the reached epoch, so
+  a rollback can never replay a beat the save already earned.
+- Clearing the 100th Gate (`route.zone` first reaching 1000) mints the one-time
+  **Patchline Complete** record and plays the Go-Live-class finale cinematic.
+  The record is `{ schema: 'apn.patchline-complete', version: 1, atZone, ts }`
+  under `meta`, beside — not inside — the journey capsule, because an older v3
+  client re-mints `meta.routeJourney` from its own Route shape but leaves every
+  other meta key untouched. `route.patchlineCompleted` is monotonic and
+  reconstructed from `zone >= 1000`, the Clean Era pattern, so the trophy
+  survives a rollback round trip even if the receipt is lost.
+- The Route sheet states the terminal goal from Zone 1 (`Route Goal · Zone
+  1000`, with exact remaining distance), leads with a permanent trophy card once
+  complete, and labels everything after it **Endless Rating**.
 
 ## Scheduler after the Clean Era
 
@@ -246,6 +297,9 @@ Save state uses stable string IDs, never catalog array indexes:
 - `history` (newest 60)
 - `cleanEraCompleted`
 - `cleanEraCompletedAtZone`
+- `eraTiersSeen`
+- `patchlineCompleted`
+- `patchlineCompletedAtZone`
 - `catalogVersion`
 - `seed`
 
@@ -256,10 +310,16 @@ whose Route normalizer does not know the new fields, preserves them opaquely.
 Progress earned while rolled back is folded back from the legacy `seenPackIds`
 and corruption counters when the current client returns.
 
+The journey capsule stays at version 1 while fields are added: it restores per
+key, so an older capsule simply carries fewer fields and the Route normalizer
+reconstructs the rest. Bumping the version would instead reject older capsules
+wholesale, losing journey state in exactly the rollback case it protects.
+
 Pack meta is stored under the existing v3 `meta` boundary as
-`coverageMasteryByPack` and `claimedCoverageSetIds`. Both fields are sanitized,
-idempotent, preserved by Go Live/offline/save reload, and opaque to an older v3
-rollback so that client can round-trip them without understanding them.
+`coverageMasteryByPack`, `claimedCoverageSetIds`, and the Patchline Complete
+record `patchline`. All three are sanitized, idempotent, preserved by Go
+Live/offline/save reload, and opaque to an older v3 rollback so that client can
+round-trip them without understanding them.
 
 ## Pacing targets
 

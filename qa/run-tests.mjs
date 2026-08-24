@@ -56,7 +56,9 @@ import {
   queryGearBag,
   toggleJunk,
 } from '../js/loot.js';
-import { SKILLS, SKILL_TREES, skillSpCost } from '../js/content.js';
+import { ERAS, SKILLS, SKILL_TREES, skillSpCost } from '../js/content.js';
+import { bossBannerFor } from '../js/render.js';
+import { driftTreatmentForTier } from '../js/scenery-v2.js';
 import {
   hubOnKill,
   emptyHub,
@@ -383,6 +385,65 @@ ok(
   ['data-route-current', 'data-route-next', 'data-route-clean', 'data-route-echo', 'data-route-drift']
     .every((marker) => uiSource.includes(marker)),
   'Route surface exposes current, next, Clean Era, Echo, and Signal Drift state',
+);
+ok(
+  ['data-route-era', 'data-route-goal', 'data-route-trophy'].every((marker) =>
+    uiSource.includes(marker),
+  ),
+  'Route surface exposes the named era, the terminal goal, and the Patchline trophy',
+);
+ok(
+  uiSource.indexOf('data-route-trophy') < uiSource.indexOf('data-route-current'),
+  'Patchline trophy leads the Route sheet once earned',
+);
+ok(
+  /\.route-goal-card[^{]*\{/.test(cssSource) && /\.route-trophy-card[^{]*\{/.test(cssSource),
+  'Route goal and trophy cards reuse the tokenized Route card shell',
+);
+const renderSource = readFileSync(new URL('../js/render.js', import.meta.url), 'utf8');
+const scenerySource = readFileSync(new URL('../js/scenery-v2.js', import.meta.url), 'utf8');
+ok(
+  renderSource.includes('packCorruption:') && renderSource.includes('driftTier'),
+  'the stage hands the authored corruption mask and Drift tier to the scenery',
+);
+ok(
+  scenerySource.includes('drawDriftFissures') && scenerySource.includes('drawDriftWash'),
+  'scenery draws Corruption as authored fissures plus a scene-wide wash',
+);
+ok(
+  !/drawDrift(?:Fissures|Wash)\([^)]*\bt\b[^)]*\)/.test(scenerySource),
+  'the Corruption layer carries no time term, so reduced motion has nothing to gate',
+);
+ok(
+  driftTreatmentForTier(0) === null && driftTreatmentForTier(9) === driftTreatmentForTier(4),
+  'Corruption treatment is absent at tier 0 and capped at tier 4',
+);
+ok(
+  [2, 3, 4].every((tier) => {
+    const step = driftTreatmentForTier(tier);
+    const previous = driftTreatmentForTier(tier - 1);
+    return (
+      step.ink > previous.ink &&
+      step.wash > previous.wash &&
+      step.rim > previous.rim &&
+      step.glowMix > previous.glowMix &&
+      step.fissures > previous.fissures
+    );
+  }),
+  'every Corruption channel steps strictly up with the Drift tier',
+);
+ok(
+  ERAS.length === 5 && new Set(ERAS.map((era) => era.name)).size === 5,
+  'content names five distinct Corruption eras',
+);
+ok(
+  bossBannerFor({ id: 'b', type: 'boss', packId: 'league', label: 'x' }, 199) ===
+    `VERSION GATE · ${ERAS[1].name.toUpperCase()}`,
+  'the Zone 200 milestone Gate banner names the incoming era',
+);
+ok(
+  bossBannerFor({ id: 'b', type: 'boss', packId: 'league', label: 'x' }, 19) === 'VERSION GATE',
+  'an ordinary Gate banner is unchanged',
 );
 ok(uiSource.includes("spBtn.disabled = h.energy < 1"), 'Sprint empty state uses native disabled semantics');
 ok(/\.btn-chip\s*\{[^}]*min-height:\s*calc\(var\(--touch-min\) \+ var\(--sp-1\)\)/s.test(cssSource), 'Run skills preserve touch targets');
