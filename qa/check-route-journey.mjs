@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { GAME_PACKS } from '../js/generated/game-packs.js';
 import { C, killsNeeded } from '../js/formulas.js';
@@ -10,12 +11,28 @@ import {
 } from '../js/save.js';
 import {
   ECHO_TOTAL,
+  PATCHLINE_COMPLETE_ZONE,
+  SIGNAL_DRIFT_ZONE,
   createRouteState,
   echoProgressFor,
+  epochTierForZone,
+  normalizePatchlineRecord,
   normalizeRoute,
   recordRouteZoneClear,
   routeJourney,
 } from '../js/route.js';
+import {
+  ENDLESS_ERA_NAME,
+  ERAS,
+  ERA_MAX_TIER,
+  MILESTONE_GATE_ZONES,
+  eraNameForTier,
+  milestoneGateEraName,
+} from '../js/content.js';
+
+const CATALOG_POLICY = JSON.parse(
+  fs.readFileSync(new URL('../assets/game-packs/catalog-policy.json', import.meta.url), 'utf8'),
+);
 
 const assert = (condition, message) => {
   if (!condition) throw new Error(`Route journey contract: ${message}`);
@@ -113,6 +130,188 @@ export function checkRouteJourneyContract() {
   assert(
     Math.max(...Object.values(longRoute.corruptionByPack)) <= 4,
     'persisted corruption remains bounded at tier 4',
+  );
+
+  // —— Named eras ————————————————————————————————————————
+  assert(ERAS.length === 5, 'the Route names exactly five eras (tier 0–4)');
+  assert(
+    ERAS.every((era, index) => era.tier === index),
+    'era records are indexed by their Corruption tier',
+  );
+  assert(ERAS[0].name === 'Clean Signal', 'tier 0 keeps the Clean-signal language');
+  const eraNames = ERAS.map((era) => era.name);
+  assert(
+    new Set(eraNames).size === eraNames.length,
+    'every era name is distinct',
+  );
+  assert(
+    !eraNames.includes(ENDLESS_ERA_NAME),
+    'the endless continuation label is not reused as an era name',
+  );
+  const eraCopy = [...eraNames, ENDLESS_ERA_NAME, ...ERAS.map((era) => era.blurb)];
+  const copyBans = [
+    /\bWeapon\b/i,
+    /\bShip\b/i,
+    /\bArea\b/i,
+    /\bhover\b/i,
+    /\bmana\b/i,
+    /\bReputation\b/i,
+    /End[\s-]+Season/i,
+  ];
+  assert(
+    eraCopy.every((line) => copyBans.every((pattern) => !pattern.test(line))),
+    'era copy carries no banned display form',
+  );
+  assert(
+    eraCopy.every((line) =>
+      CATALOG_POLICY.deniedRuntimeMarks.every(
+        (mark) => !line.toLowerCase().includes(mark.toLowerCase()),
+      ),
+    ),
+    'era copy carries no denied runtime mark',
+  );
+  assert(
+    eraNameForTier(-3) === ERAS[0].name && eraNameForTier(99) === ERAS[ERA_MAX_TIER].name,
+    'era lookup clamps outside the 0–4 tier ladder',
+  );
+  assert(
+    MILESTONE_GATE_ZONES.join(',') === '200,400,600,800,1000',
+    'milestone Gates sit on the five era boundaries',
+  );
+  assert(
+    milestoneGateEraName(200) === ERAS[1].name &&
+      milestoneGateEraName(800) === ERAS[4].name &&
+      milestoneGateEraName(1000) === ENDLESS_ERA_NAME,
+    'milestone Gates name the era they hand the Route over to',
+  );
+  assert(
+    milestoneGateEraName(10) === null && milestoneGateEraName(199) === null,
+    'ordinary Gates carry no era suffix',
+  );
+  assert(
+    epochTierForZone(0) === 0 &&
+      epochTierForZone(199) === 0 &&
+      epochTierForZone(200) === 1 &&
+      epochTierForZone(800) === 4 &&
+      epochTierForZone(5000) === 4,
+    'Corruption epoch derives from zone and caps at tier 4',
+  );
+
+  // —— Era-shift beat: one-shot, monotonic, deterministic ——————
+  const beforeShift = normalizeRoute({
+    ...cleanEra,
+    zone: SIGNAL_DRIFT_ZONE - 1,
+    eraTiersSeen: [],
+  });
+  assert(
+    beforeShift.eraTiersSeen.length === 0,
+    'no era shift is recorded before the Route reaches Zone 200',
+  );
+  const shift = recordRouteZoneClear(beforeShift, GAME_PACKS, (SIGNAL_DRIFT_ZONE - 1));
+  assert(
+    shift.eraShift?.tier === 1 && shift.eraShift?.name === ERAS[1].name,
+    'crossing Zone 200 fires the tier-1 era shift once',
+  );
+  assert(
+    shift.route.eraTiersSeen.join(',') === '1',
+    'the era shift persists its seen tier',
+  );
+  assert(
+    recordRouteZoneClear(shift.route, GAME_PACKS, shift.route.zone).eraShift === null,
+    'the era shift never fires twice for the same tier',
+  );
+  assert(
+    JSON.stringify(recordRouteZoneClear(beforeShift, GAME_PACKS, (SIGNAL_DRIFT_ZONE - 1))) ===
+      JSON.stringify(shift),
+    'the era shift is a deterministic function of Route state',
+  );
+  assert(
+    normalizeRoute({ zone: 850, eraTiersSeen: [2] }).eraTiersSeen.join(',') === '1,2,3,4',
+    'seen tiers reconstruct monotonically from the reached epoch',
+  );
+  assert(
+    normalizeRoute({ zone: 0, eraTiersSeen: [3, 3, 'x', 0, 9, 2.7] }).eraTiersSeen.join(',') === '2,3',
+    'seen tiers sanitize, deduplicate, and sort',
+  );
+
+  // —— Patchline Complete at the 999 → 1000 boundary ——————————
+  const preFinal = normalizeRoute({
+    ...cleanEra,
+    zone: PATCHLINE_COMPLETE_ZONE - 1,
+  });
+  assert(
+    preFinal.patchlineCompleted === false && preFinal.patchlineCompletedAtZone === 0,
+    'Zone 1000 is unearned while the 100th Gate still stands',
+  );
+  const preFinalJourney = routeJourney(preFinal, GAME_PACKS);
+  assert(
+    preFinalJourney.patchline.goalZone === PATCHLINE_COMPLETE_ZONE &&
+      preFinalJourney.patchline.remaining === 1 &&
+      preFinalJourney.patchline.completed === false,
+    'the Route states its terminal goal and exact remaining distance',
+  );
+  assert(
+    routeJourney(createRouteState(), GAME_PACKS).patchline.remaining ===
+      PATCHLINE_COMPLETE_ZONE,
+    'the terminal goal is stated from Zone 1',
+  );
+  const finalGate = recordRouteZoneClear(
+    preFinal,
+    GAME_PACKS,
+    PATCHLINE_COMPLETE_ZONE - 1,
+  );
+  assert(
+    finalGate.patchline?.schema === 'apn.patchline-complete' &&
+      finalGate.patchline?.version === 1 &&
+      finalGate.patchline?.atZone === PATCHLINE_COMPLETE_ZONE,
+    'clearing the 100th Gate mints the Patchline completion record',
+  );
+  assert(
+    finalGate.route.patchlineCompleted === true &&
+      finalGate.route.patchlineCompletedAtZone === PATCHLINE_COMPLETE_ZONE,
+    'Patchline completion persists its exact boundary',
+  );
+  assert(
+    recordRouteZoneClear(finalGate.route, GAME_PACKS, finalGate.route.zone).patchline === null,
+    'the Patchline record is minted exactly once',
+  );
+  const endlessJourney = routeJourney(finalGate.route, GAME_PACKS);
+  assert(
+    endlessJourney.patchline.completed === true &&
+      endlessJourney.patchline.remaining === 0,
+    'the journey projects a completed Patchline',
+  );
+  assert(
+    endlessJourney.signalDrift.label.startsWith(ENDLESS_ERA_NAME) &&
+      endlessJourney.era.endless === true,
+    'post-completion play is labeled Endless Rating',
+  );
+  assert(
+    endlessJourney.era.name === ERAS[ERA_MAX_TIER].name,
+    'Endless Rating keeps the tier-4 era art language',
+  );
+  assert(
+    routeJourney(cleanEra, GAME_PACKS).signalDrift.label ===
+      `Signal Drift 1 · ${ERAS[1].name}`,
+    'the drift kicker carries the era name beside the exact tier',
+  );
+  assert(
+    routeJourney(createRouteState(), GAME_PACKS).signalDrift.label === 'Clean',
+    'a clean pre-Drift Route keeps its unchanged Clean kicker',
+  );
+  assert(
+    normalizeRoute({ zone: 4200 }).patchlineCompleted === true,
+    'a deep legacy save reconstructs its earned Patchline completion',
+  );
+  assert(
+    normalizePatchlineRecord({ schema: 'apn.patchline-complete', version: 1, atZone: 3, ts: -5 })
+      ?.atZone === PATCHLINE_COMPLETE_ZONE,
+    'a malformed completion zone clamps to the real boundary',
+  );
+  assert(
+    normalizePatchlineRecord({ schema: 'other', version: 1 }) === null &&
+      normalizePatchlineRecord(null) === null,
+    'an unrecognized completion record is treated as unearned',
   );
 
   const malformed = normalizeRoute({
@@ -251,6 +450,78 @@ export function checkRouteJourneyContract() {
       restoredRollbackProgress.route.history[0]?.completedAtZone === 20,
     'rollback-era Pack completion reconstructs its newest history entry',
   );
+  // —— Patchline trophy survives an old-client rollback round trip ————
+  const finished = createState();
+  finished.route = finalGate.route;
+  finished.meta.patchline = {
+    schema: 'apn.patchline-complete',
+    version: 1,
+    atZone: PATCHLINE_COMPLETE_ZONE,
+    ts: 1_700_000_000_000,
+  };
+  assert(saveState(finished) === true, 'completed Patchline save writes successfully');
+  const finishedBlob = JSON.parse(saveMemory.get(SAVE_KEY_V2));
+  assert(
+    finishedBlob.meta.patchline?.schema === 'apn.patchline-complete' &&
+      finishedBlob.meta.patchline.atZone === PATCHLINE_COMPLETE_ZONE,
+    'the Patchline trophy persists beside the journey capsule under meta',
+  );
+  assert(
+    finishedBlob.meta.routeJourney.patchlineCompleted === true &&
+      finishedBlob.meta.routeJourney.eraTiersSeen.join(',') === '1,2,3,4',
+    'the rollback capsule additively carries era and Patchline state at version 1',
+  );
+  // An older v3 client keeps only the Route fields it understands and re-mints
+  // its own journey capsule, but never touches other meta keys.
+  const oldClientBlob = {
+    ...finishedBlob,
+    meta: {
+      ...finishedBlob.meta,
+      routeJourney: {
+        schema: 'apn.route-journey',
+        version: 1,
+        echoProgressByPack: finishedBlob.route.echoProgressByPack,
+        cleanCompletedPackIds: finishedBlob.route.cleanCompletedPackIds,
+        packVisitCountById: finishedBlob.route.packVisitCountById,
+        history: finishedBlob.route.history,
+        cleanEraCompleted: finishedBlob.route.cleanEraCompleted,
+        cleanEraCompletedAtZone: finishedBlob.route.cleanEraCompletedAtZone,
+      },
+    },
+    route: Object.fromEntries(
+      Object.entries(finishedBlob.route).filter(
+        ([key]) =>
+          !['eraTiersSeen', 'patchlineCompleted', 'patchlineCompletedAtZone'].includes(key),
+      ),
+    ),
+  };
+  const afterRollback = createState();
+  applySave(afterRollback, oldClientBlob);
+  assert(
+    afterRollback.route.patchlineCompleted === true &&
+      afterRollback.route.patchlineCompletedAtZone === PATCHLINE_COMPLETE_ZONE,
+    'an old-client round trip cannot revoke an earned Patchline completion',
+  );
+  assert(
+    afterRollback.route.eraTiersSeen.join(',') === '1,2,3,4',
+    'an old-client round trip cannot replay already-seen era shifts',
+  );
+  assert(
+    afterRollback.meta.patchline?.ts === 1_700_000_000_000,
+    'the exact Patchline trophy receipt survives the rollback round trip',
+  );
+  const reconstructed = createState();
+  applySave(reconstructed, {
+    ...oldClientBlob,
+    meta: { ...oldClientBlob.meta, patchline: { schema: 'nonsense' } },
+  });
+  assert(
+    reconstructed.meta.patchline?.schema === 'apn.patchline-complete' &&
+      reconstructed.meta.patchline.atZone === PATCHLINE_COMPLETE_ZONE &&
+      reconstructed.meta.patchline.ts === 0,
+    'a lost or malformed trophy receipt is rebuilt from the Route it proves',
+  );
+
   reloaded.route.zone = 210;
   reloaded.meta.pendingGoLiveZone = 210;
   const beforeGoLive = JSON.stringify(reloaded.route);
@@ -276,6 +547,11 @@ export function checkRouteJourneyContract() {
     'Pack completion and bounded exact history',
     'catalog-derived monotonic Clean Era',
     'visible bounded Signal Drift',
+    'five distinct rights-safe named eras',
+    'one-shot deterministic era-shift beat with monotonic seen tiers',
+    'Patchline Complete minted once at the Zone 1000 Gate',
+    'stated terminal goal and Endless Rating continuation',
+    'Patchline trophy survives an old-client rollback round trip',
     'extensible journey projection',
     'sanitized idempotent save shape',
     'legacy and current save round trip',

@@ -1,6 +1,6 @@
-import { GAME_PACKS } from './generated/game-packs.js?v=gaf2d-motion-v1';
-import { packForRoute } from './route.js?v=gaf2d-motion-v1';
-import { withRuntimeVersion } from './cache.js?v=gaf2d-motion-v1';
+import { GAME_PACKS } from './generated/game-packs.js?v=enhanced-v1';
+import { packForRoute } from './route.js?v=enhanced-v1';
+import { withRuntimeVersion } from './cache.js?v=enhanced-v1';
 
 const browserImage = (src) => new Promise((resolve, reject) => {
   const image = new Image();

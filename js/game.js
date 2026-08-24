@@ -21,8 +21,16 @@ import {
   spentSkillPoints,
   verifyYieldMultiplier,
   relayIdleEfficiency,
-} from './formulas.js?v=gaf2d-motion-v1';
-import { SEASON, META, SKILLS, ENEMY_FLAVOR, skillSpCost } from './content.js?v=gaf2d-motion-v1';
+} from './formulas.js?v=enhanced-v1';
+import {
+  SEASON,
+  META,
+  SKILLS,
+  ENEMY_FLAVOR,
+  creatureBossFlavor,
+  echoLineFor,
+  skillSpCost,
+} from './content.js?v=enhanced-v1';
 import {
   ensureHub,
   hubOnKill,
@@ -38,7 +46,7 @@ import {
   applyReward,
   seasonLevel,
   SEASON_MILESTONES,
-} from './hub.js?v=gaf2d-motion-v1';
+} from './hub.js?v=enhanced-v1';
 import {
   killLine,
   pick,
@@ -48,8 +56,8 @@ import {
   LEVEL_LINES,
   SHIP_LINES,
   SCANNER_LINES,
-} from './comedy.js?v=gaf2d-motion-v1';
-import { sfx } from './sfx.js?v=gaf2d-motion-v1';
+} from './comedy.js?v=enhanced-v1';
+import { sfx } from './sfx.js?v=enhanced-v1';
 import {
   emptyGear,
   normalizeGear,
@@ -65,30 +73,34 @@ import {
   pickSlotForGear,
   SLOTS,
   BAG_CAP,
-} from './loot.js?v=gaf2d-motion-v1';
+} from './loot.js?v=enhanced-v1';
 import {
+  PATCHLINE_COMPLETE_ZONE,
   createRouteState,
   nextSeasonBoundary,
   packForRoute,
+  patchlineRecord,
   recordRouteZoneClear,
-} from './route.js?v=gaf2d-motion-v1';
-import { GAME_PACKS } from './generated/game-packs.js?v=gaf2d-motion-v1';
+} from './route.js?v=enhanced-v1';
+import { GAME_PACKS } from './generated/game-packs.js?v=enhanced-v1';
 import {
   coverageBossHpMultiplier,
   coverageFinalTargetSignalMultiplier,
   coverageGateNotesMultiplier,
   coverageOfflineEfficiency,
   coverageYieldMultiplier,
-} from './coverage.js?v=gaf2d-motion-v1';
+} from './coverage.js?v=enhanced-v1';
 
 const HERO_ATTACK_SECONDS = 8 / 16;
 const HERO_HIT_SECONDS = 4 / 16;
 const HERO_DEATH_SECONDS = 8 / 16;
 import {
   enemyTypesForPackWave as authoredEnemyTypesForPackWave,
+  rollWaveEnemyType,
   targetForEnemyType,
-} from './wave-roster.js?v=gaf2d-motion-v1';
-import { motionReduced } from './motion-preference.js?v=gaf2d-motion-v1';
+  waveBeatForPack,
+} from './wave-roster.js?v=enhanced-v1';
+import { motionReduced } from './motion-preference.js?v=enhanced-v1';
 
 export function createState() {
   return {
@@ -682,14 +694,10 @@ export function pickEnemyTypeForPackWave(packId, packWave, random = Math.random)
 
 function pickEnemyType(zone, forceBoss, packId) {
   if (forceBoss) return 'boss';
-  const authored = pickEnemyTypeForPackWave(packId, (zone % 10) + 1);
+  const packWave = (zone % 10) + 1;
+  const authored = pickEnemyTypeForPackWave(packId, packWave);
   if (authored) return authored;
-  const r = Math.random();
-  if (r < C.CHAMPION_CHANCE) return 'patch';
-  if (r < C.CHAMPION_CHANCE + C.ELITE_CHANCE) {
-    return Math.random() < 0.5 ? 'lag' : Math.random() < 0.5 ? 'spoiler' : 'event';
-  }
-  return Math.random() < 0.5 ? 'stale' : 'rumor';
+  return rollWaveEnemyType(waveBeatForPack(packId, packWave));
 }
 
 export function spawnEnemy(s) {
@@ -704,7 +712,10 @@ export function spawnEnemy(s) {
   if (type === 'boss') {
     s.world.bossActive = true;
     s.world.bossTimer = C.BOSS_TIMER;
-    toast(s, pick(BOSS_OPEN));
+    // The comedy draw always happens, so the RNG stream is byte-identical to the
+    // pre-E5 build; a legacy-creature Gate simply prints its own bio instead.
+    const openLine = pick(BOSS_OPEN);
+    toast(s, creatureBossFlavor({ type: 'boss', packId: pack?.id }, zone) || openLine);
     tip(s, 'boss');
   }
 
@@ -1044,20 +1055,57 @@ function onKill(s, e) {
       s.ui.seasonDone = true;
       toast(s, `Zone ${s.route.zone} checkpoint! Go Live to bank Notes and grow your Live Mult.`, 2.6, 'live');
       tip(s, 'season');
+    } else if (routeTransition.echo) {
+      // The discovery beat speaks the archive line itself. Selection is a pure
+      // (packId, slot) lookup — no RNG draw enters the kill/clear path.
+      const found = routeTransition.echo;
+      const line = echoLineFor(found.packId, found.slot - 1);
+      toast(
+        s,
+        `Patch Echo ${found.slot}/${found.total} · ${line || 'Archive entry recovered.'}`,
+        2.6,
+        'info',
+      );
     } else {
-      const routeResult = routeTransition.echo
-        ? ` · Echo ${routeTransition.echo.slot}/${routeTransition.echo.total} found`
-        : routeTransition.completion
-          ? ` · ${routeTransition.completion.clean ? 'Pack archived' : `Drift ${routeTransition.completion.tier} cleared`}`
-          : '';
+      const routeResult = routeTransition.completion
+        ? ` · ${routeTransition.completion.clean ? 'Pack archived' : `Drift ${routeTransition.completion.tier} cleared`}`
+        : '';
       toast(
         s,
         `Zone ${s.route.zone} cleared — on to Zone ${s.route.zone + 1}${routeResult}`,
-        routeTransition.echo || routeTransition.completion ? 2.4 : 1.8,
+        routeTransition.completion ? 2.4 : 1.8,
         'zone',
       );
     }
     if (isBossZone(s.route.zone)) tip(s, 'boss');
+
+    // —— Narrated arc beats ————————————————————————————————————
+    // Both are deterministic facts of the Route transition (no RNG draw, no new
+    // particle spawn), so the seeded pacing profiles stay bit-identical. They
+    // run last so the era/finale line owns the toast channel for this clear.
+    if (routeTransition.eraShift) {
+      const era = routeTransition.eraShift;
+      toast(s, `Era shift · ${era.name} — ${era.blurb}`, 3.4, 'live');
+      if (!motionReduced(s)) s.ui.fx = { kind: 'sweep', t: 0.9, life: 0.9 };
+    }
+    if (routeTransition.patchline && !s.meta.patchline) {
+      s.meta.patchline = patchlineRecord(
+        routeTransition.patchline.atZone,
+        Date.now(),
+      );
+      toast(
+        s,
+        `Patchline Complete — Zone ${PATCHLINE_COMPLETE_ZONE} cleared. Endless Rating begins.`,
+        4,
+        'live',
+      );
+      s.ui.fx = {
+        kind: 'patchline',
+        t: 2.4,
+        life: 2.4,
+        zone: routeTransition.patchline.atZone,
+      };
+    }
   }
 }
 
@@ -1487,6 +1535,9 @@ export function allocSkill(s, id) {
   s.run.hero.sp -= cost;
   s.run.hero.skills[id] = (s.run.hero.skills[id] || 0) + 1;
   if (id === 'live_tracker') s.run.hero.trackerOn = true;
+  // The Focus meter and its shortcut chip both appear on this exact beat, so
+  // the tip that explains them fires here. Deterministic: no RNG, once ever.
+  if (id === 'hotfix' || id === 'summary_burst') tip(s, 'focus');
   syncLegacyMasteryFields(s);
   s.ui.panelDirty = true;
   confetti(s, s.world.heroX, 190, ['#FC1243', '#fff', '#3ecf8e'], 16);

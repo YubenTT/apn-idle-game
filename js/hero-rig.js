@@ -16,7 +16,7 @@
  * Missing rig = caller falls back to the flipbook/procedural body.
  */
 
-import { clamp } from './formulas.js?v=gaf2d-motion-v1';
+import { clamp } from './formulas.js?v=enhanced-v1';
 
 const TAU = Math.PI * 2;
 let RIG = null;

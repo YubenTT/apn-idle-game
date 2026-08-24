@@ -37,7 +37,7 @@ import * as renderRuntime from '../js/render.js';
 import { resolveActorGeometry } from '../js/stage-presentation.js';
 
 const versionedHeroV3 = await import(
-  '../js/hero-v3.js?v=gaf2d-motion-v1'
+  '../js/hero-v3.js?v=enhanced-v1'
 );
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const heroRoot = path.join(root, 'assets/mascot/v3');
@@ -921,6 +921,30 @@ assert(
     authoredDrawOptions?.geometry.body.height === 96 &&
     authoredDrawOptions?.geometry.body.bottom === 294,
   'renderer passes authored trim height, pivot, and resolved Hero geometry together',
+);
+// Off-stage Host previews (Gear niche) name a visible body, not a trim height:
+// the same hero rung, the same scaled hover gap, and uniform scaling with size.
+const previewFullHost = renderRuntime.heroPreviewDrawOptions?.(44, 83, 96, 0);
+const previewNicheHost = renderRuntime.heroPreviewDrawOptions?.(44, 83, 70.4, 0);
+const nicheFit = 70.4 / 96;
+assert(
+  previewFullHost?.geometry.role === 'hero' &&
+    previewFullHost.height === previewFullHost.geometry.body.height &&
+    previewFullHost.geometry.body.height === 96 &&
+    previewFullHost.geometry.body.bottom === 77 &&
+    previewFullHost.drawTrimHeight === previewFullHost.geometry.drawTrimHeight &&
+    previewFullHost.pivotY === previewFullHost.geometry.pivotY &&
+    previewNicheHost.motionSelector.pose === 'idle' &&
+    Math.abs(previewNicheHost.height - 70.4) < 1e-9 &&
+    Math.abs(previewNicheHost.geometry.body.height - 70.4) < 1e-9 &&
+    Math.abs(previewNicheHost.geometry.body.bottom - (83 - 6 * nicheFit)) < 1e-9 &&
+    Math.abs(
+      previewNicheHost.drawTrimHeight - previewFullHost.drawTrimHeight * nicheFit,
+    ) < 1e-9 &&
+    Math.abs(
+      previewNicheHost.geometry.scale - previewFullHost.geometry.scale * nicheFit,
+    ) < 1e-9,
+  'off-stage Host preview keeps the visible-body contract and scales uniformly with its niche',
 );
 const smoothPreview = createHarness({ sourceFiles: smoothPreviewRuntimeFiles });
 await loadHeroV3('assets/preview-smooth-v3/', {

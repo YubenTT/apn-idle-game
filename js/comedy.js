@@ -78,6 +78,20 @@ export const TITLE_TAGLINES = [
   'All Patch Notes presents: workplace violence (for content).',
 ];
 
+/**
+ * Deterministic title-screen tagline rotation. The title screen runs outside
+ * every simulated path, but the index is still a pure function of the day and
+ * the save's Go Live count — never `Math.random` — so headless profiles, QA
+ * screenshots, and repeat loads on the same day agree.
+ */
+export function titleTaglineFor(dayIndex = 0, goLiveCount = 0) {
+  const day = Number.isFinite(dayIndex) ? Math.floor(dayIndex) : 0;
+  const lives = Number.isFinite(goLiveCount) ? Math.floor(goLiveCount) : 0;
+  const span = TITLE_TAGLINES.length;
+  const index = (((day + lives) % span) + span) % span;
+  return TITLE_TAGLINES[index];
+}
+
 export const ENEMY_ROASTS = {
   stale: ['Stale post archived.', 'Too old for the feed.'],
   rumor: ['Fake leak rejected.', 'Source: none.'],

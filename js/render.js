@@ -1,28 +1,28 @@
 /** APN Idle canvas — V2 scenery/targets/Host + combat juice overlays */
 
-import { C, clamp, easeOutCubic, easeOutQuad } from './formulas.js?v=gaf2d-motion-v1';
-import { getCurrentPackAssets } from './assets.js?v=gaf2d-motion-v1';
-import { resolveHostClip } from './host-contract.js?v=gaf2d-motion-v1';
-import { drawHeroV2 } from './hero-v2.js?v=gaf2d-motion-v1';
+import { C, clamp, easeOutCubic, easeOutQuad } from './formulas.js?v=enhanced-v1';
+import { getCurrentPackAssets } from './assets.js?v=enhanced-v1';
+import { resolveHostClip } from './host-contract.js?v=enhanced-v1';
+import { drawHeroV2 } from './hero-v2.js?v=enhanced-v1';
 import {
   getV3Clip,
   getV3Geometry,
   getV3Presentation,
   resolveHeroV3Frame,
-} from './hero-v3.js?v=gaf2d-motion-v1';
+} from './hero-v3.js?v=enhanced-v1';
 import {
   STAGE_OVERHEAD_GAP,
   STAGE_ROLE_PRESENTATION,
   legacySquarePresentation,
   resolveActorGeometry,
   stageFitForActors,
-} from './stage-presentation.js?v=gaf2d-motion-v1';
-import { motionReduced } from './motion-preference.js?v=gaf2d-motion-v1';
+} from './stage-presentation.js?v=enhanced-v1';
+import { motionReduced } from './motion-preference.js?v=enhanced-v1';
 import {
   drawMotionFrame,
   frameIndexForClip,
   selectEnemyMotion,
-} from './motion-bundle.js?v=gaf2d-motion-v1';
+} from './motion-bundle.js?v=enhanced-v1';
 import {
   failMotionRecord,
   getMotionClipRecord,
@@ -30,15 +30,20 @@ import {
   motionDiagnostics,
   pruneMotionClipResidency,
   warmMotionClip,
-} from './motion-store.js?v=gaf2d-motion-v1';
-import { drawTarget } from './enemies-v2.js?v=gaf2d-motion-v1';
-import { drawScenery } from './scenery-v2.js?v=gaf2d-motion-v1';
-import { CREATURES, creatureKindFor } from './content.js?v=gaf2d-motion-v1';
-import { creatureClipReady, drawCreature } from './creatures.js?v=gaf2d-motion-v1';
+} from './motion-store.js?v=enhanced-v1';
+import { drawTarget } from './enemies-v2.js?v=enhanced-v1';
+import { drawScenery } from './scenery-v2.js?v=enhanced-v1';
+import {
+  CREATURES,
+  creatureKindFor,
+  milestoneGateEraName,
+} from './content.js?v=enhanced-v1';
+import { corruptionTierFor } from './route.js?v=enhanced-v1';
+import { creatureClipReady, drawCreature } from './creatures.js?v=enhanced-v1';
 import {
   packWaveIdentityIds,
   targetForEnemyType,
-} from './wave-roster.js?v=gaf2d-motion-v1';
+} from './wave-roster.js?v=enhanced-v1';
 
 const LEGACY_ENEMY_PRESENTATION = legacySquarePresentation({ sourceSize: 1 });
 const LEGACY_ENEMY_INTRINSICS = Object.freeze({
@@ -157,9 +162,48 @@ function stageFunctionalLayout({
   });
 }
 
-/** Enemy type is trusted game state; asset IDs never self-assign scale. */
-export function stageRoleForEnemy(enemy) {
-  return enemy?.type === 'boss' ? 'boss' : 'standard';
+/**
+ * Enemy types that present one step above a common target.
+ *
+ * This is the 1.75x HP family (`typeHpMult`), the same three types
+ * `ENEMY_FLAVOR` marks `kind: 'elite'`, and the same three `creatureKindFor`
+ * dresses in the legacy elite creature bodies. `event` is included for exactly
+ * that reason: it is the same HP tier wearing the same bodies, so excluding it
+ * would draw one identity at two different sizes on consecutive waves.
+ *
+ * `patch` is deliberately absent. It is the champion tier, not an elite: its own
+ * `ENEMY_FLAVOR` kind, its own drop rule, and no rung of its own on the ladder.
+ * Where a Pack authored it a larger body, its approved identity says so and the
+ * approval rule in `stageRoleForEnemy` carries it — Valorant's Patch Note wears
+ * Site Sentinel and presents at elite scale for that reason, not because the
+ * enemy type asked for it.
+ */
+const ELITE_STAGE_TYPES = new Set(['lag', 'spoiler', 'event']);
+/** Approved roles an enemy body may claim; `hero` is never a target. */
+const ENEMY_CONSUMER_ROLES = new Set(['standard', 'elite', 'boss']);
+
+/**
+ * Approved stage role for one enemy body, in strict precedence:
+ *
+ * 1. `boss` is trusted game state and outranks every presentation fact.
+ * 2. A motion-mapped identity presents at the role its approved
+ *    `consumerScale` states. Approval data is sealed and already carries its
+ *    own no-upscale proof, so an approved `standard` identity is never grown to
+ *    84 px just because an elite-tier type happens to wear it.
+ * 3. Otherwise the enemy type decides. Packs without authored motion draw
+ *    freely scalable atlas cells and legacy creature frames, so the elite family
+ *    reads at the 84 px rung there.
+ *
+ * Enemy type is trusted game state; asset IDs never self-assign scale — the role
+ * is read from the pack-level approval record, never from the asset ID.
+ */
+export function stageRoleForEnemy(enemy, motionInfo = null) {
+  if (enemy?.type === 'boss') return 'boss';
+  const approved = motionInfo?.consumerRole;
+  if (typeof approved === 'string' && ENEMY_CONSUMER_ROLES.has(approved)) {
+    return approved;
+  }
+  return ELITE_STAGE_TYPES.has(enemy?.type) ? 'elite' : 'standard';
 }
 
 function enemyIntrinsicsForMotion(motionInfo) {
@@ -219,7 +263,7 @@ function resolveEnemyGeometry(enemy, groundY, fit, motionInfo) {
     actorX: enemy.displayX,
     groundY,
     fit,
-    role: stageRoleForEnemy(enemy),
+    role: stageRoleForEnemy(enemy, motionInfo),
     ...enemyIntrinsicsForMotion(motionInfo),
   });
 }
@@ -238,7 +282,13 @@ export function enemyLabelForDisplay(labelSource, isBoss = false) {
   return label.length > limit ? `${label.slice(0, limit - 1)}…` : label;
 }
 
-/** Name approved Valorant identities and V3 variants without changing legacy packs. */
+/**
+ * Name approved Valorant identities and V3 variants without changing legacy
+ * packs. A milestone Gate (display Zone 200/400/600/800/1000) additionally
+ * carries the era it hands the Route over to. This is label text only — the
+ * boss HP budget, the timer, and every plate/timer rectangle are untouched, and
+ * ordinary Gates (every tier-0 Valorant zone included) render byte-identically.
+ */
 export function bossBannerFor(activeBoss, zone = 0) {
   if (!activeBoss) return 'VERSION GATE';
   const kind = creatureKindFor(activeBoss, zone);
@@ -247,7 +297,11 @@ export function bossBannerFor(activeBoss, zone = 0) {
     : activeBoss.packId === 'valorant'
       ? activeBoss.label
       : 'Version Gate';
-  return String(label || 'Version Gate').toUpperCase();
+  const milestoneEra = milestoneGateEraName((zone | 0) + 1);
+  const banner = milestoneEra
+    ? `${label || 'Version Gate'} · ${milestoneEra}`
+    : label || 'Version Gate';
+  return String(banner).toUpperCase();
 }
 
 /** Dock the timer below the fixed two-row DOM stage HUD. */
@@ -282,7 +336,10 @@ function ready(img) {
 export function sizeCanvas(canvas) {
   const parent = canvas.parentElement;
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  const w = parent.clientWidth;
+  // A hidden embed or a zero-sized window at boot reports clientWidth 0; a
+  // 0-wide backing store makes every cached-strip drawImage throw and kills
+  // the boot draw, so the view floors at 1px until a real resize arrives.
+  const w = Math.max(1, parent.clientWidth);
   const h = Math.max(160, parent.clientHeight);
   canvas.width = Math.floor(w * dpr);
   canvas.height = Math.floor(h * dpr);
@@ -575,12 +632,11 @@ export function draw(
   };
   const enemyStageActors = (plateFit) =>
     show.map((enemy) => {
-      const role = stageRoleForEnemy(enemy);
+      const motionInfo = motionInfoByEnemyId.get(enemy.id);
+      const role = stageRoleForEnemy(enemy, motionInfo);
       return {
         role,
-        presentation: enemyStagePresentationForMotion(
-          motionInfoByEnemyId.get(enemy.id),
-        ),
+        presentation: enemyStagePresentationForMotion(motionInfo),
         overheadClearance: enemyPlateClearance(role, plateFit),
       };
     });
@@ -604,6 +660,13 @@ export function draw(
   ctx.translate(shakeX, shakeY);
 
   // --- layered editorial world (per-zone seeded mood, pack plate far layer) ---
+  // Drift tier is the Pack's own Corruption tier, read from the same pure Route
+  // helper the scheduler uses. A Pack that failed to decode reports tier 0, so a
+  // procedural fallback scene renders exactly as it does today.
+  const driftTier =
+    packAssets?.ready && packAssets.id
+      ? corruptionTierFor(s.route, packAssets.id)
+      : 0;
   drawScenery(ctx, w, h, {
     zone: s.route?.zone ?? 0,
     gy,
@@ -611,6 +674,13 @@ export function draw(
     t,
     reducedMotion: motionReduced(s),
     packBg: packAssets?.ready && ready(packAssets.background) ? packAssets.background : null,
+    packProps: packAssets?.ready && ready(packAssets.props) ? packAssets.props : null,
+    packCorruption:
+      packAssets?.ready && ready(packAssets.corruptionMask)
+        ? packAssets.corruptionMask
+        : null,
+    packId: packAssets?.ready ? packAssets.id || null : null,
+    driftTier,
   });
 
   // alerts
@@ -740,6 +810,8 @@ export function draw(
       drawZoneSweep(ctx, w, h, fx);
     } else if (fx.kind === 'golive') {
       drawGoLiveFx(ctx, w, h, fx, motionReduced(s));
+    } else if (fx.kind === 'patchline') {
+      drawPatchlineFx(ctx, w, h, fx, motionReduced(s));
     }
   }
 
@@ -903,6 +975,38 @@ export function heroDrawOptions(actorX, groundY, fit = 1, selected = null) {
     drawTrimHeight: geometry.drawTrimHeight,
     pivotY: geometry.pivotY,
     geometry,
+  });
+}
+
+/**
+ * Off-stage Host preview (Gear sheet niche) under the stage scale contract.
+ *
+ * The preview is the same character, so it must obey the same rule: the
+ * requested size names the neutral **visible body**, which becomes a hero-role
+ * stage fit, and the authored clip is drawn through the resolved trim height and
+ * pivot. Passing a bare `height` instead takes hero-v2's legacy trim-height
+ * compatibility path, which grounds the Host on the wrong pivot and crops its
+ * feet out of the niche.
+ */
+export function heroPreviewDrawOptions(
+  actorX,
+  groundY,
+  visibleBodyHeight,
+  time = 0,
+) {
+  const selector = Object.freeze({ t: time, pose: 'idle' });
+  const options = heroDrawOptions(
+    actorX,
+    groundY,
+    visibleBodyHeight / STAGE_ROLE_PRESENTATION.hero.visibleBodyHeight,
+    resolveHeroV3Frame(selector),
+  );
+  return Object.freeze({
+    height: options.geometry.targetBodyHeight,
+    drawTrimHeight: options.drawTrimHeight,
+    pivotY: options.pivotY,
+    geometry: options.geometry,
+    motionSelector: selector,
   });
 }
 
@@ -1070,6 +1174,9 @@ export function inspectEnemyMotion(enemy, packAssets = null, assetStore = null, 
   const target = pack ? targetForEnemyType(pack, enemy?.type) : null;
   const assetId = target?.id || null;
   const source = assetId ? pack?.motion?.characters?.[assetId] : null;
+  // Pack-level approval fact, reported in every load state so an identity's
+  // stage scale never changes between warming, ready, and fallback frames.
+  const consumerRole = source?.consumerScale?.role ?? null;
   const fallbackCount = assetStore?.motionStore
     ? motionDiagnostics(assetStore.motionStore).length
     : 0;
@@ -1082,6 +1189,7 @@ export function inspectEnemyMotion(enemy, packAssets = null, assetStore = null, 
       frameIndex: null,
       fallbacks: fallbackCount,
       target,
+      consumerRole,
     };
   }
   const record = assetStore?.motionStore
@@ -1096,6 +1204,7 @@ export function inspectEnemyMotion(enemy, packAssets = null, assetStore = null, 
       frameIndex: null,
       fallbacks: fallbackCount,
       target,
+      consumerRole,
     };
   }
   if (record.status === 'failed') {
@@ -1107,6 +1216,7 @@ export function inspectEnemyMotion(enemy, packAssets = null, assetStore = null, 
       frameIndex: null,
       fallbacks: fallbackCount,
       target,
+      consumerRole,
     };
   }
   const selection = selectEnemyMotion(enemy, {
@@ -1167,6 +1277,7 @@ export function inspectEnemyMotion(enemy, packAssets = null, assetStore = null, 
           fallbacks: fallbackCount,
           record: retainedRecord,
           target,
+          consumerRole,
         };
       }
       return {
@@ -1179,6 +1290,7 @@ export function inspectEnemyMotion(enemy, packAssets = null, assetStore = null, 
         frameIndex: null,
         fallbacks: fallbackCount,
         target,
+        consumerRole,
       };
     }
     if (clipRecord.status === 'failed') {
@@ -1190,6 +1302,7 @@ export function inspectEnemyMotion(enemy, packAssets = null, assetStore = null, 
         frameIndex: null,
         fallbacks: fallbackCount,
         target,
+        consumerRole,
       };
     }
     return {
@@ -1204,6 +1317,7 @@ export function inspectEnemyMotion(enemy, packAssets = null, assetStore = null, 
       fallbacks: fallbackCount,
       record: clipRecord,
       target,
+      consumerRole,
     };
   }
   const clip = record.descriptor?.clips?.[selection.clip];
@@ -1216,6 +1330,7 @@ export function inspectEnemyMotion(enemy, packAssets = null, assetStore = null, 
       frameIndex: null,
       fallbacks: fallbackCount,
       target,
+      consumerRole,
     };
   }
   return {
@@ -1228,6 +1343,7 @@ export function inspectEnemyMotion(enemy, packAssets = null, assetStore = null, 
     fallbacks: fallbackCount,
     record,
     target,
+    consumerRole,
   };
 }
 
@@ -1772,6 +1888,47 @@ function drawGoLiveFx(ctx, w, h, fx, reduced) {
   ctx.strokeText(label, 0, 0);
   ctx.fillStyle = '#e6b84d';
   ctx.fillText(label, 0, 0);
+  ctx.restore();
+}
+
+/**
+ * Patchline Complete — the Go-Live-class finale beat, fired once ever when the
+ * 100th Gate falls. Same structure as the Go Live cinematic (flash → centered
+ * title card) with its own copy, and the same reduced-motion contract: no flash,
+ * no pop, static final card.
+ */
+function drawPatchlineFx(ctx, w, h, fx, reduced) {
+  const life = fx.life || 2.4;
+  const u = 1 - clamp(fx.t / life, 0, 1);
+  if (!reduced && u < 0.2) {
+    ctx.fillStyle = `rgba(255,244,220,${0.5 * (1 - u / 0.2)})`;
+    ctx.fillRect(0, 0, w, h);
+  }
+  const a = Math.min(clamp(u / 0.1, 0, 1), clamp(fx.t / 0.45, 0, 1));
+  const pop = reduced ? 1 : 1 + Math.max(0, 1 - u / 0.28) * 0.45;
+  ctx.save();
+  ctx.globalAlpha = a;
+  ctx.translate(w / 2, h * 0.34);
+  ctx.scale(pop, pop);
+  ctx.textAlign = 'center';
+  ctx.lineJoin = 'round';
+  ctx.font = '800 13px system-ui, -apple-system, sans-serif';
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = 'rgba(6,8,10,0.9)';
+  ctx.strokeText('PATCHLINE COMPLETE', 0, -34);
+  ctx.fillStyle = '#FC1243';
+  ctx.fillText('PATCHLINE COMPLETE', 0, -34);
+  ctx.font = '900 30px system-ui, -apple-system, sans-serif';
+  ctx.lineWidth = 5;
+  const label = `ZONE ${fx.zone || 1000}`;
+  ctx.strokeText(label, 0, 0);
+  ctx.fillStyle = '#e6b84d';
+  ctx.fillText(label, 0, 0);
+  ctx.font = '800 12px system-ui, -apple-system, sans-serif';
+  ctx.lineWidth = 3.5;
+  ctx.strokeText('ENDLESS RATING BEGINS', 0, 26);
+  ctx.fillStyle = '#3ecf8e';
+  ctx.fillText('ENDLESS RATING BEGINS', 0, 26);
   ctx.restore();
 }
 

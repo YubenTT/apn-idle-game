@@ -3,7 +3,7 @@ import {
   validateMotionBundle,
   validateMotionPreviewBundle,
   validateMotionSetIndex,
-} from './motion-bundle.js?v=gaf2d-motion-v1';
+} from './motion-bundle.js?v=enhanced-v1';
 
 export const DEFAULT_MOTION_DEADLINE_MS = 10_000;
 export const MAX_DESCRIPTOR_BYTES = 256 * 1024;

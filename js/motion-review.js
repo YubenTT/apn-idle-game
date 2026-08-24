@@ -3,18 +3,18 @@ import {
   frameIndexForClip,
   validateMotionClipDescriptor,
   validateMotionSetIndex,
-} from './motion-bundle.js?v=gaf2d-motion-v1';
+} from './motion-bundle.js?v=enhanced-v1';
 import {
   HERO_V3_CLIPS,
   validateHeroClipDescriptor,
   validateHeroSetManifest,
-} from './hero-v3-contract.js?v=gaf2d-motion-v1';
-import { isMotionPreviewRequested } from './motion-preview.js?v=gaf2d-motion-v1';
+} from './hero-v3-contract.js?v=enhanced-v1';
+import { isMotionPreviewRequested } from './motion-preview.js?v=enhanced-v1';
 import {
   validateConsumerScaleContract,
   validateQualityProfileBinding,
   visualFidelityEncodedLimit,
-} from './visual-fidelity-v4.js?v=gaf2d-motion-v1';
+} from './visual-fidelity-v4.js?v=enhanced-v1';
 
 const MAX_SET_BYTES = 64 * 1024;
 const MAX_DESCRIPTOR_BYTES = 256 * 1024;

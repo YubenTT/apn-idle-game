@@ -1,20 +1,21 @@
 /** APN Idle bootstrap */
 
-import { C } from './formulas.js?v=gaf2d-motion-v1';
-import { createState, step, collectAlert, simulateOffline, setSprint, isSprinting, goLive, canGoLive, goLiveAvailableZone } from './game.js?v=gaf2d-motion-v1';
-import { sizeCanvas, draw, bossTimerYFor, enemyFrameFor, inspectEnemyMotion, inspectHeroMotion, inspectStagePresentation, legacyCreatureKindForStage } from './render.js?v=gaf2d-motion-v1';
-import { createAssetStore, getCurrentPackAssets, preloadRouteAssets, packWindowForRoute } from './assets.js?v=gaf2d-motion-v1';
-import { bindUI, renderHUD } from './ui.js?v=gaf2d-motion-v1';
-import { save, load, apply } from './save.js?v=gaf2d-motion-v1';
+import { C } from './formulas.js?v=enhanced-v1';
+import { createState, step, collectAlert, simulateOffline, setSprint, isSprinting, goLive, canGoLive, goLiveAvailableZone } from './game.js?v=enhanced-v1';
+import { sizeCanvas, draw, bossTimerYFor, enemyFrameFor, inspectEnemyMotion, inspectHeroMotion, inspectStagePresentation, legacyCreatureKindForStage } from './render.js?v=enhanced-v1';
+import { createAssetStore, getCurrentPackAssets, preloadRouteAssets, packWindowForRoute } from './assets.js?v=enhanced-v1';
+import { bindUI, renderHUD } from './ui.js?v=enhanced-v1';
+import { save, load, apply } from './save.js?v=enhanced-v1';
 import {
   heroV3AuthorityStatus,
   loadHeroV3,
-} from './hero-v3.js?v=gaf2d-motion-v1';
+} from './hero-v3.js?v=enhanced-v1';
 import {
   createMotionPreferenceController,
   motionReduced,
-} from './motion-preference.js?v=gaf2d-motion-v1';
-import { setReducedMotion } from './sfx.js?v=gaf2d-motion-v1';
+} from './motion-preference.js?v=enhanced-v1';
+import { gateSpawnAccent, packEntryMotif, setReducedMotion } from './sfx.js?v=enhanced-v1';
+import { titleTaglineFor } from './comedy.js?v=enhanced-v1';
 import {
   createMotionStore,
   getMotionClipRecord,
@@ -24,33 +25,33 @@ import {
   releaseColdMotion,
   warmMotionClip,
   warmMotionSet,
-} from './motion-store.js?v=gaf2d-motion-v1';
+} from './motion-store.js?v=enhanced-v1';
 import {
   packWaveIdentityIds,
   routeWaveIdentityUnion,
   routeWaveWindow,
-} from './wave-roster.js?v=gaf2d-motion-v1';
-import { GAME_PACKS } from './generated/game-packs.js?v=gaf2d-motion-v1';
-import { routeJourney } from './route.js?v=gaf2d-motion-v1';
+} from './wave-roster.js?v=enhanced-v1';
+import { GAME_PACKS } from './generated/game-packs.js?v=enhanced-v1';
+import { routeJourney } from './route.js?v=enhanced-v1';
 import {
   COVERAGE_MAX_LEVEL,
   COVERAGE_SETS,
   coverageMasteryLevel,
   coverageSetStatus,
   coverageYieldMultiplier,
-} from './coverage.js?v=gaf2d-motion-v1';
+} from './coverage.js?v=enhanced-v1';
 import {
   createCreatureStore,
   releaseColdCreatureKinds,
   warmCreatureKind,
-} from './creatures.js?v=gaf2d-motion-v1';
+} from './creatures.js?v=enhanced-v1';
 import {
   loadMotionPreview,
-} from './motion-preview.js?v=gaf2d-motion-v1';
+} from './motion-preview.js?v=enhanced-v1';
 import {
   isMotionReviewRequested,
   mountMotionReviewSurface,
-} from './motion-review.js?v=gaf2d-motion-v1';
+} from './motion-review.js?v=enhanced-v1';
 
 const canvas = document.getElementById('game');
 const s = createState();
@@ -114,6 +115,15 @@ if (saved) {
   document.getElementById('title-screen').hidden = true;
 } else {
   s.ui.pendingTip = 'start';
+}
+// Title-screen voice: the permanent Host line is static markup; the tagline
+// rotates deterministically by day + Go Live count, never by Math.random.
+const titleTagline = document.getElementById('title-tagline');
+if (titleTagline) {
+  titleTagline.textContent = titleTaglineFor(
+    Math.floor(Date.now() / 86400000),
+    s.meta.goLiveCount,
+  );
 }
 if (qaParams.has('autostart') && qaParams.has('zone')) {
   const displayZone = Math.max(1, Math.floor(Number(qaParams.get('zone')) || 1));
@@ -333,6 +343,8 @@ function renderGameToText() {
       echo: journey.echo,
       cleanEra: journey.cleanEra,
       signalDrift: journey.signalDrift,
+      era: journey.era,
+      patchline: journey.patchline,
       historyCount: journey.history.length,
     },
     coverage: {
@@ -692,6 +704,43 @@ if (qaParams.has('autostart')) {
 
 document.getElementById('chk-motion').checked = s.settings.reducedMotion;
 
+/* Pack audio motifs — a read-only frame observation. Nothing here writes to
+ * state, so the motif can never influence the sim; mute and reduced motion are
+ * enforced inside sfx.js by `feedbackAllowed()`. */
+const motifTitleScreen = document.getElementById('title-screen');
+/** One motif per Pack change, and never two inside this window. */
+const MOTIF_DEBOUNCE_MS = 2000;
+let motifPackId = null;
+let motifBossActive = false;
+let motifBaselineTaken = false;
+let motifLastAt = Number.NEGATIVE_INFINITY;
+
+function observePackAudio(now) {
+  const [current] = routeWaveWindow(s.route, runtimePacks);
+  const pack = current?.pack || null;
+  const packId = pack?.id || null;
+  const bossActive = s.world.bossActive === true;
+  // Silent while the Pack is only being observed for the first time (boot or
+  // load), on the title screen, in a hidden tab, or under the Go Live cinematic.
+  const silent =
+    !motifBaselineTaken ||
+    (motifTitleScreen ? motifTitleScreen.hidden !== true : false) ||
+    (typeof document.visibilityState === 'string' && document.visibilityState === 'hidden') ||
+    s.ui.fx?.kind === 'golive';
+  if (!silent && packId) {
+    if (packId !== motifPackId && now - motifLastAt >= MOTIF_DEBOUNCE_MS) {
+      packEntryMotif(packId, pack?.genre);
+      motifLastAt = now;
+    }
+    if (bossActive && !motifBossActive) gateSpawnAccent(packId, pack?.genre);
+  }
+  // Baselines advance even while silent, so a change missed behind the title
+  // screen or a hidden tab is dropped rather than queued.
+  motifPackId = packId;
+  motifBossActive = bossActive;
+  motifBaselineTaken = true;
+}
+
 let last = performance.now();
 let acc = 0;
 let hudT = 0;
@@ -723,6 +772,7 @@ function frame(now) {
   syncRouteAssets();
   syncMotionWindow();
   syncLegacyCreatureOwner();
+  observePackAudio(now);
   draw(
     view.ctx,
     view.w,

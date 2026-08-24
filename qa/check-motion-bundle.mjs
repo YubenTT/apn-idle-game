@@ -38,9 +38,24 @@ const stageRoleForEnemy = renderRuntime.stageRoleForEnemy;
 assert(
   typeof stageRoleForEnemy === 'function' &&
     stageRoleForEnemy({ type: 'stale' }) === 'standard' &&
+    stageRoleForEnemy({ type: 'rumor' }) === 'standard' &&
     stageRoleForEnemy({ type: 'patch' }) === 'standard' &&
+    stageRoleForEnemy({ type: 'lag' }) === 'elite' &&
+    stageRoleForEnemy({ type: 'spoiler' }) === 'elite' &&
+    stageRoleForEnemy({ type: 'event' }) === 'elite' &&
     stageRoleForEnemy({ type: 'boss' }) === 'boss',
-  'trusted enemy state resolves standard and boss stage roles',
+  'trusted enemy state resolves standard, elite, and boss stage roles',
+);
+assert(
+  stageRoleForEnemy({ type: 'lag' }, { consumerRole: 'standard' }) ===
+    'standard' &&
+    stageRoleForEnemy({ type: 'patch' }, { consumerRole: 'elite' }) ===
+      'elite' &&
+    stageRoleForEnemy({ type: 'boss' }, { consumerRole: 'standard' }) ===
+      'boss' &&
+    stageRoleForEnemy({ type: 'lag' }, { consumerRole: 'hero' }) === 'elite' &&
+    stageRoleForEnemy({ type: 'lag' }, { consumerRole: 'made-up' }) === 'elite',
+  'an approved consumer role outranks the enemy tier, boss outranks both, and unknown roles are ignored',
 );
 
 const geometryProbeContext = new Proxy(

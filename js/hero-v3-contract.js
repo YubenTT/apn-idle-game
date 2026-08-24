@@ -6,7 +6,7 @@
  * motion set, rig, export, and pinned derivative toolchain are all present.
  */
 
-import { validatePresentationRecord } from './stage-presentation.js?v=gaf2d-motion-v1';
+import { validatePresentationRecord } from './stage-presentation.js?v=enhanced-v1';
 
 export const HERO_SET_GRAMMAR = 'gaf2d-hero-set-v1';
 export const HERO_APPROVED_CLIP_GRAMMAR = 'gaf2d-hero-clip-v1';

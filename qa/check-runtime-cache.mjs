@@ -3,7 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const EXPECTED_BUILD_ID = 'gaf2d-motion-v1';
+const EXPECTED_BUILD_ID = 'enhanced-v1';
 const assert = (condition, message) => {
   if (!condition) throw new Error(`Runtime cache: ${message}`);
   console.log(`OK ${message}`);

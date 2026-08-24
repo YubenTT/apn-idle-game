@@ -56,7 +56,9 @@ import {
   queryGearBag,
   toggleJunk,
 } from '../js/loot.js';
-import { SKILLS, SKILL_TREES, skillSpCost } from '../js/content.js';
+import { COACH, ERAS, SKILLS, SKILL_TREES, TIPS, skillSpCost } from '../js/content.js';
+import { bossBannerFor } from '../js/render.js';
+import { driftTreatmentForTier } from '../js/scenery-v2.js';
 import {
   hubOnKill,
   emptyHub,
@@ -226,6 +228,16 @@ process.stdout.write(
   })
 );
 process.stdout.write(
+  execFileSync(process.execPath, [fileURLToPath(new URL('./check-wave-roster.mjs', import.meta.url))], {
+    encoding: 'utf8',
+  })
+);
+process.stdout.write(
+  execFileSync(process.execPath, [fileURLToPath(new URL('./check-echo-lines.mjs', import.meta.url))], {
+    encoding: 'utf8',
+  })
+);
+process.stdout.write(
   execFileSync(process.execPath, [fileURLToPath(new URL('./check-balance-targets.mjs', import.meta.url))], {
     encoding: 'utf8',
   })
@@ -379,6 +391,81 @@ ok(
     .every((marker) => uiSource.includes(marker)),
   'Route surface exposes current, next, Clean Era, Echo, and Signal Drift state',
 );
+ok(
+  ['data-route-era', 'data-route-goal', 'data-route-trophy'].every((marker) =>
+    uiSource.includes(marker),
+  ),
+  'Route surface exposes the named era, the terminal goal, and the Patchline trophy',
+);
+ok(
+  uiSource.includes('patchline.completed ? 100 : Math.min(99, goalRatio)'),
+  'the terminal-goal track only reads full once the Patchline is actually complete',
+);
+ok(
+  uiSource.includes("if (s.ui.pendingTip && TIPS[s.ui.pendingTip] && !s.ui.panel)"),
+  'a once-ever tip waits for the stage instead of being spent behind an open sheet',
+);
+ok(
+  uiSource.indexOf('data-route-trophy') < uiSource.indexOf('data-route-current'),
+  'Patchline trophy leads the Route sheet once earned',
+);
+ok(
+  /\.route-goal-card[^{]*\{/.test(cssSource) && /\.route-trophy-card[^{]*\{/.test(cssSource),
+  'Route goal and trophy cards reuse the tokenized Route card shell',
+);
+const renderSource = readFileSync(new URL('../js/render.js', import.meta.url), 'utf8');
+const scenerySource = readFileSync(new URL('../js/scenery-v2.js', import.meta.url), 'utf8');
+ok(
+  renderSource.includes('packCorruption:') && renderSource.includes('driftTier'),
+  'the stage hands the authored corruption mask and Drift tier to the scenery',
+);
+ok(
+  scenerySource.includes('drawDriftFissures') && scenerySource.includes('drawDriftWash'),
+  'scenery draws Corruption as authored fissures plus a scene-wide wash',
+);
+ok(
+  !/drawDrift(?:Fissures|Wash)\([^)]*\bt\b[^)]*\)/.test(scenerySource),
+  'the Corruption layer carries no time term, so reduced motion has nothing to gate',
+);
+ok(
+  renderSource.includes('Math.max(1, parent.clientWidth)'),
+  'sizeCanvas floors the view width so a hidden embed or zero-sized window cannot kill the boot draw',
+);
+ok(
+  scenerySource.includes('if (!(w >= 1) || !(h >= 1)) return null;'),
+  'makeCanvas refuses zero-sized strips so cached scenery can never throw InvalidStateError',
+);
+ok(
+  driftTreatmentForTier(0) === null && driftTreatmentForTier(9) === driftTreatmentForTier(4),
+  'Corruption treatment is absent at tier 0 and capped at tier 4',
+);
+ok(
+  [2, 3, 4].every((tier) => {
+    const step = driftTreatmentForTier(tier);
+    const previous = driftTreatmentForTier(tier - 1);
+    return (
+      step.ink > previous.ink &&
+      step.wash > previous.wash &&
+      step.rim > previous.rim &&
+      step.glowMix > previous.glowMix &&
+      step.fissures > previous.fissures
+    );
+  }),
+  'every Corruption channel steps strictly up with the Drift tier',
+);
+ok(
+  ERAS.length === 5 && new Set(ERAS.map((era) => era.name)).size === 5,
+  'content names five distinct Corruption eras',
+);
+ok(
+  bossBannerFor({ id: 'b', type: 'boss', packId: 'league', label: 'x' }, 199) ===
+    `VERSION GATE · ${ERAS[1].name.toUpperCase()}`,
+  'the Zone 200 milestone Gate banner names the incoming era',
+);
+ok(
+  bossBannerFor({ id: 'b', type: 'boss', packId: 'league', label: 'x' }, 19) === 'VERSION GATE',
+  'an ordinary Gate banner is unchanged',
+);
 ok(uiSource.includes("spBtn.disabled = h.energy < 1"), 'Sprint empty state uses native disabled semantics');
 ok(/\.btn-chip\s*\{[^}]*min-height:\s*calc\(var\(--touch-min\) \+ var\(--sp-1\)\)/s.test(cssSource), 'Run skills preserve touch targets');
 ok((shellMarkup.match(/class="nav-btn"/g) || []).length === 5, 'Navigation keeps exactly five tabs');
@@ -388,6 +475,89 @@ for (const label of ['Build', 'Go Live', 'Route', 'Boosts', 'Menu']) {
 ok(shellMarkup.includes('id="btn-bag"') && shellMarkup.includes('data-panel="gear"'), 'Gear remains a separate FAB');
 ok((shellMarkup.match(/aria-controls="sheet-root"/g) || []).length === 6, 'All six sheet launchers expose their controlled surface');
 ok(navAdr.includes('Option A') && navAdr.includes('minimal active fill'), 'Keep-five Option A is locked in ADR-0007');
+
+// —— E6 · FTUE + UX honesty ——————————————————————————————————————————
+// Progressive disclosure: nothing in the HUD may advertise a control, a label,
+// or a state the current save cannot actually act on.
+ok(
+  uiSource.includes('const learned = lv >= 1;') && uiSource.includes('el.hidden = !learned;'),
+  'skill shortcut chips appear only once their skill is learned',
+);
+ok(
+  uiSource.includes('skillRow.hidden = !skillChipShown') &&
+    /\.btn-skills\[hidden\]\s*\{[^}]*display:\s*none/s.test(cssSource),
+  'the shortcut row folds away entirely while no skill is learned',
+);
+ok(
+  /\.btn-skills\s*\{[^}]*grid-auto-flow:\s*column;[^}]*grid-auto-columns:\s*minmax\(0, 1fr\)/s.test(cssSource),
+  'one to four revealed chips fill the shortcut row evenly',
+);
+ok(
+  !uiSource.includes('Build to unlock') && !cssSource.includes('.btn-chip.locked'),
+  'the dead locked-chip state is gone with the chips that showed it',
+);
+ok(
+  Object.values(TIPS).every((line) => line.length <= 90),
+  'every tip stays inside one readable toast',
+);
+ok(
+  /\bSignal\b/.test(TIPS.start) && !/(Build|Go Live|Notes|\bSP\b)/.test(TIPS.start),
+  'the opening tip introduces exactly one concept',
+);
+ok(
+  Boolean(TIPS.focus) && gameSource.includes("tip(s, 'focus')"),
+  'the Focus meter reveal has its own tip on its own trigger',
+);
+ok(
+  contentSource.includes('export const COACH') &&
+    COACH.upgrade.title.length > 0 &&
+    uiSource.includes('COACH.upgrade.title') &&
+    shellMarkup.includes('data-coach-title') &&
+    !shellMarkup.includes('Tap to upgrade'),
+  'coach hint copy is authored in content and bound by the UI',
+);
+const coachRule = cssSource.match(/\.coach-hint\s*\{([^}]*)\}/)?.[1] || '';
+ok(
+  coachRule.includes('box-shadow: var(--elev-card);') && !/px var\(--c-signal/.test(coachRule),
+  'the coach hint keeps flat elevation with no outer glow',
+);
+ok(
+  (cssSource.match(/\.nav-btn\.active\s*\{/g) || []).length === 1 &&
+    !cssSource.includes('[data-panel="skills"].has-badge'),
+  'exactly one active-tab layer survives and the orphan Build badge is gone',
+);
+ok(
+  /\.stage-context-track\s*\{[^}]*height:\s*var\(--sp-2\)/s.test(cssSource),
+  'the stage context track meets the 8px progress-track floor',
+);
+ok(
+  shellMarkup.includes('<small>Wave</small>') && !shellMarkup.includes('<small>Pack</small>'),
+  'the ten-step counter is labelled Wave on the stage chip',
+);
+ok(
+  uiSource.includes('aria-label="Wave ${journey.packWave} of 10"'),
+  'the Route sheet track announces the same Wave counter',
+);
+ok(
+  !shellMarkup.includes('stage-live-state') && !cssSource.includes('.stage-live-state'),
+  'the static ACTIVE pip is gone; only data-bound state sits under Live',
+);
+ok(
+  shellMarkup.includes('id="offline-receipt"') && !shellMarkup.includes('<pre'),
+  'the return receipt is structured markup instead of a text dump',
+);
+ok(
+  ['offline-away', 'offline-receipt', 'offline-progress', 'offline-note'].every((id) =>
+    shellMarkup.includes(`id="${id}"`),
+  ),
+  'the return receipt states elapsed time, earnings, progress, and the checkpoint stop',
+);
+ok(
+  uiSource.includes('rw-chip k-${kind}') &&
+    uiSource.includes("['sig', 'Signal'") &&
+    uiSource.includes("['notes', 'Notes'"),
+  'receipt currency rows reuse the contracted reward-chip color roles',
+);
 for (const section of ['Accessibility', 'Audio', 'Account', 'Reset']) {
   ok(shellMarkup.includes(`menu-section-title">${section}`), `Menu has ${section} section`);
 }
@@ -417,6 +587,13 @@ for (const def of [...DAILY_DEFS, ...WEEKLY_DEFS, ...SEASON_MILESTONES]) {
 }
 ok(!shellMarkup.includes('id="v-attrs"'), 'Menu has no attribute debug string');
 ok((shellMarkup.match(/class="switch-ui"/g) || []).length === 2, 'Menu uses one switch component twice');
+const tamperedTipsFixture = createState();
+applySave(tamperedTipsFixture, { v: SAVE_VERSION, ui: { tips: 7 } });
+ok(
+  typeof tamperedTipsFixture.ui.tips === 'object' &&
+    tamperedTipsFixture.ui.tips !== null,
+  'a tampered primitive tips field is replaced by a real object so tip() cannot throw',
+);
 const boostFixture = createState();
 boostFixture.authority.amount = 20;
 const damageBoostPreview = metaUpgradePreview(boostFixture, 'signal_power');

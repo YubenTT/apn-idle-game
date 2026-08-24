@@ -25,13 +25,13 @@
  *   levelT/defeatT/lootT  optional 0..1 clip clocks (wired by later waves)
  */
 
-import { clamp } from './formulas.js?v=gaf2d-motion-v1';
+import { clamp } from './formulas.js?v=enhanced-v1';
 import {
   drawV3Frame,
   heroV3Ready,
   pickV3,
   resolveHeroV3Frame,
-} from './hero-v3.js?v=gaf2d-motion-v1';
+} from './hero-v3.js?v=enhanced-v1';
 
 const T = 130; // design height in px (HOST_PRESENTATION.target)
 

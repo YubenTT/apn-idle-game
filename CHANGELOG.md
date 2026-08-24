@@ -352,6 +352,75 @@ Versioning: [SemVer](https://semver.org/) for tagged releases.
 - PWA manifest
 - Revisit cosmetics-only APN benefits after MVP retention evidence; no paid power
 
+## [Enhanced Edition] — 2026-08-24
+
+### Added
+
+- **Authored wave composition for all 20 Packs.** Every Pack now owns a designed
+  ten-wave rhythm in `js/wave-roster.js` instead of one shared probability table,
+  so each Pack *plays* differently rather than only looking different. Per-Pack
+  type mixes stay inside the existing statistical envelope, which keeps all nine
+  assertion-locked balance gates green; the approved Valorant creature pool is
+  untouched.
+
+- **Pack set dressing and threaded accents.** The manifested but never-drawn
+  `props.webp` cells now render as a deterministic near-ground set-dressing
+  strip, and each Pack's accent color threads through billboard and rail
+  treatments, so the *place* changes when the Pack changes. No new assets, and
+  the layer is static under reduced motion.
+
+- **Visible Signal Drift, named eras, and Patchline Complete.** Corruption masks
+  draw over the Pack plate with tier-stepped alpha, five named eras narrate the
+  200–1000 stretch, and Milestone Gates carry era-named boss titles as a label
+  layer only. Clearing Gate 100 at zone 1000 mints a one-time persisted
+  completion record, plays the Go-Live-class cinematic, pins a permanent trophy
+  card at the top of Route, and labels post-1000 play **Endless Rating**. Route
+  states the terminal goal from zone 1.
+
+- **Reachable elite tier and a contract-true Gear preview.** `stageRoleForEnemy`
+  now honors the authored `elite` role, so Site Sentinel renders at its approved
+  84 px and elite-typed targets across Packs reach the elite ladder step. The
+  Gear-sheet Hero preview passes the real stage geometry contract instead of
+  trim-height scaling. Ladder values are unchanged.
+
+- **The APN story, spoken.** Sixty unique editorial-voice Echo discovery lines
+  (20 Packs × 3) surface on discovery and fill the Echo Archive as a trophy case;
+  the title screen carries a deterministic tagline rotation plus one in-world
+  line. Existing creature bios reach boss help copy where identity-neutral rules
+  allow.
+
+- **Pack audio motifs.** `js/sfx.js` derives a deterministic two-to-four note
+  WebAudio motif per Pack from a genre family table plus an id-hash pitch offset
+  — no assets and no `Math.random` — fired on Pack entry and Gate boss spawn
+  behind the same mute and reduced-motion silence as every other cue.
+
+### Changed
+
+- **Progressive FTUE, honest HUD, and a real offline receipt.** Skill chips stay
+  hidden until the player can actually use them; the single six-noun opening
+  toast is replaced by staged single-concept tips on real triggers (first kill,
+  first affordable upgrade, rank 1, first patch, first checkpoint), with tip copy
+  owned by `js/content.js`. The offline `<pre>` becomes a structured,
+  token-colored per-currency receipt with honest numbers and no reveal
+  animation. The ten-step counter reads **Wave n/10** everywhere, including
+  assistive text. Two dead `.nav-btn.active` layers, the orphan skills-badge
+  rule, and the coach-hint outer glow are deleted, and the stage-context track is
+  raised to the 8 px floor.
+
+- **Release cache invalidated.** `RUNTIME_BUILD_ID` moves `gaf2d-motion-v1` →
+  `enhanced-v1` across `index.html` and every relative runtime import;
+  `qa/check-runtime-cache.mjs` enforces the exact token everywhere and rejects
+  stale ones.
+
+- **`docs/EMBED.md` corrected.** The deploy section now documents the real
+  mechanism — the fail-closed `apn-web/scripts/sync-idle-game.mjs` projection
+  into `apn-web/public/idle/` with `release.json` source commit, `treeSha256`,
+  and rollback block, then Cloudflare Workers `deploy:production` and
+  `smoke:idle-game` verification against the expected source/tree — instead of
+  the retired "manual copy" claim. The health check names the real
+  `apn_idle_save_v2` key at schema `v: 3`, and a ship checklist replaces the
+  stale PR-10 deferral notes.
+
 ## [1.7.2] — 2026-07-13
 
 ### Changed

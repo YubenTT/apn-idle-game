@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#0d1217" />
     <meta name="color-scheme" content="dark" />
     <title>APN Idle</title>
-    <link rel="icon" href="./assets/apn-logo.svg?v=gaf2d-motion-v1" />
-    <link rel="stylesheet" href="./css/game.css?v=gaf2d-motion-v1" />
+    <link rel="icon" href="./assets/apn-logo.svg?v=enhanced-v1" />
+    <link rel="stylesheet" href="./css/game.css?v=enhanced-v1" />
   </head>
   <body>
     <div id="app">
@@ -58,7 +58,7 @@
       </section>
 
       <div class="hud-ticker" role="status" aria-label="Current live patch feed">
-        <img class="feed-source" src="./assets/apn-logo.svg?v=gaf2d-motion-v1" alt="" width="16" height="16" />
+        <img class="feed-source" src="./assets/apn-logo.svg?v=enhanced-v1" alt="" width="16" height="16" />
         <strong class="feed-game" id="feed-game">Valorant</strong>
         <span class="feed-kind patch">Patch</span>
         <span class="feed-context">
@@ -71,7 +71,9 @@
       <main class="hud-stage">
         <div class="stage-context" aria-label="Route progress">
           <span class="stage-context-chip"><small>Route</small><strong id="v-zone">1</strong></span>
-          <span class="stage-context-chip pack"><small>Pack</small><strong id="v-pack-progress">1/10</strong><span class="stage-context-track"><i id="bar-pack"></i></span></span>
+          <!-- One name for the 10-step counter: Wave. The id keeps the Pack
+               spelling (display/ID split) so saves, QA hooks, and CSS stay put. -->
+          <span class="stage-context-chip pack"><small>Wave</small><strong id="v-pack-progress">1/10</strong><span class="stage-context-track"><i id="bar-pack"></i></span></span>
           <span class="patch-echo-chip" id="patch-echo-chip" hidden>
             <small>Patch Echo</small><strong id="v-echo-progress">0/0</strong>
           </span>
@@ -96,9 +98,10 @@
               <span class="stage-stat-lab">LIVE</span>
               <span class="stage-live-value">×<em id="v-live">1.00</em></span>
             </div>
+            <!-- Only data-bound state lives here: the combo chip. The old
+                 ACTIVE pip was static markup with nothing behind it. -->
             <div class="stage-live-meta">
               <span id="v-combo" class="stage-combo" hidden></span>
-              <span class="stage-live-state"><i aria-hidden="true"></i>ACTIVE</span>
             </div>
           </div>
         </div>
@@ -174,9 +177,10 @@
             <span class="chip-fill" aria-hidden="true"></span>
           </button>
         </div>
+        <!-- Container only — js/ui.js binds COACH copy from js/content.js. -->
         <div id="coach-hint" class="coach-hint" role="status" hidden>
-          <strong>Tap to upgrade</strong>
-          <span>Spend Signal on your Scanner</span>
+          <strong data-coach-title></strong>
+          <span data-coach-body></span>
         </div>
       </section>
 
@@ -300,21 +304,29 @@
       </div>
       <div class="modal-card title-card">
         <div class="title-mark" aria-hidden="true">
-          <img src="./assets/apn-logo.svg?v=gaf2d-motion-v1" alt="" width="72" height="72" />
+          <img src="./assets/apn-logo.svg?v=enhanced-v1" alt="" width="72" height="72" />
         </div>
         <h1 class="title-word">APN <span>Idle</span></h1>
+        <p class="title-role">You are the Host. Clear the noise. Stay live.</p>
+        <p class="title-tagline" id="title-tagline" data-title-tagline></p>
         <button type="button" id="btn-start" class="btn-primary title-play">Play</button>
       </div>
     </div>
 
+    <!-- Return receipt: structured rows, not a text dump. js/ui.js fills every
+         value from the offline simulation; the currency chips reuse the
+         contracted .rw-chip color roles. -->
     <div id="offline-modal" class="modal" hidden>
-      <div class="modal-card">
+      <div class="modal-card offline-card">
         <h2>While offline</h2>
-        <pre id="offline-body" class="box"></pre>
+        <p class="offline-away" id="offline-away">Away 0s</p>
+        <div class="offline-receipt" id="offline-receipt" role="group" aria-label="Offline earnings"></div>
+        <p class="offline-progress" id="offline-progress"></p>
+        <p class="offline-note" id="offline-note" hidden></p>
         <button type="button" id="btn-offline-ok" class="btn-primary">Continue</button>
       </div>
     </div>
 
-    <script type="module" src="./js/main.js?v=gaf2d-motion-v1"></script>
+    <script type="module" src="./js/main.js?v=enhanced-v1"></script>
   </body>
 </html>

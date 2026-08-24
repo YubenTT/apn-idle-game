@@ -9,25 +9,27 @@ import {
   clamp,
   killsNeeded,
   nextGoLiveBoundary,
-} from './formulas.js?v=gaf2d-motion-v1';
+} from './formulas.js?v=enhanced-v1';
 import {
+  COACH,
   META,
   SKILLS,
   SKILL_TREES,
   TIPS,
   FEED_COPY,
+  echoLineFor,
   skillSpCost,
-} from './content.js?v=gaf2d-motion-v1';
+} from './content.js?v=enhanced-v1';
 import {
   echoProgressFor,
   packForRoute,
   packZoneDisplay,
   routeJourney,
-} from './route.js?v=gaf2d-motion-v1';
+} from './route.js?v=enhanced-v1';
 import {
   CATALOG_NOTICE,
   GAME_PACKS,
-} from './generated/game-packs.js?v=gaf2d-motion-v1';
+} from './generated/game-packs.js?v=enhanced-v1';
 import {
   COVERAGE_MAX_LEVEL,
   COVERAGE_SETS,
@@ -37,7 +39,7 @@ import {
   coverageMasteryLevel,
   coverageSetStatus,
   isPackCovered,
-} from './coverage.js?v=gaf2d-motion-v1';
+} from './coverage.js?v=enhanced-v1';
 import {
   combatStats,
   allocSkill,
@@ -67,7 +69,7 @@ import {
   normalizeGear,
   HOTFIX_FOCUS_COST,
   PRIORITY_FOCUS_COST,
-} from './game.js?v=gaf2d-motion-v1';
+} from './game.js?v=enhanced-v1';
 import {
   formatAffix,
   sellValue,
@@ -81,7 +83,7 @@ import {
   primaryStat,
   queryGearBag,
   toggleJunk,
-} from './loot.js?v=gaf2d-motion-v1';
+} from './loot.js?v=enhanced-v1';
 import {
   DAILY_DEFS,
   WEEKLY_DEFS,
@@ -92,12 +94,13 @@ import {
   seasonLevel,
   SEASON_MILESTONES,
   formatReward,
-} from './hub.js?v=gaf2d-motion-v1';
-import { skillIco, metaIco, hubIco, gearIcon } from './icons.js?v=gaf2d-motion-v1';
-import { drawHeroV2 } from './hero-v2.js?v=gaf2d-motion-v1';
-import { motionReduced } from './motion-preference.js?v=gaf2d-motion-v1';
-import { save, clear } from './save.js?v=gaf2d-motion-v1';
-import { sfx, unlockAudio, setMuted, setReducedMotion } from './sfx.js?v=gaf2d-motion-v1';
+} from './hub.js?v=enhanced-v1';
+import { skillIco, metaIco, hubIco, gearIcon } from './icons.js?v=enhanced-v1';
+import { drawHeroV2 } from './hero-v2.js?v=enhanced-v1';
+import { heroPreviewDrawOptions } from './render.js?v=enhanced-v1';
+import { motionReduced } from './motion-preference.js?v=enhanced-v1';
+import { save, clear } from './save.js?v=enhanced-v1';
+import { sfx, unlockAudio, setMuted, setReducedMotion } from './sfx.js?v=enhanced-v1';
 
 const PANEL_TITLES = {
   skills: 'Build',
@@ -245,8 +248,15 @@ function mountGearHero(s) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save();
     ctx.scale(dpr, dpr);
+    // Same visible-body contract as the run stage: the niche Host is the stage
+    // Host at preview scale, never a trim-height approximation of it.
     drawHeroV2(ctx, cssSize / 2, cssSize - 5, {
-      height: cssSize * 0.8,
+      ...heroPreviewDrawOptions(
+        cssSize / 2,
+        cssSize - 5,
+        cssSize * 0.8,
+        now / 1000,
+      ),
       time: now / 1000,
       pose: 'idle',
       energy: 100,
@@ -964,9 +974,37 @@ function renderRouteJourney(s) {
   const cleanLabel = clean.completed
     ? `Clean Era Complete · ${clean.completedCount}/${clean.total}`
     : `Clean Era · ${clean.completedCount}/${clean.total}`;
+  const patchline = journey.patchline;
+  const routeZone = Math.min(patchline.goalZone, s.route.zone + 1);
+  // Floor the track, and hold it below full until the Gate is actually closed:
+  // rounding let zones 995-999 paint a finished bar beside "5 to go".
+  const goalRatio = Math.floor((patchline.zone / patchline.goalZone) * 100);
+  const goalPct = patchline.completed ? 100 : Math.min(99, goalRatio);
+  const goalCard = `
+    <div class="route-clean-card route-goal-card ${patchline.completed ? 'is-complete' : ''}" data-route-goal>
+      <div>
+        <small>Terminal goal</small>
+        <strong>Route Goal · Zone ${patchline.goalZone}</strong>
+      </div>
+      <span>${patchline.completed
+        ? `${journey.era.endlessName} · past Zone ${patchline.goalZone}`
+        : `Zone ${routeZone} · ${patchline.remaining} to go`}</span>
+      <div class="route-clean-track"><i style="width:${goalPct}%"></i></div>
+    </div>`;
+  const trophyCard = patchline.completed
+    ? `
+    <div class="route-clean-card route-trophy-card" data-route-trophy>
+      <div>
+        <small>Patchline Complete</small>
+        <strong>The 100th Gate is closed</strong>
+      </div>
+      <span>Zone ${patchline.completedAtZone || patchline.goalZone} · ${journey.era.endlessName}</span>
+    </div>`
+    : '';
 
   return `
   <section class="route-journey" data-route-journey aria-label="Route journey">
+    ${trophyCard}
     <div class="route-current-card ${journey.signalDrift.tier > 0 ? 'is-drift' : ''}">
       <div class="route-card-kicker">
         <span data-route-drift>${driftLabel}</span>
@@ -983,14 +1021,17 @@ function renderRouteJourney(s) {
           <strong data-route-next>${next?.title || 'Route recalculating'}</strong>
         </div>
       </div>
-      <div class="route-wave-track" aria-label="Pack wave ${journey.packWave} of 10">
+      <div class="route-wave-track" aria-label="Wave ${journey.packWave} of 10">
         <i style="width:${journey.packWave * 10}%"></i>
       </div>
       <div class="route-echo-now" data-route-echo>
         <span><small>Patch Echo</small><strong>${journey.echo.found}/${journey.echo.total}</strong></span>
         <span class="route-echo-dots">${echoDots}</span>
       </div>
+      <p class="route-era-line" data-route-era>${journey.era.blurb}</p>
     </div>
+
+    ${goalCard}
 
     <div class="route-mastery-card" data-coverage-mastery>
       <div class="route-mastery-copy">
@@ -1028,8 +1069,18 @@ function renderRouteJourney(s) {
       <div class="route-archive-grid">
         ${archive.map(({ pack, echo, complete }) => `
           <div class="route-archive-row ${complete ? 'is-complete' : ''}" data-echo-pack="${pack.id}">
-            <span><strong>${pack.title}</strong><small>${complete ? 'Gate cleared' : 'Gate open'}</small></span>
-            <b>${echo.found}/${echo.total}</b>
+            <div class="route-archive-head">
+              <span><strong>${pack.title}</strong><small>${complete ? 'Gate cleared' : 'Gate open'}</small></span>
+              <b>${echo.found}/${echo.total}</b>
+            </div>
+            <ol class="route-echo-lines">
+              ${Array.from({ length: echo.total }, (_, index) => {
+                const line = index < echo.found ? echoLineFor(pack.id, index) : null;
+                return `<li class="${line ? 'is-found' : 'is-locked'}" data-echo-slot="${index + 1}">${
+                  line || `Echo ${index + 1} · undiscovered`
+                }</li>`;
+              }).join('')}
+            </ol>
           </div>`).join('')}
       </div>
     </details>
@@ -1481,7 +1532,10 @@ export function renderHUD(s) {
   });
   document.getElementById('app')?.classList.toggle('is-sprinting', sprinting);
 
-  if (s.ui.pendingTip && TIPS[s.ui.pendingTip]) {
+  // A tip fires once ever, so it must never be spent behind an open sheet
+  // (the sheet stacks above the toast): hold it until the player is back on
+  // the stage, then show it.
+  if (s.ui.pendingTip && TIPS[s.ui.pendingTip] && !s.ui.panel) {
     s.ui.toast = TIPS[s.ui.pendingTip];
     s.ui.toastT = 3;
     s.ui.toastTone = 'info';
@@ -1490,11 +1544,19 @@ export function renderHUD(s) {
   updateToastBanner(s);
 
   // First-run coach hint: points at the Upgrade Scanner until the first buy.
+  // The shell owns the container; the copy is authored in js/content.js.
   const coach = $('coach-hint');
   if (coach) {
     coach.hidden = !!s.ui.tips.coachUpgrade || h.scanner > 0 || !!s.ui.panel;
+    set(coach.querySelector('[data-coach-title]'), COACH.upgrade.title);
+    set(coach.querySelector('[data-coach-body]'), COACH.upgrade.body);
   }
 
+  // Progressive disclosure: a shortcut chip exists only once its skill is real.
+  // Same rule as the Focus meter above — learned (level ≥ 1) or absent, so the
+  // row never shows a control the player cannot press. Skills are run-scoped,
+  // so Go Live folds the row away again, honestly.
+  let skillChipShown = false;
   for (const [id, sk, on, castCost] of [
     ['btn-hotfix', 'hotfix', false, HOTFIX_FOCUS_COST],
     ['btn-summary', 'summary_burst', false, PRIORITY_FOCUS_COST],
@@ -1504,10 +1566,11 @@ export function renderHUD(s) {
     const el = $(id);
     if (!el) continue;
     const lv = skillLv(s, sk);
-    const locked = lv < 1;
-    el.hidden = false;
-    el.disabled = locked;
-    el.classList.toggle('locked', locked);
+    const learned = lv >= 1;
+    el.hidden = !learned;
+    el.disabled = !learned;
+    if (!learned) continue;
+    skillChipShown = true;
     el.classList.toggle('on', !!on);
     el.setAttribute('aria-pressed', on ? 'true' : 'false');
     const def = SKILLS[sk];
@@ -1519,8 +1582,7 @@ export function renderHUD(s) {
     if (subEl) {
       let sub = '';
       let subState = '';
-      if (locked) sub = 'Build to unlock';
-      else if (castCost > 0) {
+      if (castCost > 0) {
         sub = `${castCost} Focus`;
         subState = h.focus >= castCost ? 'ready' : 'wait';
       } else sub = on ? 'Active' : 'Toggle';
@@ -1529,26 +1591,27 @@ export function renderHUD(s) {
       subEl.classList.toggle('wait', subState === 'wait');
     }
     // Charge fill: Focus gathered toward the next cast (active skills only).
-    const charge = castCost > 0 && !locked ? clamp(h.focus / castCost, 0, 1) : 0;
+    const charge = castCost > 0 ? clamp(h.focus / castCost, 0, 1) : 0;
     el.style.setProperty('--charge', charge.toFixed(3));
     el.classList.toggle('charged', charge >= 1);
     const pips = el.querySelectorAll('.chip-pips i');
     if (pips.length) {
-      const filled = locked ? 0 : Math.max(1, Math.ceil((lv / (def?.max || 1)) * pips.length));
+      const filled = Math.max(1, Math.ceil((lv / (def?.max || 1)) * pips.length));
       pips.forEach((pip, i) => pip.classList.toggle('fill', i < filled));
     }
   }
+  // The whole row folds away until the first skill is learned, so minute 0 has
+  // no empty 44 px band; the landscape dock reclaims the chip track with it.
+  const skillRow = $('skill-shortcuts');
+  if (skillRow) skillRow.hidden = !skillChipShown;
+  document.querySelector('.hud-cta')?.classList.toggle('has-skills', skillChipShown);
   document.getElementById('app')?.classList.toggle('is-overdrive', !!h.deepOn);
 
   if (s.ui.offline) {
     const m = $('offline-modal');
     if (m) {
       m.hidden = false;
-      const o = s.ui.offline;
-      set(
-        $('offline-body'),
-        `Away ${fmtTime(o.seconds)}\n+${formatNum(o.bytes)} Signal · +${formatNum(o.patches)} Notes\n+${o.levels} ranks · +${o.zones} zones · ${o.kills} clears`
-      );
+      renderOfflineReceipt(s.ui.offline);
     }
   }
 
@@ -1577,4 +1640,35 @@ function fmtTime(sec) {
   if (sec < 60) return `${sec | 0}s`;
   if (sec < 3600) return `${(sec / 60) | 0}m`;
   return `${(sec / 3600) | 0}h`;
+}
+
+/**
+ * Return receipt — the strongest moment a returning Host gets, printed as a
+ * receipt instead of a text dump: elapsed line, one row per currency reusing
+ * the contracted `.rw-chip` color roles, then the run-progress line.
+ *
+ * Honest and static. Every number is exactly what `simulateOffline` banked, and
+ * the anti-farm checkpoint stop (ADR-0008) is stated rather than hidden. No
+ * reveal animation, so reduced motion has nothing to gate.
+ */
+function renderOfflineReceipt(o) {
+  const $ = (id) => document.getElementById(id);
+  set($('offline-away'), `Away ${fmtTime(o.seconds)}`);
+  const html = [
+    ['sig', 'Signal', `+${formatNum(o.bytes)}`],
+    ['notes', 'Notes', `+${formatNum(o.patches)}`],
+  ]
+    .map(
+      ([kind, label, value]) =>
+        `<div class="offline-row"><small>${label}</small><span class="rw-chip k-${kind}">${value}</span></div>`,
+    )
+    .join('');
+  const receipt = $('offline-receipt');
+  if (receipt && receipt.innerHTML !== html) receipt.innerHTML = html;
+  set($('offline-progress'), `+${o.levels} ranks · +${o.zones} zones · ${o.kills} clears`);
+  const note = $('offline-note');
+  if (note) {
+    note.hidden = !o.stoppedAtSeasonBoundary;
+    set(note, 'Paused at the checkpoint — offline never banks past a Go Live.');
+  }
 }

@@ -47,6 +47,7 @@ import {
   targetForEnemyType,
 } from '../js/wave-roster.js';
 import {
+  STAGE_ROLE_PRESENTATION,
   legacySquarePresentation,
   stageFitForActors,
 } from '../js/stage-presentation.js';
@@ -1160,6 +1161,128 @@ assert(
     entryGeometry.visualGap === 2,
   'authored Entry Runner resolves an exact 72 px body with a 2 px ground gap',
 );
+
+// —— approved elite rung ————————————————————————————————————————
+// Site Sentinel is approved at consumerScale.role 'elite'. It must present at
+// the 84 px rung of the locked ladder, in every load state, without ever
+// upscaling past its approved source pixels.
+const sentinelSource = pack.motion.characters['site-sentinel'];
+const sentinelSet = readJson(path.join(root, sentinelSource.set));
+const sentinelSetDescriptor = {
+  sourceFamily: 'authored-semantic-v4',
+  clips: sentinelSet.clips,
+  frameSize: sentinelSet.frameSize,
+  presentation: sentinelSet.presentation,
+};
+const sentinelStore = {
+  motionStore: {
+    entries: new Map([
+      [
+        'valorant/site-sentinel',
+        { status: 'ready', descriptor: sentinelSetDescriptor },
+      ],
+      ...Object.keys(sentinelSet.clips).map((clipName) => {
+        const clip = readJson(
+          path.join(packDir, 'characters/site-sentinel', `${clipName}.json`),
+        );
+        return [
+          `valorant/site-sentinel#${clipName}`,
+          {
+            status: 'ready',
+            descriptor: {
+              sourceFamily: 'authored-semantic-v4',
+              fps: clip.fps,
+              playback: clip.playback,
+              frames: clip.frames,
+              trim: clip.trim,
+              pivot: clip.pivot,
+              presentation: clip.presentation,
+            },
+            set: sentinelSetDescriptor,
+            image: { width: clip.atlas.width, height: clip.atlas.height },
+          },
+        ];
+      }),
+    ]),
+    diagnostics: new Map(),
+  },
+};
+const sentinelPackAssets = {
+  ...syntheticPackAssets,
+  pack,
+};
+const sentinelEnemy = {
+  ...syntheticEnemy,
+  id: 'motion-sentinel',
+  type: 'patch',
+  label: 'Site Sentinel',
+  frame: 'elite',
+};
+const sentinelPendingMotion = inspectEnemyMotion(
+  sentinelEnemy,
+  { ...sentinelPackAssets, pack: { ...pack, motion: pack.motion } },
+  null,
+  syntheticEnv,
+);
+const sentinelReadyMotion = inspectEnemyMotion(
+  sentinelEnemy,
+  sentinelPackAssets,
+  sentinelStore,
+  syntheticEnv,
+);
+assert(
+  sentinelPendingMotion.assetId === 'site-sentinel' &&
+    sentinelPendingMotion.consumerRole === 'elite' &&
+    sentinelReadyMotion.status === 'ready' &&
+    sentinelReadyMotion.consumerRole === 'elite' &&
+    stageRoleForEnemy(sentinelEnemy, sentinelPendingMotion) === 'elite' &&
+    stageRoleForEnemy(sentinelEnemy, sentinelReadyMotion) === 'elite',
+  'approved elite identity reports one stage role while warming and once ready',
+);
+const sentinelGeometry = drawEnemy(
+  createCanvasProbe().ctx,
+  sentinelEnemy,
+  320,
+  1.25,
+  sentinelPackAssets,
+  sentinelStore,
+  false,
+  1,
+  syntheticEnv,
+);
+assert(
+  sentinelGeometry.role === 'elite' &&
+    sentinelGeometry.body.height === 84 &&
+    sentinelGeometry.body.bottom === 318 &&
+    sentinelGeometry.visualGap === 2,
+  'approved Site Sentinel resolves an exact 84 px body with a 2 px ground gap',
+);
+const eliteTypedValorantMotion = inspectEnemyMotion(
+  { ...sentinelEnemy, id: 'motion-lag', type: 'lag', frame: 'common-c' },
+  sentinelPackAssets,
+  null,
+  syntheticEnv,
+);
+assert(
+  eliteTypedValorantMotion.assetId === 'signal-hunter' &&
+    eliteTypedValorantMotion.consumerRole === 'standard' &&
+    stageRoleForEnemy(
+      { ...sentinelEnemy, type: 'lag' },
+      eliteTypedValorantMotion,
+    ) === 'standard',
+  'a sealed standard approval outranks the elite enemy tier instead of being upscaled',
+);
+for (const [assetId, source] of Object.entries(pack.motion.characters)) {
+  const scale = source.consumerScale;
+  assert(
+    STAGE_ROLE_PRESENTATION[scale.role].visibleBodyHeight ===
+      scale.maximumCssBodyHeight &&
+      scale.maximumCssBodyHeight * scale.maximumDpr ===
+        scale.displayedDevicePixels &&
+      scale.displayedDevicePixels <= scale.sourceVisiblePixels,
+    `${assetId} presents its approved ${scale.role} rung (${scale.maximumCssBodyHeight} px × ${scale.maximumDpr} = ${scale.displayedDevicePixels} ≤ ${scale.sourceVisiblePixels} source px) without upscale`,
+  );
+}
 const bossKey = `${syntheticMotionPack.id}/site-warden`;
 const syntheticBoss = {
   ...syntheticEnemy,

@@ -849,13 +849,13 @@ async function collectContinuityMetrics(cdp) {
     `(async () => {
       const payload = ${JSON.stringify(payload)};
       const { createMotionReviewCatalog, loadMotionReviewClip } =
-        await import('/js/motion-review.js?v=gaf2d-motion-v1');
+        await import('/js/motion-review.js?v=enhanced-v1');
       const {
         reviewScaleMetrics,
         reviewCycleComplete,
-      } = await import('/js/motion-review.js?v=gaf2d-motion-v1');
+      } = await import('/js/motion-review.js?v=enhanced-v1');
       const { frameIndexForClip, drawMotionFrame } =
-        await import('/js/motion-bundle.js?v=gaf2d-motion-v1');
+        await import('/js/motion-bundle.js?v=enhanced-v1');
       const manifest = window.__APN_QA__.motionPreview.manifest;
       const entries = createMotionReviewCatalog(manifest);
       const failures = [];
@@ -1335,7 +1335,7 @@ async function collectScaleMatrix(cdp) {
     cdp,
     `(async () => {
       const { createMotionReviewCatalog, loadMotionReviewClip, reviewScaleMetrics } =
-        await import('/js/motion-review.js?v=gaf2d-motion-v1');
+        await import('/js/motion-review.js?v=enhanced-v1');
       const manifest = window.__APN_QA__.motionPreview.manifest;
       const catalog = createMotionReviewCatalog(manifest);
       const witnesses = ${JSON.stringify(CONTINUITY_WITNESS_SPECS)};
@@ -1377,9 +1377,9 @@ async function collectSameScalePageFacts(cdp, screenshotName) {
         createMotionReviewCatalog,
         loadMotionReviewClip,
         reviewScaleMetrics,
-      } = await import('/js/motion-review.js?v=gaf2d-motion-v1');
+      } = await import('/js/motion-review.js?v=enhanced-v1');
       const { drawMotionFrame } =
-        await import('/js/motion-bundle.js?v=gaf2d-motion-v1');
+        await import('/js/motion-bundle.js?v=enhanced-v1');
       const manifest = window.__APN_QA__.motionPreview.manifest;
       const catalog = createMotionReviewCatalog(manifest);
       const pairs = [];
@@ -1580,7 +1580,7 @@ async function collectColdTransitionProof(cdp) {
     cdp,
     `(async () => {
       const { releaseColdMotion, motionDiagnostics } =
-        await import('/js/motion-store.js?v=gaf2d-motion-v1');
+        await import('/js/motion-store.js?v=enhanced-v1');
       const q = window.__APN_QA__;
       const store = q.assets?.motionStore;
       const packAssets = q.assets?.packs?.get('valorant');

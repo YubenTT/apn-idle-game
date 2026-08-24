@@ -1,8 +1,22 @@
+import {
+  ENDLESS_ERA_NAME,
+  ERA_MAX_TIER,
+  eraForTier,
+} from './content.js?v=enhanced-v1';
+
 const DEFAULT_SEED = 0x41504e;
 const FIRST_PACK_ID = 'valorant';
 export const ECHO_TOTAL = 3;
 export const ROUTE_HISTORY_LIMIT = 60;
 export const SIGNAL_DRIFT_ZONE = 200;
+/**
+ * The stated terminal goal: Zone 1000 is the 100th Gate, so `route.zone` first
+ * reaches 1000 exactly when that Gate is cleared. Play continues afterwards as
+ * Endless Rating; the completion record is minted once and never revoked.
+ */
+export const PATCHLINE_COMPLETE_ZONE = 1000;
+export const PATCHLINE_RECORD_SCHEMA = 'apn.patchline-complete';
+export const PATCHLINE_RECORD_VERSION = 1;
 const ECHO_WAVES = Object.freeze([3, 6, 9]);
 const PACK_ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -47,6 +61,30 @@ const echoRecord = (value) => {
   );
 };
 
+/** Corruption epoch for a Route zone — the world era, not one Pack's tier. */
+export const epochTierForZone = (zone) =>
+  Math.min(ERA_MAX_TIER, Math.floor(finiteInt(zone) / SIGNAL_DRIFT_ZONE));
+
+/**
+ * Era tiers whose shift beat has already played, newest-safe and monotonic.
+ *
+ * Reaching a Corruption epoch is itself durable proof the shift happened, so
+ * every tier at or below the zone's epoch is folded in. That makes the list
+ * rollback-safe (an old client that drops the field cannot replay era beats the
+ * save already earned) and keeps the beat one-shot without a second counter.
+ */
+const eraTierList = (value, zone) => {
+  const seen = new Set(
+    Array.isArray(value)
+      ? value
+          .filter((item) => Number.isFinite(item) && item >= 1 && item <= ERA_MAX_TIER)
+          .map((item) => Math.floor(item))
+      : [],
+  );
+  for (let tier = 1; tier <= epochTierForZone(zone); tier += 1) seen.add(tier);
+  return [...seen].sort((a, b) => a - b);
+};
+
 const historyList = (value) => {
   if (!Array.isArray(value)) return [];
   return value
@@ -86,6 +124,9 @@ export function createRouteState(seed = DEFAULT_SEED) {
     history: [],
     cleanEraCompleted: false,
     cleanEraCompletedAtZone: 0,
+    eraTiersSeen: [],
+    patchlineCompleted: false,
+    patchlineCompletedAtZone: 0,
     catalogVersion: 1,
     seed: finiteInt(seed, DEFAULT_SEED) >>> 0,
   };
@@ -156,6 +197,13 @@ export function normalizeRoute(route, legacyRun = null) {
     cleanCompletedPackIds.length >= SIGNAL_DRIFT_ZONE / 10;
   const cleanEraCompleted =
     source.cleanEraCompleted === true || legacyCleanEraCompleted;
+  // Patchline completion follows the Clean Era pattern: an explicit monotonic
+  // flag, reconstructed from the one field no rollback can strip. Reaching Zone
+  // 1000 is the achievement, so a client that never knew the flag still hands
+  // it back intact when the current client returns.
+  const patchlineCompleted =
+    source.patchlineCompleted === true || zone >= PATCHLINE_COMPLETE_ZONE;
+  const recordedPatchlineZone = finiteInt(source.patchlineCompletedAtZone);
 
   return {
     ...base,
@@ -175,6 +223,11 @@ export function normalizeRoute(route, legacyRun = null) {
       ? legacyCleanEraCompleted
         ? SIGNAL_DRIFT_ZONE
         : finiteInt(source.cleanEraCompletedAtZone)
+      : 0,
+    eraTiersSeen: eraTierList(source.eraTiersSeen, zone),
+    patchlineCompleted,
+    patchlineCompletedAtZone: patchlineCompleted
+      ? Math.max(PATCHLINE_COMPLETE_ZONE, recordedPatchlineZone)
       : 0,
     catalogVersion: Math.max(1, finiteInt(source.catalogVersion, 1)),
     seed: finiteInt(source.seed, DEFAULT_SEED) >>> 0,
@@ -211,7 +264,7 @@ const chooseDifferentGenre = (candidates, chosen) =>
 
 export function corruptionTierFor(route, packId) {
   if (!stringList(route?.seenPackIds).includes(packId)) return 0;
-  const epochTier = Math.min(4, Math.floor(finiteInt(route?.zone) / 200));
+  const epochTier = epochTierForZone(route?.zone);
   const completedTier = finiteInt(route?.corruptionByPack?.[packId]);
   return Math.min(epochTier, completedTier + 1);
 }
@@ -299,6 +352,7 @@ const cloneRoute = (route) => ({
   cleanCompletedPackIds: [...route.cleanCompletedPackIds],
   packVisitCountById: { ...route.packVisitCountById },
   history: route.history.map((entry) => ({ ...entry })),
+  eraTiersSeen: [...route.eraTiersSeen],
 });
 
 /**
@@ -318,6 +372,8 @@ export function recordRouteZoneClear(route, catalog, completedZone) {
   const completedWave = (zone % 10) + 1;
   let echo = null;
   let completion = null;
+  let eraShift = null;
+  let patchline = null;
 
   if (completedPack) {
     const echoIndex = ECHO_WAVES.indexOf(completedWave);
@@ -336,6 +392,28 @@ export function recordRouteZoneClear(route, catalog, completedZone) {
 
   next.zone = zone + 1;
   next.killsInZone = 0;
+
+  // Era shift and Patchline completion are pure functions of the new zone —
+  // no RNG draw, no wall clock — so the seeded headless profiles stay bit-exact.
+  const arrivingTier = epochTierForZone(next.zone);
+  if (arrivingTier > 0 && !current.eraTiersSeen.includes(arrivingTier)) {
+    next.eraTiersSeen = [...current.eraTiersSeen, arrivingTier].sort((a, b) => a - b);
+    eraShift = {
+      tier: arrivingTier,
+      name: eraForTier(arrivingTier).name,
+      blurb: eraForTier(arrivingTier).blurb,
+      atZone: next.zone,
+    };
+  }
+  if (!current.patchlineCompleted && next.zone >= PATCHLINE_COMPLETE_ZONE) {
+    next.patchlineCompleted = true;
+    next.patchlineCompletedAtZone = next.zone;
+    patchline = {
+      schema: PATCHLINE_RECORD_SCHEMA,
+      version: PATCHLINE_RECORD_VERSION,
+      atZone: next.zone,
+    };
+  }
 
   if (completedPack && completedWave === 10) {
     const alreadySeen = current.seenPackIds.includes(completedPack.id);
@@ -393,6 +471,8 @@ export function recordRouteZoneClear(route, catalog, completedZone) {
     route: next,
     echo,
     completion,
+    eraShift,
+    patchline,
     nextPackId: nextPack?.id || null,
   };
 }
@@ -416,7 +496,19 @@ export function routeJourney(route, catalog) {
   const completed =
     currentRoute.cleanEraCompleted ||
     (packs.length > 0 && completedCount === packs.length);
-  const tier = Math.min(4, finiteInt(current?.tier));
+  const tier = Math.min(ERA_MAX_TIER, finiteInt(current?.tier));
+  const epochTier = epochTierForZone(currentRoute.zone);
+  const era = eraForTier(epochTier);
+  const patchlineCompleted = currentRoute.patchlineCompleted;
+  // The kicker names the era the Route is living in; the number stays the
+  // current Pack's own Corruption tier, so neither fact impersonates the other.
+  const driftLabel = patchlineCompleted
+    ? `${ENDLESS_ERA_NAME} · ${era.name}`
+    : tier > 0
+      ? `Signal Drift ${tier} · ${era.name}`
+      : epochTier > 0
+        ? `Clean · ${era.name}`
+        : 'Clean';
 
   return {
     current,
@@ -432,8 +524,51 @@ export function routeJourney(route, catalog) {
     signalDrift: {
       unlocked: currentRoute.zone >= SIGNAL_DRIFT_ZONE,
       tier,
-      label: tier > 0 ? `Signal Drift ${tier}` : 'Clean',
+      label: driftLabel,
+    },
+    era: {
+      tier: epochTier,
+      name: era.name,
+      blurb: era.blurb,
+      endless: patchlineCompleted,
+      endlessName: ENDLESS_ERA_NAME,
+      seenTiers: [...currentRoute.eraTiersSeen],
+    },
+    patchline: {
+      completed: patchlineCompleted,
+      goalZone: PATCHLINE_COMPLETE_ZONE,
+      zone: Math.min(currentRoute.zone, PATCHLINE_COMPLETE_ZONE),
+      remaining: Math.max(0, PATCHLINE_COMPLETE_ZONE - currentRoute.zone),
+      completedAtZone: currentRoute.patchlineCompletedAtZone,
     },
     history: currentRoute.history.map((entry) => ({ ...entry })),
   };
+}
+
+/**
+ * One-time Patchline Complete record for `meta`. Sanitized and idempotent: the
+ * exact wall clock is supplied by the caller (the impure layer), so the Route
+ * domain itself never reads a clock and the seeded sims stay deterministic.
+ */
+export function patchlineRecord(atZone, ts = 0) {
+  return {
+    schema: PATCHLINE_RECORD_SCHEMA,
+    version: PATCHLINE_RECORD_VERSION,
+    atZone: Math.max(PATCHLINE_COMPLETE_ZONE, finiteInt(atZone)),
+    ts: finiteInt(ts),
+  };
+}
+
+/** Accept only a well-formed record; anything else is treated as unearned. */
+export function normalizePatchlineRecord(value) {
+  if (
+    !value ||
+    typeof value !== 'object' ||
+    Array.isArray(value) ||
+    value.schema !== PATCHLINE_RECORD_SCHEMA ||
+    value.version !== PATCHLINE_RECORD_VERSION
+  ) {
+    return null;
+  }
+  return patchlineRecord(value.atZone, value.ts);
 }

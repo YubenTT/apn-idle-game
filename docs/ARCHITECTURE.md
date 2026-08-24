@@ -143,6 +143,14 @@ flowchart TB
   `world.stageFit` each frame so `game.js` can stage-anchor effects and text.
 - `enemyFrameFor` is the one normal/boss-break frame resolver used by both the
   renderer and deterministic browser QA.
+- `stageRoleForEnemy` resolves the stage rung in one fixed precedence: `boss`
+  type, then the identity's approved `consumerScale.role` (reported in every
+  motion load state, so scale never changes while a bundle warms), then the
+  elite enemy tier (`lag`/`spoiler`/`event`) at `elite`, then `standard`. A
+  sealed `standard` approval is never upscaled to satisfy the tier.
+- `heroPreviewDrawOptions` keeps off-stage Host previews on the same
+  visible-body contract as the stage instead of hero-v2's legacy trim-height
+  compatibility path.
 - A motion-enabled pack uses character-owned, hash-verified GAF2D bundles.
   `targets.webp` is failure-only for mapped identities and remains the normal
   path for unmapped packs.
@@ -185,6 +193,10 @@ flowchart TB
 - `wave-roster.js` is the shared spawn/warm/budget identity authority. It uses
   declared target roles and the real current/next Route window, never target
   array position or catalog adjacency.
+- It also owns the authored per-pack wave composition: creature pools where a
+  pack's cast is authored as pools, weighted composition rhythms elsewhere, and
+  the probability table as the fallback for an unauthored pack ID. See
+  [Game Pack Route](./GAME-PACK-ROUTE.md).
 - Initial simulation waits for current-wave motion. Later pending motion can
   hold only the spawn boundary; UI and rendering continue.
 
@@ -221,6 +233,11 @@ flowchart TB
 ### `sfx.js`
 
 - WebAudio only; no-ops without `window` / until unlocked by gesture.
+- Each Pack carries a tiny audible identity: `js/sfx.js` derives a deterministic
+  2–4 note WebAudio motif per Pack (genre family table plus an id-hash pitch
+  offset, no assets and no `Math.random`), which `js/main.js` fires from the
+  frame loop on Pack entry and on Gate boss spawn, behind the same
+  `feedbackAllowed()` mute and reduced-motion silence as every other cue.
 
 ## State shape (conceptual)
 

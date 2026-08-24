@@ -1,6 +1,6 @@
 /** APN Idle content — skills, permanent Boosts, tips */
 
-import { skillSpCost as buildSkillSpCost, isBossZone } from './formulas.js?v=gaf2d-motion-v1';
+import { skillSpCost as buildSkillSpCost, isBossZone } from './formulas.js?v=enhanced-v1';
 
 export const SEASON = {
   id: 'season_01',
@@ -205,6 +205,76 @@ export const SKILL_TREES = [
   { id: 'amplify', mastery: 'relay', label: 'Relay', promise: 'Stronger skills and longer idle continuity' },
 ];
 
+/**
+ * Named Corruption eras — the editorial voice of the 200→1000 stretch.
+ *
+ * Tier is the Corruption epoch (`floor(zone / 200)`, capped at 4), so the era
+ * is a property of the Route, not of one Pack: a freshly debuted clean Pack in
+ * a late epoch still plays inside that era's world. Tier 0 keeps the shipped
+ * Clean-signal language untouched, so every Zone 1–200 surface is unchanged.
+ *
+ * Names are APN-original broadcast vocabulary. They carry no third-party mark
+ * and no banned display form, and `qa/check-route-journey.mjs` asserts they
+ * stay present, distinct, and mark-free.
+ */
+export const ERAS = Object.freeze([
+  Object.freeze({
+    tier: 0,
+    name: 'Clean Signal',
+    blurb: 'Canonical Packs. Nothing is bleeding into the feed yet.',
+  }),
+  Object.freeze({
+    tier: 1,
+    name: 'Static Hour',
+    blurb: 'The first noise creeps in behind the broadcast.',
+  }),
+  Object.freeze({
+    tier: 2,
+    name: 'Dead Air',
+    blurb: 'The feed still runs. Nothing answers on the other end.',
+  }),
+  Object.freeze({
+    tier: 3,
+    name: 'Feed Collapse',
+    blurb: 'Patchlines fold into each other and stop agreeing.',
+  }),
+  Object.freeze({
+    tier: 4,
+    name: 'Total Blackout',
+    blurb: 'Maximum readable mutation. The signal is all yours to hold.',
+  }),
+]);
+
+/** Post-completion continuation label promised by GAME-PACK-ROUTE. */
+export const ENDLESS_ERA_NAME = 'Endless Rating';
+
+export const ERA_MAX_TIER = ERAS.length - 1;
+
+/** Era record for a Corruption epoch tier; always resolves (clamped 0–4). */
+export function eraForTier(tier) {
+  const index = Number.isFinite(tier) ? Math.min(ERA_MAX_TIER, Math.max(0, Math.floor(tier))) : 0;
+  return ERAS[index];
+}
+
+export function eraNameForTier(tier) {
+  return eraForTier(tier).name;
+}
+
+/**
+ * Display Zones whose Gate closes one era and opens the next. This is a label
+ * table only — the epoch anchor itself stays the deliberate `SIGNAL_DRIFT_ZONE`
+ * literal in `js/route.js`, and nothing here touches HP, timers, or geometry.
+ */
+export const MILESTONE_GATE_ZONES = Object.freeze([200, 400, 600, 800, 1000]);
+
+/** Era a milestone Gate hands the Route over to, or null for an ordinary Gate. */
+export function milestoneGateEraName(displayZone) {
+  const zone = Number.isFinite(displayZone) ? Math.floor(displayZone) : 0;
+  if (!MILESTONE_GATE_ZONES.includes(zone)) return null;
+  const tier = MILESTONE_GATE_ZONES.indexOf(zone) + 1;
+  return tier > ERA_MAX_TIER ? ENDLESS_ERA_NAME : ERAS[tier].name;
+}
+
 export const ENEMY_FLAVOR = {
   stale: { label: 'Broken Link', color: '#697384', kind: 'normal' },
   rumor: { label: 'Fake Leak', color: '#A7AFBC', kind: 'normal' },
@@ -287,20 +357,191 @@ export function creatureKindFor(enemy, zone = 0) {
   return null;
 }
 
+/**
+ * Staged first-time tips — one concept per beat, fired on the real moment that
+ * concept becomes true (js/game.js `tip()`), never as a minute-0 noun dump.
+ *
+ * The ladder a new Host walks, in order:
+ *   start → Signal · kill → Scanner · alert → Energy/Sprint · level → SP/Build
+ *   focus → the Focus meter · patch → Notes · gear → Loadout · combo → streak
+ *   boss → the Gate · season → Go Live · ship → Rep/Boosts
+ *
+ * The fired map is save-persisted and each id fires once, ever, so ids are
+ * append-only: renaming an existing id would re-fire it for every veteran save.
+ * Copy stays ≤ 90 characters (asserted in qa/run-tests.mjs) so a 3-second toast
+ * is readable at a glance on a 360 px screen.
+ */
 export const TIPS = {
-  start:
-    'Clear noise → Signal funds Scanner upgrades. Build spends SP. Go Live to bank Notes for permanent Rep.',
-  kill: 'Upgrade Scanner each run. Spend SP directly in Scan, Verify, or Relay.',
-  level: 'Rank up! Open Build and strengthen one focused branch.',
-  patch: 'Notes banked. Go Live → permanent Rep → Boosts.',
-  alert: 'Collect orbs for Energy and Signal. Sprint spends Energy.',
-  boss: 'Final target drops gear. Kill before the timer.',
-  ship: 'Go Live to bank Notes for Rep. Stuck? Improve Boosts, Gear, or Scanner.',
+  start: 'You are live. Clear the noise — every target you drop pays Signal.',
+  kill: 'Signal buys Scanner levels. Upgrade Scanner to hit harder.',
+  alert: 'Grab orbs to refill Energy. Hold Sprint to spend Energy for speed.',
+  level: 'Rank up pays SP. Open Build and spend it on one branch.',
+  focus: 'Skill learned. Its chip sits beside Sprint and spends the Focus meter.',
+  patch: 'That was a Patch Note. They bank Notes — your run payout.',
+  gear: 'Loadout: Scanner · Chest · Legs · Visor. Tap an item to compare or equip.',
   combo: 'Feed streak! Bonus Signal while it holds.',
-  season:
-    'Checkpoint! Go Live banks Notes → Rep and grows your Live Mult. Gear and Rep Boosts stay · run power resets.',
-  gear: 'Loadout: Scanner · Chest · Legs · Visor. Tap an item to compare, equip, mark, or scrap.',
+  boss: 'A Gate closes the zone. Beat its timer and it drops gear.',
+  season: 'Checkpoint reached. Go Live banks your Notes and restarts the run stronger.',
+  ship: 'Notes convert to Rep. Rep is permanent — spend it in Boosts.',
 };
+
+/**
+ * First-run coach hint — the single on-stage instruction a new Host gets,
+ * bound by js/ui.js into the `#coach-hint` container. Copy lives here, beside
+ * the tips, so qa/check-copy.mjs scans it with the rest of the player voice.
+ */
+export const COACH = Object.freeze({
+  upgrade: Object.freeze({
+    title: 'Tap to upgrade',
+    body: 'Spend Signal on your Scanner',
+  }),
+});
+
+/**
+ * Patch Echo discovery lines — the APN editorial voice, spoken in-game.
+ *
+ * Three lines per Pack, one per Echo wave (3 / 6 / 9), keyed by Pack id and
+ * indexed by Echo slot, so selection is a pure function of `(packId, index)`:
+ * no RNG draw ever enters the Route/spawn/kill path. Each line riffs on that
+ * Pack's own APN runtime title and genre — never on a third-party mark, place,
+ * or character name — so `deniedRuntimeMarks`/`deniedRuntimeTerms` stay out of
+ * runtime copy. `qa/check-echo-lines.mjs` asserts coverage, uniqueness, the
+ * length cap, mark safety, and the accessor's fail-safe.
+ */
+export const ECHO_LINE_MAX = 90;
+
+export const ECHO_LINES = Object.freeze({
+  valorant: Object.freeze([
+    'The defuse timer and the patch note argued. The patch note won by 0.4 seconds.',
+    'They nerfed one pixel-perfect angle and filed it under quality-of-life.',
+    'The site went quiet at last. The changelog kept talking anyway.',
+  ]),
+  league: Object.freeze([
+    'A lane went missing for nine minutes. The notes recorded it as intended.',
+    'One champion got half a percent. The feed lost an entire weekend to it.',
+    'The jungle timer outlived three roadmaps and one very formal apology.',
+  ]),
+  fortnite: Object.freeze([
+    'The storm closed on a build so tall it needed its own patch note.',
+    'A season ended mid-sentence. The archive kept the sentence.',
+    'Patch day deleted one ramp. Two thousand builders filed grief in the replies.',
+  ]),
+  'world-of-warcraft': Object.freeze([
+    'A guild dissolved over a single loot roll. The notes called it social content.',
+    'The raid cleared at 4 a.m. and nobody wrote it down except us.',
+    'Eleven expansions in, the tank still pulls before the healer is ready.',
+  ]),
+  'fc-26': Object.freeze([
+    'A rating dropped by one point and an entire market crashed before lunch.',
+    'The pack odds were published. Nobody read them. Everybody quoted them.',
+    'They patched the through-ball. The excuse for missing it survived the patch.',
+  ]),
+  minecraft: Object.freeze([
+    'The first tree ever punched is still in the changelog, load-bearing.',
+    'One block texture changed and the feed held a week of memorial posts.',
+    'A world save from 2011 booted fine. The patch notes from 2011 did not.',
+  ]),
+  'counter-strike-2': Object.freeze([
+    'A smoke behaved differently on Tuesday. No note. Just physics and vibes.',
+    'The eco round became a strategy, then a meme, then a balance pass.',
+    'Someone found a one-pixel gap. It got a hotfix and a small funeral.',
+  ]),
+  'old-school-runescape': Object.freeze([
+    'A poll failed by 0.3% and the feed discussed it for six calendar years.',
+    'Two hundred hours of clicking, one line in the update log. Fair trade.',
+    'The drop rate was fine. The player was unlucky. Both notes are filed.',
+  ]),
+  'nba-2k26': Object.freeze([
+    'The shot meter changed overnight and every jumper filed a formal complaint.',
+    'A buzzer beater was nerfed for realism. Realism was never consulted.',
+    'The badge notes ran longer than the actual playoff run.',
+  ]),
+  overwatch: Object.freeze([
+    'The payload stopped one meter short and the feed took it personally.',
+    'A support got 5% and the tank mains had a manifesto out by morning.',
+    'Role queue arrived. Peace did not.',
+  ]),
+  'grand-theft-auto-v': Object.freeze([
+    'The fifth star arrived before the getaway did. Notes: working as intended.',
+    'An online heist paid twice. The hotfix took eleven days and made a legend.',
+    'Twelve years of patch notes, and the radio station outlives every one.',
+  ]),
+  'madden-nfl-26': Object.freeze([
+    'Fourth and goal, and the sim engine chose violence. Patched by Thursday.',
+    'A playbook glitch became meta, then a tournament ban, then one small note.',
+    'The kicker was fixed. The kicker is never fixed.',
+  ]),
+  'apex-legends': Object.freeze([
+    'Two squads fought honestly. A third had simply read the patch notes.',
+    'The loot pool rotated at 3 a.m. and nobody survived the confusion.',
+    'They buffed movement by a hair. By Friday everyone could fly.',
+  ]),
+  'dota-2': Object.freeze([
+    'One patch rewrote the whole map and landed with no press release at all.',
+    'The last hit was clean. The argument about it lasted four hours.',
+    'A single item moved 25 gold and the meta filed for relocation.',
+  ]),
+  'dead-by-daylight': Object.freeze([
+    'The hook timer moved two seconds and both sides claimed betrayal.',
+    'A survivor looped one corner for nine minutes. Patched, then unpatched.',
+    'The hunter got a buff on Tuesday and an apology note by Thursday.',
+  ]),
+  'path-of-exile-2': Object.freeze([
+    'The loot filter hid the best drop of the year. Working as configured.',
+    'One line of passive tree notes. Nine hundred pages of community reply.',
+    'Trade chat has archived itself into a language outsiders cannot read.',
+  ]),
+  'marvel-rivals': Object.freeze([
+    'A team-up was too much fun, so the notes came for it by season two.',
+    'The cape physics got a hotfix nobody asked for and everybody noticed.',
+    'Patch day: one hero rose, one fell, one was quietly forgotten.',
+  ]),
+  'escape-from-tarkov': Object.freeze([
+    'The good gear stayed in the stash for eleven wipes. It is still there.',
+    'The extraction was forty meters away. The patch note was closer.',
+    'Insurance returned the helmet. It did not return the six hours.',
+  ]),
+  'rocket-league': Object.freeze([
+    'A boost pad respawned one frame late and the leaderboard felt it.',
+    'The aerial was perfect, the net was not, the replay went live regardless.',
+    'They tuned the ball by one percent. Every muscle memory filed a complaint.',
+  ]),
+  'elden-ring': Object.freeze([
+    'The boss was patched for fairness. The feed took that as a personal insult.',
+    'Two hundred deaths, one dodge learned, zero patch notes involved.',
+    'They buffed a starter stick and the whole kingdom respec’d overnight.',
+  ]),
+});
+
+/** Authored Echo lines for a Pack, or null for an unknown/absent Pack id. */
+export function echoLinesFor(packId) {
+  if (typeof packId !== 'string' || !Object.hasOwn(ECHO_LINES, packId)) return null;
+  const lines = ECHO_LINES[packId];
+  return Array.isArray(lines) && lines.length > 0 ? lines : null;
+}
+
+/** One Echo line by zero-based slot; null whenever the Pack or slot is unknown. */
+export function echoLineFor(packId, index) {
+  const lines = echoLinesFor(packId);
+  if (!lines) return null;
+  const slot = Number.isFinite(index) ? Math.floor(index) : -1;
+  if (slot < 0 || slot >= lines.length) return null;
+  return lines[slot];
+}
+
+/**
+ * Boss flavor for the legacy V3 creature Gates only — the approved pack-owned
+ * casts keep their own identity. Deterministic (creatureKindFor is pure) and
+ * identity-neutral: the bio is APN-original copy already shipped in CREATURES.
+ */
+export function creatureBossFlavor(enemy, zone = 0) {
+  const kind = creatureKindFor(enemy, zone);
+  const creature = kind ? CREATURES[kind] : null;
+  if (!creature || creature.role !== 'boss') return null;
+  const opener = String(creature.desc || '').split('. ')[0];
+  if (!opener) return null;
+  return `${creature.label} · ${opener.replace(/\.$/, '')}.`;
+}
 
 export const FEED_COPY = {
   'tactical-shooter': 'Round update notes live',

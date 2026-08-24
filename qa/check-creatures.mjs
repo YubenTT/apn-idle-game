@@ -246,12 +246,42 @@ const stagedCreatureGeometry = renderRuntime.drawEnemy(
   { zone: 0, meleeStop: 170, engagedId: null },
 );
 assert(
-  stagedCreatureGeometry.role === 'standard' &&
-    stagedCreatureGeometry.body.height === 72 &&
+  stagedCreatureGeometry.role === 'elite' &&
+    stagedCreatureGeometry.body.height === 84 &&
     stagedCreatureGeometry.body.bottom === 298 &&
     stagedCreatureGeometry.visualGap === 2 &&
-    stagedCreatureDraw?.[8] === 72,
-  'legacy creature atlas consumes the standard 72 px geometry without auto-assigning elite scale',
+    stagedCreatureDraw?.[8] === 84,
+  'elite-typed legacy creature consumes the exact 84 px elite geometry with a 2 px ground gap',
+);
+const stagedChampionGeometry = renderRuntime.drawEnemy(
+  stagedCreatureContext,
+  {
+    id: 'legacy-champion',
+    type: 'patch',
+    packId: 'league',
+    label: 'Patch Note',
+    frame: 'elite',
+    x: 220,
+    displayX: 220,
+    hp: 10,
+    hpMax: 10,
+    deathT: 0,
+    hurt: 0,
+    killed: false,
+    priorityTagRank: 0,
+  },
+  300,
+  1,
+  null,
+  { creatureStore },
+  true,
+  1,
+  { zone: 0, meleeStop: 170, engagedId: null },
+);
+assert(
+  stagedChampionGeometry.role === 'standard' &&
+    stagedChampionGeometry.body.height === 72,
+  'the champion type stays on the standard rung — the elite rung is the 1.75x elite family only',
 );
 
 function secondFrameBodyScale({ enemy, packAssets, store }) {
