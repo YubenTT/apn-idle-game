@@ -976,10 +976,10 @@ function renderRouteJourney(s) {
     : `Clean Era · ${clean.completedCount}/${clean.total}`;
   const patchline = journey.patchline;
   const routeZone = Math.min(patchline.goalZone, s.route.zone + 1);
-  const goalPct = Math.min(
-    100,
-    Math.round((patchline.zone / patchline.goalZone) * 100),
-  );
+  // Floor the track, and hold it below full until the Gate is actually closed:
+  // rounding let zones 995-999 paint a finished bar beside "5 to go".
+  const goalRatio = Math.floor((patchline.zone / patchline.goalZone) * 100);
+  const goalPct = patchline.completed ? 100 : Math.min(99, goalRatio);
   const goalCard = `
     <div class="route-clean-card route-goal-card ${patchline.completed ? 'is-complete' : ''}" data-route-goal>
       <div>
@@ -1532,7 +1532,10 @@ export function renderHUD(s) {
   });
   document.getElementById('app')?.classList.toggle('is-sprinting', sprinting);
 
-  if (s.ui.pendingTip && TIPS[s.ui.pendingTip]) {
+  // A tip fires once ever, so it must never be spent behind an open sheet
+  // (the sheet stacks above the toast): hold it until the player is back on
+  // the stage, then show it.
+  if (s.ui.pendingTip && TIPS[s.ui.pendingTip] && !s.ui.panel) {
     s.ui.toast = TIPS[s.ui.pendingTip];
     s.ui.toastT = 3;
     s.ui.toastTone = 'info';

@@ -398,6 +398,14 @@ ok(
   'Route surface exposes the named era, the terminal goal, and the Patchline trophy',
 );
 ok(
+  uiSource.includes('patchline.completed ? 100 : Math.min(99, goalRatio)'),
+  'the terminal-goal track only reads full once the Patchline is actually complete',
+);
+ok(
+  uiSource.includes("if (s.ui.pendingTip && TIPS[s.ui.pendingTip] && !s.ui.panel)"),
+  'a once-ever tip waits for the stage instead of being spent behind an open sheet',
+);
+ok(
   uiSource.indexOf('data-route-trophy') < uiSource.indexOf('data-route-current'),
   'Patchline trophy leads the Route sheet once earned',
 );
