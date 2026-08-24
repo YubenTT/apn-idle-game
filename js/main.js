@@ -14,7 +14,7 @@ import {
   createMotionPreferenceController,
   motionReduced,
 } from './motion-preference.js?v=gaf2d-motion-v1';
-import { setReducedMotion } from './sfx.js?v=gaf2d-motion-v1';
+import { gateSpawnAccent, packEntryMotif, setReducedMotion } from './sfx.js?v=gaf2d-motion-v1';
 import { titleTaglineFor } from './comedy.js?v=gaf2d-motion-v1';
 import {
   createMotionStore,
@@ -704,6 +704,43 @@ if (qaParams.has('autostart')) {
 
 document.getElementById('chk-motion').checked = s.settings.reducedMotion;
 
+/* Pack audio motifs — a read-only frame observation. Nothing here writes to
+ * state, so the motif can never influence the sim; mute and reduced motion are
+ * enforced inside sfx.js by `feedbackAllowed()`. */
+const motifTitleScreen = document.getElementById('title-screen');
+/** One motif per Pack change, and never two inside this window. */
+const MOTIF_DEBOUNCE_MS = 2000;
+let motifPackId = null;
+let motifBossActive = false;
+let motifBaselineTaken = false;
+let motifLastAt = Number.NEGATIVE_INFINITY;
+
+function observePackAudio(now) {
+  const [current] = routeWaveWindow(s.route, runtimePacks);
+  const pack = current?.pack || null;
+  const packId = pack?.id || null;
+  const bossActive = s.world.bossActive === true;
+  // Silent while the Pack is only being observed for the first time (boot or
+  // load), on the title screen, in a hidden tab, or under the Go Live cinematic.
+  const silent =
+    !motifBaselineTaken ||
+    (motifTitleScreen ? motifTitleScreen.hidden !== true : false) ||
+    (typeof document.visibilityState === 'string' && document.visibilityState === 'hidden') ||
+    s.ui.fx?.kind === 'golive';
+  if (!silent && packId) {
+    if (packId !== motifPackId && now - motifLastAt >= MOTIF_DEBOUNCE_MS) {
+      packEntryMotif(packId, pack?.genre);
+      motifLastAt = now;
+    }
+    if (bossActive && !motifBossActive) gateSpawnAccent(packId, pack?.genre);
+  }
+  // Baselines advance even while silent, so a change missed behind the title
+  // screen or a hidden tab is dropped rather than queued.
+  motifPackId = packId;
+  motifBossActive = bossActive;
+  motifBaselineTaken = true;
+}
+
 let last = performance.now();
 let acc = 0;
 let hudT = 0;
@@ -735,6 +772,7 @@ function frame(now) {
   syncRouteAssets();
   syncMotionWindow();
   syncLegacyCreatureOwner();
+  observePackAudio(now);
   draw(
     view.ctx,
     view.w,
