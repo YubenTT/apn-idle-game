@@ -579,6 +579,13 @@ for (const def of [...DAILY_DEFS, ...WEEKLY_DEFS, ...SEASON_MILESTONES]) {
 }
 ok(!shellMarkup.includes('id="v-attrs"'), 'Menu has no attribute debug string');
 ok((shellMarkup.match(/class="switch-ui"/g) || []).length === 2, 'Menu uses one switch component twice');
+const tamperedTipsFixture = createState();
+applySave(tamperedTipsFixture, { v: SAVE_VERSION, ui: { tips: 7 } });
+ok(
+  typeof tamperedTipsFixture.ui.tips === 'object' &&
+    tamperedTipsFixture.ui.tips !== null,
+  'a tampered primitive tips field is replaced by a real object so tip() cannot throw',
+);
 const boostFixture = createState();
 boostFixture.authority.amount = 20;
 const damageBoostPreview = metaUpgradePreview(boostFixture, 'signal_power');

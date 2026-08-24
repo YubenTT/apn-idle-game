@@ -268,7 +268,11 @@ export function apply(s, d) {
     migrateBuildV2(s.run.hero, d.run?.hero?.buildVersion);
   }
   if (d.ui) {
-    s.ui.tips = d.ui.tips || {};
+    // A tampered save can carry a truthy primitive here; assigning a tip flag
+    // onto a primitive throws in strict mode and bricks the loop, so only a
+    // real object survives the load.
+    s.ui.tips =
+      d.ui.tips && typeof d.ui.tips === 'object' ? { ...d.ui.tips } : {};
     s.ui.seasonDone = !!d.ui.seasonDone;
   }
   if (d.settings) {

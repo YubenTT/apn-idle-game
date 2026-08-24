@@ -377,7 +377,7 @@ export const TIPS = {
   alert: 'Grab orbs to refill Energy. Hold Sprint to spend Energy for speed.',
   level: 'Rank up pays SP. Open Build and spend it on one branch.',
   focus: 'Skill learned. Its chip sits beside Sprint and spends the Focus meter.',
-  patch: 'Patch Notes are the red targets. They bank Notes — your run payout.',
+  patch: 'That was a Patch Note. They bank Notes — your run payout.',
   gear: 'Loadout: Scanner · Chest · Legs · Visor. Tap an item to compare or equip.',
   combo: 'Feed streak! Bonus Signal while it holds.',
   boss: 'A Gate closes the zone. Beat its timer and it drops gear.',
