@@ -56,7 +56,7 @@ import {
   queryGearBag,
   toggleJunk,
 } from '../js/loot.js';
-import { ERAS, SKILLS, SKILL_TREES, skillSpCost } from '../js/content.js';
+import { COACH, ERAS, SKILLS, SKILL_TREES, TIPS, skillSpCost } from '../js/content.js';
 import { bossBannerFor } from '../js/render.js';
 import { driftTreatmentForTier } from '../js/scenery-v2.js';
 import {
@@ -459,6 +459,89 @@ for (const label of ['Build', 'Go Live', 'Route', 'Boosts', 'Menu']) {
 ok(shellMarkup.includes('id="btn-bag"') && shellMarkup.includes('data-panel="gear"'), 'Gear remains a separate FAB');
 ok((shellMarkup.match(/aria-controls="sheet-root"/g) || []).length === 6, 'All six sheet launchers expose their controlled surface');
 ok(navAdr.includes('Option A') && navAdr.includes('minimal active fill'), 'Keep-five Option A is locked in ADR-0007');
+
+// —— E6 · FTUE + UX honesty ——————————————————————————————————————————
+// Progressive disclosure: nothing in the HUD may advertise a control, a label,
+// or a state the current save cannot actually act on.
+ok(
+  uiSource.includes('const learned = lv >= 1;') && uiSource.includes('el.hidden = !learned;'),
+  'skill shortcut chips appear only once their skill is learned',
+);
+ok(
+  uiSource.includes('skillRow.hidden = !skillChipShown') &&
+    /\.btn-skills\[hidden\]\s*\{[^}]*display:\s*none/s.test(cssSource),
+  'the shortcut row folds away entirely while no skill is learned',
+);
+ok(
+  /\.btn-skills\s*\{[^}]*grid-auto-flow:\s*column;[^}]*grid-auto-columns:\s*minmax\(0, 1fr\)/s.test(cssSource),
+  'one to four revealed chips fill the shortcut row evenly',
+);
+ok(
+  !uiSource.includes('Build to unlock') && !cssSource.includes('.btn-chip.locked'),
+  'the dead locked-chip state is gone with the chips that showed it',
+);
+ok(
+  Object.values(TIPS).every((line) => line.length <= 90),
+  'every tip stays inside one readable toast',
+);
+ok(
+  /\bSignal\b/.test(TIPS.start) && !/(Build|Go Live|Notes|\bSP\b)/.test(TIPS.start),
+  'the opening tip introduces exactly one concept',
+);
+ok(
+  Boolean(TIPS.focus) && gameSource.includes("tip(s, 'focus')"),
+  'the Focus meter reveal has its own tip on its own trigger',
+);
+ok(
+  contentSource.includes('export const COACH') &&
+    COACH.upgrade.title.length > 0 &&
+    uiSource.includes('COACH.upgrade.title') &&
+    shellMarkup.includes('data-coach-title') &&
+    !shellMarkup.includes('Tap to upgrade'),
+  'coach hint copy is authored in content and bound by the UI',
+);
+const coachRule = cssSource.match(/\.coach-hint\s*\{([^}]*)\}/)?.[1] || '';
+ok(
+  coachRule.includes('box-shadow: var(--elev-card);') && !/px var\(--c-signal/.test(coachRule),
+  'the coach hint keeps flat elevation with no outer glow',
+);
+ok(
+  (cssSource.match(/\.nav-btn\.active\s*\{/g) || []).length === 1 &&
+    !cssSource.includes('[data-panel="skills"].has-badge'),
+  'exactly one active-tab layer survives and the orphan Build badge is gone',
+);
+ok(
+  /\.stage-context-track\s*\{[^}]*height:\s*var\(--sp-2\)/s.test(cssSource),
+  'the stage context track meets the 8px progress-track floor',
+);
+ok(
+  shellMarkup.includes('<small>Wave</small>') && !shellMarkup.includes('<small>Pack</small>'),
+  'the ten-step counter is labelled Wave on the stage chip',
+);
+ok(
+  uiSource.includes('aria-label="Wave ${journey.packWave} of 10"'),
+  'the Route sheet track announces the same Wave counter',
+);
+ok(
+  !shellMarkup.includes('stage-live-state') && !cssSource.includes('.stage-live-state'),
+  'the static ACTIVE pip is gone; only data-bound state sits under Live',
+);
+ok(
+  shellMarkup.includes('id="offline-receipt"') && !shellMarkup.includes('<pre'),
+  'the return receipt is structured markup instead of a text dump',
+);
+ok(
+  ['offline-away', 'offline-receipt', 'offline-progress', 'offline-note'].every((id) =>
+    shellMarkup.includes(`id="${id}"`),
+  ),
+  'the return receipt states elapsed time, earnings, progress, and the checkpoint stop',
+);
+ok(
+  uiSource.includes('rw-chip k-${kind}') &&
+    uiSource.includes("['sig', 'Signal'") &&
+    uiSource.includes("['notes', 'Notes'"),
+  'receipt currency rows reuse the contracted reward-chip color roles',
+);
 for (const section of ['Accessibility', 'Audio', 'Account', 'Reset']) {
   ok(shellMarkup.includes(`menu-section-title">${section}`), `Menu has ${section} section`);
 }

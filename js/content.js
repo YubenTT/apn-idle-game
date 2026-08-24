@@ -357,20 +357,45 @@ export function creatureKindFor(enemy, zone = 0) {
   return null;
 }
 
+/**
+ * Staged first-time tips — one concept per beat, fired on the real moment that
+ * concept becomes true (js/game.js `tip()`), never as a minute-0 noun dump.
+ *
+ * The ladder a new Host walks, in order:
+ *   start → Signal · kill → Scanner · alert → Energy/Sprint · level → SP/Build
+ *   focus → the Focus meter · patch → Notes · gear → Loadout · combo → streak
+ *   boss → the Gate · season → Go Live · ship → Rep/Boosts
+ *
+ * The fired map is save-persisted and each id fires once, ever, so ids are
+ * append-only: renaming an existing id would re-fire it for every veteran save.
+ * Copy stays ≤ 90 characters (asserted in qa/run-tests.mjs) so a 3-second toast
+ * is readable at a glance on a 360 px screen.
+ */
 export const TIPS = {
-  start:
-    'Clear noise → Signal funds Scanner upgrades. Build spends SP. Go Live to bank Notes for permanent Rep.',
-  kill: 'Upgrade Scanner each run. Spend SP directly in Scan, Verify, or Relay.',
-  level: 'Rank up! Open Build and strengthen one focused branch.',
-  patch: 'Notes banked. Go Live → permanent Rep → Boosts.',
-  alert: 'Collect orbs for Energy and Signal. Sprint spends Energy.',
-  boss: 'Final target drops gear. Kill before the timer.',
-  ship: 'Go Live to bank Notes for Rep. Stuck? Improve Boosts, Gear, or Scanner.',
+  start: 'You are live. Clear the noise — every target you drop pays Signal.',
+  kill: 'Signal buys Scanner levels. Upgrade Scanner to hit harder.',
+  alert: 'Grab orbs to refill Energy. Hold Sprint to spend Energy for speed.',
+  level: 'Rank up pays SP. Open Build and spend it on one branch.',
+  focus: 'Skill learned. Its chip sits beside Sprint and spends the Focus meter.',
+  patch: 'Patch Notes are the red targets. They bank Notes — your run payout.',
+  gear: 'Loadout: Scanner · Chest · Legs · Visor. Tap an item to compare or equip.',
   combo: 'Feed streak! Bonus Signal while it holds.',
-  season:
-    'Checkpoint! Go Live banks Notes → Rep and grows your Live Mult. Gear and Rep Boosts stay · run power resets.',
-  gear: 'Loadout: Scanner · Chest · Legs · Visor. Tap an item to compare, equip, mark, or scrap.',
+  boss: 'A Gate closes the zone. Beat its timer and it drops gear.',
+  season: 'Checkpoint reached. Go Live banks your Notes and restarts the run stronger.',
+  ship: 'Notes convert to Rep. Rep is permanent — spend it in Boosts.',
 };
+
+/**
+ * First-run coach hint — the single on-stage instruction a new Host gets,
+ * bound by js/ui.js into the `#coach-hint` container. Copy lives here, beside
+ * the tips, so qa/check-copy.mjs scans it with the rest of the player voice.
+ */
+export const COACH = Object.freeze({
+  upgrade: Object.freeze({
+    title: 'Tap to upgrade',
+    body: 'Spend Signal on your Scanner',
+  }),
+});
 
 /**
  * Patch Echo discovery lines — the APN editorial voice, spoken in-game.

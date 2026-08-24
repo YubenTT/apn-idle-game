@@ -152,6 +152,9 @@ async function scenario(displayZone, viewport) {
     expression: `JSON.stringify({
       zone: document.querySelector('#v-zone')?.textContent,
       packProgress: document.querySelector('#v-pack-progress')?.textContent,
+      waveLabel: document.querySelector('.stage-context-chip.pack small')?.textContent,
+      skillsHidden: document.querySelector('#skill-shortcuts')?.hidden,
+      livePip: Boolean(document.querySelector('.stage-live-state')),
       stageLabels: [...document.querySelectorAll('.stage-stat-lab')].map((node) => node.childNodes[0]?.textContent.trim()),
       focusHidden: document.querySelector('#bar-focus-wrap')?.hidden,
       echoHidden: document.querySelector('#patch-echo-chip')?.hidden,
@@ -185,8 +188,11 @@ async function scenario(displayZone, viewport) {
     (event.method === 'Log.entryAdded' && ['error', 'warning'].includes(event.params?.entry?.level))
   );
   assert(result.zone === String(displayZone), `${tag} HUD matches Route`);
-  assert(result.packProgress === `${((displayZone - 1) % 10) + 1}/10`, `${tag} HUD matches Pack progress`);
+  assert(result.packProgress === `${((displayZone - 1) % 10) + 1}/10`, `${tag} HUD matches Wave progress`);
+  assert(result.waveLabel === 'Wave', `${tag} labels the ten-step counter Wave (${result.waveLabel})`);
   assert(result.stageLabels.join('|') === 'CLEAR|RANK|LIVE', `${tag} keeps Clear / Rank / Live hierarchy uncluttered`);
+  assert(result.livePip === false, `${tag} carries no static ACTIVE pip under Live`);
+  assert(result.skillsHidden === true, `${tag} hides the skill shortcut row before a skill is learned`);
   assert(result.focusHidden === true, `${tag} hides Focus before a Focus skill is learned`);
   assert(result.echoHidden === false, `${tag} exposes data-bound Patch Echo progress`);
   assert(result.echoText === (displayZone === 201 ? '3/3' : '0/3'), `${tag} Echo text comes from Route state (${result.echoText})`);

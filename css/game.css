@@ -1121,16 +1121,9 @@ canvas {
   background: var(--compat-surface-quiet);
 }
 
-.nav-btn.active {
-  color: var(--compat-text-white);
-  background: var(--compat-brand-a14);
-  box-shadow: inset 0 0 0 1px var(--compat-brand-a35);
-}
-
-.nav-btn.active .nav-ico {
-  opacity: 1;
-  color: var(--compat-brand-overloaded);
-}
+/* The active-tab layer lives once, in section 5 (bottom navigation). The
+   crimson fill that used to sit here contradicted ADR-0007's minimal fill and
+   was already fully overridden. */
 
 .nav-btn span {
   line-height: 1.1;
@@ -1157,12 +1150,6 @@ canvas {
   text-align: center;
   box-shadow: 0 2px 0 var(--compat-brand-deep);
   animation: badge-pop 0.35s ease;
-}
-
-.nav-btn[data-panel="skills"].has-badge::after {
-  background: var(--c-sp);
-  color: var(--compat-ink);
-  box-shadow: 0 2px 0 color-mix(in srgb, var(--c-sp) 55%, var(--compat-ink));
 }
 
 @keyframes badge-pop {
@@ -1304,19 +1291,6 @@ canvas {
 .lead strong {
   color: var(--compat-text-strong);
   font-weight: 700;
-}
-
-.box {
-  margin: 0 0 10px;
-  padding: 0;
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  font: inherit;
-  font-size: var(--compat-fs-compact);
-  color: var(--compat-text-secondary);
-  white-space: normal;
-  line-height: 1.4;
 }
 
 /* Structured ship stats (not a dump pre) */
@@ -2647,6 +2621,71 @@ canvas {
 .modal-card h2 {
   margin: 0 0 10px;
   font-size: var(--compat-fs-legacy-body);
+}
+
+/* ---- Return receipt — the offline recap, printed instead of dumped ----
+   Left-aligned rows, flat surface, no reveal animation. Currency values keep
+   the contracted .rw-chip color roles so Signal and Notes read as themselves. */
+.offline-card {
+  text-align: left;
+}
+
+.offline-away {
+  margin: 0 0 var(--sp-3);
+  color: var(--text-mid);
+  font-size: var(--fs-label-m);
+  line-height: var(--lh-label-m);
+  font-weight: 700;
+}
+
+.offline-receipt {
+  display: grid;
+  gap: var(--sp-1);
+  margin: 0 0 var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  border: var(--border-1);
+  border-radius: var(--r-chip);
+  background: var(--surface-900);
+}
+
+.offline-row {
+  min-height: var(--sp-6);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+
+.offline-row small {
+  color: var(--text-mid);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+  font-weight: 700;
+}
+
+.offline-row .rw-chip {
+  background: transparent;
+  font-size: var(--fs-label-m);
+  line-height: var(--lh-label-m);
+  font-variant-numeric: tabular-nums;
+}
+
+.offline-progress {
+  margin: 0 0 var(--sp-3);
+  color: var(--text-mid);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+}
+
+.offline-note {
+  margin: 0 0 var(--sp-3);
+  color: var(--text-low);
+  font-size: var(--fs-label-s);
+  line-height: var(--lh-label-s);
+}
+
+.offline-note[hidden] {
+  display: none;
 }
 
 /* ---- TITLE INTRO (clean · animated · no mascot fluff) ---- */
@@ -4310,12 +4349,20 @@ button[hidden] {
   color: var(--text-mid);
 }
 
+/* Chips are revealed one at a time as their skills are learned, so the row
+   tracks the visible chips instead of reserving four fixed columns: 1–4 chips
+   always fill the row evenly, and an empty row is removed outright. */
 .btn-skills {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
   gap: var(--sp-2);
   min-height: var(--touch-min);
   margin-top: var(--sp-2);
+}
+
+.btn-skills[hidden] {
+  display: none;
 }
 
 .btn-chip {
@@ -4331,12 +4378,6 @@ button[hidden] {
   line-height: var(--lh-label-s);
 }
 
-.btn-chip.locked {
-  color: var(--text-low);
-  background: var(--ink-950);
-  opacity: 1;
-}
-
 .btn-chip.on,
 #btn-deep.on {
   border-color: var(--c-positive);
@@ -4344,16 +4385,6 @@ button[hidden] {
   color: var(--c-positive);
   box-shadow: inset 0 calc(var(--border-accent) * -1) 0 var(--c-positive);
   animation: none;
-}
-
-.nav-btn.active {
-  color: var(--text-high);
-  background: var(--surface-800);
-  box-shadow: inset 0 var(--border-accent) 0 var(--c-info);
-}
-
-.nav-btn.active .nav-ico {
-  color: var(--c-info);
 }
 
 .bag-fab,
@@ -6062,19 +6093,6 @@ button[hidden] {
   font-weight: 800;
 }
 
-.stage-live-state {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sp-1);
-}
-
-.stage-live-state i {
-  width: var(--sp-2);
-  height: var(--sp-2);
-  border-radius: var(--r-pill);
-  background: var(--c-positive);
-}
-
 .stage-combo { color: var(--c-notes); }
 
 /* PR-5 · Route / Pack context sits above the uncluttered Clear / Rank / Live strip. */
@@ -6123,8 +6141,9 @@ button[hidden] {
   grid-template-columns: auto auto minmax(var(--sp-8), var(--sp-12));
 }
 
+/* Progress tracks sit on the 8 px accessibility floor (brand/DESIGN-TOKENS). */
 .stage-context-track {
-  height: var(--sp-1);
+  height: var(--sp-2);
   overflow: hidden;
   border-radius: var(--r-pill);
   background: var(--border-700);
@@ -6815,15 +6834,6 @@ button[hidden] {
   background: var(--c-positive);
 }
 
-.btn-chip.locked .chip-lab,
-.btn-chip.locked .chip-sub {
-  color: var(--text-low);
-}
-
-.btn-chip.locked .chip-fill {
-  display: none;
-}
-
 /* —— 3 · Energy / Focus meters ———————————————————————————————————— */
 
 .bar-bg {
@@ -7051,10 +7061,17 @@ button[hidden] {
   z-index: 1;
 }
 
-/* the pill carries the active fill now — the button stays transparent */
+/* The single active-tab layer: the pill carries the fill, the button stays
+   transparent, and the label/icon carry the readable state. */
 .nav-btn.active {
+  color: var(--text-high);
   background: transparent;
   box-shadow: none;
+}
+
+.nav-btn.active .nav-ico {
+  opacity: 1;
+  color: var(--c-info);
 }
 
 @media (orientation: landscape) and (max-height: 480px) {
@@ -7146,7 +7163,8 @@ button[hidden] {
   border: 1px solid var(--c-signal);
   border-radius: var(--r-chip);
   background: var(--surface-800);
-  box-shadow: var(--elev-card), 0 0 16px var(--c-signal-a45);
+  /* Flat editorial elevation only — no outer glow (brand/COMPONENTS). */
+  box-shadow: var(--elev-card);
   pointer-events: none;
   animation: coach-pulse 1.6s var(--ease-in-out) infinite;
 }
@@ -7239,6 +7257,12 @@ button[hidden] {
      40% track yields ~77px at 844px wide. The Scanner CTA stays generously wide. */
   .hud-cta {
     grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  }
+
+  /* Before the first skill is learned there is no chip row, so the CTA takes
+     the whole dock instead of leaving a reserved empty track. */
+  .hud-cta:not(.has-skills) {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .hud-cta .btn-skills {

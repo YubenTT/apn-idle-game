@@ -11,6 +11,7 @@ import {
   nextGoLiveBoundary,
 } from './formulas.js?v=gaf2d-motion-v1';
 import {
+  COACH,
   META,
   SKILLS,
   SKILL_TREES,
@@ -1020,7 +1021,7 @@ function renderRouteJourney(s) {
           <strong data-route-next>${next?.title || 'Route recalculating'}</strong>
         </div>
       </div>
-      <div class="route-wave-track" aria-label="Pack wave ${journey.packWave} of 10">
+      <div class="route-wave-track" aria-label="Wave ${journey.packWave} of 10">
         <i style="width:${journey.packWave * 10}%"></i>
       </div>
       <div class="route-echo-now" data-route-echo>
@@ -1540,11 +1541,19 @@ export function renderHUD(s) {
   updateToastBanner(s);
 
   // First-run coach hint: points at the Upgrade Scanner until the first buy.
+  // The shell owns the container; the copy is authored in js/content.js.
   const coach = $('coach-hint');
   if (coach) {
     coach.hidden = !!s.ui.tips.coachUpgrade || h.scanner > 0 || !!s.ui.panel;
+    set(coach.querySelector('[data-coach-title]'), COACH.upgrade.title);
+    set(coach.querySelector('[data-coach-body]'), COACH.upgrade.body);
   }
 
+  // Progressive disclosure: a shortcut chip exists only once its skill is real.
+  // Same rule as the Focus meter above — learned (level ≥ 1) or absent, so the
+  // row never shows a control the player cannot press. Skills are run-scoped,
+  // so Go Live folds the row away again, honestly.
+  let skillChipShown = false;
   for (const [id, sk, on, castCost] of [
     ['btn-hotfix', 'hotfix', false, HOTFIX_FOCUS_COST],
     ['btn-summary', 'summary_burst', false, PRIORITY_FOCUS_COST],
@@ -1554,10 +1563,11 @@ export function renderHUD(s) {
     const el = $(id);
     if (!el) continue;
     const lv = skillLv(s, sk);
-    const locked = lv < 1;
-    el.hidden = false;
-    el.disabled = locked;
-    el.classList.toggle('locked', locked);
+    const learned = lv >= 1;
+    el.hidden = !learned;
+    el.disabled = !learned;
+    if (!learned) continue;
+    skillChipShown = true;
     el.classList.toggle('on', !!on);
     el.setAttribute('aria-pressed', on ? 'true' : 'false');
     const def = SKILLS[sk];
@@ -1569,8 +1579,7 @@ export function renderHUD(s) {
     if (subEl) {
       let sub = '';
       let subState = '';
-      if (locked) sub = 'Build to unlock';
-      else if (castCost > 0) {
+      if (castCost > 0) {
         sub = `${castCost} Focus`;
         subState = h.focus >= castCost ? 'ready' : 'wait';
       } else sub = on ? 'Active' : 'Toggle';
@@ -1579,26 +1588,27 @@ export function renderHUD(s) {
       subEl.classList.toggle('wait', subState === 'wait');
     }
     // Charge fill: Focus gathered toward the next cast (active skills only).
-    const charge = castCost > 0 && !locked ? clamp(h.focus / castCost, 0, 1) : 0;
+    const charge = castCost > 0 ? clamp(h.focus / castCost, 0, 1) : 0;
     el.style.setProperty('--charge', charge.toFixed(3));
     el.classList.toggle('charged', charge >= 1);
     const pips = el.querySelectorAll('.chip-pips i');
     if (pips.length) {
-      const filled = locked ? 0 : Math.max(1, Math.ceil((lv / (def?.max || 1)) * pips.length));
+      const filled = Math.max(1, Math.ceil((lv / (def?.max || 1)) * pips.length));
       pips.forEach((pip, i) => pip.classList.toggle('fill', i < filled));
     }
   }
+  // The whole row folds away until the first skill is learned, so minute 0 has
+  // no empty 44 px band; the landscape dock reclaims the chip track with it.
+  const skillRow = $('skill-shortcuts');
+  if (skillRow) skillRow.hidden = !skillChipShown;
+  document.querySelector('.hud-cta')?.classList.toggle('has-skills', skillChipShown);
   document.getElementById('app')?.classList.toggle('is-overdrive', !!h.deepOn);
 
   if (s.ui.offline) {
     const m = $('offline-modal');
     if (m) {
       m.hidden = false;
-      const o = s.ui.offline;
-      set(
-        $('offline-body'),
-        `Away ${fmtTime(o.seconds)}\n+${formatNum(o.bytes)} Signal · +${formatNum(o.patches)} Notes\n+${o.levels} ranks · +${o.zones} zones · ${o.kills} clears`
-      );
+      renderOfflineReceipt(s.ui.offline);
     }
   }
 
@@ -1627,4 +1637,35 @@ function fmtTime(sec) {
   if (sec < 60) return `${sec | 0}s`;
   if (sec < 3600) return `${(sec / 60) | 0}m`;
   return `${(sec / 3600) | 0}h`;
+}
+
+/**
+ * Return receipt — the strongest moment a returning Host gets, printed as a
+ * receipt instead of a text dump: elapsed line, one row per currency reusing
+ * the contracted `.rw-chip` color roles, then the run-progress line.
+ *
+ * Honest and static. Every number is exactly what `simulateOffline` banked, and
+ * the anti-farm checkpoint stop (ADR-0008) is stated rather than hidden. No
+ * reveal animation, so reduced motion has nothing to gate.
+ */
+function renderOfflineReceipt(o) {
+  const $ = (id) => document.getElementById(id);
+  set($('offline-away'), `Away ${fmtTime(o.seconds)}`);
+  const html = [
+    ['sig', 'Signal', `+${formatNum(o.bytes)}`],
+    ['notes', 'Notes', `+${formatNum(o.patches)}`],
+  ]
+    .map(
+      ([kind, label, value]) =>
+        `<div class="offline-row"><small>${label}</small><span class="rw-chip k-${kind}">${value}</span></div>`,
+    )
+    .join('');
+  const receipt = $('offline-receipt');
+  if (receipt && receipt.innerHTML !== html) receipt.innerHTML = html;
+  set($('offline-progress'), `+${o.levels} ranks · +${o.zones} zones · ${o.kills} clears`);
+  const note = $('offline-note');
+  if (note) {
+    note.hidden = !o.stoppedAtSeasonBoundary;
+    set(note, 'Paused at the checkpoint — offline never banks past a Go Live.');
+  }
 }

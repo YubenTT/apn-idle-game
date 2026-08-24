@@ -1535,6 +1535,9 @@ export function allocSkill(s, id) {
   s.run.hero.sp -= cost;
   s.run.hero.skills[id] = (s.run.hero.skills[id] || 0) + 1;
   if (id === 'live_tracker') s.run.hero.trackerOn = true;
+  // The Focus meter and its shortcut chip both appear on this exact beat, so
+  // the tip that explains them fires here. Deterministic: no RNG, once ever.
+  if (id === 'hotfix' || id === 'summary_burst') tip(s, 'focus');
   syncLegacyMasteryFields(s);
   s.ui.panelDirty = true;
   confetti(s, s.world.heroX, 190, ['#FC1243', '#fff', '#3ecf8e'], 16);
