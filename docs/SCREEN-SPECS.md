@@ -93,8 +93,11 @@ Fixes over the shipped run screen:
 ### Run actor geometry
 
 At `fit = 1`, the stage uses the `STAGE_ROLE_PRESENTATION` ladder: `hero`
-96 px/6 px gap, `standard` 72 px/2 px, reserved `elite` 84 px/2 px, and
+96 px/6 px gap, `standard` 72 px/2 px, `elite` 84 px/2 px, and
 `boss` 112 px/2 px.
+Role assignment is trusted game state, never an asset ID: `boss` first, then an
+authored identity's approved `consumerScale.role`, then the elite enemy tier
+(Broken Link / Fake Leak / Event Surge) at `elite`, and `standard` otherwise.
 Those measurements describe the neutral visible body, not an atlas cell.
 The neutral bounds choose scale while the body-only motion envelope reserves
 clearance for the enemy HP plate, priority brackets, floaters, and the fixed HUD

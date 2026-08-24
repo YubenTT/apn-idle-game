@@ -143,6 +143,14 @@ flowchart TB
   `world.stageFit` each frame so `game.js` can stage-anchor effects and text.
 - `enemyFrameFor` is the one normal/boss-break frame resolver used by both the
   renderer and deterministic browser QA.
+- `stageRoleForEnemy` resolves the stage rung in one fixed precedence: `boss`
+  type, then the identity's approved `consumerScale.role` (reported in every
+  motion load state, so scale never changes while a bundle warms), then the
+  elite enemy tier (`lag`/`spoiler`/`event`) at `elite`, then `standard`. A
+  sealed `standard` approval is never upscaled to satisfy the tier.
+- `heroPreviewDrawOptions` keeps off-stage Host previews on the same
+  visible-body contract as the stage instead of hero-v2's legacy trim-height
+  compatibility path.
 - A motion-enabled pack uses character-owned, hash-verified GAF2D bundles.
   `targets.webp` is failure-only for mapped identities and remains the normal
   path for unmapped packs.

@@ -162,9 +162,48 @@ function stageFunctionalLayout({
   });
 }
 
-/** Enemy type is trusted game state; asset IDs never self-assign scale. */
-export function stageRoleForEnemy(enemy) {
-  return enemy?.type === 'boss' ? 'boss' : 'standard';
+/**
+ * Enemy types that present one step above a common target.
+ *
+ * This is the 1.75x HP family (`typeHpMult`), the same three types
+ * `ENEMY_FLAVOR` marks `kind: 'elite'`, and the same three `creatureKindFor`
+ * dresses in the legacy elite creature bodies. `event` is included for exactly
+ * that reason: it is the same HP tier wearing the same bodies, so excluding it
+ * would draw one identity at two different sizes on consecutive waves.
+ *
+ * `patch` is deliberately absent. It is the champion tier, not an elite: its own
+ * `ENEMY_FLAVOR` kind, its own drop rule, and no rung of its own on the ladder.
+ * Where a Pack authored it a larger body, its approved identity says so and the
+ * approval rule in `stageRoleForEnemy` carries it — Valorant's Patch Note wears
+ * Site Sentinel and presents at elite scale for that reason, not because the
+ * enemy type asked for it.
+ */
+const ELITE_STAGE_TYPES = new Set(['lag', 'spoiler', 'event']);
+/** Approved roles an enemy body may claim; `hero` is never a target. */
+const ENEMY_CONSUMER_ROLES = new Set(['standard', 'elite', 'boss']);
+
+/**
+ * Approved stage role for one enemy body, in strict precedence:
+ *
+ * 1. `boss` is trusted game state and outranks every presentation fact.
+ * 2. A motion-mapped identity presents at the role its approved
+ *    `consumerScale` states. Approval data is sealed and already carries its
+ *    own no-upscale proof, so an approved `standard` identity is never grown to
+ *    84 px just because an elite-tier type happens to wear it.
+ * 3. Otherwise the enemy type decides. Packs without authored motion draw
+ *    freely scalable atlas cells and legacy creature frames, so the elite family
+ *    reads at the 84 px rung there.
+ *
+ * Enemy type is trusted game state; asset IDs never self-assign scale — the role
+ * is read from the pack-level approval record, never from the asset ID.
+ */
+export function stageRoleForEnemy(enemy, motionInfo = null) {
+  if (enemy?.type === 'boss') return 'boss';
+  const approved = motionInfo?.consumerRole;
+  if (typeof approved === 'string' && ENEMY_CONSUMER_ROLES.has(approved)) {
+    return approved;
+  }
+  return ELITE_STAGE_TYPES.has(enemy?.type) ? 'elite' : 'standard';
 }
 
 function enemyIntrinsicsForMotion(motionInfo) {
@@ -224,7 +263,7 @@ function resolveEnemyGeometry(enemy, groundY, fit, motionInfo) {
     actorX: enemy.displayX,
     groundY,
     fit,
-    role: stageRoleForEnemy(enemy),
+    role: stageRoleForEnemy(enemy, motionInfo),
     ...enemyIntrinsicsForMotion(motionInfo),
   });
 }
@@ -590,12 +629,11 @@ export function draw(
   };
   const enemyStageActors = (plateFit) =>
     show.map((enemy) => {
-      const role = stageRoleForEnemy(enemy);
+      const motionInfo = motionInfoByEnemyId.get(enemy.id);
+      const role = stageRoleForEnemy(enemy, motionInfo);
       return {
         role,
-        presentation: enemyStagePresentationForMotion(
-          motionInfoByEnemyId.get(enemy.id),
-        ),
+        presentation: enemyStagePresentationForMotion(motionInfo),
         overheadClearance: enemyPlateClearance(role, plateFit),
       };
     });
@@ -937,6 +975,38 @@ export function heroDrawOptions(actorX, groundY, fit = 1, selected = null) {
   });
 }
 
+/**
+ * Off-stage Host preview (Gear sheet niche) under the stage scale contract.
+ *
+ * The preview is the same character, so it must obey the same rule: the
+ * requested size names the neutral **visible body**, which becomes a hero-role
+ * stage fit, and the authored clip is drawn through the resolved trim height and
+ * pivot. Passing a bare `height` instead takes hero-v2's legacy trim-height
+ * compatibility path, which grounds the Host on the wrong pivot and crops its
+ * feet out of the niche.
+ */
+export function heroPreviewDrawOptions(
+  actorX,
+  groundY,
+  visibleBodyHeight,
+  time = 0,
+) {
+  const selector = Object.freeze({ t: time, pose: 'idle' });
+  const options = heroDrawOptions(
+    actorX,
+    groundY,
+    visibleBodyHeight / STAGE_ROLE_PRESENTATION.hero.visibleBodyHeight,
+    resolveHeroV3Frame(selector),
+  );
+  return Object.freeze({
+    height: options.geometry.targetBodyHeight,
+    drawTrimHeight: options.drawTrimHeight,
+    pivotY: options.pivotY,
+    geometry: options.geometry,
+    motionSelector: selector,
+  });
+}
+
 export function drawHero(ctx, x, gy, s, t, fit = 1) {
   const semantics = heroRuntimeSemantics(s, t);
   const selected = resolveHeroV3Frame(semantics.selector);
@@ -1101,6 +1171,9 @@ export function inspectEnemyMotion(enemy, packAssets = null, assetStore = null, 
   const target = pack ? targetForEnemyType(pack, enemy?.type) : null;
   const assetId = target?.id || null;
   const source = assetId ? pack?.motion?.characters?.[assetId] : null;
+  // Pack-level approval fact, reported in every load state so an identity's
+  // stage scale never changes between warming, ready, and fallback frames.
+  const consumerRole = source?.consumerScale?.role ?? null;
   const fallbackCount = assetStore?.motionStore
     ? motionDiagnostics(assetStore.motionStore).length
     : 0;
@@ -1113,6 +1186,7 @@ export function inspectEnemyMotion(enemy, packAssets = null, assetStore = null, 
       frameIndex: null,
       fallbacks: fallbackCount,
       target,
+      consumerRole,
     };
   }
   const record = assetStore?.motionStore
@@ -1127,6 +1201,7 @@ export function inspectEnemyMotion(enemy, packAssets = null, assetStore = null, 
       frameIndex: null,
       fallbacks: fallbackCount,
       target,
+      consumerRole,
     };
   }
   if (record.status === 'failed') {
@@ -1138,6 +1213,7 @@ export function inspectEnemyMotion(enemy, packAssets = null, assetStore = null, 
       frameIndex: null,
       fallbacks: fallbackCount,
       target,
+      consumerRole,
     };
   }
   const selection = selectEnemyMotion(enemy, {
@@ -1198,6 +1274,7 @@ export function inspectEnemyMotion(enemy, packAssets = null, assetStore = null, 
           fallbacks: fallbackCount,
           record: retainedRecord,
           target,
+          consumerRole,
         };
       }
       return {
@@ -1210,6 +1287,7 @@ export function inspectEnemyMotion(enemy, packAssets = null, assetStore = null, 
         frameIndex: null,
         fallbacks: fallbackCount,
         target,
+        consumerRole,
       };
     }
     if (clipRecord.status === 'failed') {
@@ -1221,6 +1299,7 @@ export function inspectEnemyMotion(enemy, packAssets = null, assetStore = null, 
         frameIndex: null,
         fallbacks: fallbackCount,
         target,
+        consumerRole,
       };
     }
     return {
@@ -1235,6 +1314,7 @@ export function inspectEnemyMotion(enemy, packAssets = null, assetStore = null, 
       fallbacks: fallbackCount,
       record: clipRecord,
       target,
+      consumerRole,
     };
   }
   const clip = record.descriptor?.clips?.[selection.clip];
@@ -1247,6 +1327,7 @@ export function inspectEnemyMotion(enemy, packAssets = null, assetStore = null, 
       frameIndex: null,
       fallbacks: fallbackCount,
       target,
+      consumerRole,
     };
   }
   return {
@@ -1259,6 +1340,7 @@ export function inspectEnemyMotion(enemy, packAssets = null, assetStore = null, 
     fallbacks: fallbackCount,
     record,
     target,
+    consumerRole,
   };
 }
 
