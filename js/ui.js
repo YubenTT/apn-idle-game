@@ -16,6 +16,7 @@ import {
   SKILL_TREES,
   TIPS,
   FEED_COPY,
+  echoLineFor,
   skillSpCost,
 } from './content.js?v=gaf2d-motion-v1';
 import {
@@ -95,6 +96,7 @@ import {
 } from './hub.js?v=gaf2d-motion-v1';
 import { skillIco, metaIco, hubIco, gearIcon } from './icons.js?v=gaf2d-motion-v1';
 import { drawHeroV2 } from './hero-v2.js?v=gaf2d-motion-v1';
+import { heroPreviewDrawOptions } from './render.js?v=gaf2d-motion-v1';
 import { motionReduced } from './motion-preference.js?v=gaf2d-motion-v1';
 import { save, clear } from './save.js?v=gaf2d-motion-v1';
 import { sfx, unlockAudio, setMuted, setReducedMotion } from './sfx.js?v=gaf2d-motion-v1';
@@ -245,8 +247,15 @@ function mountGearHero(s) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save();
     ctx.scale(dpr, dpr);
+    // Same visible-body contract as the run stage: the niche Host is the stage
+    // Host at preview scale, never a trim-height approximation of it.
     drawHeroV2(ctx, cssSize / 2, cssSize - 5, {
-      height: cssSize * 0.8,
+      ...heroPreviewDrawOptions(
+        cssSize / 2,
+        cssSize - 5,
+        cssSize * 0.8,
+        now / 1000,
+      ),
       time: now / 1000,
       pose: 'idle',
       energy: 100,
@@ -1059,8 +1068,18 @@ function renderRouteJourney(s) {
       <div class="route-archive-grid">
         ${archive.map(({ pack, echo, complete }) => `
           <div class="route-archive-row ${complete ? 'is-complete' : ''}" data-echo-pack="${pack.id}">
-            <span><strong>${pack.title}</strong><small>${complete ? 'Gate cleared' : 'Gate open'}</small></span>
-            <b>${echo.found}/${echo.total}</b>
+            <div class="route-archive-head">
+              <span><strong>${pack.title}</strong><small>${complete ? 'Gate cleared' : 'Gate open'}</small></span>
+              <b>${echo.found}/${echo.total}</b>
+            </div>
+            <ol class="route-echo-lines">
+              ${Array.from({ length: echo.total }, (_, index) => {
+                const line = index < echo.found ? echoLineFor(pack.id, index) : null;
+                return `<li class="${line ? 'is-found' : 'is-locked'}" data-echo-slot="${index + 1}">${
+                  line || `Echo ${index + 1} · undiscovered`
+                }</li>`;
+              }).join('')}
+            </ol>
           </div>`).join('')}
       </div>
     </details>

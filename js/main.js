@@ -15,6 +15,7 @@ import {
   motionReduced,
 } from './motion-preference.js?v=gaf2d-motion-v1';
 import { setReducedMotion } from './sfx.js?v=gaf2d-motion-v1';
+import { titleTaglineFor } from './comedy.js?v=gaf2d-motion-v1';
 import {
   createMotionStore,
   getMotionClipRecord,
@@ -114,6 +115,15 @@ if (saved) {
   document.getElementById('title-screen').hidden = true;
 } else {
   s.ui.pendingTip = 'start';
+}
+// Title-screen voice: the permanent Host line is static markup; the tagline
+// rotates deterministically by day + Go Live count, never by Math.random.
+const titleTagline = document.getElementById('title-tagline');
+if (titleTagline) {
+  titleTagline.textContent = titleTaglineFor(
+    Math.floor(Date.now() / 86400000),
+    s.meta.goLiveCount,
+  );
 }
 if (qaParams.has('autostart') && qaParams.has('zone')) {
   const displayZone = Math.max(1, Math.floor(Number(qaParams.get('zone')) || 1));

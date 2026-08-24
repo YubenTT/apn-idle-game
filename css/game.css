@@ -2759,8 +2759,32 @@ canvas {
   object-fit: contain;
 }
 
+.title-role,
+.title-tagline {
+  margin: 0 0 var(--sp-2);
+  text-wrap: balance;
+}
+
+.title-role {
+  color: var(--text-high);
+  font-size: var(--fs-body-m);
+  line-height: var(--lh-body-m);
+  font-weight: 800;
+  animation: title-mark-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
+}
+
+.title-tagline {
+  margin-bottom: var(--sp-6);
+  min-height: var(--lh-label-m);
+  color: var(--text-low);
+  font-size: var(--fs-label-m);
+  line-height: var(--lh-label-m);
+  font-weight: 700;
+  animation: title-mark-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.24s both;
+}
+
 .title-word {
-  margin: 0 0 20px !important;
+  margin: 0 0 var(--sp-3) !important;
   font-size: var(--fs-display-l) !important;
   font-weight: 900 !important;
   letter-spacing: -0.03em;
@@ -2805,6 +2829,8 @@ canvas {
   .title-card,
   .title-mark,
   .title-word,
+  .title-role,
+  .title-tagline,
   .title-play {
     animation: none !important;
   }
@@ -4743,7 +4769,7 @@ button[hidden] {
 .route-clean-card,
 .route-archive summary,
 .route-sets summary,
-.route-archive-row,
+.route-archive-head,
 .route-history-row {
   display: flex;
   align-items: center;
@@ -4767,7 +4793,7 @@ button[hidden] {
 .route-card-kicker b,
 .route-echo-now strong,
 .route-archive summary > b,
-.route-archive-row > b,
+.route-archive-head > b,
 .route-history-row > b {
   font-variant-numeric: tabular-nums;
 }
@@ -4794,7 +4820,7 @@ button[hidden] {
 .route-echo-now small,
 .route-clean-card small,
 .route-archive summary small,
-.route-archive-row small,
+.route-archive-head small,
 .route-history-row small {
   color: var(--text-low);
   font-size: var(--fs-label-s);
@@ -5006,7 +5032,7 @@ button[hidden] {
 
 .route-archive summary > span,
 .route-sets summary > span,
-.route-archive-row > span,
+.route-archive-head > span,
 .route-history-row > span {
   min-width: 0;
   display: grid;
@@ -5036,6 +5062,37 @@ button[hidden] {
   border-bottom: var(--border-1);
 }
 
+/* The archive is the trophy case: each Pack row carries its three Echo slots,
+   found lines in full and undiscovered slots as an honest locked placeholder. */
+.route-archive-row {
+  display: grid;
+  align-content: center;
+  gap: var(--sp-2);
+}
+
+.route-echo-lines {
+  display: grid;
+  gap: var(--sp-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.route-echo-lines li {
+  overflow-wrap: anywhere;
+  padding-left: var(--sp-3);
+  border-left: var(--border-1);
+  color: var(--text-low);
+  font-size: var(--fs-label-m);
+  line-height: var(--lh-label-m);
+  font-weight: 600;
+}
+
+.route-echo-lines li.is-found {
+  border-left-color: var(--c-positive);
+  color: var(--text-mid);
+}
+
 .route-archive-row:last-child,
 .route-history-row:last-child {
   border-bottom: 0;
@@ -5050,11 +5107,11 @@ button[hidden] {
 }
 
 .route-archive-row.is-complete strong,
-.route-archive-row.is-complete > b {
+.route-archive-row.is-complete .route-archive-head > b {
   color: var(--c-positive);
 }
 
-.route-archive-row > b,
+.route-archive-head > b,
 .route-history-row > b {
   flex: 0 0 auto;
   color: var(--text-mid);

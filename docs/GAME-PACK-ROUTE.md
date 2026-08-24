@@ -41,6 +41,25 @@ earned Clean Era; an unseen added Pack still debuts Clean.
 - The HUD always shows the current Pack's real Echo state (`0/3` on a fresh
   Pack); it never hides missing domain data or manufactures progress.
 
+### Echo lines
+
+Every Echo carries an authored editorial line, so the discovery is content and
+not just a counter. `ECHO_LINES` in `js/content.js` holds 20 Packs × 3 unique
+lines, keyed by Pack id and indexed by Echo slot; `echoLineFor(packId, index)`
+is the only reader and returns `null` for an unknown Pack or slot, so nothing
+renders `undefined`. Selection is therefore a pure lookup — the Route, spawn,
+and kill paths draw no RNG for it, and a replayed save speaks the same lines.
+
+Each line riffs on that Pack's own APN runtime title and genre only: no
+third-party mark, place, or character name appears in runtime copy, and each
+line stays inside a 90-character toast budget. Discovery prints the line on the
+existing toast channel (`Patch Echo n/3 · <line>`, info tone) in place of the
+generic zone-clear line, and the Echo Archive becomes the trophy case — a found
+slot shows its line, an unfound slot shows `Echo n · undiscovered`.
+`qa/check-echo-lines.mjs` asserts coverage, uniqueness, the length cap, the
+denied-mark sweep, accessor fail-safes, the legacy-creature Gate bio, and the
+deterministic title-screen tagline rotation.
+
 ## Implemented Coverage Mastery and Sets
 
 - A Pack becomes `covered` only after its Gate and all three Echoes are earned.

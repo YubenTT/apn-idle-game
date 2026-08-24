@@ -22,7 +22,15 @@ import {
   verifyYieldMultiplier,
   relayIdleEfficiency,
 } from './formulas.js?v=gaf2d-motion-v1';
-import { SEASON, META, SKILLS, ENEMY_FLAVOR, skillSpCost } from './content.js?v=gaf2d-motion-v1';
+import {
+  SEASON,
+  META,
+  SKILLS,
+  ENEMY_FLAVOR,
+  creatureBossFlavor,
+  echoLineFor,
+  skillSpCost,
+} from './content.js?v=gaf2d-motion-v1';
 import {
   ensureHub,
   hubOnKill,
@@ -704,7 +712,10 @@ export function spawnEnemy(s) {
   if (type === 'boss') {
     s.world.bossActive = true;
     s.world.bossTimer = C.BOSS_TIMER;
-    toast(s, pick(BOSS_OPEN));
+    // The comedy draw always happens, so the RNG stream is byte-identical to the
+    // pre-E5 build; a legacy-creature Gate simply prints its own bio instead.
+    const openLine = pick(BOSS_OPEN);
+    toast(s, creatureBossFlavor({ type: 'boss', packId: pack?.id }, zone) || openLine);
     tip(s, 'boss');
   }
 
@@ -1044,16 +1055,25 @@ function onKill(s, e) {
       s.ui.seasonDone = true;
       toast(s, `Zone ${s.route.zone} checkpoint! Go Live to bank Notes and grow your Live Mult.`, 2.6, 'live');
       tip(s, 'season');
+    } else if (routeTransition.echo) {
+      // The discovery beat speaks the archive line itself. Selection is a pure
+      // (packId, slot) lookup — no RNG draw enters the kill/clear path.
+      const found = routeTransition.echo;
+      const line = echoLineFor(found.packId, found.slot - 1);
+      toast(
+        s,
+        `Patch Echo ${found.slot}/${found.total} · ${line || 'Archive entry recovered.'}`,
+        2.6,
+        'info',
+      );
     } else {
-      const routeResult = routeTransition.echo
-        ? ` · Echo ${routeTransition.echo.slot}/${routeTransition.echo.total} found`
-        : routeTransition.completion
-          ? ` · ${routeTransition.completion.clean ? 'Pack archived' : `Drift ${routeTransition.completion.tier} cleared`}`
-          : '';
+      const routeResult = routeTransition.completion
+        ? ` · ${routeTransition.completion.clean ? 'Pack archived' : `Drift ${routeTransition.completion.tier} cleared`}`
+        : '';
       toast(
         s,
         `Zone ${s.route.zone} cleared — on to Zone ${s.route.zone + 1}${routeResult}`,
-        routeTransition.echo || routeTransition.completion ? 2.4 : 1.8,
+        routeTransition.completion ? 2.4 : 1.8,
         'zone',
       );
     }
