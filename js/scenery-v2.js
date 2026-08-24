@@ -135,6 +135,9 @@ export function biomeForZone(zone) {
 
 function makeCanvas(w, h) {
   if (typeof document === 'undefined') return null;
+  // A zero-sized canvas is not drawable — drawImage throws InvalidStateError —
+  // so callers get null (which every draw site already guards) instead.
+  if (!(w >= 1) || !(h >= 1)) return null;
   const c = document.createElement('canvas');
   c.width = w;
   c.height = h;

@@ -336,7 +336,10 @@ function ready(img) {
 export function sizeCanvas(canvas) {
   const parent = canvas.parentElement;
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  const w = parent.clientWidth;
+  // A hidden embed or a zero-sized window at boot reports clientWidth 0; a
+  // 0-wide backing store makes every cached-strip drawImage throw and kills
+  // the boot draw, so the view floors at 1px until a real resize arrives.
+  const w = Math.max(1, parent.clientWidth);
   const h = Math.max(160, parent.clientHeight);
   canvas.width = Math.floor(w * dpr);
   canvas.height = Math.floor(h * dpr);

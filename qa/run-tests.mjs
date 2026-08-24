@@ -420,6 +420,14 @@ ok(
   'the Corruption layer carries no time term, so reduced motion has nothing to gate',
 );
 ok(
+  renderSource.includes('Math.max(1, parent.clientWidth)'),
+  'sizeCanvas floors the view width so a hidden embed or zero-sized window cannot kill the boot draw',
+);
+ok(
+  scenerySource.includes('if (!(w >= 1) || !(h >= 1)) return null;'),
+  'makeCanvas refuses zero-sized strips so cached scenery can never throw InvalidStateError',
+);
+ok(
   driftTreatmentForTier(0) === null && driftTreatmentForTier(9) === driftTreatmentForTier(4),
   'Corruption treatment is absent at tier 0 and capped at tier 4',
 );
