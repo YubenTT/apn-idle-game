@@ -39,6 +39,15 @@ Living plan — not a commitment calendar.
 
 ## Near term
 
+- [x] **Enhanced Edition** (2026-08-24) — authored ten-wave composition for all 20
+      Packs, Pack set dressing plus threaded accents, visible Signal Drift with
+      five named eras and the zone-1000 **Patchline Complete** finale ahead of
+      **Endless Rating**, the reachable `elite` stage tier and a contract-true
+      Gear preview, 60 Echo discovery lines with the Echo Archive as trophy case
+      and a title-screen voice, deterministic per-Pack audio motifs, and a
+      progressive FTUE with an honest HUD and structured offline receipt. Locked
+      balance curves and the sealed GAF2D V4 authority are untouched; runtime
+      cache is `enhanced-v1`
 - [x] Build V2 domain: named Scan/Verify/Relay axes, derived Mastery, exact v3
       SP refund, and three seeded Zone-200 profiles (PR-4a / issue #21)
 - [x] Build V2 presentation + Priority Tag behavior (PR-4b / issue #22)

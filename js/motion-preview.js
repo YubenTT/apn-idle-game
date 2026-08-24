@@ -1,19 +1,19 @@
 import {
   validateMotionSetIndex,
   validateMotionPreviewBundle,
-} from './motion-bundle.js?v=gaf2d-motion-v1';
+} from './motion-bundle.js?v=enhanced-v1';
 import {
   HERO_V3_CLIPS,
   MAX_HERO_IMAGE_BYTES,
   validateHeroClipDescriptor,
   validateHeroSetManifest,
-} from './hero-v3-contract.js?v=gaf2d-motion-v1';
+} from './hero-v3-contract.js?v=enhanced-v1';
 import {
   validateConsumerScaleContract,
   validateQualityProfileBinding,
   VISUAL_FIDELITY_BUDGETS,
   visualFidelityEncodedLimit,
-} from './visual-fidelity-v4.js?v=gaf2d-motion-v1';
+} from './visual-fidelity-v4.js?v=enhanced-v1';
 
 const MANIFEST_PATH = '.gaf2d-preview/manifest.json';
 const PRODUCTION_HERO_BASE = 'assets/mascot/v3/';

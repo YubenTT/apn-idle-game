@@ -21,7 +21,7 @@ import {
   spentSkillPoints,
   verifyYieldMultiplier,
   relayIdleEfficiency,
-} from './formulas.js?v=gaf2d-motion-v1';
+} from './formulas.js?v=enhanced-v1';
 import {
   SEASON,
   META,
@@ -30,7 +30,7 @@ import {
   creatureBossFlavor,
   echoLineFor,
   skillSpCost,
-} from './content.js?v=gaf2d-motion-v1';
+} from './content.js?v=enhanced-v1';
 import {
   ensureHub,
   hubOnKill,
@@ -46,7 +46,7 @@ import {
   applyReward,
   seasonLevel,
   SEASON_MILESTONES,
-} from './hub.js?v=gaf2d-motion-v1';
+} from './hub.js?v=enhanced-v1';
 import {
   killLine,
   pick,
@@ -56,8 +56,8 @@ import {
   LEVEL_LINES,
   SHIP_LINES,
   SCANNER_LINES,
-} from './comedy.js?v=gaf2d-motion-v1';
-import { sfx } from './sfx.js?v=gaf2d-motion-v1';
+} from './comedy.js?v=enhanced-v1';
+import { sfx } from './sfx.js?v=enhanced-v1';
 import {
   emptyGear,
   normalizeGear,
@@ -73,7 +73,7 @@ import {
   pickSlotForGear,
   SLOTS,
   BAG_CAP,
-} from './loot.js?v=gaf2d-motion-v1';
+} from './loot.js?v=enhanced-v1';
 import {
   PATCHLINE_COMPLETE_ZONE,
   createRouteState,
@@ -81,15 +81,15 @@ import {
   packForRoute,
   patchlineRecord,
   recordRouteZoneClear,
-} from './route.js?v=gaf2d-motion-v1';
-import { GAME_PACKS } from './generated/game-packs.js?v=gaf2d-motion-v1';
+} from './route.js?v=enhanced-v1';
+import { GAME_PACKS } from './generated/game-packs.js?v=enhanced-v1';
 import {
   coverageBossHpMultiplier,
   coverageFinalTargetSignalMultiplier,
   coverageGateNotesMultiplier,
   coverageOfflineEfficiency,
   coverageYieldMultiplier,
-} from './coverage.js?v=gaf2d-motion-v1';
+} from './coverage.js?v=enhanced-v1';
 
 const HERO_ATTACK_SECONDS = 8 / 16;
 const HERO_HIT_SECONDS = 4 / 16;
@@ -99,8 +99,8 @@ import {
   rollWaveEnemyType,
   targetForEnemyType,
   waveBeatForPack,
-} from './wave-roster.js?v=gaf2d-motion-v1';
-import { motionReduced } from './motion-preference.js?v=gaf2d-motion-v1';
+} from './wave-roster.js?v=enhanced-v1';
+import { motionReduced } from './motion-preference.js?v=enhanced-v1';
 
 export function createState() {
   return {

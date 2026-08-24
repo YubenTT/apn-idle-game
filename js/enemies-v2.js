@@ -11,7 +11,7 @@
  * accent hue — same editorial language as the Host.
  */
 
-import { clamp, easeOutQuad } from './formulas.js?v=gaf2d-motion-v1';
+import { clamp, easeOutQuad } from './formulas.js?v=enhanced-v1';
 
 const TAU = Math.PI * 2;
 

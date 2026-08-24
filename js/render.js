@@ -1,28 +1,28 @@
 /** APN Idle canvas — V2 scenery/targets/Host + combat juice overlays */
 
-import { C, clamp, easeOutCubic, easeOutQuad } from './formulas.js?v=gaf2d-motion-v1';
-import { getCurrentPackAssets } from './assets.js?v=gaf2d-motion-v1';
-import { resolveHostClip } from './host-contract.js?v=gaf2d-motion-v1';
-import { drawHeroV2 } from './hero-v2.js?v=gaf2d-motion-v1';
+import { C, clamp, easeOutCubic, easeOutQuad } from './formulas.js?v=enhanced-v1';
+import { getCurrentPackAssets } from './assets.js?v=enhanced-v1';
+import { resolveHostClip } from './host-contract.js?v=enhanced-v1';
+import { drawHeroV2 } from './hero-v2.js?v=enhanced-v1';
 import {
   getV3Clip,
   getV3Geometry,
   getV3Presentation,
   resolveHeroV3Frame,
-} from './hero-v3.js?v=gaf2d-motion-v1';
+} from './hero-v3.js?v=enhanced-v1';
 import {
   STAGE_OVERHEAD_GAP,
   STAGE_ROLE_PRESENTATION,
   legacySquarePresentation,
   resolveActorGeometry,
   stageFitForActors,
-} from './stage-presentation.js?v=gaf2d-motion-v1';
-import { motionReduced } from './motion-preference.js?v=gaf2d-motion-v1';
+} from './stage-presentation.js?v=enhanced-v1';
+import { motionReduced } from './motion-preference.js?v=enhanced-v1';
 import {
   drawMotionFrame,
   frameIndexForClip,
   selectEnemyMotion,
-} from './motion-bundle.js?v=gaf2d-motion-v1';
+} from './motion-bundle.js?v=enhanced-v1';
 import {
   failMotionRecord,
   getMotionClipRecord,
@@ -30,20 +30,20 @@ import {
   motionDiagnostics,
   pruneMotionClipResidency,
   warmMotionClip,
-} from './motion-store.js?v=gaf2d-motion-v1';
-import { drawTarget } from './enemies-v2.js?v=gaf2d-motion-v1';
-import { drawScenery } from './scenery-v2.js?v=gaf2d-motion-v1';
+} from './motion-store.js?v=enhanced-v1';
+import { drawTarget } from './enemies-v2.js?v=enhanced-v1';
+import { drawScenery } from './scenery-v2.js?v=enhanced-v1';
 import {
   CREATURES,
   creatureKindFor,
   milestoneGateEraName,
-} from './content.js?v=gaf2d-motion-v1';
-import { corruptionTierFor } from './route.js?v=gaf2d-motion-v1';
-import { creatureClipReady, drawCreature } from './creatures.js?v=gaf2d-motion-v1';
+} from './content.js?v=enhanced-v1';
+import { corruptionTierFor } from './route.js?v=enhanced-v1';
+import { creatureClipReady, drawCreature } from './creatures.js?v=enhanced-v1';
 import {
   packWaveIdentityIds,
   targetForEnemyType,
-} from './wave-roster.js?v=gaf2d-motion-v1';
+} from './wave-roster.js?v=enhanced-v1';
 
 const LEGACY_ENEMY_PRESENTATION = legacySquarePresentation({ sourceSize: 1 });
 const LEGACY_ENEMY_INTRINSICS = Object.freeze({

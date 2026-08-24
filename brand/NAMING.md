@@ -3,6 +3,14 @@
 > How we name things the player reads. Terminology definitions live in
 > [GLOSSARY.md](../docs/GLOSSARY.md); this file is the *writing rules*.
 
+> **Examples refreshed 2026-08-24 to the shipped vocabulary** — `Upgrade Scanner`,
+> `Go Live`, `Route`, `Wave n/10`. The rules below are unchanged; only the sample
+> strings moved. The retired display forms `Upgrade Weapon`, `Ship Notes`, and
+> `End Season` are now **banned copy** in player-facing sources and
+> `qa/check-copy.mjs` fails the build on them. Lowercase code identifiers and CSS
+> classes (`ship-row`, slot id `weapon`, `leaveSeason`) are deliberately outside
+> the ban.
+
 ## The one rule that fixes the most bugs
 
 **Name the object, not the resource.** A CTA that spends a currency is titled by
@@ -10,24 +18,24 @@ what it *upgrades*, never by the currency it *costs*.
 
 | ❌ Wrong | ✅ Right | Why |
 |---------|---------|-----|
-| "Upgrade Signal" | **"Upgrade Weapon"** (shipped) / "Upgrade Scanner" (thematic) | Signal is the *cost*, not the thing improving. "Upgrade Signal" makes the player ask "am I upgrading my money?" |
-| "Buy Notes" | "Ship Notes → Rep" | Names the action + outcome. |
+| "Upgrade Signal" | **"Upgrade Scanner"** (shipped) | Signal is the *cost*, not the thing improving. "Upgrade Signal" makes the player ask "am I upgrading my money?" |
+| "Buy Notes" | "Go Live · bank Notes → Rep" | Names the action + outcome. |
 | "SP button" | "Hotfix · stronger hit · 3 SP" | Object · effect · cost. |
 
-The shipped CTA is already **"Upgrade Weapon"** — keep it. `Scanner` is an approved
-thematic alias if a screen wants the scan metaphor; both are legal, "Upgrade
-Signal" is not.
+The shipped CTA is **"Upgrade Scanner"** — keep it. "Upgrade Signal" is illegal
+because it names the currency, and the older "Upgrade Weapon" form is retired
+display copy that `qa/check-copy.mjs` rejects.
 
 ## Voice
 
-- **Plain verbs players know.** Upgrade, Ship, Build, Boost, Equip, Scrap.
+- **Plain verbs players know.** Upgrade, Go Live, Build, Boost, Equip, Scrap.
 - **Object · effect · cost**, in that order, on every actionable row.
-  Example: `Upgrade Weapon` · `+8 scan power · Lv 37 → 38` · `4.0K Signal`.
-- **APN-flavored, not fantasy.** scan / filter / notes / rep / ship / live —
+  Example: `Upgrade Scanner` · `+8 scan power · Lv 37 → 38` · `4.0K Signal`.
+- **APN-flavored, not fantasy.** scan / filter / notes / rep / patch / go live —
   never fantasy-resource or random-loot-drop language. Active skills spend the
   canonical **Focus** meter defined in [GLOSSARY](../docs/GLOSSARY.md).
-- **Comedy is flavor, never a blocker.** Kill/boss/ship quips are fine; they never
-  carry information the player needs to act.
+- **Comedy is flavor, never a blocker.** Kill, Gate, and checkpoint quips are
+  fine; they never carry information the player needs to act.
 
 ## Mobile-safe copy
 
@@ -50,12 +58,13 @@ Signal" is not.
 
 ## Destructive-action copy
 
-Any action that resets progress (End Season, New Game) must:
+Any action that resets progress (Go Live, New Game) must:
 
 1. Read as its consequence, not its label — the button says what it *does*.
 2. Sit at **lower** visual weight than the primary CTA (never same-size crimson).
 3. Route through a **preview / confirm** step that lists *what resets and what is
-   kept* before it fires. See [SCREEN-SPECS](../docs/SCREEN-SPECS.md) § Ship.
+   kept* before it fires. Go Live is the single atomic checkpoint — see
+   [ADR-0008](../docs/decisions/ADR-0008-go-live-sole-checkpoint.md).
 
 ## Localization-ready
 

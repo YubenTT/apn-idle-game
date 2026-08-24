@@ -1,5 +1,57 @@
 Original prompt: Complete the APN Idle redesign autonomously, including QA, review, and a muted localhost build for the final integrated user gate.
 
+## 2026-08-24 — Enhanced Edition session
+
+- Owner-directed release on `feat/enhanced-edition`, branched from `main` at
+  `c1298dc`: make the shipped game read as a crafted, complete, long-horizon idle
+  without touching the locked balance curves, the sealed GAF2D V4 authority, or
+  any human approval gate. Plan:
+  `docs/superpowers/plans/2026-08-23-apn-idle-enhanced-edition.md`.
+- Eight slices shipped in order, each with its lockstep QA and doc updates:
+  1. **E1 · authored wave composition** — all 20 Packs get a designed ten-wave
+     rhythm in `js/wave-roster.js`, replacing the single probability table; type
+     mixes held inside the existing envelope so the balance gates stay green.
+  2. **E2 · Signal Drift made visible** — tier-stepped corruption masks, five
+     named eras across the 200–1000 stretch, era-named Milestone Gate titles, the
+     one-time **Patchline Complete** record and cinematic at zone 1000, a
+     permanent Route trophy card, and **Endless Rating** for post-1000 play.
+  3. **E3 · Pack set dressing** — the manifested but never-drawn `props.webp`
+     cells now render as a deterministic near-ground strip with the Pack accent
+     threaded into billboard and rail treatments. No asset changes.
+  4. **E4 · character presentation correctness** — `stageRoleForEnemy` honors the
+     authored `elite` role (Site Sentinel at its approved 84 px) and the
+     Gear-sheet Hero preview uses the real stage geometry contract. Ladder values
+     unchanged, so the ten-document geometry contract stayed green.
+  5. **E5 · the APN story, spoken** — 60 unique Echo discovery lines (20 Packs ×
+     3), the Echo Archive as trophy case, and a title-screen tagline rotation
+     plus one in-world line.
+  6. **E6 · FTUE and UX honesty** — skill chips hidden until usable, staged
+     single-concept tips on real triggers, a structured per-currency offline
+     receipt replacing the `<pre>`, **Wave n/10** as the single ten-step label,
+     and the targeted CSS debt deletions.
+  7. **E7 · Pack audio motifs** — `js/sfx.js` derives a deterministic two-to-four
+     note WebAudio motif per Pack from a genre family table plus an id-hash pitch
+     offset (no assets, no `Math.random`), fired on Pack entry and Gate boss
+     spawn behind the existing mute and reduced-motion silence.
+  8. **E8 · release mechanics** — `RUNTIME_BUILD_ID` swept `gaf2d-motion-v1` →
+     `enhanced-v1` across `index.html`, every relative runtime import, and the QA
+     scripts that pin the token; `docs/EMBED.md` corrected to the real
+     `sync-idle-game.mjs` projection plus Cloudflare Workers deploy and the
+     `apn_idle_save_v2` / `v: 3` health check, with a ship checklist added;
+     CHANGELOG, ROADMAP, ARCHITECTURE, NAMING, and this record updated.
+- Balance is untouched and proven untouched: `js/formulas.js` `C` constants have
+  zero changes and `node qa/check-balance-targets.mjs` reports the same settled
+  successor Gate acceleration ratios as the pre-slice baseline — scan
+  `0.885x / 0.439x`, verify `0.839x / 0.386x`, relay `0.742x / 0.482x` — with
+  Zone-1000 bounds still inside their locked targets (ordinary hits 217.71,
+  boss hits 1978.01, per-zone 30.48 min, aggregate 319.55 h, 100 Gates).
+- `node qa/run-tests.mjs` ends `ALL PASS`. The Chrome matrix on
+  `127.0.0.1:8791` is green: route smoke across its viewport set and the 20-Pack
+  catalog/rights smoke, both with zero console errors and zero horizontal
+  overflow, re-run after the cache-token sweep so a missed import specifier would
+  have surfaced as a 404.
+- No commit, merge, or deploy ran in this slice; `git diff --check` is clean.
+
 ## 2026-08-12 — ALL-257 production enemy-visibility incident started
 
 - New owner request: live `https://allpatchnotes.com/idle/` shows combat/HP/name but no creature body; diagnose broadly, fix without overengineering, then PR/merge/deploy and leave both repositories clean.

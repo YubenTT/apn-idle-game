@@ -37,7 +37,7 @@ import * as renderRuntime from '../js/render.js';
 import { resolveActorGeometry } from '../js/stage-presentation.js';
 
 const versionedHeroV3 = await import(
-  '../js/hero-v3.js?v=gaf2d-motion-v1'
+  '../js/hero-v3.js?v=enhanced-v1'
 );
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const heroRoot = path.join(root, 'assets/mascot/v3');

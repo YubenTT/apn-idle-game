@@ -1,4 +1,4 @@
-export const RUNTIME_BUILD_ID = 'gaf2d-motion-v1';
+export const RUNTIME_BUILD_ID = 'enhanced-v1';
 
 export function withRuntimeVersion(source) {
   const value = String(source || '');

@@ -368,7 +368,7 @@ async function resetProductionMotionEvidence(cdp) {
   const expectedAssetIds = Object.keys(APPROVED_MOTION_SHA256).sort();
   return evaluate(cdp, `(async () => {
     const { releaseColdMotion } =
-      await import('/js/motion-store.js?v=gaf2d-motion-v1');
+      await import('/js/motion-store.js?v=enhanced-v1');
     const q = window.__APN_QA__;
     const packAssets = q?.assets?.packs?.get('valorant');
     if (!packAssets?.pack || !q.assets.motionStore) {
@@ -410,7 +410,7 @@ async function resetProductionMotionEvidence(cdp) {
 async function productionMotionSnapshot(cdp) {
   return evaluate(cdp, `(async () => {
     const { motionDiagnostics } =
-      await import('/js/motion-store.js?v=gaf2d-motion-v1');
+      await import('/js/motion-store.js?v=enhanced-v1');
     const q = window.__APN_QA__;
     const resources = performance
       .getEntriesByType('resource')
@@ -537,7 +537,7 @@ async function validateReducedMotionAuthority(cdp) {
   const snapshot = () =>
     evaluate(cdp, `(async () => {
       const { motionReduced } =
-        await import('/js/motion-preference.js?v=gaf2d-motion-v1');
+        await import('/js/motion-preference.js?v=enhanced-v1');
       const state = window.__APN_QA__.state;
       const savedRaw = localStorage.getItem('apn_idle_save_v2');
       return {

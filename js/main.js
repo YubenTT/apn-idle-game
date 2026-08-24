@@ -1,21 +1,21 @@
 /** APN Idle bootstrap */
 
-import { C } from './formulas.js?v=gaf2d-motion-v1';
-import { createState, step, collectAlert, simulateOffline, setSprint, isSprinting, goLive, canGoLive, goLiveAvailableZone } from './game.js?v=gaf2d-motion-v1';
-import { sizeCanvas, draw, bossTimerYFor, enemyFrameFor, inspectEnemyMotion, inspectHeroMotion, inspectStagePresentation, legacyCreatureKindForStage } from './render.js?v=gaf2d-motion-v1';
-import { createAssetStore, getCurrentPackAssets, preloadRouteAssets, packWindowForRoute } from './assets.js?v=gaf2d-motion-v1';
-import { bindUI, renderHUD } from './ui.js?v=gaf2d-motion-v1';
-import { save, load, apply } from './save.js?v=gaf2d-motion-v1';
+import { C } from './formulas.js?v=enhanced-v1';
+import { createState, step, collectAlert, simulateOffline, setSprint, isSprinting, goLive, canGoLive, goLiveAvailableZone } from './game.js?v=enhanced-v1';
+import { sizeCanvas, draw, bossTimerYFor, enemyFrameFor, inspectEnemyMotion, inspectHeroMotion, inspectStagePresentation, legacyCreatureKindForStage } from './render.js?v=enhanced-v1';
+import { createAssetStore, getCurrentPackAssets, preloadRouteAssets, packWindowForRoute } from './assets.js?v=enhanced-v1';
+import { bindUI, renderHUD } from './ui.js?v=enhanced-v1';
+import { save, load, apply } from './save.js?v=enhanced-v1';
 import {
   heroV3AuthorityStatus,
   loadHeroV3,
-} from './hero-v3.js?v=gaf2d-motion-v1';
+} from './hero-v3.js?v=enhanced-v1';
 import {
   createMotionPreferenceController,
   motionReduced,
-} from './motion-preference.js?v=gaf2d-motion-v1';
-import { gateSpawnAccent, packEntryMotif, setReducedMotion } from './sfx.js?v=gaf2d-motion-v1';
-import { titleTaglineFor } from './comedy.js?v=gaf2d-motion-v1';
+} from './motion-preference.js?v=enhanced-v1';
+import { gateSpawnAccent, packEntryMotif, setReducedMotion } from './sfx.js?v=enhanced-v1';
+import { titleTaglineFor } from './comedy.js?v=enhanced-v1';
 import {
   createMotionStore,
   getMotionClipRecord,
@@ -25,33 +25,33 @@ import {
   releaseColdMotion,
   warmMotionClip,
   warmMotionSet,
-} from './motion-store.js?v=gaf2d-motion-v1';
+} from './motion-store.js?v=enhanced-v1';
 import {
   packWaveIdentityIds,
   routeWaveIdentityUnion,
   routeWaveWindow,
-} from './wave-roster.js?v=gaf2d-motion-v1';
-import { GAME_PACKS } from './generated/game-packs.js?v=gaf2d-motion-v1';
-import { routeJourney } from './route.js?v=gaf2d-motion-v1';
+} from './wave-roster.js?v=enhanced-v1';
+import { GAME_PACKS } from './generated/game-packs.js?v=enhanced-v1';
+import { routeJourney } from './route.js?v=enhanced-v1';
 import {
   COVERAGE_MAX_LEVEL,
   COVERAGE_SETS,
   coverageMasteryLevel,
   coverageSetStatus,
   coverageYieldMultiplier,
-} from './coverage.js?v=gaf2d-motion-v1';
+} from './coverage.js?v=enhanced-v1';
 import {
   createCreatureStore,
   releaseColdCreatureKinds,
   warmCreatureKind,
-} from './creatures.js?v=gaf2d-motion-v1';
+} from './creatures.js?v=enhanced-v1';
 import {
   loadMotionPreview,
-} from './motion-preview.js?v=gaf2d-motion-v1';
+} from './motion-preview.js?v=enhanced-v1';
 import {
   isMotionReviewRequested,
   mountMotionReviewSurface,
-} from './motion-review.js?v=gaf2d-motion-v1';
+} from './motion-review.js?v=enhanced-v1';
 
 const canvas = document.getElementById('game');
 const s = createState();

@@ -2,7 +2,7 @@ import {
   ENDLESS_ERA_NAME,
   ERA_MAX_TIER,
   eraForTier,
-} from './content.js?v=gaf2d-motion-v1';
+} from './content.js?v=enhanced-v1';
 
 const DEFAULT_SEED = 0x41504e;
 const FIRST_PACK_ID = 'valorant';

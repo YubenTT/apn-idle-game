@@ -1,5 +1,5 @@
-import { C } from './formulas.js?v=gaf2d-motion-v1';
-import { packForRoute } from './route.js?v=gaf2d-motion-v1';
+import { C } from './formulas.js?v=enhanced-v1';
+import { packForRoute } from './route.js?v=enhanced-v1';
 
 const VALORANT_WAVE_POOLS = Object.freeze([
   Object.freeze(['stale']),

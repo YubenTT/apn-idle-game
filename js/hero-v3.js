@@ -24,12 +24,12 @@
  * legless identity-safe Canvas silhouette. No DOM or fetch at import time.
  */
 
-import { clamp } from './formulas.js?v=gaf2d-motion-v1';
-import { withRuntimeVersion } from './cache.js?v=gaf2d-motion-v1';
+import { clamp } from './formulas.js?v=enhanced-v1';
+import { withRuntimeVersion } from './cache.js?v=enhanced-v1';
 import {
   validateMotionClipDescriptor,
   validateMotionSetIndex,
-} from './motion-bundle.js?v=gaf2d-motion-v1';
+} from './motion-bundle.js?v=enhanced-v1';
 import {
   HERO_V3_CLIPS,
   MAX_HERO_DESCRIPTOR_BYTES,
@@ -37,8 +37,8 @@ import {
   MAX_HERO_SET_BYTES,
   validateHeroClipDescriptor,
   validateHeroSetManifest,
-} from './hero-v3-contract.js?v=gaf2d-motion-v1';
-import { visualFidelityEncodedLimit } from './visual-fidelity-v4.js?v=gaf2d-motion-v1';
+} from './hero-v3-contract.js?v=enhanced-v1';
+import { visualFidelityEncodedLimit } from './visual-fidelity-v4.js?v=enhanced-v1';
 
 export const V3_CLIPS = HERO_V3_CLIPS;
 

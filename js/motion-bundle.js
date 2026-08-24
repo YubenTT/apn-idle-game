@@ -6,13 +6,13 @@
  * selector and one-call blitter from simulation state.
  */
 
-import { validatePresentationRecord } from './stage-presentation.js?v=gaf2d-motion-v1';
+import { validatePresentationRecord } from './stage-presentation.js?v=enhanced-v1';
 import {
   validateConsumerScaleContract,
   validateQualityProfileBinding,
   visualFidelityDecodedLimit,
   visualFidelityEncodedLimit,
-} from './visual-fidelity-v4.js?v=gaf2d-motion-v1';
+} from './visual-fidelity-v4.js?v=enhanced-v1';
 
 export const MOTION_GRAMMAR = 'gaf2d-motion-bundle-v1';
 export const MOTION_PREVIEW_GRAMMAR = 'gaf2d-motion-preview-v1';

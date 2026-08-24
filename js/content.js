@@ -1,6 +1,6 @@
 /** APN Idle content — skills, permanent Boosts, tips */
 
-import { skillSpCost as buildSkillSpCost, isBossZone } from './formulas.js?v=gaf2d-motion-v1';
+import { skillSpCost as buildSkillSpCost, isBossZone } from './formulas.js?v=enhanced-v1';
 
 export const SEASON = {
   id: 'season_01',

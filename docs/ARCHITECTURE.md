@@ -233,6 +233,11 @@ flowchart TB
 ### `sfx.js`
 
 - WebAudio only; no-ops without `window` / until unlocked by gesture.
+- Each Pack carries a tiny audible identity: `js/sfx.js` derives a deterministic
+  2–4 note WebAudio motif per Pack (genre family table plus an id-hash pitch
+  offset, no assets and no `Math.random`), which `js/main.js` fires from the
+  frame loop on Pack entry and on Gate boss spawn, behind the same
+  `feedbackAllowed()` mute and reduced-motion silence as every other cue.
 
 ## State shape (conceptual)
 

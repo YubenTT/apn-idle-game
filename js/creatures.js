@@ -6,7 +6,7 @@
  * render hot path; there is intentionally no eager "load every creature" API.
  */
 
-import { withRuntimeVersion } from './cache.js?v=gaf2d-motion-v1';
+import { withRuntimeVersion } from './cache.js?v=enhanced-v1';
 
 const CLIPS = Object.freeze({
   curator: Object.freeze([

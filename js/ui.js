@@ -9,7 +9,7 @@ import {
   clamp,
   killsNeeded,
   nextGoLiveBoundary,
-} from './formulas.js?v=gaf2d-motion-v1';
+} from './formulas.js?v=enhanced-v1';
 import {
   COACH,
   META,
@@ -19,17 +19,17 @@ import {
   FEED_COPY,
   echoLineFor,
   skillSpCost,
-} from './content.js?v=gaf2d-motion-v1';
+} from './content.js?v=enhanced-v1';
 import {
   echoProgressFor,
   packForRoute,
   packZoneDisplay,
   routeJourney,
-} from './route.js?v=gaf2d-motion-v1';
+} from './route.js?v=enhanced-v1';
 import {
   CATALOG_NOTICE,
   GAME_PACKS,
-} from './generated/game-packs.js?v=gaf2d-motion-v1';
+} from './generated/game-packs.js?v=enhanced-v1';
 import {
   COVERAGE_MAX_LEVEL,
   COVERAGE_SETS,
@@ -39,7 +39,7 @@ import {
   coverageMasteryLevel,
   coverageSetStatus,
   isPackCovered,
-} from './coverage.js?v=gaf2d-motion-v1';
+} from './coverage.js?v=enhanced-v1';
 import {
   combatStats,
   allocSkill,
@@ -69,7 +69,7 @@ import {
   normalizeGear,
   HOTFIX_FOCUS_COST,
   PRIORITY_FOCUS_COST,
-} from './game.js?v=gaf2d-motion-v1';
+} from './game.js?v=enhanced-v1';
 import {
   formatAffix,
   sellValue,
@@ -83,7 +83,7 @@ import {
   primaryStat,
   queryGearBag,
   toggleJunk,
-} from './loot.js?v=gaf2d-motion-v1';
+} from './loot.js?v=enhanced-v1';
 import {
   DAILY_DEFS,
   WEEKLY_DEFS,
@@ -94,13 +94,13 @@ import {
   seasonLevel,
   SEASON_MILESTONES,
   formatReward,
-} from './hub.js?v=gaf2d-motion-v1';
-import { skillIco, metaIco, hubIco, gearIcon } from './icons.js?v=gaf2d-motion-v1';
-import { drawHeroV2 } from './hero-v2.js?v=gaf2d-motion-v1';
-import { heroPreviewDrawOptions } from './render.js?v=gaf2d-motion-v1';
-import { motionReduced } from './motion-preference.js?v=gaf2d-motion-v1';
-import { save, clear } from './save.js?v=gaf2d-motion-v1';
-import { sfx, unlockAudio, setMuted, setReducedMotion } from './sfx.js?v=gaf2d-motion-v1';
+} from './hub.js?v=enhanced-v1';
+import { skillIco, metaIco, hubIco, gearIcon } from './icons.js?v=enhanced-v1';
+import { drawHeroV2 } from './hero-v2.js?v=enhanced-v1';
+import { heroPreviewDrawOptions } from './render.js?v=enhanced-v1';
+import { motionReduced } from './motion-preference.js?v=enhanced-v1';
+import { save, clear } from './save.js?v=enhanced-v1';
+import { sfx, unlockAudio, setMuted, setReducedMotion } from './sfx.js?v=enhanced-v1';
 
 const PANEL_TITLES = {
   skills: 'Build',
