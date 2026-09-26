@@ -5,8 +5,9 @@ Instructions for coding agents working in this repo.
 ## What this is
 
 **APN Idle** is a zero-dependency, vanilla ES-module + Canvas 2D idle mini-game for
-[allpatchnotes.com](https://allpatchnotes.com). Players clear feed noise, collect
-Notes, ship for permanent Rep/Boosts, and prestige for Live Mult (weapon resets) — while learning APN brand language.
+[allpatchnotes.com](https://allpatchnotes.com), live at `/idle/`. Players clear feed noise, collect
+Notes, and **Go Live**: the single prestige checkpoint (first at zone 10, then every 20) that banks
+Notes into permanent Rep (spent on Boosts) and grows Live Mult ([ADR-0008](./docs/decisions/ADR-0008-go-live-sole-checkpoint.md)) — while learning APN brand language.
 
 ## Non-negotiables
 
@@ -14,17 +15,25 @@ Notes, ship for permanent Rep/Boosts, and prestige for Live Mult (weapon resets)
 2. **Domain purity.** Combat math and economy live in `js/formulas.js` + `js/game.js`. UI and canvas read state; they do not invent balance rules.
 3. **Headless tests must pass:** `node qa/run-tests.mjs`
 4. **Brand IP.** Host mascot, crimson APN palette, feed-noise enemies. Do not copy Idle Miner / third-party characters.
-5. **Plain language UI.** Prefer “Upgrade Weapon”, “Damage / Crit / Skills”, “Burst Hit” over jargon. Full copy rules: [brand/NAMING.md](./brand/NAMING.md).
+5. **Plain language UI.** Use the shipped vocabulary: “Upgrade Scanner”, “Go Live”, “Route”, “Wave n/10”. “Upgrade Weapon”, “Ship Notes” and “End Season” are retired, banned copy (`qa/check-copy.mjs` fails on them). Full copy rules: [brand/NAMING.md](./brand/NAMING.md).
 6. **Design system is law.** Colors/sizes come from [brand/tokens.css](./brand/tokens.css); widgets from [brand/COMPONENTS.md](./brand/COMPONENTS.md); mascot from [brand/MASCOT-CANON.md](./brand/MASCOT-CANON.md). One color, one job. No new raw hex.
 
 ## Where to look first
 
-Read [docs/00_START_HERE.md](./docs/00_START_HERE.md) — it maps every doc and says
-which one is the **source of truth** for a given topic. Check
-[docs/VISION.md](./docs/VISION.md) pillars + non-goals before proposing anything,
-and [docs/GLOSSARY.md](./docs/GLOSSARY.md) before naming anything. Stack decisions
-are settled in [docs/decisions/](./docs/decisions/) — do **not** reopen the
+Current state: the newest entry at the top of [progress.md](./progress.md). Current design:
+[docs/product/RECONCILIATION.md](./docs/product/RECONCILIATION.md) and the go-live v2 plan
+(`docs/superpowers/plans/2026-07-16-infinite-patchline-go-live-v2.md`). `docs/00_START_HERE.md`,
+`README.md`, `docs/ROADMAP.md` and `docs/GLOSSARY.md` still teach the retired Ship Notes + End Season
+prestige model (see their banners). Check [docs/VISION.md](./docs/VISION.md) pillars + non-goals
+before proposing anything, and [brand/NAMING.md](./brand/NAMING.md) before naming anything. Stack
+decisions are settled in [docs/decisions/](./docs/decisions/) — do **not** reopen the
 React/Pixi question ([ADR-0001](./docs/decisions/ADR-0001-vanilla-stack.md)) without a new ADR.
+
+## Release
+
+Merging `main` publishes nothing. The live `/idle/` build is projected from a named commit by
+apn-web `npm run sync:idle-game` (`scripts/sync-idle-game.mjs`), which writes
+`public/idle/release.json`; see "Deploy truth" in [docs/EMBED.md](./docs/EMBED.md).
 
 ## Layout
 
@@ -69,5 +78,5 @@ Full gate: [docs/DEFINITION-OF-DONE.md](./docs/DEFINITION-OF-DONE.md). Minimum:
 - [ ] Tokens + components only (no raw hex / off-scale sizes)
 - [ ] No secret keys or local save dumps committed
 - [ ] Docs updated if loop / currency / architecture changed
-- [ ] Cache-bust `?v=` on `index.html` CSS/JS only when shipping UX that must invalidate CDN caches
+- [ ] Shipping UX: bump `RUNTIME_BUILD_ID` in `js/cache.js` and sweep every `?v=` token (`index.html` links plus every relative JS import); `qa/check-runtime-cache.mjs` (run by `qa/run-tests.mjs`) enforces it
 - [ ] No force-push to `main`
