@@ -33,27 +33,19 @@ React/Pixi question ([ADR-0001](./docs/decisions/ADR-0001-vanilla-stack.md)) wit
 
 Merging `main` publishes nothing. The live `/idle/` build is projected from a named commit by
 apn-web `npm run sync:idle-game` (`scripts/sync-idle-game.mjs`), which writes
-`public/idle/release.json`; see "Deploy truth" in [docs/EMBED.md](./docs/EMBED.md).
+`public/idle/release.json`; it goes live only with the next apn-web production deploy, verified by
+`npm run smoke:idle-game -- --expected-source <commit> --expected-tree <tree>` (see "Deploy truth" in
+[docs/EMBED.md](./docs/EMBED.md)).
 
 ## Layout
 
 ```
 index.html          HUD shell
 css/game.css        Layout + chrome
-js/
-  main.js           Bootstrap, input, loop
-  game.js           State, combat step, economy actions
-  formulas.js       Balance constants + pure math
-  content.js        Skills, meta, tips, ticker
-  render.js         Canvas draw
-  ui.js             Sheets, HUD bind
-  save.js           localStorage
-  sfx.js            WebAudio
-  icons.js          Build SVG icons
-  comedy.js         Quips
-assets/             Mascot, enemies, ticker icons
+js/                 Game modules (entry js/main.js; cache authority js/cache.js)
+assets/             Mascot, creatures, game packs, icons + manifest.json
 docs/               Design + architecture
-qa/                 Headless tests + screenshots
+qa/                 run-tests.mjs, check-*.mjs gates, browser smokes
 ```
 
 ## How to change balance
